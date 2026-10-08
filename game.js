@@ -56,6 +56,16 @@ const NAMES = {
     'flower': ['💧 Water Drop', '🌱 Seedling', '🌷 Bud', '🌼 Daisy', '🌷 Tulip', '🌹 Rose', '🌺 Lily', '🌸 Orchid', '🪷 Lotus', '🍄 Rafflesia', '💎 Crystal Flower', '🌳 Tree of Life']
 };
 
+const BARN_IMAGES = {
+    1: 'assets/ghibli/egg.jpg',
+    2: 'assets/ghibli/chick.jpg',
+    3: 'assets/ghibli/chicken.jpg',
+    4: 'assets/ghibli/piglet.jpg',
+    5: 'assets/ghibli/pig.jpg',
+    6: 'assets/ghibli/calf.jpg',
+    8: 'assets/ghibli/horse.jpg'
+};
+
 function getHue(mode, tier) {
     if (mode === 'farm') return (tier * 15 + 120) % 360; 
     else if (mode === 'hay') return (tier * 15 + 40) % 360; 
@@ -445,9 +455,16 @@ function renderGrid(mode, poppedIndices = []) {
                     handleShopClick(mode, i);
                 });
             } else {
-                itemEl.innerText = NAMES[mode][item.tier];
-                const hue = getHue(mode, item.tier);
-                itemEl.style.background = `radial-gradient(circle at 30% 30%, hsl(${hue}, 80%, 70%), hsl(${hue}, 80%, 40%))`;
+                if (mode === 'barn' && BARN_IMAGES[item.tier]) {
+                    itemEl.innerText = '';
+                    itemEl.style.backgroundImage = `url('${BARN_IMAGES[item.tier]}')`;
+                    itemEl.style.backgroundSize = 'cover';
+                    itemEl.style.backgroundPosition = 'center';
+                } else {
+                    itemEl.innerText = NAMES[mode][item.tier];
+                    const hue = getHue(mode, item.tier);
+                    itemEl.style.background = `radial-gradient(circle at 30% 30%, hsl(${hue}, 80%, 70%), hsl(${hue}, 80%, 40%))`;
+                }
                 itemEl.addEventListener('pointerdown', (e) => {
                     handleDragStart(e, mode, i);
                 });
