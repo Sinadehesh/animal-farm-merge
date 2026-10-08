@@ -41,6 +41,7 @@
         .hud-row { display: flex; align-items: center; gap: 6px; }
         .hud h1 {
             flex: 1;
+            min-width: 0;
             margin: 0;
             font-size: 21px;
             font-weight: 900;
@@ -60,6 +61,10 @@
             white-space: nowrap;
         }
         .btn-back { cursor: pointer; }
+        /* The top row holds back, title and three pills; keep them compact so it fits. */
+        .hud-row { gap: 4px; }
+        .hud h1 { font-size: 18px; }
+        .btn-back, .pill { padding: 2px 8px; font-size: 15px; }
         .btn-back:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
         .btn-back[hidden] { display: none; }
         .pill-btn { cursor: pointer; }
@@ -83,14 +88,14 @@
             background: rgba(74, 52, 38, 0.85);
             color: #fff;
             border-radius: 10px;
-            padding: 3px 6px;
-            font-size: 13px;
+            padding: 3px 4px;
+            font-size: min(12px, calc(var(--stage-w) / 29)); /* shrinks a little on the smallest screens */
         }
         .res {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 0 4px;
+            padding: 0 2px;
             background: none;
             border: 0;
             color: #fff;
@@ -442,8 +447,8 @@
         <div class="hud-row">
             <button id="btn-back" class="btn-back" hidden>⬅ Map</button>
             <h1 id="scene-title">Farmstead</h1>
-            <button class="pill pill-btn" id="btn-coins" title="Get more money">💵 <span id="money-val">50</span> <span class="plus">+</span></button>
-            <div class="pill" title="Hearts">❤️ <span id="hearts-val">0</span></div>
+            <button class="pill pill-btn" id="btn-coins" title="Shop">💵 <span id="money-val">50</span></button>
+            <button class="pill pill-btn" id="btn-gems" title="Shop">💎 <span id="gems-val">0</span> <span class="plus">+</span></button>
         </div>
         <!-- Filled by game.js with the resources your land uses and makes. -->
         <div class="hud-row resources" id="resources"></div>

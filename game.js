@@ -14,7 +14,7 @@ const NUM_CELLS = GAME_WIDTH * GAME_HEIGHT;
 // Essentials refill by themselves over time, up to a cap. A full bar lasts a
 // short play session and takes 30-60 minutes to refill, so once the starting
 // stock and the cheap early land are used up, players either come back later,
-// spend 💵 on a refill, or buy 💵 with real money.
+// watch an ad, or spend 💎 gems on a refill.
 
 const ESSENTIALS = {
     feed:          { refillSeconds: 60,  cap: 40 },
@@ -24,10 +24,6 @@ const ESSENTIALS = {
     water:         { refillSeconds: 120, cap: 25 },
 };
 
-// 💵 per missing unit for an instant refill. A unit earns about ORDER_PAY in
-// orders, so this must stay well above it: refills are for impatience, not profit.
-const REFILL_PRICE = 25;
-
 // 💵 an order pays per unit of input that went into the item (tier n = 2^n units).
 const ORDER_PAY = 10;
 
@@ -36,20 +32,39 @@ const ORDER_PAY = 10;
 // produce more than it uses, which makes the refill timers pointless.
 const MERGE_OUTPUT = 1;
 
-// A generous first session; the cap only limits refilling, not what you hold.
-const START = { money: 50, feed: 100 };
+// 💎 Gems are the only thing sold for real money, as in Merge Gardens. 💵 is
+// earned by playing. Gems pay for instant refills and cover any 💵 you're short.
+// A unit earns about 💵10 in orders and costs 💎2 = 💵20 to refill, so refills
+// are for impatience, not profit.
+const GEMS_PER_REFILL_UNIT = 2;
+const COINS_PER_GEM = 10;
+const LEVEL_UP_GEMS = 5; // a few free gems each time a townsperson levels up
 
-// Real-money coin packs. Prices are placeholders: in the app stores the
+// Rewarded ads: a free top-up when you run out, a few times a day.
+const AD_REWARD_UNITS = 10;
+const ADS_PER_DAY = 5;
+
+// A generous first session. The starting gems pay for one refill, so players
+// learn what gems are for before they run out of them.
+const START = { money: 50, gems: 100, feed: 100 };
+
+// The shop follows Merge Gardens' store: gem packs at the same names and price
+// points, a 30-day Daily Basket and a one-time Special Offer. Merge Gardens
+// doesn't publish its gem amounts, so these are ours. In the app stores the
 // localized price comes from the store itself.
-const COIN_PACKS = [
-    { id: 'coins_1000',  coins: 1000,  price: '$0.99' },
-    { id: 'coins_6000',  coins: 6000,  price: '$4.99',  tag: '+20%' },
-    { id: 'coins_15000', coins: 15000, price: '$9.99',  tag: '+50%' },
-    { id: 'coins_40000', coins: 40000, price: '$19.99', tag: 'Best value' },
+const GEM_PACKS = [
+    { id: 'gems_pile',   name: 'Pile of Gems',   gems: 500,  price: '$4.99' },
+    { id: 'gems_cask',   name: 'Cask of Gems',   gems: 1100, price: '$9.99',  tag: '+10%' },
+    { id: 'gems_barrel', name: 'Barrel of Gems', gems: 2400, price: '$19.99', tag: '+20%' },
 ];
+// Gems once a day for 30 days; a day you don't open the game is lost.
+const DAILY_BASKET = { id: 'daily_basket', name: '30 Day Daily Basket', gemsPerDay: 25, days: 30, price: '$3.99' };
+// One-time offer, shown the first time you run out. Also fills every bar.
+const SPECIAL_OFFER = { id: 'special_offer', name: 'Special Offer', gems: 200, money: 1000, price: '$1.99' };
 
 const RESOURCES = {
     money:         { emoji: '💵', name: 'Money' },
+    gems:          { emoji: '💎', name: 'Gems' },
     hearts:        { emoji: '❤️', name: 'Hearts' },
     feed:          { emoji: '🌿', name: 'Feed' },
     wheat:         { emoji: '🌾', name: 'Wheat' },
@@ -61,15 +76,17 @@ const RESOURCES = {
 
 let unlocks = { barn: true, hay: false, farm: false, fert: false, aqua: false, flower: false };
 let maxTier = 3;
-const res = { money: 0, hearts: 0, feed: 0, wheat: 0, fertilizer: 0, rawFertilizer: 0, water: 0, nectar: 0 };
+const res = { money: 0, gems: 0, hearts: 0, feed: 0, wheat: 0, fertilizer: 0, rawFertilizer: 0, water: 0, nectar: 0 };
 Object.assign(res, START);
 // When the next unit of each essential arrives (ms timestamp), or null when full.
 const refillAt = {};
+// Daily Basket, Special Offer and ad state (saved with the game).
+const shop = { basketStart: null, basketClaimed: null, offerBought: false, offerShown: false, adsDay: null, adsWatched: 0 };
 let currentScene = 'map';
 
 // UI Elements
 const moneyEl = document.getElementById('money-val');
-const heartsEl = document.getElementById('hearts-val');
+const gemsEl = document.getElementById('gems-val');
 const resourcesEl = document.getElementById('resources');
 
 const stageEl = document.getElementById('stage');
@@ -200,67 +217,180 @@ function timeUntilFull(key) {
     return (refillAt[key] - Date.now()) + (cap - res[key] - 1) * refillSeconds * 1000;
 }
 
-function refillPrice(key) {
-    return Math.max(0, ESSENTIALS[key].cap - res[key]) * REFILL_PRICE;
+function refillGems(key) {
+    return Math.max(0, ESSENTIALS[key].cap - res[key]) * GEMS_PER_REFILL_UNIT;
+}
+
+// Takes gems if you have enough; otherwise sends you to the shop.
+function spendGems(n) {
+    if (res.gems < n) {
+        openShop(`You need 💎 ${n - res.gems} more.`);
+        return false;
+    }
+    res.gems -= n;
+    return true;
+}
+
+// Calendar day number in the player's time zone.
+function today() {
+    const d = new Date();
+    return Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000);
+}
+
+function adsLeft() {
+    if (shop.adsDay !== today()) { shop.adsDay = today(); shop.adsWatched = 0; }
+    return ADS_PER_DAY - shop.adsWatched;
 }
 
 // Shown when you tap a resource in the HUD or run out while playing.
 function openEssential(key, ranOut = false) {
     tickEssentials();
+    // The first time anything runs out, show the one-time offer instead.
+    if (ranOut && !shop.offerBought && !shop.offerShown) {
+        shop.offerShown = true;
+        openSpecialOffer(`Out of ${resLabel(key)}?`);
+        return;
+    }
     const { refillSeconds, cap } = ESSENTIALS[key];
     const full = res[key] >= cap;
-    const price = refillPrice(key);
+    const gems = refillGems(key);
+    const ads = adsLeft();
     const timing = full
         ? 'Full! It refills again once you use some.'
         : `+1 every ${formatDuration(refillSeconds * 1000)} · next in ${formatDuration(refillAt[key] - Date.now())} · full in ${formatDuration(timeUntilFull(key))}`;
+    const actions = [{ label: `Fill up now · 💎 ${gems}`, primary: true, wide: true, onClick: () => refillEssential(key) }];
+    if (ads > 0) {
+        actions.push({ label: `Watch an ad · +${AD_REWARD_UNITS} (${ads} left today)`, wide: true, onClick: () => watchAdFor(key) });
+    }
+    actions.push({ label: 'Wait' });
     showDialog({
         title: ranOut ? `Out of ${resLabel(key)}` : resLabel(key),
         body: `<p class="big-count">${res[key]} / ${cap}</p><p class="hint">${timing}</p>`,
-        actions: full
-            ? [{ label: 'OK' }]
-            : [buyAction(price, () => refillEssential(key), `Refill now for 💵 ${price.toLocaleString()}`),
-               { label: 'Get more 💵', primary: price > res.money, onClick: openCoinShop },
-               { label: 'Wait' }],
+        actions: full ? [{ label: 'OK' }] : actions,
     });
 }
 
 function refillEssential(key) {
-    const price = refillPrice(key);
-    if (res.money < price) return;
-    res.money -= price;
+    if (!spendGems(refillGems(key))) return;
     res[key] = ESSENTIALS[key].cap;
     refillAt[key] = null;
     updateUI();
     toast(`${resLabel(key)} refilled!`, 'good');
 }
 
-// --- COIN SHOP ---
+function watchAdFor(key) {
+    if (adsLeft() <= 0) return;
+    showRewardedAd(() => {
+        shop.adsWatched++;
+        res[key] += AD_REWARD_UNITS;
+        tickEssentials();
+        updateUI();
+        toast(`+${AD_REWARD_UNITS} ${resLabel(key)}`, 'good');
+    });
+}
 
-function openCoinShop() {
+// --- SHOP ---
+
+function openShop(note = '') {
+    const basketDays = basketDaysLeft();
+    const actions = [];
+    if (!shop.offerBought) {
+        actions.push({
+            label: `⭐ ${SPECIAL_OFFER.name}: 💎 ${SPECIAL_OFFER.gems} + 💵 ${SPECIAL_OFFER.money.toLocaleString()} + full bars · ${SPECIAL_OFFER.price}`,
+            primary: true, wide: true, onClick: buySpecialOffer,
+        });
+    }
+    GEM_PACKS.forEach(pack => actions.push({
+        label: `${pack.name}: 💎 ${pack.gems.toLocaleString()}${pack.tag ? ` (${pack.tag})` : ''} · ${pack.price}`,
+        primary: true, wide: true,
+        onClick: () => purchase(pack.id, () => { res.gems += pack.gems; return `+💎 ${pack.gems.toLocaleString()}`; }),
+    }));
+    actions.push(basketDays > 0
+        ? { label: `🧺 Daily Basket active · ${basketDeliveriesLeft()} more days`, wide: true, disabled: true }
+        : { label: `🧺 ${DAILY_BASKET.name}: 💎 ${DAILY_BASKET.gemsPerDay} every day · ${DAILY_BASKET.price}`,
+            primary: true, wide: true, onClick: buyDailyBasket });
+    actions.push({ label: 'Close' });
     showDialog({
-        title: 'Get more 💵',
-        body: `<p>Coins buy land, Growth Guides and instant refills.</p>
+        title: 'Shop',
+        body: `${note ? `<p><b>${note}</b></p>` : ''}
+               <p>💎 Gems fill up your essentials instantly and cover any 💵 you're short.</p>
                <p class="hint">Test mode: no real payment is taken yet.</p>`,
+        actions,
+    });
+}
+
+function openSpecialOffer(title = SPECIAL_OFFER.name) {
+    showDialog({
+        title,
+        body: `<p><b>One-time ${SPECIAL_OFFER.name}</b></p>
+               <p>💎 ${SPECIAL_OFFER.gems} + 💵 ${SPECIAL_OFFER.money.toLocaleString()} and every essential filled up.</p>`,
         actions: [
-            ...COIN_PACKS.map(pack => ({
-                label: `💵 ${pack.coins.toLocaleString()}${pack.tag ? ` (${pack.tag})` : ''} · ${pack.price}`,
-                wide: true,
-                primary: true,
-                onClick: () => purchaseCoins(pack),
-            })),
-            { label: 'Close' },
+            { label: `Get it for ${SPECIAL_OFFER.price}`, primary: true, wide: true, onClick: buySpecialOffer },
+            { label: 'No thanks' },
         ],
     });
 }
 
-// Real payments need the app-store billing plugin once the game is packaged
-// with Capacitor (Google Play Billing / Apple In-App Purchase). Until then this
-// grants the coins straight away so the flow can be tested.
-function purchaseCoins(pack) {
-    res.money += pack.coins;
+function buySpecialOffer() {
+    if (shop.offerBought) return;
+    purchase(SPECIAL_OFFER.id, () => {
+        shop.offerBought = true;
+        res.gems += SPECIAL_OFFER.gems;
+        res.money += SPECIAL_OFFER.money;
+        Object.keys(ESSENTIALS).forEach(k => {
+            if (isRefilling(k)) { res[k] = Math.max(res[k], ESSENTIALS[k].cap); refillAt[k] = null; }
+        });
+        return `+💎 ${SPECIAL_OFFER.gems} +💵 ${SPECIAL_OFFER.money.toLocaleString()}`;
+    });
+}
+
+// Days of the basket left, counting today.
+function basketDaysLeft() {
+    if (shop.basketStart === null) return 0;
+    return Math.max(0, shop.basketStart + DAILY_BASKET.days - today());
+}
+
+// Deliveries still to come after today's (if today's is already claimed).
+function basketDeliveriesLeft() {
+    return basketDaysLeft() - (shop.basketClaimed === today() ? 1 : 0);
+}
+
+function buyDailyBasket() {
+    if (basketDaysLeft() > 0) return;
+    purchase(DAILY_BASKET.id, () => {
+        shop.basketStart = today();
+        shop.basketClaimed = null;
+        claimDailyBasket();
+        return `${DAILY_BASKET.name} started`;
+    });
+}
+
+// Runs on start-up and every tick; gives today's gems once.
+function claimDailyBasket() {
+    if (basketDaysLeft() <= 0 || shop.basketClaimed === today()) return;
+    shop.basketClaimed = today();
+    res.gems += DAILY_BASKET.gemsPerDay;
     updateUI();
-    toast(`+💵 ${pack.coins.toLocaleString()} (test purchase)`, 'good');
+    toast(`🧺 Daily Basket: +💎 ${DAILY_BASKET.gemsPerDay} (${basketDeliveriesLeft()} more days)`, 'good');
+}
+
+// Real payments need the app-store billing plugin once the game is packaged
+// with Capacitor (Google Play Billing / Apple In-App Purchase): call the store
+// with productId and run grant() only after the store confirms. Until then this
+// grants straight away so the flow can be tested.
+function purchase(productId, grant) {
+    const message = grant();
+    updateUI();
+    saveGame();
+    toast(`${message} (test purchase)`, 'good');
     goTo(currentScene);
+}
+
+// Real ads need an ad SDK (for example AdMob) once the game is packaged; call
+// onReward() only when the ad network reports the video was watched.
+function showRewardedAd(onReward) {
+    toast('(test ad)');
+    onReward();
 }
 
 // --- SCENE LAYOUTS ---
@@ -366,13 +496,19 @@ function toast(message, kind = '') {
 }
 
 // A "Buy" dialog button that explains the shortfall instead of failing silently.
+// A "Buy" dialog button. When 💵 is short, gems cover the rest.
 function buyAction(cost, onBuy, label = `Buy for 💵 ${cost.toLocaleString()}`) {
     const short = cost - res.money;
+    if (short <= 0) return { label, primary: true, onClick: onBuy };
+    const gems = Math.ceil(short / COINS_PER_GEM);
     return {
-        label: short > 0 ? `Need 💵 ${short.toLocaleString()} more` : label,
+        label: res.money > 0 ? `Buy for 💵 ${res.money.toLocaleString()} + 💎 ${gems}` : `Buy for 💎 ${gems}`,
         primary: true,
-        disabled: short > 0,
-        onClick: onBuy,
+        onClick: () => {
+            if (!spendGems(gems)) return;
+            res.money += gems * COINS_PER_GEM;
+            onBuy();
+        },
     };
 }
 
@@ -528,8 +664,11 @@ function deliver(npc) {
     res.money += r.rewardMoney;
     res.hearts += r.rewardHearts;
     npc.deliveries++;
+    const levelUp = npc.deliveries % 5 === 0;
+    if (levelUp) res.gems += LEVEL_UP_GEMS;
     updateUI();
     toast(`${npc.name} loved the ${itemName(r.mode, r.tier)}! +💵${r.rewardMoney} +❤️${r.rewardHearts}`, 'good');
+    if (levelUp) toast(`${npc.name} reached Lv.${npc.deliveries / 5 + 1}! +💎 ${LEVEL_UP_GEMS}`, 'good');
 
     generateRequestFor(npc);
     renderTown();
@@ -582,13 +721,20 @@ function buyUpgrade() {
     goTo(currentScene);
 }
 
+// 12,450 -> "12.4k" so the top bar fits on small phones.
+function shortNumber(n) {
+    if (n >= 100000) return Math.floor(n / 1000) + 'k';
+    if (n >= 10000) return (Math.floor(n / 100) / 10) + 'k';
+    return n.toLocaleString();
+}
+
 function updateUI() {
-    moneyEl.textContent = res.money.toLocaleString();
-    heartsEl.textContent = res.hearts.toLocaleString();
+    moneyEl.textContent = shortNumber(res.money);
+    gemsEl.textContent = shortNumber(res.gems);
     // Only resources a board you own uses or makes. Refilling ones show their cap
     // and a countdown, and open the refill dialog when tapped. Chips are updated
     // in place so a tap isn't lost when the timer redraws them.
-    const keys = Object.keys(RESOURCES).filter(key => key !== 'money' && key !== 'hearts' && isRelevant(key));
+    const keys = Object.keys(RESOURCES).filter(key => key === 'hearts' || (!['money', 'gems'].includes(key) && isRelevant(key)));
     const layout = keys.map(key => key + (isRefilling(key) ? '*' : '')).join();
     if (resourcesEl.dataset.layout !== layout) {
         resourcesEl.dataset.layout = layout;
@@ -600,10 +746,10 @@ function updateUI() {
         const chip = resourcesEl.querySelector(`[data-key="${key}"]`);
         const { emoji } = RESOURCES[key];
         if (!isRefilling(key)) {
-            chip.innerHTML = `<span>${emoji} <b>${res[key]}</b></span>`;
+            chip.innerHTML = `<span>${emoji} <b>${shortNumber(res[key])}</b></span>`;
         } else {
-            const timer = refillAt[key] ? `+1 in ${formatDuration(refillAt[key] - Date.now())}` : 'full';
-            chip.innerHTML = `<span>${emoji} <b>${res[key]}/${ESSENTIALS[key].cap}</b></span><small>${timer}</small>`;
+            const timer = refillAt[key] ? `+1 ${formatDuration(refillAt[key] - Date.now())}` : 'full';
+            chip.innerHTML = `<span>${emoji} <b>${shortNumber(res[key])}</b></span><small>${timer}</small>`;
         }
     });
 }
@@ -612,7 +758,8 @@ resourcesEl.addEventListener('click', e => {
     const chip = e.target.closest('button.res');
     if (chip) openEssential(chip.dataset.key);
 });
-document.getElementById('btn-coins').addEventListener('click', openCoinShop);
+document.getElementById('btn-coins').addEventListener('click', openShop);
+document.getElementById('btn-gems').addEventListener('click', openShop);
 
 // --- GRID AND MERGE LOGIC ---
 
@@ -829,7 +976,7 @@ const SAVE_KEY = 'merge-farmstead-save-v1';
 function saveGame() {
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
-            res, refillAt, unlocks, maxTier, grids,
+            res, refillAt, shop, unlocks, maxTier, grids,
             npcs: npcs.map(({ id, deliveries, request }) => ({ id, deliveries, request })),
         }));
     } catch (e) {
@@ -847,6 +994,7 @@ function loadGame() {
         if (!save) return false;
         Object.assign(res, save.res);
         Object.assign(refillAt, save.refillAt);
+        Object.assign(shop, save.shop);
         Object.assign(unlocks, save.unlocks);
         maxTier = save.maxTier;
         Object.keys(grids).forEach(mode => {
@@ -868,12 +1016,14 @@ function loadGame() {
 });
 if (!loadGame()) initTown();
 tickEssentials(); // catch up on refills that arrived while the game was closed
+claimDailyBasket();
 Object.keys(grids).forEach(mode => renderGrid(mode));
 updateUI();
 goTo('map');
 
 setInterval(() => {
     tickEssentials();
+    claimDailyBasket();
     updateUI();
     saveGame();
 }, 1000);
