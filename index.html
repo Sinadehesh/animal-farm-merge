@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Merge Farmstead: Tycoon Edition</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #74ebd5, #acb6e5); /* Soft Ghibli sky */
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #2c3e50;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        h1 { margin: 5px 0; font-size: 22px; color: #fff; text-shadow: 1px 1px 4px rgba(0,0,0,0.5); }
+        .game-board {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            aspect-ratio: 9/16;
+            border: 8px solid #8e44ad;
+            border-radius: 12px;
+            box-sizing: border-box;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4), inset 0 0 20px rgba(0,0,0,0.3);
+            background: linear-gradient(to bottom, #a8e063, #56ab2f); /* Grassy gradient */
+            overflow: hidden;
+        }
+        .nav-btn {
+            flex: 1 0 25%;
+            padding: 10px 0;
+            border: none;
+            color: white;
+            font-weight: 800;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.2s;
+            font-size: 12px;
+            box-sizing: border-box;
+            border-right: 1px solid rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(0,0,0,0.2);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+        }
+        .nav-btn:hover { opacity: 0.9; }
+        .nav-btn.active {
+            opacity: 1;
+            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.4);
+            transform: translateY(-2px);
+        }
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 100%;
+            height: 100%;
+            gap: 4px;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .grid-cell {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            position: relative;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .item {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            cursor: grab;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 800;
+            text-align: center;
+            user-select: none;
+            z-index: 10;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            color: white;
+            box-sizing: border-box;
+            border: 3px solid rgba(255,255,255,0.4);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 -4px 10px rgba(0,0,0,0.2);
+            touch-action: none;
+            transition: transform 0.1s;
+        }
+        .item:hover { transform: scale(1.05); }
+        .item.dragging {
+            opacity: 0.9;
+            z-index: 100;
+            cursor: grabbing;
+            transform: scale(1.2);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+        }
+        .item.pop {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.1); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .resource-bar {
+            width: 100%; 
+            max-width: 450px; 
+            background: rgba(44, 62, 80, 0.9); 
+            padding: 10px; 
+            border-radius: 12px 12px 0 0; 
+            box-sizing: border-box; 
+            font-size: 13px; 
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <h1>Merge Farmstead</h1>
+    
+    <div class="resource-bar">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <div>✨ Fert: <span id="fert-val">0</span></div>
+            <div>🌾 Wheat: <span id="wheat-val">0</span></div>
+            <div>🌿 Feed: <span id="feed-val">0</span></div>
+            <div>💩 Raw: <span id="raw-val">0</span></div>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+            <div>💧 Water: <span id="water-val">0</span></div>
+            <div>🍯 Nectar: <span id="nectar-val">0</span></div>
+            <div style="color: #f1c40f;">💵 Money: <span id="money-val">50</span></div>
+            <div style="color: #e74c3c;">❤️ Hearts: <span id="hearts-val">0</span></div>
+        </div>
+    </div>
+    
+    <div style="width: 100%; max-width: 450px; display: flex; flex-wrap: wrap; background: #1a252f; border-radius: 0 0 12px 12px; overflow: hidden; margin-bottom: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+        <button class="nav-btn active" id="btn-barn" style="background: #c0392b;">🐷 Barn</button>
+        <button class="nav-btn" id="btn-hay" style="background: #f39c12; display: none;">🌾 Hay</button>
+        <button class="nav-btn" id="btn-farm" style="background: #27ae60; display: none;">🍅 Farm</button>
+        <button class="nav-btn" id="btn-fert" style="background: #8e44ad; display: none;">💩 Fert</button>
+        <button class="nav-btn" id="btn-aqua" style="background: #2980b9; display: none;">🐟 Aqua</button>
+        <button class="nav-btn" id="btn-flower" style="background: #e84393; display: none;">🌸 Flower</button>
+        <button class="nav-btn" id="btn-town" style="background: #34495e;">🏡 Town</button>
+        <button class="nav-btn" id="btn-shop" style="background: #f1c40f; color: #2c3e50;">🛒 Shop</button>
+    </div>
+
+    <!-- Game Boards -->
+    <div id="barn-container" class="game-board"><div class="game-grid" id="grid-barn"></div></div>
+    <div id="hay-container" class="game-board" style="display: none;"><div class="game-grid" id="grid-hay"></div></div>
+    <div id="farm-container" class="game-board" style="display: none;"><div class="game-grid" id="grid-farm"></div></div>
+    <div id="fert-container" class="game-board" style="display: none;"><div class="game-grid" id="grid-fert"></div></div>
+    <div id="aqua-container" class="game-board" style="display: none;"><div class="game-grid" id="grid-aqua"></div></div>
+    <div id="flower-container" class="game-board" style="display: none;"><div class="game-grid" id="grid-flower"></div></div>
+    
+    <!-- Town & Shop -->
+    <div id="town-container" class="game-board" style="display: none; background: #ecf0f1; padding: 15px; overflow-y: auto;">
+        <h2 style="color: #2c3e50; margin-top: 0;">Townspeople</h2>
+        <p style="color: #7f8c8d; font-size: 14px; margin-top: -10px;">Build relationships by delivering items.</p>
+        <div id="missions-list" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px;"></div>
+    </div>
+
+    <div id="shop-container" class="game-board" style="display: none; background: #ecf0f1; padding: 15px; overflow-y: auto;">
+        <h2 style="color: #2c3e50; margin-top: 0;">Market & Upgrades</h2>
+        <p style="color: #7f8c8d; font-size: 14px; margin-top: -10px;">Buy initial items and unlock areas.</p>
+        <div id="shop-list" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px;"></div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
