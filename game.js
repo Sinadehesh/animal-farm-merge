@@ -88,11 +88,11 @@ Object.keys(grids).forEach(mode => grids[mode][0] = { type: 'shop' });
 
 // --- TOWNSFOLK SYSTEM ---
 const npcs = [
-    { id: 'mayor', name: 'Mayor Pelican', emoji: '🎩', pref: ['farm', 'fert'], deliveries: 0, request: null },
-    { id: 'marnie', name: 'Marnie', emoji: '🐄', pref: ['barn'], deliveries: 0, request: null },
+    { id: 'mayor', name: 'Mayor Pelican', emoji: '🎩', image: 'assets/ghibli/mayor.jpg', pref: ['farm', 'fert'], deliveries: 0, request: null },
+    { id: 'marnie', name: 'Marnie', emoji: '🐄', image: 'assets/ghibli/marnie.jpg', pref: ['barn'], deliveries: 0, request: null },
     { id: 'robin', name: 'Robin', emoji: '🪓', pref: ['hay'], deliveries: 0, request: null },
-    { id: 'willy', name: 'Willy', emoji: '🎣', pref: ['aqua'], deliveries: 0, request: null },
-    { id: 'sandy', name: 'Sandy', emoji: '🌸', pref: ['flower'], deliveries: 0, request: null }
+    { id: 'willy', name: 'Willy', emoji: '🎣', image: 'assets/ghibli/willy.jpg', pref: ['aqua'], deliveries: 0, request: null },
+    { id: 'sandy', name: 'Sandy', emoji: '🌸', image: 'assets/ghibli/sandy.jpg', pref: ['flower'], deliveries: 0, request: null }
 ];
 
 function generateRequestFor(npc) {
@@ -135,8 +135,9 @@ function renderTown() {
         
         div.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-weight: 800; font-size: 16px; color: #34495e; text-shadow: 1px 1px 1px rgba(0,0,0,0.1);">
-                    <span style="font-size:20px;">${npc.emoji}</span> ${npc.name}
+                <div style="font-weight: 800; font-size: 16px; color: #34495e; text-shadow: 1px 1px 1px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 8px;">
+                    ${npc.image ? `<img src="${npc.image}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #8e44ad; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">` : `<span style="font-size:20px;">${npc.emoji}</span>`}
+                    ${npc.name}
                 </div>
                 <div style="font-size: 11px; color: white; background: #8e44ad; padding: 3px 8px; border-radius: 10px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                     Lv.${level} (${npc.deliveries}📦)
