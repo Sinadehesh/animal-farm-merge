@@ -62,14 +62,43 @@
         .btn-back { cursor: pointer; }
         .btn-back:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
         .btn-back[hidden] { display: none; }
+        .pill-btn { cursor: pointer; }
+        .pill-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+        .pill .plus {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            margin-left: 2px;
+            border-radius: 50%;
+            background: #5cc15a;
+            color: #fff;
+            font-size: 14px;
+            line-height: 1;
+        }
         .resources {
-            justify-content: space-between;
+            justify-content: space-around;
+            min-height: 36px;
             background: rgba(74, 52, 38, 0.85);
             color: #fff;
             border-radius: 10px;
-            padding: 4px 10px;
+            padding: 3px 6px;
             font-size: 13px;
         }
+        .res {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 4px;
+            background: none;
+            border: 0;
+            color: #fff;
+            line-height: 1.15;
+            white-space: nowrap;
+        }
+        button.res { cursor: pointer; }
+        .res small { font-size: 10px; opacity: 0.8; }
 
         /* --- STAGE & SCENES --- */
         #stage {
@@ -369,6 +398,8 @@
         }
         .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
         .btn-primary { background: #5cc15a; color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
+        .btn-wide { width: 100%; }
+        .big-count { font-size: 8cqw; font-weight: 900; }
         .btn:disabled { background: #e2d8c8; color: #8a7a6a; text-shadow: none; cursor: not-allowed; }
         #toasts {
             position: absolute;
@@ -411,17 +442,11 @@
         <div class="hud-row">
             <button id="btn-back" class="btn-back" hidden>⬅ Map</button>
             <h1 id="scene-title">Farmstead</h1>
-            <div class="pill" title="Money">💵 <span id="money-val">50</span></div>
+            <button class="pill pill-btn" id="btn-coins" title="Get more money">💵 <span id="money-val">50</span> <span class="plus">+</span></button>
             <div class="pill" title="Hearts">❤️ <span id="hearts-val">0</span></div>
         </div>
-        <div class="hud-row resources">
-            <span title="Fertilizer">✨ <b id="fert-val">0</b></span>
-            <span title="Wheat">🌾 <b id="wheat-val">0</b></span>
-            <span title="Feed">🌿 <b id="feed-val">0</b></span>
-            <span title="Raw fertilizer">💩 <b id="raw-val">0</b></span>
-            <span title="Water">💧 <b id="water-val">0</b></span>
-            <span title="Nectar">🍯 <b id="nectar-val">0</b></span>
-        </div>
+        <!-- Filled by game.js with the resources your land uses and makes. -->
+        <div class="hud-row resources" id="resources"></div>
     </header>
 
     <main id="stage">

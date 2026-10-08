@@ -8,27 +8,69 @@ const GAME_WIDTH = 6;
 const GAME_HEIGHT = 8;
 const NUM_CELLS = GAME_WIDTH * GAME_HEIGHT;
 
+// --- ECONOMY ---
+// Every number that sets the pace of the game is in this block.
+//
+// Essentials refill by themselves over time, up to a cap. A full bar lasts a
+// short play session and takes 30-60 minutes to refill, so once the starting
+// stock and the cheap early land are used up, players either come back later,
+// spend 💵 on a refill, or buy 💵 with real money.
+
+const ESSENTIALS = {
+    feed:          { refillSeconds: 60,  cap: 40 },
+    wheat:         { refillSeconds: 75,  cap: 40 },
+    fertilizer:    { refillSeconds: 75,  cap: 40 },
+    rawFertilizer: { refillSeconds: 90,  cap: 30 },
+    water:         { refillSeconds: 120, cap: 25 },
+};
+
+// 💵 per missing unit for an instant refill. A unit earns about ORDER_PAY in
+// orders, so this must stay well above it: refills are for impatience, not profit.
+const REFILL_PRICE = 25;
+
+// 💵 an order pays per unit of input that went into the item (tier n = 2^n units).
+const ORDER_PAY = 10;
+
+// Each merge gives this much of the board's output resource. Keep it at 1:
+// the boards feed each other in a circle, and anything higher lets the circle
+// produce more than it uses, which makes the refill timers pointless.
+const MERGE_OUTPUT = 1;
+
+// A generous first session; the cap only limits refilling, not what you hold.
+const START = { money: 50, feed: 100 };
+
+// Real-money coin packs. Prices are placeholders: in the app stores the
+// localized price comes from the store itself.
+const COIN_PACKS = [
+    { id: 'coins_1000',  coins: 1000,  price: '$0.99' },
+    { id: 'coins_6000',  coins: 6000,  price: '$4.99',  tag: '+20%' },
+    { id: 'coins_15000', coins: 15000, price: '$9.99',  tag: '+50%' },
+    { id: 'coins_40000', coins: 40000, price: '$19.99', tag: 'Best value' },
+];
+
+const RESOURCES = {
+    money:         { emoji: '💵', name: 'Money' },
+    hearts:        { emoji: '❤️', name: 'Hearts' },
+    feed:          { emoji: '🌿', name: 'Feed' },
+    wheat:         { emoji: '🌾', name: 'Wheat' },
+    fertilizer:    { emoji: '✨', name: 'Fert' },
+    rawFertilizer: { emoji: '💩', name: 'Raw Fert' },
+    water:         { emoji: '💧', name: 'Water' },
+    nectar:        { emoji: '🍯', name: 'Nectar' },
+};
+
 let unlocks = { barn: true, hay: false, farm: false, fert: false, aqua: false, flower: false };
 let maxTier = 3;
-let money = 50;
-let feed = 0;
-let fertilizer = 0;
-let wheat = 0;
-let rawFertilizer = 0;
-let water = 0;
-let nectar = 0;
-let hearts = 0;
+const res = { money: 0, hearts: 0, feed: 0, wheat: 0, fertilizer: 0, rawFertilizer: 0, water: 0, nectar: 0 };
+Object.assign(res, START);
+// When the next unit of each essential arrives (ms timestamp), or null when full.
+const refillAt = {};
 let currentScene = 'map';
 
 // UI Elements
-const fertEl = document.getElementById('fert-val');
-const wheatEl = document.getElementById('wheat-val');
-const feedEl = document.getElementById('feed-val');
-const rawEl = document.getElementById('raw-val');
-const waterEl = document.getElementById('water-val');
-const nectarEl = document.getElementById('nectar-val');
 const moneyEl = document.getElementById('money-val');
 const heartsEl = document.getElementById('hearts-val');
+const resourcesEl = document.getElementById('resources');
 
 const stageEl = document.getElementById('stage');
 const titleEl = document.getElementById('scene-title');
@@ -80,25 +122,146 @@ function itemIcon(mode, tier) {
         : `<span class="inline-item">${itemEmoji(mode, tier)}</span>`;
 }
 
-// Land on the farm map. `cost` is the price of its deed.
+// Land on the farm map. `cost` is the price of its deed, `input` is what one tap
+// of the board's corner tile spends, `output` is what each merge produces.
 const AREAS = {
-    barn:   { name: 'Barn',          cost: 0,    uses: '💵 Money',           makes: '💩 Raw Fert', desc: 'Raise animals from feed.' },
-    farm:   { name: 'Crop Field',    cost: 200,  uses: '✨ Fert',            makes: '🌾 Wheat',    desc: 'Grow crops using fertilizer.' },
-    hay:    { name: 'Hay Field',     cost: 400,  uses: '🌾 Wheat',           makes: '🌿 Feed',     desc: 'Harvest hay using wheat.' },
-    fert:   { name: 'Compost Yard',  cost: 800,  uses: '💩 Raw Fert',        makes: '✨ Fert',     desc: 'Make your own fertilizer.' },
-    aqua:   { name: 'Fish Pond',     cost: 2000, uses: '🌾 Wheat',           makes: '💧 Water',    desc: 'Feed wheat to fish to generate water.' },
-    flower: { name: 'Flower Garden', cost: 5000, uses: '💧 Water + ✨ Fert', makes: '🍯 Nectar',   desc: 'Use Water + Fert to grow Nectar.' },
+    barn:   { name: 'Barn',          cost: 0,    input: { feed: 1 },                  output: 'rawFertilizer', desc: 'Raise animals from feed.' },
+    farm:   { name: 'Crop Field',    cost: 200,  input: { fertilizer: 1 },            output: 'wheat',         desc: 'Grow crops using fertilizer.' },
+    hay:    { name: 'Hay Field',     cost: 400,  input: { wheat: 1 },                 output: 'feed',          desc: 'Harvest hay using wheat.' },
+    fert:   { name: 'Compost Yard',  cost: 800,  input: { rawFertilizer: 1 },         output: 'fertilizer',    desc: 'Make your own fertilizer.' },
+    aqua:   { name: 'Fish Pond',     cost: 2000, input: { wheat: 1 },                 output: 'water',         desc: 'Feed wheat to fish to generate water.' },
+    flower: { name: 'Flower Garden', cost: 5000, input: { water: 1, fertilizer: 1 },  output: 'nectar',        desc: 'Use Water + Fert to grow Nectar.' },
 };
 
 // The corner tile on every board that spawns new tier-0 items.
 const GENERATORS = {
-    barn:   { emoji: '🧺', label: 'Feed Bin',     cost: '💵10' },
-    hay:    { emoji: '🌾', label: 'Wheat Sack',   cost: '🌾1' },
-    farm:   { emoji: '✨', label: 'Fert Bag',     cost: '✨1' },
-    fert:   { emoji: '🪣', label: 'Muck Bucket',  cost: '💩1' },
-    aqua:   { emoji: '🥫', label: 'Fish Food',    cost: '🌾1' },
-    flower: { emoji: '🚿', label: 'Watering Can', cost: '💧1 ✨1' },
+    barn:   { emoji: '🧺', label: 'Feed Bin' },
+    hay:    { emoji: '🌾', label: 'Wheat Sack' },
+    farm:   { emoji: '✨', label: 'Fert Bag' },
+    fert:   { emoji: '🪣', label: 'Muck Bucket' },
+    aqua:   { emoji: '🥫', label: 'Fish Food' },
+    flower: { emoji: '🚿', label: 'Watering Can' },
 };
+
+function resLabel(key) {
+    return `${RESOURCES[key].emoji} ${RESOURCES[key].name}`;
+}
+
+// e.g. "💧1 ✨1"
+function inputText(mode) {
+    return Object.entries(AREAS[mode].input).map(([k, n]) => `${RESOURCES[k].emoji}${n}`).join(' ');
+}
+
+function usesText(mode) {
+    return Object.keys(AREAS[mode].input).map(resLabel).join(' + ');
+}
+
+// Units of input that went into one item of this tier.
+function inputsPerItem(mode, tier) {
+    const perSpawn = Object.values(AREAS[mode].input).reduce((a, b) => a + b, 0);
+    return 2 ** tier * perSpawn;
+}
+
+// --- ESSENTIALS OVER TIME ---
+
+// A resource is in play once a board you own uses or makes it.
+function isRelevant(key) {
+    return Object.keys(AREAS).some(id => unlocks[id] && (AREAS[id].input[key] || AREAS[id].output === key));
+}
+
+function isRefilling(key) {
+    return !!ESSENTIALS[key] && Object.keys(AREAS).some(id => unlocks[id] && AREAS[id].input[key]);
+}
+
+// Adds every unit that has arrived since the last tick, including time the game was closed.
+function tickEssentials(now = Date.now()) {
+    Object.keys(ESSENTIALS).forEach(key => {
+        const { refillSeconds, cap } = ESSENTIALS[key];
+        const ms = refillSeconds * 1000;
+        if (!isRefilling(key) || res[key] >= cap) { refillAt[key] = null; return; }
+        if (!refillAt[key]) { refillAt[key] = now + ms; return; }
+        if (now < refillAt[key]) return;
+        const arrived = Math.min(cap - res[key], Math.floor((now - refillAt[key]) / ms) + 1);
+        res[key] += arrived;
+        refillAt[key] = res[key] >= cap ? null : refillAt[key] + arrived * ms;
+    });
+}
+
+function formatDuration(ms) {
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    if (s >= 3600) return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
+    if (s >= 600) return `${Math.floor(s / 60)}m`;
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+function timeUntilFull(key) {
+    const { refillSeconds, cap } = ESSENTIALS[key];
+    if (res[key] >= cap || !refillAt[key]) return 0;
+    return (refillAt[key] - Date.now()) + (cap - res[key] - 1) * refillSeconds * 1000;
+}
+
+function refillPrice(key) {
+    return Math.max(0, ESSENTIALS[key].cap - res[key]) * REFILL_PRICE;
+}
+
+// Shown when you tap a resource in the HUD or run out while playing.
+function openEssential(key, ranOut = false) {
+    tickEssentials();
+    const { refillSeconds, cap } = ESSENTIALS[key];
+    const full = res[key] >= cap;
+    const price = refillPrice(key);
+    const timing = full
+        ? 'Full! It refills again once you use some.'
+        : `+1 every ${formatDuration(refillSeconds * 1000)} · next in ${formatDuration(refillAt[key] - Date.now())} · full in ${formatDuration(timeUntilFull(key))}`;
+    showDialog({
+        title: ranOut ? `Out of ${resLabel(key)}` : resLabel(key),
+        body: `<p class="big-count">${res[key]} / ${cap}</p><p class="hint">${timing}</p>`,
+        actions: full
+            ? [{ label: 'OK' }]
+            : [buyAction(price, () => refillEssential(key), `Refill now for 💵 ${price.toLocaleString()}`),
+               { label: 'Get more 💵', primary: price > res.money, onClick: openCoinShop },
+               { label: 'Wait' }],
+    });
+}
+
+function refillEssential(key) {
+    const price = refillPrice(key);
+    if (res.money < price) return;
+    res.money -= price;
+    res[key] = ESSENTIALS[key].cap;
+    refillAt[key] = null;
+    updateUI();
+    toast(`${resLabel(key)} refilled!`, 'good');
+}
+
+// --- COIN SHOP ---
+
+function openCoinShop() {
+    showDialog({
+        title: 'Get more 💵',
+        body: `<p>Coins buy land, Growth Guides and instant refills.</p>
+               <p class="hint">Test mode: no real payment is taken yet.</p>`,
+        actions: [
+            ...COIN_PACKS.map(pack => ({
+                label: `💵 ${pack.coins.toLocaleString()}${pack.tag ? ` (${pack.tag})` : ''} · ${pack.price}`,
+                wide: true,
+                primary: true,
+                onClick: () => purchaseCoins(pack),
+            })),
+            { label: 'Close' },
+        ],
+    });
+}
+
+// Real payments need the app-store billing plugin once the game is packaged
+// with Capacitor (Google Play Billing / Apple In-App Purchase). Until then this
+// grants the coins straight away so the flow can be tested.
+function purchaseCoins(pack) {
+    res.money += pack.coins;
+    updateUI();
+    toast(`+💵 ${pack.coins.toLocaleString()} (test purchase)`, 'good');
+    goTo(currentScene);
+}
 
 // --- SCENE LAYOUTS ---
 // Positions are percentages of the 9:16 stage: x/y = top-left corner, w = width.
@@ -175,7 +338,7 @@ function showDialog({ art, title, body, actions }) {
     dialogActions.innerHTML = '';
     actions.forEach(action => {
         const btn = document.createElement('button');
-        btn.className = 'btn' + (action.primary ? ' btn-primary' : '');
+        btn.className = 'btn' + (action.primary ? ' btn-primary' : '') + (action.wide ? ' btn-wide' : '');
         btn.textContent = action.label;
         btn.disabled = !!action.disabled;
         btn.addEventListener('click', () => {
@@ -203,10 +366,10 @@ function toast(message, kind = '') {
 }
 
 // A "Buy" dialog button that explains the shortfall instead of failing silently.
-function buyAction(cost, onBuy) {
-    const short = cost - money;
+function buyAction(cost, onBuy, label = `Buy for 💵 ${cost.toLocaleString()}`) {
+    const short = cost - res.money;
     return {
-        label: short > 0 ? `Need 💵 ${short} more` : `Buy for 💵 ${cost}`,
+        label: short > 0 ? `Need 💵 ${short.toLocaleString()} more` : label,
         primary: true,
         disabled: short > 0,
         onClick: onBuy,
@@ -261,16 +424,18 @@ function offerDeed(id) {
     showDialog({
         art: ASSETS.buildings[id],
         title: `${area.name} is for sale`,
-        body: `<p>${area.desc}</p><p class="hint">Uses ${area.uses} · merging makes ${area.makes}</p>`,
+        body: `<p>${area.desc}</p><p class="hint">Uses ${usesText(id)} · merging makes ${resLabel(area.output)}</p>`,
         actions: [buyAction(area.cost, () => buyDeed(id)), { label: 'Not now' }],
     });
 }
 
 function buyDeed(id) {
     const area = AREAS[id];
-    if (unlocks[id] || money < area.cost) return;
-    money -= area.cost;
+    if (unlocks[id] || res.money < area.cost) return;
+    res.money -= area.cost;
     unlocks[id] = true;
+    // New land comes with a full bar of what it uses, so it's playable right away.
+    Object.keys(area.input).forEach(k => { res[k] = Math.max(res[k], ESSENTIALS[k].cap); });
     updateUI();
     toast(`The ${area.name} is yours! Find it on the map.`, 'good');
     goTo(currentScene);
@@ -302,7 +467,7 @@ function generateRequestFor(npc) {
     npc.request = {
         mode: mode,
         tier: targetTier,
-        rewardMoney: targetTier * 30 + Math.floor(Math.random() * 20),
+        rewardMoney: Math.round(ORDER_PAY * inputsPerItem(mode, targetTier) * (0.85 + Math.random() * 0.3)),
         rewardHearts: targetTier
     };
 }
@@ -360,8 +525,8 @@ function deliver(npc) {
         return;
     }
     grids[r.mode][itemIndex] = null;
-    money += r.rewardMoney;
-    hearts += r.rewardHearts;
+    res.money += r.rewardMoney;
+    res.hearts += r.rewardHearts;
     npc.deliveries++;
     updateUI();
     toast(`${npc.name} loved the ${itemName(r.mode, r.tier)}! +💵${r.rewardMoney} +❤️${r.rewardHearts}`, 'good');
@@ -408,8 +573,8 @@ function offerUpgrade() {
 
 function buyUpgrade() {
     const cost = maxTier * 100;
-    if (money < cost) return;
-    money -= cost;
+    if (res.money < cost) return;
+    res.money -= cost;
     maxTier++;
     updateUI();
     initTown();
@@ -418,15 +583,36 @@ function buyUpgrade() {
 }
 
 function updateUI() {
-    fertEl.textContent = fertilizer;
-    wheatEl.textContent = wheat;
-    feedEl.textContent = feed;
-    rawEl.textContent = rawFertilizer;
-    waterEl.textContent = water;
-    nectarEl.textContent = nectar;
-    moneyEl.textContent = money;
-    heartsEl.textContent = hearts;
+    moneyEl.textContent = res.money.toLocaleString();
+    heartsEl.textContent = res.hearts.toLocaleString();
+    // Only resources a board you own uses or makes. Refilling ones show their cap
+    // and a countdown, and open the refill dialog when tapped. Chips are updated
+    // in place so a tap isn't lost when the timer redraws them.
+    const keys = Object.keys(RESOURCES).filter(key => key !== 'money' && key !== 'hearts' && isRelevant(key));
+    const layout = keys.map(key => key + (isRefilling(key) ? '*' : '')).join();
+    if (resourcesEl.dataset.layout !== layout) {
+        resourcesEl.dataset.layout = layout;
+        resourcesEl.innerHTML = keys.map(key => isRefilling(key)
+            ? `<button class="res" data-key="${key}" title="${RESOURCES[key].name}"></button>`
+            : `<span class="res" data-key="${key}" title="${RESOURCES[key].name}"></span>`).join('');
+    }
+    keys.forEach(key => {
+        const chip = resourcesEl.querySelector(`[data-key="${key}"]`);
+        const { emoji } = RESOURCES[key];
+        if (!isRefilling(key)) {
+            chip.innerHTML = `<span>${emoji} <b>${res[key]}</b></span>`;
+        } else {
+            const timer = refillAt[key] ? `+1 in ${formatDuration(refillAt[key] - Date.now())}` : 'full';
+            chip.innerHTML = `<span>${emoji} <b>${res[key]}/${ESSENTIALS[key].cap}</b></span><small>${timer}</small>`;
+        }
+    });
 }
+
+resourcesEl.addEventListener('click', e => {
+    const chip = e.target.closest('button.res');
+    if (chip) openEssential(chip.dataset.key);
+});
+document.getElementById('btn-coins').addEventListener('click', openCoinShop);
 
 // --- GRID AND MERGE LOGIC ---
 
@@ -460,7 +646,7 @@ function renderBoardHeader(mode) {
             <b>${area.name}</b> · max tier ${maxTier}<br>
             Tap the ${gen.emoji} ${gen.label} to add items.<br>
             Drag two alike together to merge.<br>
-            Each merge makes ${area.makes}.
+            Each merge makes ${resLabel(area.output)}.
         </div>`;
 }
 
@@ -537,14 +723,7 @@ function handleDragEnd(e) {
                 grids[mode][targetIndex] = { tier: nextTier };
                 mergedIdx = targetIndex;
 
-                const rewardAmount = nextTier * 2;
-                if (mode === 'farm') wheat += rewardAmount;
-                else if (mode === 'hay') feed += rewardAmount;
-                else if (mode === 'barn') rawFertilizer += rewardAmount;
-                else if (mode === 'fert') fertilizer += rewardAmount;
-                else if (mode === 'aqua') water += rewardAmount;
-                else if (mode === 'flower') nectar += rewardAmount;
-
+                res[AREAS[mode].output] += MERGE_OUTPUT;
                 updateUI();
             } else {
                 if (sameKind) toast(`Tier ${maxTier} is the max for now. Buy the Growth Guide at the Market!`);
@@ -586,26 +765,14 @@ function handleGeneratorClick(mode, index) {
         return;
     }
 
-    if (mode === 'farm') {
-        if (fertilizer <= 0) { toast("Not enough ✨ Fertilizer! Make some in the Compost Yard."); return; }
-        fertilizer--;
-    } else if (mode === 'hay') {
-        if (wheat <= 0) { toast("Not enough 🌾 Wheat! Grow some in the Crop Field."); return; }
-        wheat--;
-    } else if (mode === 'barn') {
-        if (money < 10) { toast("Not enough 💵 Money! Help the townsfolk to earn more."); return; }
-        money -= 10;
-    } else if (mode === 'fert') {
-        if (rawFertilizer <= 0) { toast("Not enough 💩 Raw Fertilizer! Merge animals in the Barn."); return; }
-        rawFertilizer--;
-    } else if (mode === 'aqua') {
-        if (wheat <= 0) { toast("Not enough 🌾 Wheat! Grow some in the Crop Field."); return; }
-        wheat--;
-    } else if (mode === 'flower') {
-        if (water <= 0 || fertilizer <= 0) { toast("Not enough 💧 Water or ✨ Fertilizer!"); return; }
-        water--;
-        fertilizer--;
+    const input = AREAS[mode].input;
+    const missing = Object.keys(input).find(k => res[k] < input[k]);
+    if (missing) {
+        openEssential(missing, true);
+        return;
     }
+    Object.entries(input).forEach(([k, n]) => { res[k] -= n; });
+    tickEssentials(); // starts the refill timer as soon as you drop below the cap
 
     updateUI();
     grids[mode][emptyIdx] = { tier: 0 };
@@ -631,7 +798,7 @@ function renderGrid(mode, poppedIndices = []) {
             if (item.type === 'shop') {
                 const gen = GENERATORS[mode];
                 itemEl.classList.add('generator');
-                itemEl.innerHTML = `<span class="emoji">${gen.emoji}</span>${gen.label}<br>${gen.cost}`;
+                itemEl.innerHTML = `<span class="emoji">${gen.emoji}</span>${gen.label}<br>${inputText(mode)}`;
                 itemEl.addEventListener('pointerdown', () => handleGeneratorClick(mode, i));
             } else {
                 const sprite = itemSprite(mode, item.tier);
@@ -653,11 +820,61 @@ function renderGrid(mode, poppedIndices = []) {
     }
 }
 
+// --- SAVING ---
+// Progress is kept in this browser's localStorage, including when each
+// essential refills next, so refills keep coming while the game is closed.
+// Open the game with ?reset at the end of the link to start over.
+const SAVE_KEY = 'merge-farmstead-save-v1';
+
+function saveGame() {
+    try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify({
+            res, refillAt, unlocks, maxTier, grids,
+            npcs: npcs.map(({ id, deliveries, request }) => ({ id, deliveries, request })),
+        }));
+    } catch (e) {
+        // Storage blocked or full: the game still plays, it just won't be saved.
+    }
+}
+
+function loadGame() {
+    try {
+        if (new URLSearchParams(location.search).has('reset')) {
+            localStorage.removeItem(SAVE_KEY);
+            history.replaceState(null, '', location.pathname);
+        }
+        const save = JSON.parse(localStorage.getItem(SAVE_KEY));
+        if (!save) return false;
+        Object.assign(res, save.res);
+        Object.assign(refillAt, save.refillAt);
+        Object.assign(unlocks, save.unlocks);
+        maxTier = save.maxTier;
+        Object.keys(grids).forEach(mode => {
+            if (save.grids[mode] && save.grids[mode].length === NUM_CELLS) grids[mode] = save.grids[mode];
+        });
+        save.npcs.forEach(saved => {
+            const npc = npcs.find(n => n.id === saved.id);
+            if (npc) Object.assign(npc, saved);
+        });
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
 // Initial setup
 ['map', 'town', 'market'].forEach(id => {
     document.getElementById(`scene-${id}`).style.backgroundImage = `url("${ASSETS.scenes[id]}")`;
 });
+if (!loadGame()) initTown();
+tickEssentials(); // catch up on refills that arrived while the game was closed
 Object.keys(grids).forEach(mode => renderGrid(mode));
 updateUI();
-initTown();
 goTo('map');
+
+setInterval(() => {
+    tickEssentials();
+    updateUI();
+    saveGame();
+}, 1000);
+addEventListener('pagehide', saveGame);
