@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 190" width="240" height="190">
+  <ellipse cx="120" cy="180" rx="112" ry="9" fill="#000" opacity=".15"/>
+  <g stroke="#4a3426" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <!-- back houses -->
+    <rect x="18" y="92" width="62" height="84" fill="#f6e3bf"/>
+    <path d="M10 98 L49 58 L88 98 Z" fill="#e04f3f"/>
+    <rect x="160" y="96" width="64" height="80" fill="#cfe8f6"/>
+    <path d="M152 102 L192 62 L232 102 Z" fill="#5a8fc9"/>
+    <!-- clock tower -->
+    <rect x="92" y="46" width="56" height="130" fill="#f2d9a0"/>
+    <path d="M86 50 L120 8 L154 50 Z" fill="#7d5a9b"/>
+    <circle cx="120" cy="78" r="17" fill="#fff8e7"/>
+    <path d="M120 78 V67 M120 78 L128 82" stroke-width="4"/>
+    <path d="M106 176 V138 Q106 124 120 124 Q134 124 134 138 V176 Z" fill="#8a5a33"/>
+    <!-- windows -->
+    <rect x="32" y="112" width="16" height="18" fill="#ffe08a" stroke-width="4"/>
+    <rect x="52" y="140" width="16" height="36" fill="#8a5a33" stroke-width="4"/>
+    <rect x="174" y="114" width="16" height="18" fill="#ffe08a" stroke-width="4"/>
+    <rect x="198" y="114" width="16" height="18" fill="#ffe08a" stroke-width="4"/>
+    <!-- trees -->
+    <circle cx="14" cy="160" r="16" fill="#4caf50"/>
+    <circle cx="226" cy="164" r="14" fill="#4caf50"/>
+    <!-- signpost -->
+    <path d="M150 178 V138" stroke-width="5"/>
+    <path d="M138 128 H172 L180 137 L172 146 H138 Z" fill="#c8955c" stroke-width="4"/>
+  </g>
+</svg>

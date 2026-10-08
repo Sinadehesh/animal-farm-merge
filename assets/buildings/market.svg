@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 220" width="240" height="220">
+  <ellipse cx="120" cy="208" rx="112" ry="10" fill="#000" opacity=".15"/>
+  <g stroke="#4a3426" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <!-- walls and roof -->
+    <rect x="22" y="70" width="196" height="132" fill="#f6e3bf"/>
+    <path d="M10 76 L40 28 H200 L230 76 Z" fill="#5a8fc9"/>
+    <path d="M60 28 L48 76 M100 28 L96 76 M140 28 L144 76 M180 28 L192 76" stroke-width="3"/>
+    <!-- sign -->
+    <rect x="62" y="6" width="116" height="34" rx="8" fill="#fff8e7"/>
+    <text x="120" y="31" font-family="Arial Rounded MT Bold, Nunito, Segoe UI, sans-serif" font-size="21" font-weight="900" fill="#4a3426" stroke="none" text-anchor="middle">MARKET</text>
+    <!-- striped awning -->
+    <path d="M14 84 H226 V106 H14 Z" fill="#fdfaf2"/>
+    <g fill="#e04f3f" stroke="none">
+      <rect x="16" y="86" width="20" height="18"/><rect x="58" y="86" width="20" height="18"/>
+      <rect x="100" y="86" width="20" height="18"/><rect x="142" y="86" width="20" height="18"/>
+      <rect x="184" y="86" width="20" height="18"/>
+    </g>
+    <path d="M14 106 q10.6 14 21.2 0 q10.6 14 21.2 0 q10.6 14 21.2 0 q10.6 14 21.2 0 q10.6 14 21.2 0 q10.6 14 21.2 0 q10.6 14 21.2 0 q10.6 14 21.2 0 q10.6 14 21.2 0 q10.6 14 21.2 0" fill="#e04f3f"/>
+    <path d="M14 84 H226 V106 H14 Z" fill="none"/>
+    <!-- window with produce -->
+    <rect x="34" y="128" width="84" height="54" fill="#bfe9ff"/>
+    <rect x="34" y="166" width="84" height="16" fill="#c8955c"/>
+    <circle cx="52" cy="160" r="8" fill="#e8483b" stroke-width="3"/>
+    <circle cx="70" cy="158" r="9" fill="#f39c3b" stroke-width="3"/>
+    <circle cx="88" cy="160" r="8" fill="#9ad66a" stroke-width="3"/>
+    <circle cx="104" cy="160" r="7" fill="#ffd34d" stroke-width="3"/>
+    <!-- door -->
+    <path d="M144 202 V138 Q144 124 162 124 H178 Q196 124 196 138 V202 Z" fill="#8a5a33"/>
+    <rect x="152" y="136" width="36" height="26" rx="4" fill="#bfe9ff" stroke-width="4"/>
+    <circle cx="186" cy="174" r="3.5" fill="#ffd34d" stroke-width="2"/>
+    <!-- crates -->
+    <rect x="28" y="184" width="40" height="22" fill="#c8955c" stroke-width="4"/>
+    <circle cx="38" cy="182" r="6" fill="#e8483b" stroke-width="3"/><circle cx="54" cy="181" r="6" fill="#e8483b" stroke-width="3"/>
+  </g>
+</svg>

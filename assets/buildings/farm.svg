@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 170" width="240" height="170">
+  <ellipse cx="120" cy="158" rx="112" ry="10" fill="#000" opacity=".15"/>
+  <g stroke="#4a3426" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M12 120 Q14 66 62 60 L192 54 Q232 58 230 108 Q228 150 182 152 L50 156 Q10 154 12 120 Z" fill="#9a6440"/>
+    <path d="M30 86 Q120 76 216 80 M24 112 Q120 102 224 106 M26 138 Q120 128 222 132" fill="none" stroke="#6e4329" stroke-width="7"/>
+    <!-- sprouts -->
+    <g fill="#5cbf4a" stroke-width="3">
+      <path d="M50 82 q-10 -14 0 -18 q6 8 0 18 q4 -14 14 -12 q0 10 -14 12"/>
+      <path d="M90 78 q-10 -14 0 -18 q6 8 0 18 q4 -14 14 -12 q0 10 -14 12"/>
+      <path d="M140 76 q-10 -14 0 -18 q6 8 0 18 q4 -14 14 -12 q0 10 -14 12"/>
+      <path d="M186 78 q-10 -14 0 -18 q6 8 0 18 q4 -14 14 -12 q0 10 -14 12"/>
+      <path d="M40 108 q-10 -14 0 -18 q6 8 0 18 q4 -14 14 -12 q0 10 -14 12"/>
+      <path d="M190 104 q-10 -14 0 -18 q6 8 0 18 q4 -14 14 -12 q0 10 -14 12"/>
+    </g>
+    <!-- tomato plant and carrots -->
+    <circle cx="86" cy="104" r="10" fill="#e8483b"/>
+    <circle cx="104" cy="98" r="9" fill="#e8483b"/>
+    <path d="M92 86 q4 -8 10 -4" fill="none" stroke="#3f9a3a" stroke-width="4"/>
+    <path d="M140 100 q-6 -14 4 -16 M150 100 q2 -14 12 -12 M145 100 q-1 -14 2 -18" fill="none" stroke="#3f9a3a" stroke-width="4"/>
+    <path d="M136 104 L158 104 L148 122 Z" fill="#f39c3b" stroke-width="4"/>
+    <!-- pumpkin -->
+    <ellipse cx="118" cy="138" rx="20" ry="14" fill="#f39c3b"/>
+    <path d="M118 124 v28 M106 127 q-4 11 0 22 M130 127 q4 11 0 22" fill="none" stroke-width="3"/>
+    <path d="M118 124 l4 -8" stroke="#3f9a3a" stroke-width="4"/>
+    <!-- cabbage -->
+    <circle cx="70" cy="136" r="13" fill="#9ad66a"/>
+    <path d="M62 136 q8 -10 16 0" fill="none" stroke-width="3"/>
+    <circle cx="176" cy="132" r="13" fill="#9ad66a"/>
+    <path d="M168 132 q8 -10 16 0" fill="none" stroke-width="3"/>
+  </g>
+</svg>

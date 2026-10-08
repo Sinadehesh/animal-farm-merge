@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 800" width="450" height="800" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd3f4"/><stop offset="1" stop-color="#d7f0fb"/></linearGradient>
+    <pattern id="cobbles" width="44" height="30" patternUnits="userSpaceOnUse">
+      <rect width="44" height="30" fill="#e8d6b4"/>
+      <rect x="2" y="2" width="18" height="11" rx="5" fill="#ddc8a2"/><rect x="24" y="2" width="18" height="11" rx="5" fill="#e1cda8"/>
+      <rect x="-9" y="17" width="18" height="11" rx="5" fill="#e1cda8"/><rect x="13" y="17" width="18" height="11" rx="5" fill="#ddc8a2"/><rect x="35" y="17" width="18" height="11" rx="5" fill="#e1cda8"/>
+    </pattern>
+    <g id="lamp"><rect x="-4" y="0" width="8" height="70" fill="#3d3550"/><rect x="-11" y="-20" width="22" height="22" rx="4" fill="#ffe08a"/><path d="M-14 -20 H14 L0 -32 Z" fill="#3d3550"/></g>
+  </defs>
+  <rect width="450" height="800" fill="url(#sky)"/>
+  <ellipse cx="80" cy="120" rx="44" ry="14" fill="#fff" opacity=".85"/>
+  <ellipse cx="370" cy="80" rx="54" ry="16" fill="#fff" opacity=".85"/>
+  <path d="M0 150 Q110 100 220 140 T450 130 V220 H0 Z" fill="#8ccf5e" stroke="#4a3426" stroke-width="4"/>
+  <rect y="190" width="450" height="610" fill="url(#cobbles)"/>
+  <path d="M0 190 H450" stroke="#4a3426" stroke-width="4"/>
+  <!-- fountain in the middle of the square -->
+  <g stroke="#4a3426" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="225" cy="500" rx="78" ry="30" fill="#b9b2a6"/>
+    <path d="M147 500 V520 Q225 560 303 520 V500" fill="#a9a196"/>
+    <ellipse cx="225" cy="500" rx="64" ry="21" fill="#6cc4ee"/>
+    <rect x="215" y="440" width="20" height="60" fill="#b9b2a6"/>
+    <ellipse cx="225" cy="440" rx="30" ry="10" fill="#b9b2a6"/>
+    <path d="M225 432 Q205 400 196 440 M225 432 Q245 400 254 440 M225 432 V410" fill="none" stroke="#6cc4ee" stroke-width="5"/>
+  </g>
+  <!-- lamp posts -->
+  <g stroke="#4a3426" stroke-width="4" stroke-linejoin="round">
+    
+    <use href="#lamp" x="150" y="620"/>
+    <use href="#lamp" x="300" y="620"/>
+  </g>
+  <!-- road back to the farm -->
+  <path d="M170 800 L190 720 H260 L280 800 Z" fill="#e7c78f" stroke="#4a3426" stroke-width="4"/>
+</svg>

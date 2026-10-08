@@ -3,172 +3,446 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Merge Farmstead: Tycoon Edition</title>
+    <title>Merge Farmstead</title>
     <style>
+        :root {
+            --ink: #4a3426;
+            --paper: #fff8e7;
+            --hud-h: 96px;
+            /* The stage is 9:16 and as large as fits under the HUD. */
+            --stage-w: min(100vw, 450px, calc((100dvh - var(--hud-h)) * 9 / 16));
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; height: 100%; }
         body {
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #74ebd5, #acb6e5); /* Soft Ghibli sky */
+            background: linear-gradient(170deg, #8fd3f4 0%, #c2e9fb 45%, #9bd56b 100%);
+            font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, sans-serif;
+            color: var(--ink);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        button { font: inherit; color: inherit; }
+
+        /* --- HUD --- */
+        .hud {
+            width: var(--stage-w);
+            height: var(--hud-h);
+            padding: 8px 2px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: #2c3e50;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            gap: 6px;
         }
-        h1 { margin: 5px 0; font-size: 22px; color: #fff; text-shadow: 1px 1px 4px rgba(0,0,0,0.5); }
-        .game-board {
-            position: relative;
-            width: 100%;
-            max-width: 450px;
-            aspect-ratio: 9/16;
-            border: 8px solid #8e44ad;
-            border-radius: 12px;
-            box-sizing: border-box;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.4), inset 0 0 20px rgba(0,0,0,0.3);
-            background: linear-gradient(to bottom, #a8e063, #56ab2f); /* Grassy gradient */
+        .hud-row { display: flex; align-items: center; gap: 6px; }
+        .hud h1 {
+            flex: 1;
+            margin: 0;
+            font-size: 21px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 2px 0 var(--ink), 2px 0 0 var(--ink), -2px 0 0 var(--ink), 0 -2px 0 var(--ink);
+            white-space: nowrap;
             overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .nav-btn {
-            flex: 1 0 25%;
-            padding: 10px 0;
-            border: none;
-            color: white;
-            font-weight: 800;
+        .btn-back, .pill {
+            background: var(--paper);
+            border: 3px solid var(--ink);
+            border-radius: 999px;
+            padding: 3px 11px;
+            font-weight: 900;
+            box-shadow: 0 3px 0 var(--ink);
+            white-space: nowrap;
+        }
+        .btn-back { cursor: pointer; }
+        .btn-back:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+        .btn-back[hidden] { display: none; }
+        .resources {
+            justify-content: space-between;
+            background: rgba(74, 52, 38, 0.85);
+            color: #fff;
+            border-radius: 10px;
+            padding: 4px 10px;
+            font-size: 13px;
+        }
+
+        /* --- STAGE & SCENES --- */
+        #stage {
+            position: relative;
+            width: var(--stage-w);
+            aspect-ratio: 9 / 16;
+            border: 4px solid var(--ink);
+            border-radius: 16px;
+            overflow: hidden;
+            background: #7cc35b;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+            container-type: inline-size; /* lets children size text with cqw */
+        }
+        .scene {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+        }
+        .scene[hidden] { display: none; }
+
+        /* A sprite placed on a scene. Buttons are tappable, divs are decoration. */
+        .spot {
+            position: absolute;
+            padding: 0;
+            border: 0;
+            background: none;
             cursor: pointer;
-            opacity: 0.7;
-            transition: all 0.2s;
-            font-size: 12px;
-            box-sizing: border-box;
-            border-right: 1px solid rgba(0,0,0,0.2);
-            border-bottom: 1px solid rgba(0,0,0,0.2);
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+            transition: transform 0.15s;
         }
-        .nav-btn:hover { opacity: 0.9; }
-        .nav-btn.active {
-            opacity: 1;
-            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.4);
-            transform: translateY(-2px);
+        div.spot { pointer-events: none; }
+        .spot img {
+            display: block;
+            width: 100%;
+            height: auto;
+            pointer-events: none;
+            -webkit-user-drag: none;
+            filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.15));
         }
+        button.spot:hover, button.spot:focus-visible { transform: translateY(-3px) scale(1.03); outline: none; }
+        button.spot:focus-visible img { filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 2px #fff); }
+        button.spot:active { transform: scale(0.97); }
+        .spot.locked img { filter: grayscale(1) brightness(1.1) opacity(0.65); }
+        .spot-label {
+            position: absolute;
+            left: 50%;
+            bottom: -4%;
+            transform: translateX(-50%);
+            background: var(--paper);
+            border: 2px solid var(--ink);
+            border-radius: 999px;
+            padding: 0.15em 0.8em;
+            font-weight: 900;
+            font-size: max(10px, 3.1cqw);
+            white-space: nowrap;
+            box-shadow: 0 2px 0 var(--ink);
+        }
+        .sale-sign {
+            position: absolute;
+            left: 50%;
+            top: 42%;
+            transform: translate(-50%, -50%) rotate(-5deg);
+            background: #f6d28b;
+            border: 3px solid #6b4a2b;
+            border-radius: 6px;
+            padding: 0.2em 0.6em;
+            font-weight: 900;
+            font-size: max(10px, 3cqw);
+            line-height: 1.2;
+            color: #6b4a2b;
+            text-align: center;
+            white-space: nowrap;
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+        }
+        .badge {
+            position: absolute;
+            right: 6%;
+            top: 0;
+            min-width: 7cqw;
+            height: 7cqw;
+            padding: 0 1.5cqw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e74c3c;
+            color: #fff;
+            border: 3px solid #fff;
+            border-radius: 999px;
+            font-weight: 900;
+            font-size: 4cqw;
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+            animation: bob 1.2s ease-in-out infinite;
+        }
+        .bubble {
+            position: absolute;
+            left: 50%;
+            bottom: 100%;
+            transform: translateX(-50%);
+            margin-bottom: 1.5cqw;
+            background: #fff;
+            border: 3px solid var(--ink);
+            border-radius: 14px;
+            padding: 1cqw;
+            line-height: 1;
+            font-size: 7cqw;
+            animation: bob 1.6s ease-in-out infinite;
+        }
+        .bubble::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 100%;
+            transform: translateX(-50%);
+            border: 1.6cqw solid transparent;
+            border-top-color: var(--ink);
+        }
+        .bubble img { display: block; width: 8.5cqw; height: 8.5cqw; }
+        .bubble.ready { border-color: #2e8c3c; background: #e3fbdf; }
+        .bubble.ready::before {
+            content: '✓';
+            position: absolute;
+            right: -2.4cqw;
+            top: -2.4cqw;
+            width: 5cqw;
+            height: 5cqw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #2e8c3c;
+            color: #fff;
+            font-size: 3.2cqw;
+            font-weight: 900;
+        }
+        .price-tag {
+            position: absolute;
+            right: -6%;
+            top: -6%;
+            transform: rotate(8deg);
+            background: #fff3c4;
+            border: 2px solid var(--ink);
+            border-radius: 6px;
+            padding: 0.1em 0.45em;
+            font-weight: 900;
+            font-size: max(9px, 2.8cqw);
+            white-space: nowrap;
+        }
+
+        /* --- MERGE BOARDS --- */
+        .board { display: flex; flex-direction: column; }
+        .board-header {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 3cqw;
+            padding: 2cqw 4cqw;
+            color: #fff;
+            font-size: 3.4cqw;
+            line-height: 1.45;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+        }
+        .board-header img { width: 26cqw; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.2)); }
+        .board-header b { font-size: 5cqw; }
+        .board-barn { background: repeating-linear-gradient(90deg, #a5683d 0 13cqw, #8f5631 13cqw 13.6cqw); }
+        .board-hay { background: linear-gradient(#f2c45a, #d99a32); }
+        .board-farm { background: repeating-linear-gradient(0deg, #8a5a3b 0 6cqw, #774b30 6cqw 7cqw); }
+        .board-fert { background: linear-gradient(#6d5847, #4b3b2f); }
+        .board-aqua { background: linear-gradient(#5fc3e4, #2a7fbf); }
+        .board-flower { background: linear-gradient(#f5bcd6, #8fcf63); }
         .game-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
             grid-template-rows: repeat(8, 1fr);
             width: 100%;
-            height: 100%;
-            gap: 4px;
-            padding: 8px;
-            box-sizing: border-box;
+            aspect-ratio: 6 / 8;
+            gap: 1cqw;
+            padding: 2cqw;
+            background: rgba(0, 0, 0, 0.18);
+            border-top: 4px solid rgba(74, 52, 38, 0.6);
         }
         .grid-cell {
-            background: rgba(0, 0, 0, 0.15);
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 18%;
             position: relative;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
         }
         .item {
+            position: relative;
             width: 100%;
             height: 100%;
             border-radius: 50%;
             cursor: grab;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-size: 13px;
             font-weight: 800;
             text-align: center;
-            user-select: none;
-            z-index: 10;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-            color: white;
-            box-sizing: border-box;
-            border: 3px solid rgba(255,255,255,0.4);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 -4px 10px rgba(0,0,0,0.2);
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            border: 3px solid rgba(255, 255, 255, 0.45);
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25), inset 0 -4px 8px rgba(0, 0, 0, 0.2);
             touch-action: none;
             transition: transform 0.1s;
         }
         .item:hover { transform: scale(1.05); }
+        .item .emoji { font-size: 7cqw; line-height: 1; }
+        .item .name {
+            font-size: 2.1cqw;
+            max-width: 92%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .item .tier {
+            position: absolute;
+            right: -0.6cqw;
+            bottom: -0.6cqw;
+            min-width: 4cqw;
+            height: 4cqw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--ink);
+            color: #fff;
+            border: 2px solid #fff;
+            border-radius: 999px;
+            font-size: 2.3cqw;
+            text-shadow: none;
+        }
+        .item.has-sprite { background: none; border: none; box-shadow: none; }
+        .item.has-sprite img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+            -webkit-user-drag: none;
+            filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.3));
+        }
+        .item.generator {
+            border-radius: 18%;
+            background: linear-gradient(#ffc56b, #e67e22);
+            cursor: pointer;
+            font-size: 2.4cqw;
+            line-height: 1.2;
+        }
+        .item.generator .emoji { font-size: 6cqw; }
         .item.dragging {
             opacity: 0.9;
             z-index: 100;
             cursor: grabbing;
             transform: scale(1.2);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
         }
-        .item.pop {
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        .item.has-sprite.dragging { box-shadow: none; }
+        .item.pop { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        /* --- DIALOG & TOASTS --- */
+        .dialog-backdrop {
+            position: absolute;
+            inset: 0;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 7cqw;
+            background: rgba(40, 25, 15, 0.45);
         }
+        .dialog-backdrop[hidden] { display: none; }
+        .dialog {
+            width: 100%;
+            padding: 5cqw;
+            background: var(--paper);
+            border: 4px solid var(--ink);
+            border-radius: 18px;
+            box-shadow: 0 6px 0 var(--ink);
+            text-align: center;
+            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .dialog-art { width: 30cqw; margin-top: -15cqw; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.2)); }
+        .dialog-art[hidden] { display: none; }
+        .dialog h2 { margin: 1cqw 0 2cqw; font-size: 5.4cqw; font-weight: 900; }
+        .dialog-body { font-size: 3.9cqw; line-height: 1.45; }
+        .dialog-body p { margin: 0 0 2cqw; }
+        .dialog-body .hint { color: #8a6a50; font-size: 3.4cqw; }
+        .inline-item { display: inline-block; height: 1.5em; vertical-align: middle; }
+        .dialog-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 3cqw; margin-top: 4cqw; }
+        .btn {
+            padding: 2.2cqw 5cqw;
+            background: #fff;
+            border: 3px solid var(--ink);
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 3.9cqw;
+            cursor: pointer;
+            box-shadow: 0 3px 0 var(--ink);
+        }
+        .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+        .btn-primary { background: #5cc15a; color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
+        .btn:disabled { background: #e2d8c8; color: #8a7a6a; text-shadow: none; cursor: not-allowed; }
+        #toasts {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 3cqw;
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2cqw;
+            pointer-events: none;
+        }
+        .toast {
+            max-width: 90%;
+            padding: 2.4cqw 4.5cqw;
+            background: rgba(74, 52, 38, 0.94);
+            color: #fff;
+            border-radius: 999px;
+            font-weight: 800;
+            font-size: 3.6cqw;
+            text-align: center;
+            animation: popIn 0.2s ease-out, fadeOut 0.3s ease-in 2.3s forwards;
+        }
+        .toast.good { background: rgba(46, 140, 60, 0.96); }
+
         @keyframes popIn {
             0% { transform: scale(0.1); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
-        
-        .resource-bar {
-            width: 100%; 
-            max-width: 450px; 
-            background: rgba(44, 62, 80, 0.9); 
-            padding: 10px; 
-            border-radius: 12px 12px 0 0; 
-            box-sizing: border-box; 
-            font-size: 13px; 
-            font-weight: bold;
-            color: white;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-6px); } }
+        @keyframes bob {
+            0%, 100% { translate: 0 0; }
+            50% { translate: 0 -1cqw; }
         }
     </style>
 </head>
 <body>
-    <h1>Merge Farmstead</h1>
-    
-    <div class="resource-bar">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-            <div>✨ Fert: <span id="fert-val">0</span></div>
-            <div>🌾 Wheat: <span id="wheat-val">0</span></div>
-            <div>🌿 Feed: <span id="feed-val">0</span></div>
-            <div>💩 Raw: <span id="raw-val">0</span></div>
+    <header class="hud">
+        <div class="hud-row">
+            <button id="btn-back" class="btn-back" hidden>⬅ Map</button>
+            <h1 id="scene-title">Farmstead</h1>
+            <div class="pill" title="Money">💵 <span id="money-val">50</span></div>
+            <div class="pill" title="Hearts">❤️ <span id="hearts-val">0</span></div>
         </div>
-        <div style="display: flex; justify-content: space-between;">
-            <div>💧 Water: <span id="water-val">0</span></div>
-            <div>🍯 Nectar: <span id="nectar-val">0</span></div>
-            <div style="color: #f1c40f;">💵 Money: <span id="money-val">50</span></div>
-            <div style="color: #e74c3c;">❤️ Hearts: <span id="hearts-val">0</span></div>
+        <div class="hud-row resources">
+            <span title="Fertilizer">✨ <b id="fert-val">0</b></span>
+            <span title="Wheat">🌾 <b id="wheat-val">0</b></span>
+            <span title="Feed">🌿 <b id="feed-val">0</b></span>
+            <span title="Raw fertilizer">💩 <b id="raw-val">0</b></span>
+            <span title="Water">💧 <b id="water-val">0</b></span>
+            <span title="Nectar">🍯 <b id="nectar-val">0</b></span>
         </div>
-    </div>
-    
-    <div style="width: 100%; max-width: 450px; display: flex; flex-wrap: wrap; background: #1a252f; border-radius: 0 0 12px 12px; overflow: hidden; margin-bottom: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
-        <button class="nav-btn active" id="btn-barn" style="background: #c0392b;">🐷 Barn</button>
-        <button class="nav-btn" id="btn-hay" style="background: #f39c12; display: none;">🌾 Hay</button>
-        <button class="nav-btn" id="btn-farm" style="background: #27ae60; display: none;">🍅 Farm</button>
-        <button class="nav-btn" id="btn-fert" style="background: #8e44ad; display: none;">💩 Fert</button>
-        <button class="nav-btn" id="btn-aqua" style="background: #2980b9; display: none;">🐟 Aqua</button>
-        <button class="nav-btn" id="btn-flower" style="background: #e84393; display: none;">🌸 Flower</button>
-        <button class="nav-btn" id="btn-town" style="background: #34495e;">🏡 Town</button>
-        <button class="nav-btn" id="btn-shop" style="background: #f1c40f; color: #2c3e50;">🛒 Shop</button>
-    </div>
+    </header>
 
-    <!-- Game Boards -->
-    <div id="barn-container" class="game-board"><div class="game-grid" id="grid-barn"></div></div>
-    <div id="hay-container" class="game-board" style="display: none;"><div class="game-grid" id="grid-hay"></div></div>
-    <div id="farm-container" class="game-board" style="display: none;"><div class="game-grid" id="grid-farm"></div></div>
-    <div id="fert-container" class="game-board" style="display: none;"><div class="game-grid" id="grid-fert"></div></div>
-    <div id="aqua-container" class="game-board" style="display: none;"><div class="game-grid" id="grid-aqua"></div></div>
-    <div id="flower-container" class="game-board" style="display: none;"><div class="game-grid" id="grid-flower"></div></div>
-    
-    <!-- Town & Shop -->
-    <div id="town-container" class="game-board" style="display: none; background: #ecf0f1; padding: 15px; overflow-y: auto;">
-        <h2 style="color: #2c3e50; margin-top: 0;">Townspeople</h2>
-        <p style="color: #7f8c8d; font-size: 14px; margin-top: -10px;">Build relationships by delivering items.</p>
-        <div id="missions-list" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px;"></div>
-    </div>
+    <main id="stage">
+        <!-- Places you walk around in. Their contents are built by game.js. -->
+        <section class="scene" id="scene-map"></section>
+        <section class="scene" id="scene-town" hidden></section>
+        <section class="scene" id="scene-market" hidden></section>
+        <!-- The six merge boards are added here by game.js. -->
 
-    <div id="shop-container" class="game-board" style="display: none; background: #ecf0f1; padding: 15px; overflow-y: auto;">
-        <h2 style="color: #2c3e50; margin-top: 0;">Market & Upgrades</h2>
-        <p style="color: #7f8c8d; font-size: 14px; margin-top: -10px;">Buy initial items and unlock areas.</p>
-        <div id="shop-list" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px;"></div>
-    </div>
+        <div id="dialog" class="dialog-backdrop" hidden>
+            <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+                <img class="dialog-art" id="dialog-art" alt="">
+                <h2 id="dialog-title"></h2>
+                <div class="dialog-body" id="dialog-body"></div>
+                <div class="dialog-actions" id="dialog-actions"></div>
+            </div>
+        </div>
+        <div id="toasts" aria-live="polite"></div>
+    </main>
 
+    <script src="assets.js"></script>
     <script src="game.js"></script>
 </body>
 </html>
