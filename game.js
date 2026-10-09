@@ -1522,7 +1522,7 @@ function renderMap() {
             onClick: () => unlocks[id] ? goTo(id) : offerDeed(id),
         });
         if (!unlocks[id]) {
-            addTag(spot, 'sale-sign', quests.level < area.level ? `🔒 Level ${area.level}` : `FOR SALE<br>💵 ${area.cost}`);
+            addTag(spot, 'sale-sign', quests.level < area.level ? `${uiIcon('lock', '🔒')} Level ${area.level}` : `FOR SALE<br>💵 ${area.cost}`);
         } else {
             // Orders ready to hand in on this board, and rewards waiting in its crate.
             const ready = npcs.filter(n => n.request && n.request.mode === id && canFulfill(n)).length;
@@ -1554,12 +1554,12 @@ function renderMap() {
     const side = document.createElement('div');
     side.className = 'side-buttons';
     side.innerHTML = `
-        <button class="side-btn" id="btn-gift">🎁<small>Gift</small>${dailyAvailable() ? '<span class="badge">!</span>' : ''}</button>
-        <button class="side-btn" id="btn-quests">📋<small>Jobs</small>${openTasks().some(taskReady) ? '<span class="badge">!</span>' : ''}</button>
-        <button class="side-btn" id="btn-pass">🎟️<small>Pass</small>${passClaimable() ? `<span class="badge">${passClaimable()}</span>` : ''}</button>
-        <button class="side-btn" id="btn-daily">📅<small>Daily</small>${dailyClaimable() > 0 ? '<span class="badge">!</span>' : ''}</button>
-        <button class="side-btn" id="btn-jar">🫙<small>💎${shop.jar}</small>${jarReady() ? '<span class="badge">!</span>' : ''}</button>
-        ${activeOffers().length ? `<button class="side-btn offer-btn" id="btn-offer">🔥<small data-ready="${shop.offers[activeOffers()[0].id].until}">${formatDuration(shop.offers[activeOffers()[0].id].until - Date.now())}</small>${activeOffers().length > 1 ? `<span class="badge">${activeOffers().length}</span>` : ''}</button>` : ''}`;
+        <button class="side-btn" id="btn-gift">${uiIcon('gift', '🎁')}<small>Gift</small>${dailyAvailable() ? '<span class="badge">!</span>' : ''}</button>
+        <button class="side-btn" id="btn-quests">${uiIcon('jobs', '📋')}<small>Jobs</small>${openTasks().some(taskReady) ? '<span class="badge">!</span>' : ''}</button>
+        <button class="side-btn" id="btn-pass">${uiIcon('pass', '🎟️')}<small>Pass</small>${passClaimable() ? `<span class="badge">${passClaimable()}</span>` : ''}</button>
+        <button class="side-btn" id="btn-daily">${uiIcon('daily', '📅')}<small>Daily</small>${dailyClaimable() > 0 ? '<span class="badge">!</span>' : ''}</button>
+        <button class="side-btn" id="btn-jar">${uiIcon('jar', '🫙')}<small>💎${shop.jar}</small>${jarReady() ? '<span class="badge">!</span>' : ''}</button>
+        ${activeOffers().length ? `<button class="side-btn offer-btn" id="btn-offer">${uiIcon('offer', '🔥')}<small data-ready="${shop.offers[activeOffers()[0].id].until}">${formatDuration(shop.offers[activeOffers()[0].id].until - Date.now())}</small>${activeOffers().length > 1 ? `<span class="badge">${activeOffers().length}</span>` : ''}</button>` : ''}`;
     side.querySelector('#btn-gift').addEventListener('click', openDailyGift);
     side.querySelector('#btn-quests').addEventListener('click', openTaskLog);
     side.querySelector('#btn-pass').addEventListener('click', openPass);
@@ -1736,7 +1736,7 @@ function renderMarket() {
     // One land deed per locked area sits on the shelves.
     Object.keys(AREAS).filter(id => !unlocks[id]).forEach((id, i) => {
         const deed = makeSpot({ ...MARKET_LAYOUT.shelf[i], sprite: ASSETS.props.deed, label: AREAS[id].name, onClick: () => offerDeed(id) });
-        addTag(deed, 'price-tag', quests.level < AREAS[id].level ? `🔒Lv${AREAS[id].level}` : `💵${AREAS[id].cost}`);
+        addTag(deed, 'price-tag', quests.level < AREAS[id].level ? `${uiIcon('lock', '🔒')}Lv${AREAS[id].level}` : `💵${AREAS[id].cost}`);
         scene.appendChild(deed);
     });
 
@@ -1756,7 +1756,7 @@ function renderMarket() {
     side.className = 'side-buttons';
     side.innerHTML = `
         <button class="side-btn" id="btn-flash">🏷️<small>Flash Sale</small></button>
-        <button class="side-btn" id="btn-deals">🎁<small>Daily Deals</small>${dealsWaiting() ? '<span class="badge">!</span>' : ''}</button>`;
+        <button class="side-btn" id="btn-deals">${uiIcon('gift', '🎁')}<small>Daily Deals</small>${dealsWaiting() ? '<span class="badge">!</span>' : ''}</button>`;
     side.querySelector('#btn-flash').addEventListener('click', openFlashSale);
     side.querySelector('#btn-deals').addEventListener('click', openDailyDeals);
     scene.appendChild(side);
@@ -3007,8 +3007,8 @@ function renderInfoBar(mode) {
     const text = (title, small) => `<span class="info-text"><b>${title}</b><br><small>${small}</small></span>`;
     const button = (cls, label) => `<button class="sell-btn ${cls}">${label}</button>`;
     const countdown = at => `<span data-ready="${at}">${formatDuration(at - Date.now())}</span>`;
-    let html = `<button class="inv-btn" title="Inventory: drag items here">🎒<small>${inventory.items.length}/${inventoryCapacity()}</small></button>`;
-    if (crates[mode].length) html += `<button class="crate-btn">🎁 ${crates[mode].length}</button>`;
+    let html = `<button class="inv-btn" title="Inventory: drag items here">${uiIcon('inventory', '🎒')}<small>${inventory.items.length}/${inventoryCapacity()}</small></button>`;
+    if (crates[mode].length) html += `<button class="crate-btn">${uiIcon('gift', '🎁')} ${crates[mode].length}</button>`;
 
     if (!item && lastSale && lastSale.mode === mode) {
         html += `<span class="info-icon">${itemIcon(mode, lastSale.item.tier)}</span>
@@ -3433,8 +3433,15 @@ function handleGeneratorClick(mode, index) {
 
 // --- Drawing the board ---
 
+// An interface icon from ASSETS.ui in place of its emoji, or the emoji itself.
+function uiIcon(name, emoji) {
+    const src = (ASSETS.ui || {})[name];
+    return src ? `<img class="ui-icon" src="${src}" alt="${emoji}" draggable="false">` : emoji;
+}
+
 // Art for a currency item, booster, chest or Piggy Bank from ASSETS.special, if any.
 function specialSprite(item) {
+    if (item.type === 'bubble') return null; // drawn around its item, below
     const key = item.type === 'chest' ? `chest_${item.kind}` : item.type;
     return ((ASSETS.special || {})[key] || [])[levelOf(item) - 1] || null;
 }
@@ -3475,7 +3482,11 @@ function itemFace(mode, item) {
         case 'bubble': {
             const inner = item.inner;
             const art = !inner.type && itemSprite(mode, inner.tier);
-            return { cls: ['bubble-item'], html: `<span class="bubble-inner">${art ? sprite(art) : emoji(itemEmojiFor(mode, inner))}</span>` };
+            const bubble = ((ASSETS.special || {}).bubble || [])[0];
+            return {
+                cls: ['bubble-item'].concat(bubble ? ['has-art'] : []),
+                html: `${bubble ? `<img class="bubble-art" src="${bubble}" alt="" draggable="false">` : ''}<span class="bubble-inner">${art ? sprite(art) : emoji(itemEmojiFor(mode, inner))}</span>`,
+            };
         }
         default: {
             const art = itemSprite(mode, item.tier);
@@ -3530,7 +3541,7 @@ function renderGrid(mode, poppedIndices = []) {
                 if (item.type === 'shop') itemEl.classList.add('empty');
                 addTag(itemEl, 'gen-timer', formatDuration(timer - Date.now())).dataset.ready = timer;
             }
-            if (item.type === 'chest' && !item.openAt && !chestReady(item)) addTag(itemEl, 'lock', '🔒');
+            if (item.type === 'chest' && !item.openAt && !chestReady(item)) addTag(itemEl, 'lock', uiIcon('lock', '🔒'));
             if (item.web) {
                 itemEl.classList.add('webbed');
                 addTag(itemEl, 'web', '');
@@ -3633,6 +3644,7 @@ function loadGame() {
 
 // Initial setup
 stageEl.insertBefore(tutorialEl, document.getElementById('toasts'));
+document.querySelectorAll('[data-ui]').forEach(el => { el.innerHTML = uiIcon(el.dataset.ui, el.textContent); });
 ['map', 'town', 'market'].forEach(id => {
     document.getElementById(`scene-${id}`).style.backgroundImage = `url("${ASSETS.scenes[id]}")`;
 });

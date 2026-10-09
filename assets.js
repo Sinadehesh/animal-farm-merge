@@ -73,6 +73,24 @@ const ASSETS = {
         crate: null, // the 📦 crates on a fresh board (null = emoji tile)
     },
 
+    // Interface icons in place of emoji: the top bar, the map buttons, the 🎒
+    // and the lock on chests. Cut from assets/raw/icons_5_interface.webp.
+    // null = keep the emoji.
+    ui: {
+        coin: 'assets/ui/coin.png',
+        gem: 'assets/ui/gem.png',
+        energy: 'assets/ui/energy.png',
+        star: 'assets/ui/star.png',
+        gift: 'assets/ui/gift.png',
+        jobs: 'assets/ui/jobs.png',
+        pass: 'assets/ui/pass.png',
+        daily: 'assets/ui/daily.png',
+        jar: 'assets/ui/jar.png',
+        offer: 'assets/ui/offer.png',
+        inventory: 'assets/ui/inventory.png',
+        lock: 'assets/ui/lock.png',
+    },
+
     // Optional background image behind each merge board (null = CSS colour).
     boards: {
         barn: null,
@@ -113,7 +131,7 @@ const ASSETS = {
             'assets/items/special/coin_6.png',
         ],
         // Gems, piggy banks and tickets: assets/raw/icons_3_gems_piggy_tickets.webp
-        // (the gems keep their sizes; the 2nd ticket is from the _alt sheet).
+        // (the gems keep their sizes; the 2nd ticket was pink and is recoloured gold).
         gem: [
             'assets/items/special/gem_1.png',
             'assets/items/special/gem_2.png',
@@ -141,9 +159,26 @@ const ASSETS = {
             'assets/items/special/season_3.png',
             'assets/items/special/season_4.png',
         ],     // 🍀 Season Pass items: 1, 3, 8, 20 points (one look for every season)
-        skip: [],       // ⏳ Time Skip: 1h, 2h, 4h, 8h
-        charger: [],    // ⏱️ Time Charger: 2h, 4h, 8h, 16h
-        unlimited: [],  // ♾️ Unlimited Energy: 5m, 10m, 20m
+        // Boosters and the bubble: assets/raw/icons_4_boosters.webp (the stopwatches
+        // keep their sizes).
+        skip: [
+            'assets/items/special/skip_1.png',
+            'assets/items/special/skip_2.png',
+            'assets/items/special/skip_3.png',
+            'assets/items/special/skip_4.png',
+        ],       // ⏳ Time Skip: 1h, 2h, 4h, 8h
+        charger: [
+            'assets/items/special/charger_1.png',
+            'assets/items/special/charger_2.png',
+            'assets/items/special/charger_3.png',
+            'assets/items/special/charger_4.png',
+        ],    // ⏱️ Time Charger: 2h, 4h, 8h, 16h
+        unlimited: [
+            'assets/items/special/unlimited_1.png',
+            'assets/items/special/unlimited_2.png',
+            'assets/items/special/unlimited_3.png',
+        ],  // ♾️ Unlimited Energy: 5m, 10m, 20m
+        bubble: ['assets/items/special/bubble.png'], // 🫧 the Double Bubble around an item
         chest_coin: ['assets/items/special/chest_coin_1.png'],     // 💰 Coin Chest
         chest_energy: ['assets/items/special/chest_energy_1.png'], // 🔋 Energy Chest
         chest_brown: ['assets/items/special/chest_brown_1.png', 'assets/items/special/chest_brown_2.png'], // Brown Chest, Lv1-2

@@ -576,6 +576,13 @@
         .item.chest-energy { background: linear-gradient(#e9ff9a, #6cc43a); }
         .item.chest.open { box-shadow: 0 0 0 3px #fff, 0 0 12px #ffe066, 0 3px 0 rgba(0, 0, 0, 0.25); }
         .item .lock { position: absolute; left: -0.6cqw; top: -0.6cqw; font-size: 3.6cqw; text-shadow: none; }
+        .item .lock .ui-icon { height: 5cqw; }
+        /* Interface icons drawn in place of emoji. */
+        .ui-slot { font-style: normal; }
+        .ui-icon { height: 1.25em; width: auto; vertical-align: -0.28em; pointer-events: none; }
+        .side-btn .ui-icon { height: 8.4cqw; vertical-align: middle; }
+        .inv-btn .ui-icon { height: 5.6cqw; }
+        .spot .sale-sign .ui-icon, .spot .price-tag .ui-icon { display: inline; width: auto; height: 1.2em; filter: none; }
         .item.piggy { background: radial-gradient(circle at 30% 30%, #ffd6e6, #f07aa8); }
         .item.bubble-item {
             border-radius: 50%;
@@ -587,6 +594,10 @@
         }
         .item .bubble-inner { width: 72%; height: 72%; display: flex; align-items: center; justify-content: center; }
         .item .bubble-inner img { width: 100%; height: 100%; object-fit: contain; }
+        /* With the bubble picture: the item floats inside it. */
+        .item.bubble-item.has-art { background: none; border: 0; box-shadow: none; }
+        .item .bubble-art { position: absolute; inset: -4%; width: 108%; height: 108%; object-fit: contain; opacity: 0.9; pointer-events: none; }
+        .item.bubble-item.has-art .bubble-inner { position: relative; z-index: 1; width: 62%; height: 62%; }
         .item.bubble-item .gen-timer { top: auto; bottom: -1.5cqw; transform: translateX(-50%); }
         @keyframes glow { to { box-shadow: 0 0 0 3px #fff, 0 0 22px #5dff9c; } }
         .bubble .gift {
@@ -828,6 +839,7 @@
             white-space: nowrap;
         }
         .side-btn .badge { right: -2cqw; top: -2cqw; }
+        #scene-market .side-buttons { gap: 8cqw; left: 6%; }
         .offer-reward { font-size: 4.6cqw; font-weight: 900; color: #c2410c; }
         .gift-track.daily-chests { grid-template-columns: repeat(3, 1fr); margin-top: 2cqw; }
         /* First-play tutorial: a hand pointing at what to tap, and Marnie saying why.
@@ -995,18 +1007,18 @@
         <div class="hud-row">
             <button id="btn-back" class="btn-back" hidden>⬅ Map</button>
             <h1 id="scene-title">Farmstead</h1>
-            <button class="pill pill-btn" id="btn-coins" title="Shop">💵 <span id="money-val">50</span></button>
-            <button class="pill pill-btn" id="btn-gems" title="Shop">💎 <span id="gems-val">0</span> <span class="plus">+</span></button>
+            <button class="pill pill-btn" id="btn-coins" title="Shop"><i class="ui-slot" data-ui="coin">💵</i> <span id="money-val">50</span></button>
+            <button class="pill pill-btn" id="btn-gems" title="Shop"><i class="ui-slot" data-ui="gem">💎</i> <span id="gems-val">0</span> <span class="plus">+</span></button>
         </div>
         <!-- One ⚡ Energy bar pays for every producer tap, as in Merge Mansion. -->
         <div class="hud-row resources">
             <button class="res res-energy" id="btn-energy" title="Energy">
-                <span>⚡ <b id="energy-val">100</b><small> / 100</small> <span class="plus">+</span></span>
+                <span><i class="ui-slot" data-ui="energy">⚡</i> <b id="energy-val">100</b><small> / 100</small> <span class="plus">+</span></span>
                 <small id="energy-timer">full</small>
             </button>
             <button class="res res-charge" id="btn-charge" title="Supercharge" hidden>⚡</button>
             <button class="res res-level" id="btn-level" title="Level and jobs">
-                <span>⭐ <b id="level-val">1</b> <span class="xp-bar"><i id="xp-fill"></i></span></span>
+                <span><i class="ui-slot" data-ui="star">⭐</i> <b id="level-val">1</b> <span class="xp-bar"><i id="xp-fill"></i></span></span>
                 <small id="xp-text">0/6</small>
             </button>
         </div>

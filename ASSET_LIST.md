@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**244 assets:** 50 done ✅, 25 placeholders 🟡, 169 missing ⬜.
+**260 assets:** 74 done ✅, 25 placeholders 🟡, 161 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -347,7 +347,7 @@ animals, each tier should be bigger and fancier than the last, and the top one a
 | ⬜ | 7 | Golden Pumpkin | `assets/items/fair_pumpkin/07_golden_pumpkin.png` |
 | ⬜ | producer | Pumpkin Patch | `assets/producers/fair_pumpkin.png` (index 3 in `producers.fair_pumpkin`) |
 
-## 10. Special items (45)
+## 10. Special items (46)
 
 The same on every board. Each level looks fuller or bigger than the one before.
 
@@ -358,30 +358,41 @@ The same on every board. Each level looks fuller or bigger than the one before.
 | ✅ | Energy | 5 | `assets/items/special/energy_1.png` … `_5.png` | a yellow lightning bolt in a bubble, bigger and brighter each level |
 | ✅ | XP stars | 5 | `assets/items/special/xp_1.png` … `_5.png` | a golden star, bigger and more sparkly each level |
 | ✅ | Season Pass items | 4 | `assets/items/special/season_1.png` … `_4.png` | a golden ticket with a four-leaf clover, more of them each level (works for every season) |
-| ⬜ | Time Skip | 4 | `assets/items/special/skip_1.png` … `_4.png` | an hourglass, fancier each level (1h, 2h, 4h, 8h) |
-| ⬜ | Time Charger | 4 | `assets/items/special/charger_1.png` … `_4.png` | a stopwatch with a green glow, fancier each level (2h-16h) |
-| ⬜ | Unlimited Energy | 3 | `assets/items/special/unlimited_1.png` … `_3.png` | a purple infinity sign with a bolt (5, 10, 20 min) |
+| ✅ | Time Skip | 4 | `assets/items/special/skip_1.png` … `_4.png` | an hourglass, fancier each level (1h, 2h, 4h, 8h) |
+| ✅ | Time Charger | 4 | `assets/items/special/charger_1.png` … `_4.png` | a stopwatch with a green glow, fancier each level (2h-16h) |
+| ✅ | Unlimited Energy | 3 | `assets/items/special/unlimited_1.png` … `_3.png` | a purple infinity sign with a bolt (5, 10, 20 min) |
 | ✅ | Coin Chest | 1 | `assets/items/special/chest_coin_1.png` | a small gold chest spilling coins |
 | ✅ | Energy Chest | 1 | `assets/items/special/chest_energy_1.png` | a green chest with a lightning bolt |
 | ✅ | Brown Chest | 2 | `assets/items/special/chest_brown_1.png` … `_2.png` | a wooden treasure chest; level 2 bigger with iron trim |
 | ✅ | Blue Chest | 2 | `assets/items/special/chest_blue_1.png` … `_2.png` | a fancy blue chest with gold trim; level 2 bigger |
 | ✅ | Piggy Bank | 4 | `assets/items/special/piggy_1.png` … `_4.png` | a pink piggy bank, rounder and shinier each level |
+| ✅ | Double Bubble | 1 | `assets/items/special/bubble.png` | an empty, see-through soap bubble with a rainbow sheen (the item shows inside it) |
 
-## 11. Interface icons (optional, emoji for now)
+## 11. Interface icons (15)
 
-These are emoji in the interface today. Each needs a small code change to use a picture, so make them last.
+Small square PNGs with a transparent background in `assets/ui/` (listed in `ui` in `assets.js`). Anything
+missing shows its emoji.
 
-| Icon | Where |
-|---|---|
-| 💵 coins, 💎 gems, ⚡ energy, ⭐ level | top bar |
-| 🎁 gift, 📋 quests | map buttons |
-| 🏷️ Flash Sale, 🎁 Daily Deals | Market buttons |
-| 🎒 inventory, 🎁 rewards box | board info bar |
-| 🔒 lock, 🫧 Double Bubble, 🕸️ cobweb | on board items |
-| 🧩 part | producer parts with no picture |
+| | Icon | Where | File |
+|---|---|---|---|
+| ✅ | 💵 coins | top bar | `assets/ui/coin.png` |
+| ✅ | 💎 gems | top bar | `assets/ui/gem.png` |
+| ✅ | ⚡ energy | top bar | `assets/ui/energy.png` |
+| ✅ | ⭐ level | top bar | `assets/ui/star.png` |
+| ✅ | 🎁 daily gift, Daily Deals, rewards box | map, Market and board buttons | `assets/ui/gift.png` |
+| ✅ | 📋 jobs | map button | `assets/ui/jobs.png` |
+| ✅ | 🎟️ Season Pass | map button | `assets/ui/pass.png` |
+| ✅ | 📅 daily goals | map button | `assets/ui/daily.png` |
+| ✅ | 🫙 Gem Jar | map button | `assets/ui/jar.png` |
+| ✅ | 🔥 offers | map button | `assets/ui/offer.png` |
+| ✅ | 🎒 inventory | board info bar | `assets/ui/inventory.png` |
+| ✅ | 🔒 lock | locked chests, lands and deeds | `assets/ui/lock.png` |
+| ⬜ | 🏷️ Flash Sale | Market button | not wired yet (needs a small code change) |
+| ⬜ | 🕸️ cobweb | on board items | not wired yet (needs a small code change) |
+| ⬜ | 🧩 part | producer parts with no picture | not wired yet (needs a small code change) |
 
 ## Not used by the game
 
 Older drafts you can delete or keep as references: `assets/ghibli/`, `assets/v2/`, `assets/tier*_*.jpg`,
 `assets/items/barn/09_bear.png`, `10_elephant.png`, `11_whale.png`. `assets/raw/` holds the source sheets the
-barn items were cut from.
+items and icons were cut from.
