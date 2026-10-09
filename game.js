@@ -32,6 +32,22 @@ const ORDER_PAY = 10;
 // produce more than it uses, which makes the refill timers pointless.
 const MERGE_OUTPUT = 1;
 
+// Producers (the Feed Bin, Wheat Sack, ...) are board items too, as in Merge
+// Gardens: merge two of the same level to get the next level. Higher levels
+// sometimes drop a tier 1 or tier 2 item for the same 1-unit cost.
+// odds = chance of [tier 1, tier 2]; otherwise a tier 0 item.
+const PRODUCER_LEVELS = [
+    { name: 'Basic',  odds: [0, 0] },
+    { name: 'Sturdy', odds: [0.15, 0] },
+    { name: 'Big',    odds: [0.25, 0.05] },
+    { name: 'Grand',  odds: [0.30, 0.10] },
+    { name: 'Golden', odds: [0.35, 0.15] },
+];
+
+// Chance that an order also pays a Basic producer for its board. The first
+// order of a new game always does, so players learn to merge producers early.
+const PRODUCER_REWARD_CHANCE = 0.25;
+
 // 💎 Gems are the only thing sold for real money, as in Merge Gardens. 💵 is
 // earned by playing. Gems pay for instant refills and cover any 💵 you're short.
 // A unit earns about 💵10 in orders and costs 💎2 = 💵20 to refill, so refills
@@ -80,6 +96,8 @@ const res = { money: 0, gems: 0, hearts: 0, feed: 0, wheat: 0, fertilizer: 0, ra
 Object.assign(res, START);
 // When the next unit of each essential arrives (ms timestamp), or null when full.
 const refillAt = {};
+// Rewarded producers waiting in each board's delivery crate until placed.
+const crates = { barn: [], hay: [], farm: [], fert: [], aqua: [], flower: [] };
 // Daily Basket, Special Offer and ad state (saved with the game).
 const shop = { basketStart: null, basketClaimed: null, offerBought: false, offerShown: false, adsDay: null, adsWatched: 0 };
 let currentScene = 'map';
@@ -159,6 +177,15 @@ const GENERATORS = {
     aqua:   { emoji: '🥫', label: 'Fish Food' },
     flower: { emoji: '🚿', label: 'Watering Can' },
 };
+
+function producerLevel(item) {
+    return item.level || 1; // saves from before producer levels count as level 1
+}
+
+// e.g. "Big Feed Bin"
+function producerName(mode, level) {
+    return `${PRODUCER_LEVELS[level - 1].name} ${GENERATORS[mode].label}`;
+}
 
 function resLabel(key) {
     return `${RESOURCES[key].emoji} ${RESOURCES[key].name}`;
@@ -552,6 +579,7 @@ function renderMap() {
             onClick: () => unlocks[id] ? goTo(id) : offerDeed(id),
         });
         if (!unlocks[id]) addTag(spot, 'sale-sign', `FOR SALE<br>💵 ${area.cost}`);
+        else if (crates[id].length) addTag(spot, 'badge', `📦${crates[id].length}`);
         scene.appendChild(spot);
     });
 }
@@ -605,12 +633,15 @@ function generateRequestFor(npc) {
         mode: mode,
         tier: targetTier,
         rewardMoney: Math.round(ORDER_PAY * inputsPerItem(mode, targetTier) * (0.85 + Math.random() * 0.3)),
-        rewardHearts: targetTier
+        rewardHearts: targetTier,
+        rewardProducer: Math.random() < PRODUCER_REWARD_CHANCE,
     };
 }
 
-function initTown() {
+function initTown(newGame = false) {
     npcs.forEach(npc => generateRequestFor(npc));
+    // Guarantee one early: Marnie always asks for Barn items.
+    if (newGame) npcs.find(npc => npc.id === 'marnie').request.rewardProducer = true;
 }
 
 function findItem(mode, tier) {
@@ -638,6 +669,7 @@ function renderTown() {
         if (npc.request) {
             const bubble = addTag(person, 'bubble', itemIcon(npc.request.mode, npc.request.tier));
             if (canFulfill(npc)) bubble.classList.add('ready');
+            if (npc.request.rewardProducer) addTag(bubble, 'gift', '🎁');
         }
         scene.appendChild(person);
     });
@@ -653,7 +685,7 @@ function openNpc(npc) {
         artRound: true,
         title: `${npc.name} · Lv.${level}`,
         body: `<p>“Could you bring me a ${itemIcon(r.mode, r.tier)} <b>${itemName(r.mode, r.tier)}</b> from your ${area.name}?”</p>
-               <p><b>Reward:</b> 💵 ${r.rewardMoney} · ❤️ ${r.rewardHearts}</p>
+               <p><b>Reward:</b> 💵 ${r.rewardMoney} · ❤️ ${r.rewardHearts}${r.rewardProducer ? ` · 🎁 ${GENERATORS[r.mode].emoji} ${producerName(r.mode, 1)}` : ''}</p>
                <p class="hint">${ready ? 'You have one ready on your board!' : `Merge one on the ${area.name} board first.`}</p>`,
         actions: ready
             ? [{ label: 'Deliver', primary: true, onClick: () => deliver(npc) }, { label: 'Later' }]
@@ -677,6 +709,10 @@ function deliver(npc) {
     updateUI();
     toast(`${npc.name} loved the ${itemName(r.mode, r.tier)}! +💵${r.rewardMoney} +❤️${r.rewardHearts}`, 'good');
     if (levelUp) toast(`${npc.name} reached Lv.${npc.deliveries / 5 + 1}! +💎 ${LEVEL_UP_GEMS}`, 'good');
+    if (r.rewardProducer) {
+        crates[r.mode].push({ type: 'shop', level: 1 });
+        toast(`🎁 A ${producerName(r.mode, 1)}! It's waiting in the 📦 on your ${AREAS[r.mode].name} board.`, 'good');
+    }
 
     generateRequestFor(npc);
     renderTown();
@@ -795,14 +831,32 @@ Object.keys(AREAS).forEach(mode => {
 function renderBoardHeader(mode) {
     const area = AREAS[mode];
     const gen = GENERATORS[mode];
-    document.querySelector(`#scene-${mode} .board-header`).innerHTML = `
+    const header = document.querySelector(`#scene-${mode} .board-header`);
+    const waiting = crates[mode].length;
+    header.innerHTML = `
         <img src="${ASSETS.buildings[mode]}" alt="">
         <div>
             <b>${area.name}</b> · max tier ${maxTier}<br>
-            Tap the ${gen.emoji} ${gen.label} to add items.<br>
-            Drag two alike together to merge.<br>
+            Tap a ${gen.emoji} ${gen.label} to add items.<br>
+            Merge two alike to upgrade them.<br>
             Each merge makes ${resLabel(area.output)}.
+            ${waiting ? `<button class="crate-btn">📦 ${waiting} waiting · tap to add</button>` : ''}
         </div>`;
+    if (waiting) header.querySelector('.crate-btn').addEventListener('click', () => placeFromCrate(mode));
+}
+
+// Puts the next waiting reward from the crate onto the first empty cell.
+function placeFromCrate(mode) {
+    const idx = grids[mode].findIndex(cell => cell === null);
+    if (idx === -1) {
+        toast('No room on the board. Merge or deliver something first.');
+        return;
+    }
+    const item = crates[mode].shift();
+    grids[mode][idx] = item;
+    toast(`${producerName(mode, producerLevel(item))} added!`, 'good');
+    renderBoardHeader(mode);
+    renderGrid(mode, [idx]);
 }
 
 let draggedItemInfo = null;
@@ -815,12 +869,21 @@ function placeDragElement(e) {
     dragElement.style.top = e.clientY - stageRect.top - dragElement.offsetHeight / 2 + 'px';
 }
 
+// How far (px) the pointer must move before a press becomes a drag; less is a tap.
+const DRAG_THRESHOLD = 6;
+
 function handleDragStart(e, mode, index) {
     e.preventDefault();
-    draggedItemInfo = { mode, index };
+    draggedItemInfo = { mode, index, startX: e.clientX, startY: e.clientY };
+    document.addEventListener('pointermove', handleDragMove);
+    document.addEventListener('pointerup', handleDragEnd);
+}
 
+// The drag preview appears only once the pointer has moved, so a tap stays a tap.
+function beginDragPreview() {
+    const { mode, index } = draggedItemInfo;
     const cellEl = document.querySelector(`#grid-${mode} .grid-cell[data-index='${index}'] .item`);
-    if (cellEl) cellEl.style.opacity = '0.3';
+    cellEl.style.opacity = '0.3';
 
     dragElement = cellEl.cloneNode(true);
     dragElement.classList.add('dragging');
@@ -831,20 +894,23 @@ function handleDragStart(e, mode, index) {
     dragElement.style.opacity = '0.9';
     dragElement.style.zIndex = '1000';
     stageEl.appendChild(dragElement);
-    placeDragElement(e);
-
-    document.addEventListener('pointermove', handleDragMove);
-    document.addEventListener('pointerup', handleDragEnd);
 }
 
 function handleDragMove(e) {
-    if (dragElement) placeDragElement(e);
+    if (!draggedItemInfo) return;
+    if (!dragElement) {
+        const moved = Math.hypot(e.clientX - draggedItemInfo.startX, e.clientY - draggedItemInfo.startY);
+        if (moved < DRAG_THRESHOLD) return;
+        beginDragPreview();
+    }
+    placeDragElement(e);
 }
 
 function handleDragEnd(e) {
     document.removeEventListener('pointermove', handleDragMove);
     document.removeEventListener('pointerup', handleDragEnd);
 
+    const wasDragged = !!dragElement;
     if (dragElement) {
         dragElement.remove();
         dragElement = null;
@@ -853,6 +919,13 @@ function handleDragEnd(e) {
     if (!draggedItemInfo) return;
     const { mode, index } = draggedItemInfo;
     draggedItemInfo = null;
+
+    // A tap: producers make an item, anything else does nothing.
+    if (!wasDragged) {
+        const item = grids[mode][index];
+        if (item && item.type === 'shop') handleGeneratorClick(mode, index);
+        return;
+    }
 
     const elements = document.elementsFromPoint(e.clientX, e.clientY);
     let targetCell = null;
@@ -870,8 +943,17 @@ function handleDragEnd(e) {
             const sourceItem = grids[mode][index];
             const targetItem = grids[mode][targetIndex];
             const sameKind = targetItem && sourceItem && targetItem.tier === sourceItem.tier && targetItem.type !== 'shop' && sourceItem.type !== 'shop';
+            const sameProducer = targetItem && sourceItem && targetItem.type === 'shop' && sourceItem.type === 'shop'
+                && producerLevel(targetItem) === producerLevel(sourceItem);
 
-            if (sameKind && sourceItem.tier < maxTier) {
+            if (sameProducer && producerLevel(sourceItem) < PRODUCER_LEVELS.length) {
+                // Two producers of the same level make the next level.
+                const level = producerLevel(sourceItem) + 1;
+                grids[mode][index] = null;
+                grids[mode][targetIndex] = { type: 'shop', level };
+                mergedIdx = targetIndex;
+                toast(`Upgraded to a ${producerName(mode, level)}!`, 'good');
+            } else if (sameKind && sourceItem.tier < maxTier) {
                 // Direct Merge 2
                 const nextTier = sourceItem.tier + 1;
                 grids[mode][index] = null;
@@ -882,6 +964,7 @@ function handleDragEnd(e) {
                 updateUI();
             } else {
                 if (sameKind) toast(`Tier ${maxTier} is the max for now. Buy the Growth Guide at the Market!`);
+                if (sameProducer) toast(`That's already a ${producerName(mode, PRODUCER_LEVELS.length)}, the best there is!`);
                 // Swap
                 grids[mode][index] = targetItem;
                 grids[mode][targetIndex] = sourceItem;
@@ -930,7 +1013,10 @@ function handleGeneratorClick(mode, index) {
     tickEssentials(); // starts the refill timer as soon as you drop below the cap
 
     updateUI();
-    grids[mode][emptyIdx] = { tier: 0 };
+    const [tier1Odds, tier2Odds] = PRODUCER_LEVELS[producerLevel(grids[mode][index]) - 1].odds;
+    const roll = Math.random();
+    const tier = roll < tier2Odds ? 2 : roll < tier2Odds + tier1Odds ? 1 : 0;
+    grids[mode][emptyIdx] = { tier: Math.min(tier, maxTier) };
     renderGrid(mode, [emptyIdx]);
 }
 
@@ -952,9 +1038,18 @@ function renderGrid(mode, poppedIndices = []) {
 
             if (item.type === 'shop') {
                 const gen = GENERATORS[mode];
-                itemEl.classList.add('generator');
-                itemEl.innerHTML = `<span class="emoji">${gen.emoji}</span>${gen.label}<br>${inputText(mode)}`;
-                itemEl.addEventListener('pointerdown', () => handleGeneratorClick(mode, i));
+                const level = producerLevel(item);
+                const sprite = (ASSETS.producers[mode] || [])[level - 1];
+                itemEl.title = producerName(mode, level);
+                if (sprite) {
+                    itemEl.classList.add('has-sprite');
+                    itemEl.innerHTML = `<img src="${sprite}" alt="" draggable="false">`;
+                } else {
+                    itemEl.classList.add('generator', `gen-lv${level}`);
+                    itemEl.innerHTML = `<span class="emoji">${gen.emoji}</span>${gen.label}<br>${inputText(mode)}`;
+                }
+                addTag(itemEl, 'tier gen-level', level);
+                itemEl.addEventListener('pointerdown', (e) => handleDragStart(e, mode, i));
             } else {
                 const sprite = itemSprite(mode, item.tier);
                 itemEl.title = itemName(mode, item.tier);
@@ -984,7 +1079,7 @@ const SAVE_KEY = 'merge-farmstead-save-v1';
 function saveGame() {
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
-            res, refillAt, shop, unlocks, maxTier, grids,
+            res, refillAt, shop, crates, unlocks, maxTier, grids,
             npcs: npcs.map(({ id, deliveries, request }) => ({ id, deliveries, request })),
         }));
     } catch (e) {
@@ -1003,6 +1098,7 @@ function loadGame() {
         Object.assign(res, save.res);
         Object.assign(refillAt, save.refillAt);
         Object.assign(shop, save.shop);
+        Object.assign(crates, save.crates);
         Object.assign(unlocks, save.unlocks);
         maxTier = save.maxTier;
         Object.keys(grids).forEach(mode => {
@@ -1022,7 +1118,7 @@ function loadGame() {
 ['map', 'town', 'market'].forEach(id => {
     document.getElementById(`scene-${id}`).style.backgroundImage = `url("${ASSETS.scenes[id]}")`;
 });
-if (!loadGame()) initTown();
+if (!loadGame()) initTown(true);
 tickEssentials(); // catch up on refills that arrived while the game was closed
 claimDailyBasket();
 Object.keys(grids).forEach(mode => renderGrid(mode));

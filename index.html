@@ -361,6 +361,32 @@
             line-height: 1.2;
         }
         .item.generator .emoji { font-size: 6cqw; }
+        /* Producer levels: each upgrade gets a richer colour, Golden glows. */
+        .item.gen-lv2 { background: linear-gradient(#ffe08a, #f5a623); }
+        .item.gen-lv3 { background: linear-gradient(#ffb3d1, #e8487f); }
+        .item.gen-lv4 { background: linear-gradient(#cdb6ff, #8a5cf0); }
+        .item.gen-lv5 { background: linear-gradient(#fff6b0, #f5b700); box-shadow: 0 0 0 2px #fff, 0 0 12px #ffd34d, 0 3px 0 rgba(0, 0, 0, 0.25); color: #6b4a00; text-shadow: none; }
+        .item .gen-level { background: #f5b700; color: var(--ink); }
+        .bubble .gift {
+            position: absolute;
+            left: -2.6cqw;
+            top: -2.6cqw;
+            font-size: 4.5cqw;
+        }
+        .crate-btn {
+            margin-top: 1.5cqw;
+            padding: 1cqw 3cqw;
+            background: var(--paper);
+            color: var(--ink);
+            border: 3px solid var(--ink);
+            border-radius: 999px;
+            box-shadow: 0 3px 0 var(--ink);
+            font-weight: 900;
+            font-size: 3.4cqw;
+            text-shadow: none;
+            cursor: pointer;
+            animation: bob 1.2s ease-in-out infinite;
+        }
         .item.dragging {
             opacity: 0.9;
             z-index: 100;

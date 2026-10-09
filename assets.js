@@ -71,10 +71,21 @@ const ASSETS = {
         flower: null,
     },
 
+    // Producer sprites per board (Feed Bin, Wheat Sack, ...), indexed by level - 1:
+    // [Basic, Sturdy, Big, Grand, Golden]. Missing entries use the emoji tile.
+    producers: {
+        barn: [],
+        hay: [],
+        farm: [],
+        fert: [],
+        aqua: [],
+        flower: [],
+    },
+
     // Merge item sprites per board, indexed by tier (0 = the input item).
     // Missing or null entries fall back to the emoji placeholder.
     items: {
-        // Cut from assets/raw/barn_sheet_v2.jpg with tools/process_assets.py.
+        // Cut from assets/raw/barn_sheet_v3.jpg with tools/process_assets.py.
         barn: [
             'assets/items/barn/00_feed.png',
             'assets/items/barn/01_egg.png',
