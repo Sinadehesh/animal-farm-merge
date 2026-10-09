@@ -102,6 +102,7 @@ const ASSETS = {
         gem: [],        // 💎 Gems: 1, 3, 8, 20
         energy: [],     // ⚡ Energy: 2, 6, 16, 40, 100
         xp: [],         // ⭐ XP stars: 1, 3, 8, 20, 50
+        season: [],     // 🍀 Season Pass items: 1, 3, 8, 20 points (one look for every season)
         skip: [],       // ⏳ Time Skip: 1h, 2h, 4h, 8h
         charger: [],    // ⏱️ Time Charger: 2h, 4h, 8h, 16h
         unlimited: [],  // ♾️ Unlimited Energy: 5m, 10m, 20m

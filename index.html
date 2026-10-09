@@ -521,6 +521,7 @@
         .item.cur-gem { background: radial-gradient(circle at 30% 30%, #d9f6ff, #36b3e0); }
         .item.cur-energy { background: radial-gradient(circle at 30% 30%, #fffbb0, #f5c400); color: #6b4a00; text-shadow: none; }
         .item.cur-xp { background: radial-gradient(circle at 30% 30%, #ffe8b0, #ff9a1f); }
+        .item.cur-season { background: radial-gradient(circle at 30% 30%, #d8ffd0, #3fae5a); }
         .item.currency .name { font-size: 2.8cqw; }
         .item.chest { border-radius: 18%; }
         .item.chest-brown { background: linear-gradient(#d39a62, #8a5531); }
@@ -699,6 +700,35 @@
         }
         .task-row.ready .task-go { background: #5cc15a; }
         .restored-note { font-weight: 900; color: #2e8c3c; }
+        /* Season Pass: one row per level, free rewards left, golden right. */
+        .pass-head, .pass-row { display: grid; grid-template-columns: 7cqw 1fr 1fr; gap: 1.2cqw; align-items: stretch; }
+        .pass-head { margin-bottom: 1cqw; font-size: 3cqw; font-weight: 900; }
+        .pass-row { margin-bottom: 1.2cqw; }
+        .pass-level {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #e2d8c8;
+            font-size: 3cqw;
+            font-weight: 900;
+            aspect-ratio: 1;
+            align-self: center;
+        }
+        .pass-row.reached .pass-level { background: #f5a623; color: #fff; }
+        .pass-cell {
+            padding: 1.2cqw 1cqw;
+            background: #fff;
+            border: 2px solid var(--ink);
+            border-radius: 10px;
+            font-size: 2.7cqw;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+        .pass-cell.golden { background: #fff3c4; }
+        .pass-cell.ready { background: #5cc15a; color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); cursor: pointer; animation: bob 1.4s ease-in-out infinite; }
+        .pass-cell.claimed { opacity: 0.55; }
+        .pass-cell.locked { color: #8a7a6a; }
         .order-card.task-card { border-color: #b8862b; box-shadow: 0 3px 0 #b8862b; background: #fff3c4; }
         .order-card.task-card.ready { background: #e3fbdf; border-color: #2e8c3c; box-shadow: 0 3px 0 #2e8c3c; }
         .order-who .hammer { width: 9cqw; height: 9cqw; display: flex; align-items: center; justify-content: center; font-size: 6cqw; }

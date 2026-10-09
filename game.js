@@ -110,6 +110,8 @@ const CURRENCY = {
     gem:    { emoji: '💎', name: 'Gems',   values: [1, 3, 8, 20] },
     energy: { emoji: '⚡', name: 'Energy', values: [2, 6, 16, 40, 100] },
     xp:     { emoji: '⭐', name: 'XP',     values: [1, 3, 8, 20, 50] },
+    // Season Pass points; the emoji and name follow the season's theme.
+    season: { emoji: '🍀', name: 'Clovers', values: [1, 3, 8, 20] },
 };
 
 // Player levels come from XP, as in Merge Mansion. XP to reach the next level,
@@ -206,6 +208,59 @@ const DAILY_DEALS = [
     { id: 'energyChest', item: { type: 'chest', kind: 'energy', level: 1 }, gems: 50 },
 ];
 
+// Season Pass (Merge Mansion): a 28-day season. Any merge has a 10% chance to
+// drop a season item; merge them up (1, 3, 8, 20 points) and double-tap to
+// collect the points, which climb a 30-level reward track. Everyone gets the
+// free rewards. The Golden Pass (real money) adds the golden ones, and until the
+// season ends 💎5 a day and 5 more 🎒 slots.
+const SEASON_DAYS = 28;
+const SEASON_START = Date.UTC(2026, 0, 5); // seasons run back to back from here
+const SEASON_DROP_CHANCE = 0.10;
+const SEASON_THEMES = [
+    { name: 'Lucky Clovers', emoji: '🍀', item: 'Clovers' },
+    { name: 'Sweet Berries', emoji: '🫐', item: 'Berries' },
+    { name: 'Sunny Daisies', emoji: '🌼', item: 'Daisies' },
+    { name: 'Golden Acorns', emoji: '🌰', item: 'Acorns' },
+];
+const GOLDEN_PASS = { id: 'golden_pass', name: 'Golden Pass', price: '$4.99', gemsPerDay: 5, slots: 5 };
+// Points to finish each level: 20, 22, 24... (1,470 for all 30).
+function passLevelCost(level) {
+    return 20 + 2 * (level - 1);
+}
+// [free, golden] reward for each level. `item` goes into a board's 🎁.
+const PASS_REWARDS = [
+    [{ money: 50 }, { gems: 20 }],
+    [{ energy: 20 }, { item: { type: 'unlimited', level: 1 } }],
+    [{ chest: 'brown' }, { chest: 'blue' }],
+    [{ money: 75 }, { energy: 100 }],
+    [{ gems: 5 }, { part: 2 }],
+    [{ energy: 30 }, { gems: 25 }],
+    [{ timeSkip: 1 }, { item: { type: 'charger', level: 1 } }],
+    [{ money: 100 }, { chest: 'blue' }],
+    [{ part: 1 }, { timeSkip: 2 }],
+    [{ chest: 'brown' }, { part: 3 }],
+    [{ energy: 40 }, { gems: 30 }],
+    [{ money: 150 }, { energy: 150 }],
+    [{ gems: 5 }, { item: { type: 'unlimited', level: 2 } }],
+    [{ item: { type: 'charger', level: 1 } }, { chest: 'blue' }],
+    [{ chest: 'blue' }, { part: 3 }],
+    [{ money: 200 }, { gems: 40 }],
+    [{ energy: 50 }, { timeSkip: 3 }],
+    [{ part: 2 }, { item: { type: 'charger', level: 2 } }],
+    [{ gems: 10 }, { energy: 200 }],
+    [{ chest: 'blue' }, { part: 3 }],
+    [{ money: 250 }, { gems: 50 }],
+    [{ energy: 60 }, { chest: 'blue' }],
+    [{ item: { type: 'unlimited', level: 1 } }, { item: { type: 'unlimited', level: 3 } }],
+    [{ gems: 10 }, { timeSkip: 4 }],
+    [{ chest: 'blue' }, { part: 3 }],
+    [{ money: 300 }, { gems: 60 }],
+    [{ energy: 80 }, { energy: 300 }],
+    [{ part: 2 }, { item: { type: 'charger', level: 3 } }],
+    [{ gems: 15 }, { gems: 80 }],
+    [{ chest: 'blue', gems: 20 }, { part: 4, gems: 100 }],
+];
+
 // Chance that an order also pays a level 1 part for its board's producer. The
 // first order of a new game always does, so players learn to merge parts early.
 const PRODUCER_REWARD_CHANCE = 0.25;
@@ -294,6 +349,8 @@ const shop = {
 };
 // The last board you were on: where things you buy at the Market are sent.
 let lastBoard = 'barn';
+// This season's pass: points, the Golden Pass, rewards claimed per track.
+const pass = { season: null, points: 0, golden: false, claimed: { free: [], golden: [] }, gemsDay: null };
 let currentScene = 'map';
 
 // UI Elements
@@ -603,6 +660,7 @@ function tickEnergy(now = Date.now()) {
 
 function formatDuration(ms) {
     const s = Math.max(0, Math.ceil(ms / 1000));
+    if (s >= 86400) return `${Math.floor(s / 86400)}d ${Math.floor((s % 86400) / 3600)}h`;
     if (s >= 3600) return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
     if (s >= 600) return `${Math.floor(s / 60)}m`;
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -707,6 +765,7 @@ function openShop(note = '') {
         : { label: `🧺 ${DAILY_BASKET.name}: 💎 ${DAILY_BASKET.gemsPerDay} every day · ${DAILY_BASKET.price}`,
             primary: true, wide: true, onClick: buyDailyBasket });
     actions.push({ label: `⚡ ${ENERGY_PACK} Energy · 💎 ${energyPrice()}`, wide: true, onClick: buyEnergy });
+    if (!pass.golden) actions.push({ label: `🎟️ ${GOLDEN_PASS.name}: golden rewards, 💎${GOLDEN_PASS.gemsPerDay} a day · ${GOLDEN_PASS.price}`, primary: true, wide: true, onClick: buyGoldenPass });
     actions.push({ label: '🏷️ Flash Sale & 🎁 Daily Deals at the Market', wide: true, onClick: () => { goTo('market'); openFlashSale(); } });
     actions.push({ label: 'Close' });
     showDialog({
@@ -800,8 +859,9 @@ function chestName(item) {
 function rewardText(r) {
     return [
         r.money && `💵${r.money}`, r.gems && `💎${r.gems}`, r.energy && `⚡${r.energy}`,
-        r.part && `🧩 Lv${r.part} part`, r.timeSkip && `⏳ ${BOOSTERS.skip.values[r.timeSkip - 1]}h skip`,
-        r.chest && `🧰 ${CHESTS[r.chest].name}`,
+        r.part && (r.part >= FIRST_WORKING_LEVEL ? `🏭 Lv${r.part} producer` : `🧩 Lv${r.part} part`),
+        r.timeSkip && `⏳ ${BOOSTERS.skip.values[r.timeSkip - 1]}h skip`,
+        r.chest && `🧰 ${CHESTS[r.chest].name}`, r.item && itemLabel(deliveryBoard(), r.item),
     ].filter(Boolean).join(' ');
 }
 
@@ -828,6 +888,11 @@ function grantReward(r, title) {
         const mode = randomBoard();
         crates[mode].push({ type: 'chest', kind: r.chest, level: 1 });
         where.push(`${CHESTS[r.chest].name} in your ${AREAS[mode].name} 🎁`);
+    }
+    if (r.item) {
+        const mode = deliveryBoard();
+        crates[mode].push({ ...r.item });
+        where.push(`in your ${AREAS[mode].name} 🎁`);
     }
     updateUI();
     toast(`${title} ${rewardText(r)}${where.length ? ` · ${where.join(' · ')}` : ''}`, 'good');
@@ -1340,9 +1405,11 @@ function renderMap() {
     side.className = 'side-buttons';
     side.innerHTML = `
         <button class="side-btn" id="btn-gift">🎁<small>Gift</small>${dailyAvailable() ? '<span class="badge">!</span>' : ''}</button>
-        <button class="side-btn" id="btn-quests">📋<small>Jobs</small>${openTasks().some(taskReady) ? '<span class="badge">!</span>' : ''}</button>`;
+        <button class="side-btn" id="btn-quests">📋<small>Jobs</small>${openTasks().some(taskReady) ? '<span class="badge">!</span>' : ''}</button>
+        <button class="side-btn" id="btn-pass">🎟️<small>Pass</small>${passClaimable() ? `<span class="badge">${passClaimable()}</span>` : ''}</button>`;
     side.querySelector('#btn-gift').addEventListener('click', openDailyGift);
     side.querySelector('#btn-quests').addEventListener('click', openTaskLog);
+    side.querySelector('#btn-pass').addEventListener('click', openPass);
     scene.appendChild(side);
 }
 
@@ -1531,6 +1598,125 @@ function renderMarket() {
     side.querySelector('#btn-flash').addEventListener('click', openFlashSale);
     side.querySelector('#btn-deals').addEventListener('click', openDailyDeals);
     scene.appendChild(side);
+}
+
+// --- SEASON PASS ---
+
+const DAY_MS = 86400000;
+
+function currentSeason(now = Date.now()) {
+    return Math.floor((now - SEASON_START) / (SEASON_DAYS * DAY_MS));
+}
+
+function seasonEnds() {
+    return SEASON_START + (pass.season + 1) * SEASON_DAYS * DAY_MS;
+}
+
+function seasonTheme() {
+    const n = SEASON_THEMES.length;
+    return SEASON_THEMES[((pass.season % n) + n) % n];
+}
+
+// A new season starts the pass over. Season items still on the boards count
+// toward the new one.
+function syncSeason() {
+    if (pass.season !== currentSeason()) {
+        Object.assign(pass, { season: currentSeason(), points: 0, golden: false, claimed: { free: [], golden: [] }, gemsDay: null });
+    }
+    const theme = seasonTheme();
+    CURRENCY.season.emoji = theme.emoji;
+    CURRENCY.season.name = theme.item;
+}
+
+// { level reached, points into the next level, points that level needs }
+function passProgress() {
+    let level = 0;
+    let left = pass.points;
+    while (level < PASS_REWARDS.length && left >= passLevelCost(level + 1)) {
+        left -= passLevelCost(level + 1);
+        level++;
+    }
+    return { level, into: left, need: level < PASS_REWARDS.length ? passLevelCost(level + 1) : 0 };
+}
+
+// Rewards reached but not claimed yet.
+function passClaimable() {
+    const { level } = passProgress();
+    let n = 0;
+    for (let l = 1; l <= level; l++) {
+        if (!pass.claimed.free.includes(l)) n++;
+        if (pass.golden && !pass.claimed.golden.includes(l)) n++;
+    }
+    return n;
+}
+
+function addPassPoints(n) {
+    const before = passProgress().level;
+    pass.points += n;
+    const after = passProgress().level;
+    if (after > before) toast(`🎟️ Pass level ${after}! Claim your reward on the map.`, 'good');
+}
+
+// The Golden Pass's 💎 for today, once a day while it lasts.
+function claimPassGems() {
+    if (!pass.golden || pass.gemsDay === today()) return;
+    pass.gemsDay = today();
+    res.gems += GOLDEN_PASS.gemsPerDay;
+    updateUI();
+    toast(`🎟️ ${GOLDEN_PASS.name}: +💎${GOLDEN_PASS.gemsPerDay}`, 'good');
+}
+
+function buyGoldenPass() {
+    if (pass.golden) return;
+    purchase(GOLDEN_PASS.id, () => {
+        pass.golden = true;
+        claimPassGems();
+        return `🎟️ ${GOLDEN_PASS.name} for ${seasonTheme().name}`;
+    });
+}
+
+function claimPassReward(track, level) {
+    const { level: reached } = passProgress();
+    if (level > reached || pass.claimed[track].includes(level) || (track === 'golden' && !pass.golden)) return;
+    pass.claimed[track].push(level);
+    grantReward(PASS_REWARDS[level - 1][track === 'free' ? 0 : 1], `🎟️ Level ${level}:`);
+    openPass();
+}
+
+function openPass() {
+    syncSeason();
+    const theme = seasonTheme();
+    const { level, into, need } = passProgress();
+    const cell = (track, l, reward) => {
+        const claimed = pass.claimed[track].includes(l);
+        const locked = l > level || (track === 'golden' && !pass.golden);
+        const state = claimed ? 'claimed' : locked ? 'locked' : 'ready';
+        return `<button class="pass-cell ${track} ${state}" data-track="${track}" data-level="${l}" ${state === 'ready' ? '' : 'disabled'}>
+                    ${rewardText(reward)}${claimed ? ' ✓' : locked && track === 'golden' && !pass.golden ? ' 🔒' : ''}</button>`;
+    };
+    const rows = PASS_REWARDS.map(([free, golden], i) => `
+        <div class="pass-row${i + 1 <= level ? ' reached' : ''}">
+            <span class="pass-level">${i + 1}</span>${cell('free', i + 1, free)}${cell('golden', i + 1, golden)}
+        </div>`).join('');
+    showDialog({
+        title: `🎟️ ${theme.name}`,
+        body: `<p class="hint">Season ends in ${formatDuration(seasonEnds() - Date.now())}.
+               Merges sometimes drop ${theme.emoji} ${theme.item}: merge them, then double-tap to collect.</p>
+               <div class="quest xp-row"><span>${theme.emoji} Level ${level}${need ? ` → ${level + 1}` : ' · max!'}</span>
+                   <small>${need ? `${into}/${need}` : pass.points}</small>
+                   <span class="quest-bar xp"><i style="width:${need ? (100 * into) / need : 100}%"></i></span></div>
+               <div class="pass-head"><span></span><span>Free</span><span>⭐ Golden</span></div>
+               <div class="pass-track">${rows}</div>
+               ${pass.golden ? `<p class="hint">Golden Pass on: 💎${GOLDEN_PASS.gemsPerDay} a day and +${GOLDEN_PASS.slots} 🎒 slots this season.</p>` : ''}`,
+        actions: [
+            pass.golden ? null : { label: `Get the ${GOLDEN_PASS.name} · ${GOLDEN_PASS.price}`, primary: true, wide: true, onClick: buyGoldenPass },
+            { label: 'Close' },
+        ].filter(Boolean),
+    });
+    dialogBody.querySelectorAll('.pass-cell.ready').forEach(btn => btn.addEventListener('click', () => claimPassReward(btn.dataset.track, Number(btn.dataset.level))));
+    // Scroll to the first level with something left to claim, or the next one to reach.
+    const target = dialogBody.querySelector('.pass-cell.ready') || dialogBody.querySelectorAll('.pass-row')[Math.min(level, PASS_REWARDS.length - 1)];
+    if (target) target.scrollIntoView({ block: 'center' });
 }
 
 // --- FLASH SALE & DAILY DEALS ---
@@ -1856,7 +2042,7 @@ function boardItemName(mode, item) {
         case 'box': return 'Crate';
         case 'shop': return producerName(mode, levelOf(item));
         case 'skip': case 'charger': case 'unlimited': return boosterName(item);
-        case 'coin': case 'gem': case 'energy': case 'xp': return `${currencyValue(item)} ${CURRENCY[item.type].name}`;
+        case 'coin': case 'gem': case 'energy': case 'xp': case 'season': return `${currencyValue(item)} ${CURRENCY[item.type].name}`;
         case 'chest': return chestName(item);
         case 'piggy': return `${PIGGY.name}${levelOf(item) > 1 ? ` Lv${levelOf(item)}` : ''}`;
         case 'bubble': return 'Double Bubble';
@@ -1870,7 +2056,7 @@ function itemEmojiFor(mode, item) {
         case 'box': return '📦';
         case 'shop': return levelOf(item) < FIRST_WORKING_LEVEL ? '🧩' : PRODUCERS[mode].emoji;
         case 'skip': case 'charger': case 'unlimited': return BOOSTERS[item.type].emoji;
-        case 'coin': case 'gem': case 'energy': case 'xp': return CURRENCY[item.type].emoji;
+        case 'coin': case 'gem': case 'energy': case 'xp': case 'season': return CURRENCY[item.type].emoji;
         case 'chest': return CHESTS[item.kind].emoji;
         case 'piggy': return PIGGY.emoji;
         case 'bubble': return '🫧';
@@ -1933,11 +2119,15 @@ function rollDrop(contents) {
     return { type: what === 'part' ? 'shop' : what, level };
 }
 
-// After a merge: maybe a Double Bubble with a copy of the new item, and an ⭐ XP
-// star for a big merge, each in the nearest free cell (the bubble first, as in
-// Merge Mansion). Returns the cells they landed in.
+// After a merge: maybe a Season Pass item, a Double Bubble with a copy of the
+// new item, and an ⭐ XP star for a big merge, each in the nearest free cell (in
+// that order, as in Merge Mansion). Returns the cells they landed in.
 function afterMerge(mode, index, made) {
     const landed = [];
+    if (made.type !== 'season' && Math.random() < SEASON_DROP_CHANCE) {
+        const at = spawnNear(mode, index, { type: 'season', level: 1 });
+        if (at !== -1) landed.push(at);
+    }
     const isProducer = made.type === 'shop';
     const odds = !made.type ? BUBBLE_ODDS[made.tier] : isProducer ? PRODUCER_BUBBLE_ODDS[made.level] : 0;
     if (odds && Math.random() < odds) {
@@ -2064,6 +2254,7 @@ function collectCurrency(mode, index) {
     if (item.type === 'xp') addXp(value);
     else if (item.type === 'coin') res.money += value;
     else if (item.type === 'gem') res.gems += value;
+    else if (item.type === 'season') addPassPoints(value);
     else { res.energy += value; tickEnergy(); }
     toast(`+${CURRENCY[item.type].emoji}${value}`, 'good');
     updateUI();
@@ -2084,7 +2275,7 @@ function storeItem(mode, index) {
         toast('That can\'t go in the 🎒.');
         return false;
     }
-    if (inventory.items.length >= inventory.slots) {
+    if (inventory.items.length >= inventoryCapacity()) {
         toast('Your 🎒 is full. Tap it to buy another slot.');
         return false;
     }
@@ -2120,6 +2311,11 @@ function takeFromInventory(i) {
     else refreshBoard(mode, [at]);
 }
 
+// Slots you can use now: your own, plus the Golden Pass's while it lasts.
+function inventoryCapacity() {
+    return inventory.slots + (pass.golden ? GOLDEN_PASS.slots : 0);
+}
+
 // 💵 for the next slot, or undefined when you have them all.
 function inventorySlotPrice() {
     return INVENTORY_SLOT_PRICES[inventory.slots - INVENTORY_FREE_SLOTS];
@@ -2137,7 +2333,7 @@ function buyInventorySlot() {
 
 function openInventory(mode) {
     const price = inventorySlotPrice();
-    const slots = Array.from({ length: inventory.slots }, (_, i) => {
+    const slots = Array.from({ length: Math.max(inventoryCapacity(), inventory.items.length) }, (_, i) => {
         const entry = inventory.items[i];
         if (!entry) return '<span class="inv-slot empty"></span>';
         const here = entry.mode === mode;
@@ -2146,7 +2342,7 @@ function openInventory(mode) {
                 </button>`;
     }).join('');
     showDialog({
-        title: `🎒 Inventory · ${inventory.items.length}/${inventory.slots}`,
+        title: `🎒 Inventory · ${inventory.items.length}/${inventoryCapacity()}`,
         body: `<div class="inv-grid">${slots}</div>
                <p class="hint">Drag an item onto 🎒 to store it, tap it here to take it out. Timers stop while stored.</p>`,
         actions: [price ? buyAction(price, buyInventorySlot, `+1 slot · 💵${price}`) : null, { label: 'Close' }].filter(Boolean),
@@ -2170,7 +2366,7 @@ function renderInfoBar(mode) {
     const text = (title, small) => `<span class="info-text"><b>${title}</b><br><small>${small}</small></span>`;
     const button = (cls, label) => `<button class="sell-btn ${cls}">${label}</button>`;
     const countdown = at => `<span data-ready="${at}">${formatDuration(at - Date.now())}</span>`;
-    let html = `<button class="inv-btn" title="Inventory: drag items here">🎒<small>${inventory.items.length}/${inventory.slots}</small></button>`;
+    let html = `<button class="inv-btn" title="Inventory: drag items here">🎒<small>${inventory.items.length}/${inventoryCapacity()}</small></button>`;
     if (crates[mode].length) html += `<button class="crate-btn">🎁 ${crates[mode].length}</button>`;
 
     if (!item && lastSale && lastSale.mode === mode) {
@@ -2620,7 +2816,7 @@ function itemFace(mode, item) {
         }
         case 'skip': case 'charger': case 'unlimited':
             return { cls: ['booster', `booster-${item.type}`].concat(item.until ? ['running'] : []), html: named(itemEmojiFor(mode, item), boosterAmount(item)), badge: levelOf(item) };
-        case 'coin': case 'gem': case 'energy': case 'xp':
+        case 'coin': case 'gem': case 'energy': case 'xp': case 'season':
             return { cls: ['currency', `cur-${item.type}`], html: named(itemEmojiFor(mode, item), currencyValue(item)), badge: levelOf(item) };
         case 'chest':
             return { cls: ['chest', `chest-${item.kind}`].concat(chestReady(item) ? ['open'] : item.openAt ? [] : ['locked']), html: named(itemEmojiFor(mode, item), CHESTS[item.kind].name), badge: levelOf(item) };
@@ -2711,7 +2907,7 @@ function saveGame() {
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
             version: SAVE_VERSION,
-            res, energyAt, shop, crates, inventory, stats, quests, restoration, daily, settings, unlocks, maxTier, grids, lastBoard,
+            res, energyAt, shop, crates, inventory, stats, quests, restoration, pass, daily, settings, unlocks, maxTier, grids, lastBoard,
             tickedAt: lastTickAt,
             npcs: npcs.map(({ id, deliveries, request }) => ({ id, deliveries, request })),
         }));
@@ -2750,6 +2946,7 @@ function loadGame() {
         quests.level = save.quests.level || 1;
         quests.xp = save.quests.xp || 0;
         if (save.restoration) Object.assign(restoration, save.restoration);
+        if (save.pass) Object.assign(pass, save.pass);
         Object.assign(inventory, save.inventory);
         if (version < 4) {
             // Land bought before restoration jobs existed counts as its first job done.
@@ -2791,10 +2988,12 @@ if (!loadGame()) {
 // Jobs already ready when the game opens are shown by the 📋 badge, not announced.
 openTasks().filter(taskReady).forEach(task => announcedTasks.add(task.id));
 checkTasks();
+syncSeason();
 tickEnergy(); // catch up on energy and timers that ran while the game was closed
 tickBoards();
 addXp(0); // a migrated save may already have enough XP for its next level
 claimDailyBasket();
+claimPassGems();
 Object.keys(grids).forEach(mode => renderGrid(mode));
 updateUI();
 goTo('map');
@@ -2807,6 +3006,8 @@ setInterval(() => {
     // Redraw a board when one of its timers ends, but not mid-drag (the drop redraws it).
     if (changed.includes(currentScene) && !draggedItemInfo) refreshBoard(currentScene);
     claimDailyBasket();
+    syncSeason();
+    claimPassGems();
     updateUI();
     updateCountdowns();
     saveGame();

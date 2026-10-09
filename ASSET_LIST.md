@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**204 assets:** 16 done ✅, 25 placeholders 🟡, 163 missing ⬜.
+**208 assets:** 16 done ✅, 25 placeholders 🟡, 167 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -288,7 +288,7 @@ levels 4-8 get bigger and fancier; level 8 is golden.
 | ⬜ | 7 (producer) | Rain Barrel | `assets/producers/flower/7_rain_barrel.png` |
 | ⬜ | 8 (producer) | Golden Fountain | `assets/producers/flower/8_golden_fountain.png` |
 
-## 9. Special items (41)
+## 9. Special items (45)
 
 The same on every board. Each level looks fuller or bigger than the one before.
 
@@ -298,6 +298,7 @@ The same on every board. Each level looks fuller or bigger than the one before.
 | ⬜ | Gems | 4 | `assets/items/special/gem_1.png` … `_4.png` | a blue gem → 2 gems → 3 gems → gem cluster |
 | ⬜ | Energy | 5 | `assets/items/special/energy_1.png` … `_5.png` | a yellow lightning bolt in a bubble, bigger and brighter each level |
 | ⬜ | XP stars | 5 | `assets/items/special/xp_1.png` … `_5.png` | a golden star, bigger and more sparkly each level |
+| ⬜ | Season Pass items | 4 | `assets/items/special/season_1.png` … `_4.png` | a golden ticket with a four-leaf clover, more of them each level (works for every season) |
 | ⬜ | Time Skip | 4 | `assets/items/special/skip_1.png` … `_4.png` | an hourglass, fancier each level (1h, 2h, 4h, 8h) |
 | ⬜ | Time Charger | 4 | `assets/items/special/charger_1.png` … `_4.png` | a stopwatch with a green glow, fancier each level (2h-16h) |
 | ⬜ | Unlimited Energy | 3 | `assets/items/special/unlimited_1.png` … `_3.png` | a purple infinity sign with a bolt (5, 10, 20 min) |
