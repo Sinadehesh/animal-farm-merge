@@ -93,6 +93,11 @@ const ASSETS = {
         fert: [],
         aqua: [],
         flower: [],
+        // Each Fair theme's producer has one level: put its picture at index 3.
+        fair_pie: [],
+        fair_flowers: [],
+        fair_fishing: [],
+        fair_pumpkin: [],
     },
 
     // Currency items, boosters, chests and Piggy Banks, indexed by level - 1.
@@ -136,5 +141,10 @@ const ASSETS = {
         fert: [],
         aqua: [],
         flower: [],
+        // Country Fair chains, one per weekly theme (8 tiers each).
+        fair_pie: [],
+        fair_flowers: [],
+        fair_fishing: [],
+        fair_pumpkin: [],
     },
 };

@@ -344,6 +344,10 @@ const OFFERS = [
       reward: { energy: 400, item: { type: 'unlimited', level: 2 } },
       note: 'Out of energy again? Keep playing with ⚡400 and 10 minutes of free taps.',
       when: state => stats.outOfEnergy - (state.base || 0) >= 3 },
+    { id: 'fair_pack', name: 'Fair Pack', price: '$3.99', hours: 24, again: 4,
+      reward: { energy: 300, fairBoost: 60 },
+      note: 'Win the Fair! ⚡300 and an hour of double Fair points.',
+      when: () => fairOpen() },
     { id: 'builder', name: 'Builder Pack', price: '$4.99', hours: 24,
       reward: { gems: 400, part: 4, item: { type: 'charger', level: 2 } },
       note: 'A whole working producer, and a Time Charger to speed it up.',
@@ -363,6 +367,35 @@ const DAILY_GOALS = [
     { id: 'chest', label: 'Take 10 things out of chests or piggy banks', stat: 'chestDrops', n: 10, level: 3 },
 ];
 const DAILY_CHEST = [{ money: 100, energy: 20 }, { energy: 50, gems: 5 }, { chest: 'brown', gems: 15 }];
+
+// Country Fair (Merge Mansion's seasonal board events, with a leaderboard race):
+// every Friday to Sunday a Fair opens with its own board and merge chain, a
+// different theme each week. Its producer costs ⚡ like any other. Every merge
+// there scores points (the tier it makes, so bigger merges score more),
+// milestones pay out as you reach them, and you race five townsfolk for the
+// top three prizes. The Fair board is cleared when it ends.
+const FAIR_LEVEL = 2;
+const FAIR_DAYS = 3; // Friday, Saturday, Sunday
+const FAIR_THEMES = [
+    { id: 'pie', name: 'Pie Contest', emoji: '🥧', hue: 30, producer: ['🥣', 'Mixing Bowl'],
+      names: ['🌾 Flour', '🫓 Dough', '🥧 Pie Crust', '🍏 Apple Pie', '🫐 Berry Pie', '🍰 Layer Cake', '🎂 Wedding Cake', '🏆 Golden Pie'] },
+    { id: 'flowers', name: 'Flower Show', emoji: '🌸', hue: 320, producer: ['🪴', 'Seed Tray'],
+      names: ['🌰 Seed Packet', '🌱 Sprout', '🌷 Bud', '💐 Posy', '💐 Bouquet', '🧺 Flower Basket', '🌸 Flower Arch', '🏵️ Prize Rosette'] },
+    { id: 'fishing', name: 'Fishing Derby', emoji: '🎣', hue: 200, producer: ['🧰', 'Tackle Box'],
+      names: ['🪱 Bait', '🪝 Hook', '🎣 Lure', '🐟 Little Fish', '🐠 Trout', '🐡 Salmon', '🐋 Big Catch', '🏆 Trophy Fish'] },
+    { id: 'pumpkin', name: 'Pumpkin Fair', emoji: '🎃', hue: 25, producer: ['🌱', 'Pumpkin Patch'],
+      names: ['🌰 Pumpkin Seed', '🌱 Vine', '🟠 Little Pumpkin', '🎃 Pumpkin', '🎃 Big Pumpkin', '🎃 Giant Pumpkin', '🏵️ Prize Pumpkin', '👑 Golden Pumpkin'] },
+];
+// [points, reward] for each milestone.
+const FAIR_MILESTONES = [
+    [20, { energy: 20 }], [50, { money: 100 }], [90, { chest: 'brown' }], [140, { gems: 10 }], [200, { timeSkip: 1 }],
+    [270, { energy: 60 }], [350, { chest: 'blue' }], [440, { part: 3 }], [540, { gems: 30 }], [650, { part: 4, gems: 50 }],
+];
+// The townsfolk you race (game characters, not other players) and roughly how
+// far each gets, as a share of the last milestone.
+const FAIR_RIVALS = [['robin', 0.45], ['willy', 0.7], ['sandy', 0.9], ['mayor', 1.1], ['marnie', 1.35]];
+// Prizes for 1st, 2nd and 3rd when the Fair ends.
+const FAIR_PRIZES = [{ gems: 50, chest: 'blue' }, { gems: 25, chest: 'brown' }, { gems: 10 }];
 
 let unlocks = { barn: true, hay: false, farm: false, fert: false, aqua: false, flower: false };
 let maxTier = 3;
@@ -385,7 +418,7 @@ const restoration = { done: [], baselines: {} };
 // Daily gift track: the last day claimed and how many days in a row.
 const daily = { lastDay: null, streak: 0 };
 // Rewards and purchases waiting in each board's 🎁 until placed.
-const crates = { barn: [], hay: [], farm: [], fert: [], aqua: [], flower: [] };
+const crates = { barn: [], hay: [], farm: [], fert: [], aqua: [], flower: [], fair: [] };
 // Stored items, each with the board it belongs to, and how many slots you have.
 const inventory = { slots: INVENTORY_FREE_SLOTS, items: [] };
 // Daily Basket, Special Offer, energy purchases, ads, Flash Sale and Daily
@@ -398,6 +431,9 @@ const shop = {
 };
 // Today's daily goals and the counters they count from.
 const dailyGoals = { day: null, ids: [], base: {}, claimed: 0 };
+// The current (or last) Country Fair: its first day, points, milestones paid,
+// when double points end, and whether it has been wrapped up.
+const fair = { id: null, points: 0, milestones: 0, boostUntil: 0, finished: true };
 // The last board you were on: where things you buy at the Market are sent.
 let lastBoard = 'barn';
 // This season's pass: points, the Golden Pass, rewards claimed per track.
@@ -441,11 +477,32 @@ function getHue(mode, tier) {
     else if (mode === 'fert') return (tier * 15 + 280) % 360;
     else if (mode === 'aqua') return (tier * 15 + 200) % 360;
     else if (mode === 'flower') return (tier * 15 + 320) % 360;
+    else if (mode === 'fair') return (tier * 15 + fairTheme().hue) % 360;
     return 0;
 }
 
+// Where a board's art is listed in assets.js (each Fair theme has its own).
+function artKey(mode) {
+    return mode === 'fair' ? `fair_${fairTheme().id}` : mode;
+}
+
 function itemSprite(mode, tier) {
-    return (ASSETS.items[mode] || [])[tier] || null;
+    return (ASSETS.items[artKey(mode)] || [])[tier] || null;
+}
+
+// The seven boards: the six lands and the Fair.
+function isBoard(scene) {
+    return !!AREAS[scene] || scene === 'fair';
+}
+
+function boardTitle(mode) {
+    return mode === 'fair' ? `${fairTheme().emoji} ${fairTheme().name}` : AREAS[mode].name;
+}
+
+// The highest tier you can merge to: the Growth Guide's on the lands, the whole
+// chain at the Fair.
+function tierCap(mode) {
+    return mode === 'fair' ? NAMES.fair.length - 1 : maxTier;
 }
 
 function itemEmoji(mode, tier) {
@@ -928,6 +985,7 @@ function rewardText(r) {
         r.part && (r.part >= FIRST_WORKING_LEVEL ? `🏭 Lv${r.part} producer` : `🧩 Lv${r.part} part`),
         r.timeSkip && `⏳ ${BOOSTERS.skip.values[r.timeSkip - 1]}h skip`,
         r.chest && `🧰 ${CHESTS[r.chest].name}`, r.item && itemLabel(deliveryBoard(), r.item),
+        r.fairBoost && `🎪 ${r.fairBoost}m double Fair points`,
     ].filter(Boolean).join(' ');
 }
 
@@ -955,6 +1013,7 @@ function grantReward(r, title) {
         crates[mode].push({ type: 'chest', kind: r.chest, level: 1 });
         where.push(`${CHESTS[r.chest].name} in your ${AREAS[mode].name} 🎁`);
     }
+    if (r.fairBoost) fair.boostUntil = Math.max(Date.now(), fair.boostUntil) + r.fairBoost * 60000;
     if (r.item) {
         const mode = deliveryBoard();
         crates[mode].push({ ...r.item });
@@ -1420,15 +1479,15 @@ function goTo(scene) {
     closeDialog();
     document.querySelectorAll('.scene').forEach(el => { el.hidden = el.id !== `scene-${scene}`; });
     backBtn.hidden = scene === 'map';
-    chargeBtn.hidden = !AREAS[scene];
+    chargeBtn.hidden = !isBoard(scene);
 
     if (scene === 'map') { titleEl.textContent = 'Farmstead'; renderMap(); }
     else if (scene === 'town') { titleEl.textContent = 'Town Square'; renderTown(); }
     else if (scene === 'market') { titleEl.textContent = 'Market'; renderMarket(); }
     else {
         if (selected && selected.mode !== scene) selected = null;
-        lastBoard = scene;
-        titleEl.textContent = AREAS[scene].name;
+        if (AREAS[scene]) lastBoard = scene;
+        titleEl.textContent = boardTitle(scene);
         refreshBoard(scene);
     }
     updateTutorial();
@@ -1479,6 +1538,18 @@ function renderMap() {
         scene.appendChild(spot);
     });
 
+    // The Fair's ribbon: while it's on, and a reminder of the next one.
+    if (quests.level >= FAIR_LEVEL) {
+        const ribbon = document.createElement('button');
+        ribbon.className = 'fair-ribbon' + (fairOpen() ? ' open' : '');
+        ribbon.id = 'btn-fair';
+        ribbon.innerHTML = fairOpen()
+            ? `${fairTheme().emoji} ${fairTheme().name} <small>🏆 ${ordinal(fairRank())} · <span data-ready="${fairEndsAt()}">${formatDuration(fairEndsAt() - Date.now())}</span></small>`
+            : `🎪 Next Fair <small>in ${formatDuration(dayStart(nextFairDay()) - Date.now())}</small>`;
+        ribbon.addEventListener('click', () => (fairOpen() ? goTo('fair') : openFairInfo()));
+        scene.appendChild(ribbon);
+    }
+
     // Daily gift and jobs, always one tap away on the map.
     const side = document.createElement('div');
     side.className = 'side-buttons';
@@ -1488,14 +1559,14 @@ function renderMap() {
         <button class="side-btn" id="btn-pass">🎟️<small>Pass</small>${passClaimable() ? `<span class="badge">${passClaimable()}</span>` : ''}</button>
         <button class="side-btn" id="btn-daily">📅<small>Daily</small>${dailyClaimable() > 0 ? '<span class="badge">!</span>' : ''}</button>
         <button class="side-btn" id="btn-jar">🫙<small>💎${shop.jar}</small>${jarReady() ? '<span class="badge">!</span>' : ''}</button>
-        ${activeOffers().length ? `<button class="side-btn offer-btn" id="btn-offer">🔥<small data-ready="${shop.offers[activeOffers()[0].id].until}">${formatDuration(shop.offers[activeOffers()[0].id].until - Date.now())}</small></button>` : ''}`;
+        ${activeOffers().length ? `<button class="side-btn offer-btn" id="btn-offer">🔥<small data-ready="${shop.offers[activeOffers()[0].id].until}">${formatDuration(shop.offers[activeOffers()[0].id].until - Date.now())}</small>${activeOffers().length > 1 ? `<span class="badge">${activeOffers().length}</span>` : ''}</button>` : ''}`;
     side.querySelector('#btn-gift').addEventListener('click', openDailyGift);
     side.querySelector('#btn-quests').addEventListener('click', openTaskLog);
     side.querySelector('#btn-pass').addEventListener('click', openPass);
     side.querySelector('#btn-daily').addEventListener('click', openDailyGoals);
     side.querySelector('#btn-jar').addEventListener('click', openGemJar);
     const offerBtn = side.querySelector('#btn-offer');
-    if (offerBtn) offerBtn.addEventListener('click', () => openOffer(activeOffers()[0].id));
+    if (offerBtn) offerBtn.addEventListener('click', openOffers);
     scene.appendChild(side);
 }
 
@@ -1785,6 +1856,189 @@ function updateTutorial() {
     tutorialEl.classList.toggle('bubble-top', from.y > stage.height / 2);
 }
 
+// --- COUNTRY FAIR ---
+
+// The Fair board's own chain and producer change with the theme. Its producer
+// has charges to spare: at the Fair, energy is the only limit.
+function fairTheme() {
+    const id = fair.id !== null ? fair.id : currentFairId() !== null ? currentFairId() : nextFairDay();
+    const n = FAIR_THEMES.length;
+    return FAIR_THEMES[((Math.floor(id / 7) % n) + n) % n];
+}
+
+function applyFairTheme() {
+    const theme = fairTheme();
+    NAMES.fair = theme.names;
+    const [emoji, name] = theme.producer;
+    PRODUCERS.fair = { emoji, minutes: 1, names: [name, name, name, name], levels: [[10, 30, 1]] };
+}
+
+// Day of the week for a day number from today(): 0 Sunday ... 5 Friday, 6 Saturday.
+function weekday(day) {
+    return ((day + 4) % 7 + 7) % 7;
+}
+
+// The Friday the current Fair started, or null outside Friday to Sunday.
+function currentFairId() {
+    const day = today();
+    const since = (weekday(day) - 5 + 7) % 7; // days since Friday
+    return since < FAIR_DAYS ? day - since : null;
+}
+
+function nextFairDay() {
+    const day = today();
+    return day + ((5 - weekday(day) + 7) % 7 || 7);
+}
+
+// Local midnight at the start of a day number.
+function dayStart(day) {
+    return day * DAY_MS + new Date().getTimezoneOffset() * 60000;
+}
+
+function fairEndsAt() {
+    return dayStart(fair.id + FAIR_DAYS);
+}
+
+function fairOpen() {
+    return fair.id !== null && !fair.finished && fair.id === currentFairId();
+}
+
+function fairBoosted() {
+    return fair.boostUntil > Date.now();
+}
+
+// A fresh Fair board: its producer in the corner, the rest empty.
+function freshFairBoard() {
+    const board = Array(NUM_CELLS).fill(null);
+    board[0] = { type: 'shop', level: FIRST_WORKING_LEVEL };
+    return board;
+}
+
+// Starts a Fair when one is on (from level FAIR_LEVEL) and wraps up the last
+// one once it's over.
+function syncFair() {
+    const id = currentFairId();
+    if (fair.id !== null && !fair.finished && fair.id !== id) finishFair();
+    if (id !== null && fair.id !== id && quests.level >= FAIR_LEVEL) {
+        Object.assign(fair, { id, points: 0, milestones: 0, boostUntil: 0, finished: false });
+        applyFairTheme();
+        grids.fair = freshFairBoard();
+        tickProducer('fair', grids.fair[0]);
+        toast(`🎪 The ${fairTheme().name} is on until Sunday! Find it on the map.`, 'good');
+    }
+    applyFairTheme();
+}
+
+// A small seeded random number in [0, 1), so rivals do the same on every reload.
+function seeded(n) {
+    const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453;
+    return x - Math.floor(x);
+}
+
+// Where a rival is now: they head for their final score, some fast early on,
+// some late sprinters.
+function rivalScore(i, now = Date.now()) {
+    const start = dayStart(fair.id);
+    const frac = Math.min(1, Math.max(0, (now - start) / (fairEndsAt() - start)));
+    const goal = FAIR_MILESTONES[FAIR_MILESTONES.length - 1][0] * FAIR_RIVALS[i][1] * (0.85 + 0.3 * seeded(fair.id * 7 + i));
+    const pace = 0.7 + 0.7 * seeded(fair.id * 13 + i);
+    return Math.round(goal * frac ** pace);
+}
+
+// Everyone in the race, best first.
+function fairStandings(now = Date.now()) {
+    return FAIR_RIVALS.map(([id], i) => ({ id, name: npcs.find(n => n.id === id).name, score: rivalScore(i, now) }))
+        .concat({ id: 'me', name: 'You', score: fair.points })
+        .sort((a, b) => b.score - a.score || (a.id === 'me' ? -1 : 1));
+}
+
+function fairRank(now) {
+    return fairStandings(now).findIndex(e => e.id === 'me') + 1;
+}
+
+function ordinal(n) {
+    return n + (['th', 'st', 'nd', 'rd'][n % 100 > 10 && n % 100 < 14 ? 0 : n % 10] || 'th');
+}
+
+// Points for a merge at the Fair, doubled while the Fair Pack's boost runs;
+// milestones pay as soon as they're reached.
+function addFairPoints(tier) {
+    if (!fairOpen()) return;
+    fair.points += tier * (fairBoosted() ? 2 : 1);
+    while (fair.milestones < FAIR_MILESTONES.length && fair.points >= FAIR_MILESTONES[fair.milestones][0]) {
+        fair.milestones++;
+        grantReward(FAIR_MILESTONES[fair.milestones - 1][1], `🎪 Milestone ${fair.milestones}:`);
+    }
+}
+
+// Results waiting to be shown once nothing else is on screen.
+let pendingFairResults = null;
+
+function finishFair() {
+    const rank = fairRank(fairEndsAt());
+    const prize = FAIR_PRIZES[rank - 1];
+    if (prize) grantReward(prize, `🎪 ${ordinal(rank)} place:`);
+    pendingFairResults = { theme: fairTheme().name, rank, prize, points: fair.points };
+    fair.finished = true;
+    grids.fair = Array(NUM_CELLS).fill(null);
+    if (currentScene === 'fair') goTo('map');
+}
+
+function showFairResults() {
+    if (!pendingFairResults || !dialogEl.hidden || draggedItemInfo) return;
+    const r = pendingFairResults;
+    pendingFairResults = null;
+    showDialog({
+        title: `🎪 ${r.theme} results`,
+        body: `<p class="big-count">${r.rank <= 3 ? ['🥇', '🥈', '🥉'][r.rank - 1] : '🎗️'} ${ordinal(r.rank)}</p>
+               <p>You scored <b>${r.points}</b> points.</p>
+               <p>${r.prize ? `<b>Prize:</b> ${rewardText(r.prize)}` : 'No prize this time. Next Friday, a new Fair!'}</p>`,
+        actions: [{ label: 'OK', primary: true }],
+    });
+}
+
+// The strip above the Fair board: time left, points toward the next
+// milestone, and your place in the race.
+function renderFairHeader(el) {
+    const next = FAIR_MILESTONES[fair.milestones];
+    const prev = fair.milestones ? FAIR_MILESTONES[fair.milestones - 1][0] : 0;
+    const width = next ? (100 * (fair.points - prev)) / (next[0] - prev) : 100;
+    el.innerHTML = `<button class="fair-header">
+        <span class="fair-top"><b>${fairTheme().emoji} ${fairTheme().name}</b>
+            <span>⏳ <span data-ready="${fairEndsAt()}">${formatDuration(fairEndsAt() - Date.now())}</span></span>
+            <span class="fair-rank">🏆 ${ordinal(fairRank())}</span></span>
+        <span class="quest-bar xp"><i style="width:${Math.min(100, width)}%"></i></span>
+        <span class="fair-next">${fair.points} pts${next ? ` · next at ${next[0]}: ${rewardText(next[1])}` : ' · every milestone done!'}${fairBoosted() ? ' · ⚡2× points' : ''}</span>
+    </button>`;
+    el.querySelector('.fair-header').addEventListener('click', openFairInfo);
+}
+
+function openFairInfo() {
+    if (!fairOpen()) {
+        showDialog({
+            title: '🎪 Country Fair',
+            body: `<p>Every Friday to Sunday the Fair comes to town with its own board and prizes.</p>
+                   <p class="hint">${quests.level < FAIR_LEVEL ? `Reach level ${FAIR_LEVEL} to join.` : `The next one, the ${fairTheme().name}, opens in ${formatDuration(dayStart(nextFairDay()) - Date.now())}.`}</p>`,
+            actions: [{ label: 'OK' }],
+        });
+        return;
+    }
+    const miles = FAIR_MILESTONES.map(([pts, reward], i) => `
+        <div class="quest${i < fair.milestones ? ' done' : ''}"><span>${i < fair.milestones ? '✅' : '⬜'} ${pts} pts</span><small>${rewardText(reward)}</small></div>`).join('');
+    const race = fairStandings().map((e, i) => `
+        <div class="race-row${e.id === 'me' ? ' me' : ''}"><span>${i + 1}. ${e.name}</span><b>${e.score}</b>${FAIR_PRIZES[i] ? `<small>${rewardText(FAIR_PRIZES[i])}</small>` : '<small></small>'}</div>`).join('');
+    showDialog({
+        title: `${fairTheme().emoji} ${fairTheme().name}`,
+        body: `<p class="hint">Ends in ${formatDuration(fairEndsAt() - Date.now())}. Merge here to score: the bigger the merge, the more points.</p>
+               <h3 class="fair-h">🏆 The race</h3>${race}
+               <h3 class="fair-h">🎯 Milestones</h3>${miles}`,
+        actions: [
+            currentScene !== 'fair' ? { label: 'Go to the Fair', primary: true, wide: true, onClick: () => goTo('fair') } : null,
+            { label: 'Close' },
+        ].filter(Boolean),
+    });
+}
+
 // --- GEM JAR ---
 
 function fillJar(n) {
@@ -1839,8 +2093,8 @@ function activeOffers() {
     return OFFERS.filter(offerActive);
 }
 
-// An offer that just opened, to show as soon as nothing else is on screen.
-let pendingOffer = null;
+// Offers that just opened, shown one at a time once nothing else is on screen.
+const pendingOffers = [];
 
 // Opens any offer whose moment has come (once, or again after `again` days).
 function checkOffers() {
@@ -1850,13 +2104,9 @@ function checkOffers() {
         if (s.until && (!offer.again || now < s.until + offer.again * DAY_MS)) return;
         if (!offer.when(s)) return;
         Object.assign(s, { until: now + offer.hours * 3600000, bought: false, base: stats.outOfEnergy });
-        pendingOffer = offer.id;
+        pendingOffers.push(offer.id);
     });
-    if (pendingOffer && dialogEl.hidden && !draggedItemInfo) {
-        const id = pendingOffer;
-        pendingOffer = null;
-        openOffer(id);
-    }
+    if (pendingOffers.length && dialogEl.hidden && !draggedItemInfo) openOffer(pendingOffers.shift());
 }
 
 function openOffer(id) {
@@ -1869,6 +2119,20 @@ function openOffer(id) {
                <p class="offer-reward">${rewardText(offer.reward)}</p>
                <p class="hint">Ends in <span data-ready="${until}">${formatDuration(until - Date.now())}</span></p>`,
         actions: [{ label: `Get it · ${offer.price}`, primary: true, wide: true, onClick: () => buyOffer(id) }, { label: 'No thanks' }],
+    });
+}
+
+// 🔥 on the map: the one offer, or a list when there are several.
+function openOffers() {
+    const list = activeOffers();
+    if (list.length === 1) return openOffer(list[0].id);
+    showDialog({
+        title: '🔥 Offers',
+        body: '<p class="hint">Each one is only here for a little while.</p>',
+        actions: [
+            ...list.map(o => ({ label: `${o.name} · ${o.price}`, primary: true, wide: true, onClick: () => openOffer(o.id) })),
+            { label: 'Close' },
+        ],
     });
 }
 
@@ -2236,7 +2500,7 @@ function updateUI() {
     chargeBtn.textContent = mode.label;
     chargeBtn.title = mode.name;
     chargeBtn.classList.toggle('on', settings.charge > 0);
-    chargeBtn.hidden = !AREAS[currentScene];
+    chargeBtn.hidden = !isBoard(currentScene);
 }
 
 // Countdowns on the board and in dialogs tick in place, so a tap isn't lost
@@ -2261,9 +2525,10 @@ const grids = {
     'barn': Array(NUM_CELLS).fill(null),
     'fert': Array(NUM_CELLS).fill(null),
     'aqua': Array(NUM_CELLS).fill(null),
-    'flower': Array(NUM_CELLS).fill(null)
+    'flower': Array(NUM_CELLS).fill(null),
+    'fair': Array(NUM_CELLS).fill(null),
 };
-Object.keys(grids).forEach(mode => grids[mode][0] = { type: 'shop', level: FIRST_WORKING_LEVEL });
+Object.keys(AREAS).forEach(mode => grids[mode][0] = { type: 'shop', level: FIRST_WORKING_LEVEL });
 
 // A fresh board starts cluttered, as in Merge Mansion: 📦 crates that open when
 // you merge next to them, each hiding a cobwebbed item, and cobwebbed items you
@@ -2303,8 +2568,8 @@ function openBoxesAround(mode, index) {
     return opened;
 }
 
-// Build one board scene per area.
-Object.keys(AREAS).forEach(mode => {
+// Build one board scene per area, and one for the Fair.
+Object.keys(AREAS).concat('fair').forEach(mode => {
     const scene = document.createElement('section');
     scene.className = `scene board board-${mode}`;
     scene.id = `scene-${mode}`;
@@ -2323,7 +2588,8 @@ let lastSale = null;
 function renderBoardHeader(mode) {
     const header = document.querySelector(`#scene-${mode} .board-header`);
     header.innerHTML = '<div class="orders"></div><div class="info-bar"></div>';
-    renderOrders(mode, header.querySelector('.orders'));
+    if (mode === 'fair') renderFairHeader(header.querySelector('.orders'));
+    else renderOrders(mode, header.querySelector('.orders'));
     renderInfoBar(mode);
 }
 
@@ -2385,6 +2651,7 @@ function renderOrders(mode, el) {
 }
 
 function sellPrice(mode, item) {
+    if (mode === 'fair') return 1; // Fair items are for points, as on Merge Mansion's event boards
     return SELL_PRICES[Math.min(item.tier, SELL_PRICES.length - 1)];
 }
 
@@ -2486,6 +2753,10 @@ function rollDrop(contents) {
 // that order, as in Merge Mansion). Returns the cells they landed in.
 function afterMerge(mode, index, made) {
     const landed = [];
+    if (mode === 'fair') {
+        if (!made.type) addFairPoints(made.tier);
+        return landed;
+    }
     if (made.type !== 'season' && Math.random() < SEASON_DROP_CHANCE) {
         const at = spawnNear(mode, index, { type: 'season', level: 1 });
         if (at !== -1) landed.push(at);
@@ -2635,6 +2906,10 @@ function canStore(item) {
 
 function storeItem(mode, index) {
     const item = grids[mode][index];
+    if (mode === 'fair') {
+        toast('Fair items stay at the Fair.');
+        return false;
+    }
     if (!canStore(item)) {
         toast('That can\'t go in the 🎒.');
         return false;
@@ -2750,7 +3025,8 @@ function renderInfoBar(mode) {
     } else if (item.type === 'shop') {
         const level = levelOf(item);
         const name = producerName(mode, level);
-        const next = level < PRODUCER_MAX_LEVEL ? `Merge two to make a ${producerName(mode, level + 1)}.` : 'Top level!';
+        const next = mode === 'fair' ? 'Every merge here scores Fair points.'
+            : level < PRODUCER_MAX_LEVEL ? `Merge two to make a ${producerName(mode, level + 1)}.` : 'Top level!';
         if (level < FIRST_WORKING_LEVEL) {
             html += icon + text(`${name} · part Lv${level}`, `${next} At Lv${FIRST_WORKING_LEVEL} it becomes a ${producerBaseName(mode)} that makes items.`) + chainBtn;
         } else {
@@ -2793,7 +3069,7 @@ function renderInfoBar(mode) {
     } else {
         const last = NAMES[mode].length - 1;
         const tip = item.tier >= last ? 'The best there is!'
-            : item.tier >= maxTier ? 'Max tier for now: buy the Growth Guide at the Market.'
+            : item.tier >= tierCap(mode) ? 'Max tier for now: buy the Growth Guide at the Market.'
             : `Merge two to make ${itemIcon(mode, item.tier + 1)} ${itemName(mode, item.tier + 1)}.`;
         html += icon + text(`${itemName(mode, item.tier)} · tier ${item.tier}`, tip) + chainBtn + button('sell-item-btn', `Sell<br>💵${sellPrice(mode, item)}`);
     }
@@ -2887,13 +3163,15 @@ function cycleCharge() {
 // The whole merge chain of a board, like Merge Mansion's "i" button.
 function openChain(mode, highlightTier) {
     const tiles = NAMES[mode].map((_, t) => `
-        <div class="chain-tile${t === highlightTier ? ' current' : ''}${t > maxTier ? ' locked' : ''}">
+        <div class="chain-tile${t === highlightTier ? ' current' : ''}${t > tierCap(mode) ? ' locked' : ''}">
             ${itemIcon(mode, t)}<small>${t}. ${itemName(mode, t)}</small>
         </div>`).join('');
     showDialog({
-        title: `${AREAS[mode].name} chain`,
+        title: `${boardTitle(mode)} chain`,
         body: `<div class="chain-grid">${tiles}</div>
-               <p class="hint">Made by tapping a ${PRODUCERS[mode].emoji} ${producerBaseName(mode)} or better. Dimmed tiers need the Growth Guide from the Market.</p>`,
+               <p class="hint">Made by tapping a ${PRODUCERS[mode].emoji} ${producerBaseName(mode)}${mode === 'fair'
+                   ? '. Every merge here scores Fair points: the bigger the merge, the more.'
+                   : ' or better. Dimmed tiers need the Growth Guide from the Market.'}</p>`,
         actions: [{ label: 'OK' }],
     });
 }
@@ -2902,6 +3180,7 @@ function openChain(mode, highlightTier) {
 function openProducerInfo(mode) {
     const rows = PRODUCERS[mode].names.map((name, i) => {
         const level = i + 1;
+        if (mode === 'fair' && level < FIRST_WORKING_LEVEL) return '';
         const s = producerStats(mode, level);
         const odds = s && DROP_ODDS[level - FIRST_WORKING_LEVEL].map((p, t) => p && `${Math.round(p * 100)}% t${t}`).filter(Boolean).join(' ');
         return `<div class="quest"><span>${s ? PRODUCERS[mode].emoji : '🧩'} Lv${level} ${name}</span>
@@ -3064,13 +3343,13 @@ function handleDragEnd(e) {
                 } else {
                     toast(`${itemLabel(mode, made)}!`, 'good');
                 }
-            } else if (sameKind && sourceItem.tier < maxTier) {
+            } else if (sameKind && sourceItem.tier < tierCap(mode)) {
                 // Direct Merge 2
                 made = { tier: sourceItem.tier + 1 };
                 stats.made[`${mode}:${made.tier}`] = madeCount(mode, made.tier) + 1;
                 stats.merges++;
             } else if (sameKind) {
-                toast(`Tier ${maxTier} is the max for now. Buy the Growth Guide at the Market!`);
+                toast(`Tier ${tierCap(mode)} is the max for now. Buy the Growth Guide at the Market!`);
             } else if (sameLevel) {
                 toast(`That's already a ${boardItemName(mode, sourceItem)}, the best there is!`);
             } else if (targetItem && targetItem.type === 'box') {
@@ -3133,7 +3412,7 @@ function handleGeneratorClick(mode, index) {
     updateUI();
 
     let drop;
-    if (Math.random() < PART_DROP_CHANCE) {
+    if (mode !== 'fair' && Math.random() < PART_DROP_CHANCE) {
         drop = { type: 'shop', level: 1 };
         toast(`🧩 Lucky! A ${producerName(mode, 1)} part dropped.`, 'good');
     } else {
@@ -3141,7 +3420,7 @@ function handleGeneratorClick(mode, index) {
         let roll = Math.random();
         let tier = odds.findIndex(p => (roll -= p) < 0);
         if (tier === -1) tier = 0;
-        drop = { tier: Math.min(tier + charge.boost, maxTier) };
+        drop = { tier: Math.min(tier + charge.boost, tierCap(mode)) };
     }
     const at = spawnNear(mode, index, drop);
     stats.spawned[mode] = (stats.spawned[mode] || 0) + 1;
@@ -3171,7 +3450,7 @@ function itemFace(mode, item) {
             return ASSETS.props.crate ? { cls: ['box', 'has-sprite'], html: sprite(ASSETS.props.crate) } : { cls: ['box'], html: emoji('📦') };
         case 'shop': {
             const level = levelOf(item);
-            const art = (ASSETS.producers[mode] || [])[level - 1];
+            const art = (ASSETS.producers[artKey(mode)] || [])[level - 1];
             const part = level < FIRST_WORKING_LEVEL;
             return {
                 cls: art ? ['has-sprite'] : ['generator', part ? 'part' : `gen-lv${level}`],
@@ -3273,7 +3552,7 @@ function saveGame() {
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
             version: SAVE_VERSION,
-            res, energyAt, shop, crates, inventory, stats, quests, restoration, pass, dailyGoals, tutorial, daily, settings, unlocks, maxTier, grids, lastBoard,
+            res, energyAt, shop, crates, inventory, stats, quests, restoration, pass, dailyGoals, tutorial, fair, daily, settings, unlocks, maxTier, grids, lastBoard,
             tickedAt: lastTickAt,
             npcs: npcs.map(({ id, deliveries, request }) => ({ id, deliveries, request })),
         }));
@@ -3314,6 +3593,7 @@ function loadGame() {
         if (save.restoration) Object.assign(restoration, save.restoration);
         if (save.pass) Object.assign(pass, save.pass);
         if (save.dailyGoals) Object.assign(dailyGoals, save.dailyGoals);
+        if (save.fair) Object.assign(fair, save.fair);
         Object.assign(tutorial, save.tutorial || { done: true }); // players from before the tutorial know the ropes
         Object.assign(inventory, save.inventory);
         if (version < 4) {
@@ -3358,6 +3638,7 @@ if (!loadGame()) {
 openTasks().filter(taskReady).forEach(task => announcedTasks.add(task.id));
 checkTasks();
 syncSeason();
+syncFair();
 tickEnergy(); // catch up on energy and timers that ran while the game was closed
 tickBoards();
 addXp(0); // a migrated save may already have enough XP for its next level
@@ -3379,7 +3660,9 @@ setInterval(() => {
     syncSeason();
     claimPassGems();
     syncDailyGoals();
+    syncFair();
     checkOffers();
+    showFairResults();
     updateTutorial();
     updateUI();
     updateCountdowns();

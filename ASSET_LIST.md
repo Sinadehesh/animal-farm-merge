@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**208 assets:** 16 done ✅, 25 placeholders 🟡, 167 missing ⬜.
+**244 assets:** 16 done ✅, 25 placeholders 🟡, 203 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -286,7 +286,68 @@ levels 4-8 get bigger and fancier; level 8 is golden.
 | ⬜ | 7 (producer) | Rain Barrel | `assets/producers/flower/7_rain_barrel.png` |
 | ⬜ | 8 (producer) | Golden Fountain | `assets/producers/flower/8_golden_fountain.png` |
 
-## 9. Special items (45)
+## 9. Country Fair (4 themes × 8 items + 4 producers = 36)
+
+The weekend event board. Its theme changes every week; each has its own chain and producer. Like the
+animals, each tier should be bigger and fancier than the last, and the top one a gold prize.
+
+### 🥧 Pie Contest
+
+| | Tier | Item | File |
+|---|---|---|---|
+| ⬜ | 0 | Flour | `assets/items/fair_pie/00_flour.png` |
+| ⬜ | 1 | Dough | `assets/items/fair_pie/01_dough.png` |
+| ⬜ | 2 | Pie Crust | `assets/items/fair_pie/02_pie_crust.png` |
+| ⬜ | 3 | Apple Pie | `assets/items/fair_pie/03_apple_pie.png` |
+| ⬜ | 4 | Berry Pie | `assets/items/fair_pie/04_berry_pie.png` |
+| ⬜ | 5 | Layer Cake | `assets/items/fair_pie/05_layer_cake.png` |
+| ⬜ | 6 | Wedding Cake | `assets/items/fair_pie/06_wedding_cake.png` |
+| ⬜ | 7 | Golden Pie | `assets/items/fair_pie/07_golden_pie.png` |
+| ⬜ | producer | Mixing Bowl | `assets/producers/fair_pie.png` (index 3 in `producers.fair_pie`) |
+
+### 🌸 Flower Show
+
+| | Tier | Item | File |
+|---|---|---|---|
+| ⬜ | 0 | Seed Packet | `assets/items/fair_flowers/00_seed_packet.png` |
+| ⬜ | 1 | Sprout | `assets/items/fair_flowers/01_sprout.png` |
+| ⬜ | 2 | Bud | `assets/items/fair_flowers/02_bud.png` |
+| ⬜ | 3 | Posy | `assets/items/fair_flowers/03_posy.png` |
+| ⬜ | 4 | Bouquet | `assets/items/fair_flowers/04_bouquet.png` |
+| ⬜ | 5 | Flower Basket | `assets/items/fair_flowers/05_flower_basket.png` |
+| ⬜ | 6 | Flower Arch | `assets/items/fair_flowers/06_flower_arch.png` |
+| ⬜ | 7 | Prize Rosette | `assets/items/fair_flowers/07_prize_rosette.png` |
+| ⬜ | producer | Seed Tray | `assets/producers/fair_flowers.png` (index 3 in `producers.fair_flowers`) |
+
+### 🎣 Fishing Derby
+
+| | Tier | Item | File |
+|---|---|---|---|
+| ⬜ | 0 | Bait | `assets/items/fair_fishing/00_bait.png` |
+| ⬜ | 1 | Hook | `assets/items/fair_fishing/01_hook.png` |
+| ⬜ | 2 | Lure | `assets/items/fair_fishing/02_lure.png` |
+| ⬜ | 3 | Little Fish | `assets/items/fair_fishing/03_little_fish.png` |
+| ⬜ | 4 | Trout | `assets/items/fair_fishing/04_trout.png` |
+| ⬜ | 5 | Salmon | `assets/items/fair_fishing/05_salmon.png` |
+| ⬜ | 6 | Big Catch | `assets/items/fair_fishing/06_big_catch.png` |
+| ⬜ | 7 | Trophy Fish | `assets/items/fair_fishing/07_trophy_fish.png` |
+| ⬜ | producer | Tackle Box | `assets/producers/fair_fishing.png` (index 3 in `producers.fair_fishing`) |
+
+### 🎃 Pumpkin Fair
+
+| | Tier | Item | File |
+|---|---|---|---|
+| ⬜ | 0 | Pumpkin Seed | `assets/items/fair_pumpkin/00_pumpkin_seed.png` |
+| ⬜ | 1 | Vine | `assets/items/fair_pumpkin/01_vine.png` |
+| ⬜ | 2 | Little Pumpkin | `assets/items/fair_pumpkin/02_little_pumpkin.png` |
+| ⬜ | 3 | Pumpkin | `assets/items/fair_pumpkin/03_pumpkin.png` |
+| ⬜ | 4 | Big Pumpkin | `assets/items/fair_pumpkin/04_big_pumpkin.png` |
+| ⬜ | 5 | Giant Pumpkin | `assets/items/fair_pumpkin/05_giant_pumpkin.png` |
+| ⬜ | 6 | Prize Pumpkin | `assets/items/fair_pumpkin/06_prize_pumpkin.png` |
+| ⬜ | 7 | Golden Pumpkin | `assets/items/fair_pumpkin/07_golden_pumpkin.png` |
+| ⬜ | producer | Pumpkin Patch | `assets/producers/fair_pumpkin.png` (index 3 in `producers.fair_pumpkin`) |
+
+## 10. Special items (45)
 
 The same on every board. Each level looks fuller or bigger than the one before.
 
@@ -306,7 +367,7 @@ The same on every board. Each level looks fuller or bigger than the one before.
 | ⬜ | Blue Chest | 2 | `assets/items/special/chest_blue_1.png` … `_2.png` | a fancy blue chest with gold trim; level 2 bigger |
 | ⬜ | Piggy Bank | 4 | `assets/items/special/piggy_1.png` … `_4.png` | a pink piggy bank, rounder and shinier each level |
 
-## 10. Interface icons (optional, emoji for now)
+## 11. Interface icons (optional, emoji for now)
 
 These are emoji in the interface today. Each needs a small code change to use a picture, so make them last.
 

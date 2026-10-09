@@ -409,6 +409,52 @@
         .board-fert { background: linear-gradient(#6d5847, #4b3b2f); }
         .board-aqua { background: linear-gradient(#5fc3e4, #2a7fbf); }
         .board-flower { background: linear-gradient(#f5bcd6, #8fcf63); }
+        .board-fair { background: repeating-linear-gradient(90deg, #ffd9a0 0 9cqw, #ffefcf 9cqw 18cqw); }
+        /* Country Fair: the ribbon on the map, the strip above its board, the race. */
+        .fair-ribbon {
+            position: absolute;
+            left: 50%;
+            top: 19%;
+            z-index: 110;
+            transform: translateX(-50%) rotate(-3deg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1cqw 4cqw;
+            background: linear-gradient(#ffe7a3, #f5b23c);
+            color: var(--ink);
+            border: 3px solid var(--ink);
+            border-radius: 10px;
+            box-shadow: 0 3px 0 var(--ink);
+            font-weight: 900;
+            font-size: 3.6cqw;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .fair-ribbon small { font-size: 2.6cqw; font-weight: 800; }
+        .fair-ribbon:not(.open) { background: #f1e6d2; opacity: 0.9; font-size: 3cqw; }
+        .fair-ribbon.open { animation: bob 1.6s ease-in-out infinite; }
+        .fair-header {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1cqw;
+            padding: 1.6cqw 2.4cqw;
+            background: var(--paper);
+            color: var(--ink);
+            border: 3px solid var(--ink);
+            border-radius: 14px;
+            box-shadow: 0 3px 0 var(--ink);
+            text-align: left;
+            cursor: pointer;
+        }
+        .fair-top { display: flex; justify-content: space-between; align-items: center; gap: 2cqw; font-size: 3.4cqw; }
+        .fair-rank { padding: 0.2cqw 1.6cqw; background: #f5a623; color: #fff; border-radius: 999px; font-weight: 900; }
+        .fair-next { font-size: 2.8cqw; font-weight: 800; color: #8a6a50; }
+        .fair-h { margin: 2cqw 0 1cqw; font-size: 3.8cqw; text-align: left; }
+        .race-row { display: grid; grid-template-columns: 1fr auto; gap: 0 2cqw; padding: 1cqw 1.6cqw; border-radius: 8px; font-size: 3.3cqw; text-align: left; }
+        .race-row small { grid-column: 1 / -1; font-size: 2.5cqw; color: #8a6a50; }
+        .race-row.me { background: #fff3c4; }
         .game-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
