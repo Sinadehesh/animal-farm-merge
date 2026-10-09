@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**263 assets:** 114 done ✅, 25 placeholders 🟡, 124 missing ⬜.
+**263 assets:** 134 done ✅, 25 placeholders 🟡, 104 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -156,18 +156,18 @@ below it by its outline alone, bigger and fancier as it goes up; tiers 9-11 get 
 
 | | Tier | Item | File | Draw as |
 |---|---|---|---|---|
-| ⬜ | 0 | Fallen Leaf | `assets/items/fert/00_fallen_leaf.png` | a single orange autumn leaf |
-| ⬜ | 1 | Leaf Pile | `assets/items/fert/01_leaf_pile.png` | a little pile of red and orange autumn leaves |
-| ⬜ | 2 | Veggie Scraps | `assets/items/fert/02_veggie_scraps.png` | carrot tops and an apple core |
-| ⬜ | 3 | Compost | `assets/items/fert/03_compost.png` | a small heap of dark crumbly compost with a sprout on top |
-| ⬜ | 4 | Rich Soil | `assets/items/fert/04_rich_soil.png` | a clay pot full of dark rich soil |
-| ⬜ | 5 | Mushroom | `assets/items/fert/05_mushroom.png` | a cute red-capped mushroom with white spots |
-| ⬜ | 6 | Basic Fert | `assets/items/fert/06_basic_fert.png` |  |
-| ⬜ | 7 | Quality Fert | `assets/items/fert/07_quality_fert.png` |  |
-| ⬜ | 8 | Speed-Gro | `assets/items/fert/08_speed_gro.png` | a fertilizer bottle with a lightning label |
-| ⬜ | 9 | Deluxe Fert | `assets/items/fert/09_deluxe_fert.png` |  |
-| ⬜ | 10 | Magic Fert | `assets/items/fert/10_magic_fert.png` | a sparkly potion-like fertilizer bottle |
-| ⬜ | 11 | Iridium Fert | `assets/items/fert/11_iridium_fert.png` | a purple crystal sack of fertilizer |
+| ✅ | 0 | Fallen Leaf | `assets/items/fert/00_fallen_leaf.png` | a single orange autumn leaf |
+| ✅ | 1 | Leaf Pile | `assets/items/fert/01_leaf_pile.png` | a little pile of red and orange autumn leaves |
+| ✅ | 2 | Veggie Scraps | `assets/items/fert/02_veggie_scraps.png` | carrot tops and an apple core |
+| ✅ | 3 | Compost | `assets/items/fert/03_compost.png` | a small heap of dark crumbly compost with a sprout on top |
+| ✅ | 4 | Rich Soil | `assets/items/fert/04_rich_soil.png` | a clay pot full of dark rich soil |
+| ✅ | 5 | Mushroom | `assets/items/fert/05_mushroom.png` | a cute red-capped mushroom with white spots |
+| ✅ | 6 | Basic Fert | `assets/items/fert/06_basic_fert.png` |  |
+| ✅ | 7 | Quality Fert | `assets/items/fert/07_quality_fert.png` |  |
+| ✅ | 8 | Speed-Gro | `assets/items/fert/08_speed_gro.png` | a fertilizer bottle with a lightning label |
+| ✅ | 9 | Deluxe Fert | `assets/items/fert/09_deluxe_fert.png` | a burlap sack with a gem on its tie |
+| ✅ | 10 | Magic Fert | `assets/items/fert/10_magic_fert.png` | a dark sack with gold trim and a lightning bolt |
+| ✅ | 11 | Iridium Fert | `assets/items/fert/11_iridium_fert.png` | a purple crystal sack of fertilizer |
 
 ### Fish Pond
 
@@ -251,14 +251,14 @@ levels 4-8 get bigger and fancier; level 8 is golden.
 
 | | Level | Name | File |
 |---|---|---|---|
-| ⬜ | 1 (part) | Broken Rake | `assets/producers/fert/1_broken_rake.png` |
-| ⬜ | 2 (part) | Mended Rake | `assets/producers/fert/2_mended_rake.png` |
-| ⬜ | 3 (part) | Small Rake | `assets/producers/fert/3_small_rake.png` |
-| ⬜ | 4 (producer) | Leaf Rake | `assets/producers/fert/4_leaf_rake.png` |
-| ⬜ | 5 (producer) | Leaf Basket | `assets/producers/fert/5_leaf_basket.png` |
-| ⬜ | 6 (producer) | Leaf Barrow | `assets/producers/fert/6_leaf_barrow.png` |
-| ⬜ | 7 (producer) | Compost Bin | `assets/producers/fert/7_compost_bin.png` |
-| ⬜ | 8 (producer) | Golden Compost Tumbler | `assets/producers/fert/8_golden_compost_tumbler.png` |
+| ✅ | 1 (part) | Broken Rake | `assets/producers/fert/1_broken_rake.png` |
+| ✅ | 2 (part) | Mended Rake | `assets/producers/fert/2_mended_rake.png` |
+| ✅ | 3 (part) | Small Rake | `assets/producers/fert/3_small_rake.png` |
+| ✅ | 4 (producer) | Leaf Rake | `assets/producers/fert/4_leaf_rake.png` |
+| ✅ | 5 (producer) | Leaf Basket | `assets/producers/fert/5_leaf_basket.png` |
+| ✅ | 6 (producer) | Leaf Barrow | `assets/producers/fert/6_leaf_barrow.png` |
+| ✅ | 7 (producer) | Compost Bin | `assets/producers/fert/7_compost_bin.png` |
+| ✅ | 8 (producer) | Golden Compost Tumbler | `assets/producers/fert/8_golden_compost_tumbler.png` |
 
 ### Fish Pond (🥫 Fish Food Tin)
 

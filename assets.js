@@ -138,7 +138,17 @@ const ASSETS = {
             'assets/producers/farm/7_fert_barrel.png',
             'assets/producers/farm/8_golden_fert_barrel.png',
         ],
-        fert: [],
+        // Cut from assets/raw/producers_fert.webp, each level a little bigger.
+        fert: [
+            'assets/producers/fert/1_broken_rake.png',
+            'assets/producers/fert/2_mended_rake.png',
+            'assets/producers/fert/3_small_rake.png',
+            'assets/producers/fert/4_leaf_rake.png',
+            'assets/producers/fert/5_leaf_basket.png',
+            'assets/producers/fert/6_leaf_barrow.png',
+            'assets/producers/fert/7_compost_bin.png',
+            'assets/producers/fert/8_golden_compost_tumbler.png',
+        ],
         // Cut from assets/raw/producers_aqua.webp, each level a little bigger.
         aqua: [
             'assets/producers/aqua/1_empty_tin.png',
@@ -263,7 +273,22 @@ const ASSETS = {
         ],
         hay: [],
         farm: [],
-        fert: [],
+        // Cut from assets/raw/items_fert.webp: the carrot and apple core are one
+        // item, and the gem sack (Deluxe) comes before the gold-trimmed one (Magic).
+        fert: [
+            'assets/items/fert/00_fallen_leaf.png',
+            'assets/items/fert/01_leaf_pile.png',
+            'assets/items/fert/02_veggie_scraps.png',
+            'assets/items/fert/03_compost.png',
+            'assets/items/fert/04_rich_soil.png',
+            'assets/items/fert/05_mushroom.png',
+            'assets/items/fert/06_basic_fert.png',
+            'assets/items/fert/07_quality_fert.png',
+            'assets/items/fert/08_speed_gro.png',
+            'assets/items/fert/09_deluxe_fert.png',
+            'assets/items/fert/10_magic_fert.png',
+            'assets/items/fert/11_iridium_fert.png',
+        ],
         aqua: [],
         flower: [],
         // Country Fair chains, one per weekly theme (8 tiers each).
