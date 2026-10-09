@@ -509,6 +509,60 @@
         }
         .item.selected { outline: 3px dashed #fff; outline-offset: 2px; }
 
+        /* Crates on a fresh board, and cobwebbed items (Merge Mansion). */
+        .item.box {
+            border-radius: 14%;
+            background: linear-gradient(#e0ab72, #a5683d);
+            border: 3px solid #7a4f2c;
+            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.25), 0 3px 0 rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+        }
+        .item.box .emoji { font-size: 7.5cqw; }
+        .item.box.has-sprite { background: none; border: none; box-shadow: none; }
+        .item.webbed { filter: saturate(0.5) brightness(0.92); cursor: pointer; }
+        .item .web {
+            position: absolute;
+            inset: -6%;
+            background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27white%27%20stroke-width%3D%272.5%27%20stroke-opacity%3D%270.95%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M50%2050L50%202M50%2050L98%2050M50%2050L50%2098M50%2050L2%2050M50%2050L16%2016M50%2050L84%2016M50%2050L84%2084M50%2050L16%2084%27/%3E%3Cpath%20d%3D%27M50%2032Q58%2038%2063%2037Q62%2043%2068%2050Q62%2057%2063%2063Q57%2062%2050%2068Q43%2062%2037%2063Q38%2057%2032%2050Q38%2043%2037%2037Q43%2038%2050%2032Z%27/%3E%3Cpath%20d%3D%27M50%2012Q66%2024%2077%2023Q76%2034%2088%2050Q76%2066%2077%2077Q66%2076%2050%2088Q34%2076%2023%2077Q24%2066%2012%2050Q24%2034%2023%2023Q34%2024%2050%2012Z%27/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+            pointer-events: none;
+        }
+
+        /* Info bar extras: chain info, Supercharge, Undo, Dust. */
+        .chain-btn {
+            flex: 0 0 auto;
+            width: 7cqw;
+            height: 7cqw;
+            padding: 0;
+            background: #fff;
+            color: var(--ink);
+            border: 2px solid var(--ink);
+            border-radius: 50%;
+            font-size: 4cqw;
+            font-weight: 900;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .super-btn { background: #a99ccc; }
+        .super-btn.on { background: linear-gradient(#ffe066, #f5a623); color: var(--ink); text-shadow: none; box-shadow: 0 0 10px #ffd34d, 0 3px 0 var(--ink); }
+        .dust-btn { background: #8a5cf0; }
+        .undo-btn { background: #5a8fc9; }
+        .chain-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5cqw; margin-bottom: 2cqw; }
+        .chain-tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5cqw;
+            padding: 1cqw;
+            background: #fff;
+            border: 2px solid var(--ink);
+            border-radius: 10px;
+            font-size: 5cqw;
+        }
+        .chain-tile small { font-size: 2.4cqw; font-weight: 800; line-height: 1.1; }
+        .chain-tile .inline-item { height: 9cqw; }
+        .chain-tile.current { background: #fff3c4; box-shadow: 0 0 0 3px #f5a623; }
+        .chain-tile.locked { opacity: 0.4; }
+
         /* Map: daily gift and quests buttons. */
         .side-buttons { position: absolute; left: 3%; bottom: 3%; z-index: 120; display: flex; gap: 3cqw; }
         .side-btn {

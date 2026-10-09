@@ -59,6 +59,7 @@ const ASSETS = {
         counter: 'assets/props/counter.svg',
         deed: 'assets/props/deed.svg',
         upgrade: 'assets/props/upgrade.svg',
+        crate: null, // the 📦 crates on a fresh board (null = emoji tile)
     },
 
     // Optional background image behind each merge board (null = CSS colour).

@@ -48,9 +48,19 @@ const PRODUCER_LEVELS = [
 // order of a new game always does, so players learn to merge producers early.
 const PRODUCER_REWARD_CHANCE = 0.25;
 
-// Selling an item pays this much 💵 per unit of input that went into it, far
-// less than ORDER_PAY on purpose: selling is for clearing space, orders for money.
-const SELL_PRICE_PER_INPUT = 1;
+// What selling an item pays, by tier (Merge Mansion's sell table). Far less than
+// orders pay on purpose: selling is for clearing space, orders are for money.
+const SELL_PRICES = [1, 2, 4, 6, 12, 25, 51, 102, 205, 410, 820, 1640];
+
+// Supercharge (Merge Mansion): a producer tap costs twice the input but adds
+// these chances of a tier 1 / tier 2 drop on top of the producer's own odds.
+const SUPERCHARGE_COST = 2;
+const SUPERCHARGE_BONUS = [0.40, 0.15];
+
+// Gems to dust the cobwebs off an item instead of merging into it.
+function dustPrice(item) {
+    return item.type === 'shop' ? 10 * producerLevel(item) : 5 * (item.tier + 1);
+}
 
 // Daily gift: one per calendar day on a 7-day track, as in Merge Gardens. Missing
 // a day starts the track over at day 1, and gifts never pile up. Day 7 is special.
@@ -118,7 +128,9 @@ Object.assign(res, START);
 // When the next unit of each essential arrives (ms timestamp), or null when full.
 const refillAt = {};
 // Counters the quests read from (saved with the game).
-const stats = { spawned: {}, made: {}, merges: 0, delivered: 0, sold: 0, upgrades: 0, gifts: 0 };
+const stats = { spawned: {}, made: {}, merges: 0, delivered: 0, sold: 0, upgrades: 0, gifts: 0, boxes: 0, webs: 0 };
+// Player toggles (saved with the game).
+const settings = { supercharge: false };
 // Player level, and each quest's counter value when the level started.
 const quests = { level: 1, baselines: [], done: [] };
 // Daily gift track: the last day claimed and how many days in a row.
@@ -465,7 +477,7 @@ function grantReward(r, title) {
         const owned = Object.keys(AREAS).filter(id => unlocks[id]);
         const mode = owned[Math.floor(Math.random() * owned.length)];
         crates[mode].push({ type: 'shop', level: 1 });
-        where = ` · ${producerName(mode, 1)} in the 📦 on your ${AREAS[mode].name} board`;
+        where = ` · ${producerName(mode, 1)}: tap 🎁 on your ${AREAS[mode].name} board`;
     }
     updateUI();
     toast(`${title} ${rewardText(r)}${where}`, 'good');
@@ -496,13 +508,13 @@ function deliverQuest(target) {
 function questsFor(level) {
     switch (level) {
         case 1: return [
-            { label: 'Tap the 🧺 Feed Bin ×6', count: () => stats.spawned.barn || 0, target: 6 },
             makeQuest('barn', 1, 2),
+            { label: 'Open 📦 crates ×2 (merge next to them)', count: () => stats.boxes, target: 2 },
             deliverQuest(1),
         ];
         case 2: return [
             makeQuest('barn', 2, 2),
-            deliverQuest(2),
+            { label: 'Free 🕸️ cobwebbed items ×3', count: () => stats.webs, target: 3 },
             { label: 'Upgrade a producer (merge two alike)', count: () => stats.upgrades, target: 1 },
         ];
         case 3: return [ownQuest('farm'), makeQuest('farm', 1, 3), deliverQuest(3)];
@@ -792,7 +804,7 @@ function renderMap() {
         } else {
             // Orders ready to hand in on this board, and rewards waiting in its crate.
             const ready = npcs.filter(n => n.request && n.request.mode === id && canFulfill(n)).length;
-            const parts = [ready && `✓${ready}`, crates[id].length && `📦${crates[id].length}`].filter(Boolean);
+            const parts = [ready && `✓${ready}`, crates[id].length && `🎁${crates[id].length}`].filter(Boolean);
             if (parts.length) addTag(spot, 'badge', parts.join(' '));
         }
         scene.appendChild(spot);
@@ -833,6 +845,7 @@ function buyDeed(id) {
     if (unlocks[id] || res.money < area.cost || quests.level < area.level) return;
     res.money -= area.cost;
     unlocks[id] = true;
+    if (grids[id].filter(Boolean).length <= 1) grids[id] = clutterBoard();
     // New land comes with a full bar of what it uses, so it's playable right away.
     Object.keys(area.input).forEach(k => { res[k] = Math.max(res[k], ESSENTIALS[k].cap); });
     updateUI();
@@ -879,8 +892,13 @@ function initTown(newGame = false) {
     if (newGame) npcs.find(npc => npc.id === 'marnie').request.rewardProducer = true;
 }
 
+// Items that can be dragged, merged and handed in (not crates or cobwebbed).
+function isFree(item) {
+    return !!item && item.type !== 'box' && !item.web;
+}
+
 function findItem(mode, tier) {
-    return grids[mode].findIndex(item => item !== null && item.type !== 'shop' && item.tier === tier);
+    return grids[mode].findIndex(item => isFree(item) && item.type !== 'shop' && item.tier === tier);
 }
 
 function canFulfill(npc) {
@@ -936,6 +954,7 @@ function deliver(npc) {
         return;
     }
     grids[r.mode][itemIndex] = null;
+    lastSale = null;
     res.money += r.rewardMoney;
     res.hearts += r.rewardHearts;
     npc.deliveries++;
@@ -947,7 +966,7 @@ function deliver(npc) {
     if (levelUp) toast(`${npc.name} reached Lv.${npc.deliveries / 5 + 1}! +💎 ${LEVEL_UP_GEMS}`, 'good');
     if (r.rewardProducer) {
         crates[r.mode].push({ type: 'shop', level: 1 });
-        toast(`🎁 A ${producerName(r.mode, 1)}! It's waiting in the 📦 on your ${AREAS[r.mode].name} board.`, 'good');
+        toast(`🎁 A ${producerName(r.mode, 1)}! Tap 🎁 on your ${AREAS[r.mode].name} board to add it.`, 'good');
     }
 
     generateRequestFor(npc);
@@ -1054,6 +1073,44 @@ const grids = {
 };
 Object.keys(grids).forEach(mode => grids[mode][0] = { type: 'shop' });
 
+// A fresh board starts cluttered, as in Merge Mansion: 📦 crates that open when
+// you merge next to them, each hiding a cobwebbed item, and cobwebbed items you
+// free by merging a matching item into them. The top two rows are mostly open,
+// the next two a mix, and the bottom four crates. Two crates hide a cobwebbed
+// Basic producer.
+function clutterBoard() {
+    const board = Array(NUM_CELLS).fill(null);
+    board[0] = { type: 'shop', level: 1 };
+    const webbed = () => ({ tier: Math.random() < 0.6 ? 0 : Math.random() < 0.7 ? 1 : 2, web: true });
+    const producerCrates = [30 + Math.floor(Math.random() * GAME_WIDTH), 42 + Math.floor(Math.random() * GAME_WIDTH)];
+    for (let i = 1; i < NUM_CELLS; i++) {
+        const row = Math.floor(i / GAME_WIDTH);
+        if (row < 2) {
+            if (i === 4 || i === 9 || i === 11) board[i] = webbed();
+        } else if (row < 4) {
+            board[i] = Math.random() < 0.5 ? webbed() : { type: 'box', hidden: webbed() };
+        } else {
+            const hidden = producerCrates.includes(i) ? { type: 'shop', level: 1, web: true } : webbed();
+            board[i] = { type: 'box', hidden };
+        }
+    }
+    return board;
+}
+
+// Merging next to a crate opens it and reveals the cobwebbed item inside.
+function openBoxesAround(mode, index) {
+    const opened = [];
+    getNeighbors(index).forEach(n => {
+        const cell = grids[mode][n];
+        if (cell && cell.type === 'box') {
+            grids[mode][n] = cell.hidden;
+            stats.boxes++;
+            opened.push(n);
+        }
+    });
+    return opened;
+}
+
 // Build one board scene per area.
 Object.keys(AREAS).forEach(mode => {
     const scene = document.createElement('section');
@@ -1067,6 +1124,8 @@ Object.keys(AREAS).forEach(mode => {
 
 // The item shown in the info bar under the orders: { mode, index } or null.
 let selected = null;
+// The last item sold, so the info bar can offer Undo until you do something else.
+let lastSale = null;
 
 // Above each board: the orders it can fill, then the info bar.
 function renderBoardHeader(mode) {
@@ -1118,54 +1177,75 @@ function renderOrders(mode, el) {
 }
 
 function sellPrice(mode, item) {
-    return inputsPerItem(mode, item.tier) * SELL_PRICE_PER_INPUT;
+    return SELL_PRICES[Math.min(item.tier, SELL_PRICES.length - 1)];
 }
 
-// The bar under the orders: the crate, then whatever item is selected.
+// The bar under the orders: waiting rewards, then whatever item is selected.
 function renderInfoBar(mode) {
     const el = document.querySelector(`#scene-${mode} .info-bar`);
     if (!el) return;
     const gen = GENERATORS[mode];
     const item = selected && selected.mode === mode ? grids[mode][selected.index] : null;
-    let html = crates[mode].length ? `<button class="crate-btn">📦 ${crates[mode].length}</button>` : '';
+    const chainBtn = '<button class="chain-btn" title="See the whole chain">ⓘ</button>';
+    let html = crates[mode].length ? `<button class="crate-btn">🎁 ${crates[mode].length}</button>` : '';
 
-    if (!item) {
+    if (!item && lastSale && lastSale.mode === mode) {
+        html += `<span class="info-icon">${itemIcon(mode, lastSale.item.tier)}</span>
+                 <span class="info-text"><b>Sold ${itemName(mode, lastSale.item.tier)}</b> for 💵${lastSale.price}<br><small>Changed your mind?</small></span>
+                 <button class="sell-btn undo-btn">Undo</button>`;
+    } else if (!item) {
         html += `<span class="info-text">Tap a ${gen.emoji} ${gen.label} to make items. Drag two alike together to merge. Tap an item to see it.</span>`;
+    } else if (item.type === 'box') {
+        html += `<span class="info-icon">📦</span>
+                 <span class="info-text"><b>Crate</b><br><small>Merge anything next to it to open it.</small></span>`;
     } else if (item.type === 'shop') {
         const level = producerLevel(item);
-        const tip = level < PRODUCER_LEVELS.length ? 'Merge two alike to upgrade.' : 'Top level!';
-        html += `<span class="info-icon">${gen.emoji}</span>
-                 <span class="info-text"><b>${producerName(mode, level)}</b> · Lv${level}<br><small>Tap to make items (${inputText(mode)} each). ${tip}</small></span>`;
+        if (item.web) {
+            html += `<span class="info-icon">${gen.emoji}</span>
+                     <span class="info-text"><b>${producerName(mode, level)}</b> · 🕸️<br><small>Merge a free ${producerName(mode, level)} into it to free it.</small></span>
+                     <button class="sell-btn dust-btn">Dust<br>💎${dustPrice(item)}</button>`;
+        } else {
+            const tip = level < PRODUCER_LEVELS.length ? 'Merge two alike to upgrade.' : 'Top level!';
+            html += `<span class="info-icon">${gen.emoji}</span>
+                     <span class="info-text"><b>${producerName(mode, level)}</b> · Lv${level}<br><small>Tap to make items (${inputText(mode)} each). ${tip}</small></span>
+                     ${chainBtn}
+                     <button class="sell-btn super-btn${settings.supercharge ? ' on' : ''}">⚡ Super<br>${settings.supercharge ? 'ON' : 'off'}</button>`;
+        }
     } else {
         const last = NAMES[mode].length - 1;
-        const tip = item.tier >= last ? 'The best there is!'
+        const tip = item.web ? `Covered in cobwebs. Merge a free ${itemName(mode, item.tier)} into it to free it.`
+            : item.tier >= last ? 'The best there is!'
             : item.tier >= maxTier ? 'Max tier for now: buy the Growth Guide at the Market.'
             : `Merge two to make ${itemIcon(mode, item.tier + 1)} ${itemName(mode, item.tier + 1)}.`;
         html += `<span class="info-icon">${itemIcon(mode, item.tier)}</span>
-                 <span class="info-text"><b>${itemName(mode, item.tier)}</b> · tier ${item.tier}<br><small>${tip}</small></span>
-                 <button class="sell-btn">Sell<br>💵${sellPrice(mode, item)}</button>`;
+                 <span class="info-text"><b>${itemName(mode, item.tier)}</b> · tier ${item.tier}${item.web ? ' · 🕸️' : ''}<br><small>${tip}</small></span>
+                 ${chainBtn}
+                 ${item.web ? `<button class="sell-btn dust-btn">Dust<br>💎${dustPrice(item)}</button>` : `<button class="sell-btn">Sell<br>💵${sellPrice(mode, item)}</button>`}`;
     }
 
     el.innerHTML = html;
-    const crateBtn = el.querySelector('.crate-btn');
-    if (crateBtn) crateBtn.addEventListener('click', () => placeFromCrate(mode));
-    const sellBtn = el.querySelector('.sell-btn');
-    if (sellBtn) sellBtn.addEventListener('click', () => sellSelected(mode));
+    const on = (sel, fn) => { const btn = el.querySelector(sel); if (btn) btn.addEventListener('click', fn); };
+    on('.crate-btn', () => placeFromCrate(mode));
+    on('.undo-btn', () => undoSale(mode));
+    on('.dust-btn', () => dustSelected(mode));
+    on('.super-btn', toggleSupercharge);
+    on('.chain-btn', () => (item.type === 'shop' ? openProducerInfo(mode) : openChain(mode, item.tier)));
+    on('.sell-btn:not(.undo-btn):not(.dust-btn):not(.super-btn)', () => sellSelected(mode));
 }
 
 // Selling frees space; big items ask first because orders pay far more.
 function sellSelected(mode) {
     const index = selected && selected.mode === mode ? selected.index : -1;
     const item = grids[mode][index];
-    if (!item || item.type === 'shop') return;
+    if (!isFree(item) || item.type === 'shop') return;
     const price = sellPrice(mode, item);
     const sell = () => {
         grids[mode][index] = null;
         res.money += price;
         stats.sold++;
         selected = null;
+        lastSale = { mode, index, item, price };
         updateUI();
-        toast(`Sold ${itemName(mode, item.tier)} for 💵${price}`);
         checkQuests();
         refreshBoard(mode);
     };
@@ -1180,6 +1260,75 @@ function sellSelected(mode) {
     });
 }
 
+// Puts the last sold item back (in its old cell if it's still empty).
+function undoSale(mode) {
+    if (!lastSale || lastSale.mode !== mode) return;
+    if (res.money < lastSale.price) {
+        toast(`You've already spent the 💵${lastSale.price}.`);
+        return;
+    }
+    const index = grids[mode][lastSale.index] === null ? lastSale.index : grids[mode].findIndex(cell => cell === null);
+    if (index === -1) {
+        toast('No room on the board to put it back.');
+        return;
+    }
+    grids[mode][index] = lastSale.item;
+    res.money -= lastSale.price;
+    stats.sold--;
+    selected = { mode, index };
+    lastSale = null;
+    updateUI();
+    refreshBoard(mode, [index]);
+}
+
+function dustSelected(mode) {
+    const item = selected && selected.mode === mode ? grids[mode][selected.index] : null;
+    if (!item || !item.web || !spendGems(dustPrice(item))) return;
+    delete item.web;
+    stats.webs++;
+    updateUI();
+    toast('🕸️ Dusted off!', 'good');
+    checkQuests();
+    refreshBoard(mode, [selected.index]);
+}
+
+function toggleSupercharge() {
+    settings.supercharge = !settings.supercharge;
+    toast(settings.supercharge
+        ? `⚡ Supercharge on: each tap costs ${SUPERCHARGE_COST}× but drops bigger items more often.`
+        : 'Supercharge off.');
+    renderInfoBar(currentScene);
+}
+
+// The whole merge chain of a board, like Merge Mansion's "i" button.
+function openChain(mode, highlightTier) {
+    const gen = GENERATORS[mode];
+    const tiles = NAMES[mode].map((_, t) => `
+        <div class="chain-tile${t === highlightTier ? ' current' : ''}${t > maxTier ? ' locked' : ''}">
+            ${itemIcon(mode, t)}<small>${t}. ${itemName(mode, t)}</small>
+        </div>`).join('');
+    showDialog({
+        title: `${AREAS[mode].name} chain`,
+        body: `<div class="chain-grid">${tiles}</div>
+               <p class="hint">Made by tapping a ${gen.emoji} ${gen.label}. Dimmed tiers need the Growth Guide from the Market.</p>`,
+        actions: [{ label: 'OK' }],
+    });
+}
+
+// What each producer level drops.
+function openProducerInfo(mode) {
+    const rows = PRODUCER_LEVELS.map((lv, i) => {
+        const [t1, t2] = lv.odds;
+        const odds = t1 || t2 ? `${Math.round(t1 * 100)}% tier 1${t2 ? `, ${Math.round(t2 * 100)}% tier 2` : ''}` : 'tier 0 only';
+        return `<div class="quest"><span>Lv${i + 1} ${producerName(mode, i + 1)}</span><small>${odds}</small></div>`;
+    }).join('');
+    showDialog({
+        title: `${GENERATORS[mode].emoji} ${GENERATORS[mode].label} levels`,
+        body: `${rows}<p class="hint">Merge two of the same level to get the next. ⚡ Supercharge adds +${SUPERCHARGE_BONUS[0] * 100}% tier 1 and +${SUPERCHARGE_BONUS[1] * 100}% tier 2 for ${SUPERCHARGE_COST}× the cost.</p>`,
+        actions: [{ label: 'OK' }],
+    });
+}
+
 // Puts the next waiting reward from the crate onto the first empty cell.
 function placeFromCrate(mode) {
     const idx = grids[mode].findIndex(cell => cell === null);
@@ -1189,6 +1338,7 @@ function placeFromCrate(mode) {
     }
     const item = crates[mode].shift();
     grids[mode][idx] = item;
+    lastSale = null;
     selected = { mode, index: idx };
     toast(`${producerName(mode, producerLevel(item))} added!`, 'good');
     refreshBoard(mode, [idx]);
@@ -1209,6 +1359,7 @@ const DRAG_THRESHOLD = 6;
 
 function handleDragStart(e, mode, index) {
     e.preventDefault();
+    lastSale = null;
     draggedItemInfo = { mode, index, startX: e.clientX, startY: e.clientY };
     document.addEventListener('pointermove', handleDragMove);
     document.addEventListener('pointerup', handleDragEnd);
@@ -1236,6 +1387,7 @@ function handleDragMove(e) {
     if (!dragElement) {
         const moved = Math.hypot(e.clientX - draggedItemInfo.startX, e.clientY - draggedItemInfo.startY);
         if (moved < DRAG_THRESHOLD) return;
+        if (!isFree(grids[draggedItemInfo.mode][draggedItemInfo.index])) return; // crates and cobwebs stay put
         beginDragPreview();
     }
     placeDragElement(e);
@@ -1258,7 +1410,7 @@ function handleDragEnd(e) {
     // A tap: producers make an item; any item gets shown in the info bar.
     if (!wasDragged) {
         const item = grids[mode][index];
-        if (item && item.type === 'shop') {
+        if (item && item.type === 'shop' && isFree(item)) {
             handleGeneratorClick(mode, index);
         } else {
             selected = { mode, index };
@@ -1276,48 +1428,64 @@ function handleDragEnd(e) {
         }
     }
 
-    let mergedIdx = -1;
+    let popped = [];
     if (targetCell) {
         const targetIndex = parseInt(targetCell.dataset.index);
         if (targetIndex !== index) {
             const sourceItem = grids[mode][index];
             const targetItem = grids[mode][targetIndex];
-            const sameKind = targetItem && sourceItem && targetItem.tier === sourceItem.tier && targetItem.type !== 'shop' && sourceItem.type !== 'shop';
-            const sameProducer = targetItem && sourceItem && targetItem.type === 'shop' && sourceItem.type === 'shop'
+            const sameProducer = targetItem && targetItem.type === 'shop' && sourceItem.type === 'shop'
                 && producerLevel(targetItem) === producerLevel(sourceItem);
+            const sameKind = targetItem && sourceItem.type !== 'shop' && targetItem.type !== 'shop' && targetItem.type !== 'box'
+                && targetItem.tier === sourceItem.tier;
+            let merged = false;
 
             if (sameProducer && producerLevel(sourceItem) < PRODUCER_LEVELS.length) {
                 // Two producers of the same level make the next level.
                 const level = producerLevel(sourceItem) + 1;
                 grids[mode][index] = null;
                 grids[mode][targetIndex] = { type: 'shop', level };
-                mergedIdx = targetIndex;
                 stats.upgrades++;
+                merged = true;
                 toast(`Upgraded to a ${producerName(mode, level)}!`, 'good');
             } else if (sameKind && sourceItem.tier < maxTier) {
                 // Direct Merge 2
                 const nextTier = sourceItem.tier + 1;
                 grids[mode][index] = null;
                 grids[mode][targetIndex] = { tier: nextTier };
-                mergedIdx = targetIndex;
                 stats.made[`${mode}:${nextTier}`] = madeCount(mode, nextTier) + 1;
                 stats.merges++;
-
                 res[AREAS[mode].output] += MERGE_OUTPUT;
                 updateUI();
-            } else {
-                if (sameKind) toast(`Tier ${maxTier} is the max for now. Buy the Growth Guide at the Market!`);
-                if (sameProducer) toast(`That's already a ${producerName(mode, PRODUCER_LEVELS.length)}, the best there is!`);
-                // Swap
+                merged = true;
+            } else if (sameKind) {
+                toast(`Tier ${maxTier} is the max for now. Buy the Growth Guide at the Market!`);
+            } else if (sameProducer) {
+                toast(`That's already a ${producerName(mode, PRODUCER_LEVELS.length)}, the best there is!`);
+            } else if (targetItem && targetItem.type === 'box') {
+                toast('Crates stay put. Merge something next to one to open it.');
+            } else if (targetItem && targetItem.web) {
+                toast('Cobwebbed items stay put. Merge a matching item into one to free it.');
+            }
+
+            const swapped = !merged && !sameKind && !sameProducer && (!targetItem || isFree(targetItem));
+            if (swapped) {
                 grids[mode][index] = targetItem;
                 grids[mode][targetIndex] = sourceItem;
             }
-            selected = { mode, index: targetIndex };
+            if (merged) {
+                if (targetItem.web) {
+                    stats.webs++;
+                    toast('🕸️ Freed!', 'good');
+                }
+                popped = [targetIndex, ...openBoxesAround(mode, targetIndex)];
+            }
+            selected = { mode, index: merged || swapped ? targetIndex : index };
         }
     }
 
     checkQuests();
-    refreshBoard(mode, mergedIdx !== -1 ? [mergedIdx] : []);
+    refreshBoard(mode, popped);
 }
 
 function getNeighbors(index) {
@@ -1349,16 +1517,27 @@ function handleGeneratorClick(mode, index) {
     }
 
     const input = AREAS[mode].input;
+    const cost = settings.supercharge ? SUPERCHARGE_COST : 1;
     const missing = Object.keys(input).find(k => res[k] < input[k]);
     if (missing) {
         openEssential(missing, true);
         return;
     }
-    Object.entries(input).forEach(([k, n]) => { res[k] -= n; });
+    const short = Object.keys(input).find(k => res[k] < input[k] * cost);
+    if (short) {
+        toast(`Supercharge needs ${input[short] * cost} ${RESOURCES[short].emoji} per tap. Turn it off below, or refill.`);
+        return;
+    }
+    Object.entries(input).forEach(([k, n]) => { res[k] -= n * cost; });
     tickEssentials(); // starts the refill timer as soon as you drop below the cap
+    lastSale = null;
 
     updateUI();
-    const [tier1Odds, tier2Odds] = PRODUCER_LEVELS[producerLevel(grids[mode][index]) - 1].odds;
+    let [tier1Odds, tier2Odds] = PRODUCER_LEVELS[producerLevel(grids[mode][index]) - 1].odds;
+    if (settings.supercharge) {
+        tier1Odds += SUPERCHARGE_BONUS[0];
+        tier2Odds += SUPERCHARGE_BONUS[1];
+    }
     const roll = Math.random();
     const tier = roll < tier2Odds ? 2 : roll < tier2Odds + tier1Odds ? 1 : 0;
     grids[mode][emptyIdx] = { tier: Math.min(tier, maxTier) };
@@ -1385,7 +1564,17 @@ function renderGrid(mode, poppedIndices = []) {
             itemEl.className = 'item';
             if (poppedIndices.includes(i)) itemEl.classList.add('pop');
 
-            if (item.type === 'shop') {
+            if (item.type === 'box') {
+                itemEl.classList.add('box');
+                itemEl.title = 'Crate';
+                if (ASSETS.props.crate) {
+                    itemEl.classList.add('has-sprite');
+                    itemEl.innerHTML = `<img src="${ASSETS.props.crate}" alt="" draggable="false">`;
+                } else {
+                    itemEl.innerHTML = '<span class="emoji">📦</span>';
+                }
+                itemEl.addEventListener('pointerdown', (e) => handleDragStart(e, mode, i));
+            } else if (item.type === 'shop') {
                 const gen = GENERATORS[mode];
                 const level = producerLevel(item);
                 const sprite = (ASSETS.producers[mode] || [])[level - 1];
@@ -1411,11 +1600,15 @@ function renderGrid(mode, poppedIndices = []) {
                     itemEl.innerHTML = `<span class="emoji">${itemEmoji(mode, item.tier)}</span><span class="name">${itemName(mode, item.tier)}</span>`;
                 }
                 if (item.tier > 0) addTag(itemEl, 'tier', item.tier);
-                if (wanted.has(item.tier)) {
+                if (isFree(item) && wanted.has(item.tier)) {
                     itemEl.classList.add('wanted');
                     addTag(itemEl, 'tick', '✓');
                 }
                 itemEl.addEventListener('pointerdown', (e) => handleDragStart(e, mode, i));
+            }
+            if (item.web) {
+                itemEl.classList.add('webbed');
+                addTag(itemEl, 'web', '');
             }
             if (selected && selected.mode === mode && selected.index === i) itemEl.classList.add('selected');
             cell.appendChild(itemEl);
@@ -1433,7 +1626,7 @@ const SAVE_KEY = 'merge-farmstead-save-v1';
 function saveGame() {
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
-            res, refillAt, shop, crates, stats, quests, daily, unlocks, maxTier, grids,
+            res, refillAt, shop, crates, stats, quests, daily, settings, unlocks, maxTier, grids,
             npcs: npcs.map(({ id, deliveries, request }) => ({ id, deliveries, request })),
         }));
     } catch (e) {
@@ -1456,6 +1649,7 @@ function loadGame() {
         Object.assign(stats, save.stats);
         Object.assign(quests, save.quests);
         Object.assign(daily, save.daily);
+        Object.assign(settings, save.settings);
         Object.assign(unlocks, save.unlocks);
         maxTier = save.maxTier;
         Object.keys(grids).forEach(mode => {
@@ -1475,7 +1669,10 @@ function loadGame() {
 ['map', 'town', 'market'].forEach(id => {
     document.getElementById(`scene-${id}`).style.backgroundImage = `url("${ASSETS.scenes[id]}")`;
 });
-if (!loadGame()) initTown(true);
+if (!loadGame()) {
+    initTown(true);
+    grids.barn = clutterBoard();
+}
 if (!quests.baselines.length) startLevel(); // new game, or a save from before quests
 tickEssentials(); // catch up on refills that arrived while the game was closed
 claimDailyBasket();
