@@ -55,7 +55,8 @@ cut the image out cleanly. The game adds its own shadows.
    This finds each item on the sheet (so ears, tails and sparkles that cross a
    grid line stay with their item), removes the white background and its pale
    edge, centres each item in a square and saves `00.png`, `01.png`… as
-   transparent PNGs. Use `1 1` for a single image, `256` for items and `512` for
+   transparent PNGs. If your tool already exports a transparent PNG, the script
+   keeps that transparency instead of looking for white. Use `1 1` for a single image, `256` for items and `512` for
    buildings and characters. Backgrounds don't need this step; resize them to
    1080×1920.
 4. **Register it** in `assets.js` and look at it in the game. Check items next to

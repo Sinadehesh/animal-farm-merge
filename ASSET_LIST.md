@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**244 assets:** 16 done ✅, 25 placeholders 🟡, 203 missing ⬜.
+**244 assets:** 28 done ✅, 25 placeholders 🟡, 191 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -353,7 +353,7 @@ The same on every board. Each level looks fuller or bigger than the one before.
 
 | | Item | Levels | Files | Draw as |
 |---|---|---|---|---|
-| ⬜ | Coins | 6 | `assets/items/special/coin_1.png` … `_6.png` | a gold coin → 2 coins → small stack → tall stack → pile → overflowing pot |
+| ✅ | Coins | 6 | `assets/items/special/coin_1.png` … `_6.png` | a gold coin → 2 coins → small stack → tall stack → pile → overflowing pot |
 | ⬜ | Gems | 4 | `assets/items/special/gem_1.png` … `_4.png` | a blue gem → 2 gems → 3 gems → gem cluster |
 | ⬜ | Energy | 5 | `assets/items/special/energy_1.png` … `_5.png` | a yellow lightning bolt in a bubble, bigger and brighter each level |
 | ⬜ | XP stars | 5 | `assets/items/special/xp_1.png` … `_5.png` | a golden star, bigger and more sparkly each level |
@@ -361,10 +361,10 @@ The same on every board. Each level looks fuller or bigger than the one before.
 | ⬜ | Time Skip | 4 | `assets/items/special/skip_1.png` … `_4.png` | an hourglass, fancier each level (1h, 2h, 4h, 8h) |
 | ⬜ | Time Charger | 4 | `assets/items/special/charger_1.png` … `_4.png` | a stopwatch with a green glow, fancier each level (2h-16h) |
 | ⬜ | Unlimited Energy | 3 | `assets/items/special/unlimited_1.png` … `_3.png` | a purple infinity sign with a bolt (5, 10, 20 min) |
-| ⬜ | Coin Chest | 1 | `assets/items/special/chest_coin_1.png` | a small gold chest spilling coins |
-| ⬜ | Energy Chest | 1 | `assets/items/special/chest_energy_1.png` | a green chest with a lightning bolt |
-| ⬜ | Brown Chest | 2 | `assets/items/special/chest_brown_1.png` … `_2.png` | a wooden treasure chest; level 2 bigger with iron trim |
-| ⬜ | Blue Chest | 2 | `assets/items/special/chest_blue_1.png` … `_2.png` | a fancy blue chest with gold trim; level 2 bigger |
+| ✅ | Coin Chest | 1 | `assets/items/special/chest_coin_1.png` | a small gold chest spilling coins |
+| ✅ | Energy Chest | 1 | `assets/items/special/chest_energy_1.png` | a green chest with a lightning bolt |
+| ✅ | Brown Chest | 2 | `assets/items/special/chest_brown_1.png` … `_2.png` | a wooden treasure chest; level 2 bigger with iron trim |
+| ✅ | Blue Chest | 2 | `assets/items/special/chest_blue_1.png` … `_2.png` | a fancy blue chest with gold trim; level 2 bigger |
 | ⬜ | Piggy Bank | 4 | `assets/items/special/piggy_1.png` … `_4.png` | a pink piggy bank, rounder and shinier each level |
 
 ## 11. Interface icons (optional, emoji for now)

@@ -2695,7 +2695,9 @@ function itemEmojiFor(mode, item) {
 
 // A small picture of any board item, for the info bar and dialogs.
 function itemIconFor(mode, item) {
-    return item.type ? `<span class="inline-item">${itemEmojiFor(mode, item)}</span>` : itemIcon(mode, item.tier);
+    if (!item.type) return itemIcon(mode, item.tier);
+    const art = specialSprite(item);
+    return art ? `<img class="inline-item" src="${art}" alt="">` : `<span class="inline-item">${itemEmojiFor(mode, item)}</span>`;
 }
 
 // Picture and name as text, for toasts and buttons: "🧩 Feed Pail".
@@ -3444,7 +3446,11 @@ function itemFace(mode, item) {
     const named = (e, name) => `${emoji(e)}<span class="name">${name}</span>`;
     const sprite = src => `<img src="${src}" alt="" draggable="false">`;
     const art = specialSprite(item);
-    if (art) return { cls: ['has-sprite'], html: sprite(art), badge: levelOf(item) };
+    if (art) {
+        // Pictures keep the glow of a chest ready to open or a Time Charger running.
+        const glow = item.type === 'chest' ? ['chest'].concat(chestReady(item) ? ['open'] : []) : item.until ? ['booster', 'running'] : [];
+        return { cls: ['has-sprite', ...glow], html: sprite(art), badge: levelOf(item) };
+    }
     switch (item.type) {
         case 'box':
             return ASSETS.props.crate ? { cls: ['box', 'has-sprite'], html: sprite(ASSETS.props.crate) } : { cls: ['box'], html: emoji('📦') };

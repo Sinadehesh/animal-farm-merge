@@ -103,7 +103,15 @@ const ASSETS = {
     // Currency items, boosters, chests and Piggy Banks, indexed by level - 1.
     // These are the same on every board. Missing entries use the emoji tile.
     special: {
-        coin: [],       // 🪙 Coins: 1, 3, 8, 20, 50, 120
+        // Cut from assets/raw/icons_1_treasure.png.
+        coin: [         // 🪙 Coins: 1, 3, 8, 20, 50, 120
+            'assets/items/special/coin_1.png',
+            'assets/items/special/coin_2.png',
+            'assets/items/special/coin_3.png',
+            'assets/items/special/coin_4.png',
+            'assets/items/special/coin_5.png',
+            'assets/items/special/coin_6.png',
+        ],
         gem: [],        // 💎 Gems: 1, 3, 8, 20
         energy: [],     // ⚡ Energy: 2, 6, 16, 40, 100
         xp: [],         // ⭐ XP stars: 1, 3, 8, 20, 50
@@ -111,10 +119,10 @@ const ASSETS = {
         skip: [],       // ⏳ Time Skip: 1h, 2h, 4h, 8h
         charger: [],    // ⏱️ Time Charger: 2h, 4h, 8h, 16h
         unlimited: [],  // ♾️ Unlimited Energy: 5m, 10m, 20m
-        chest_coin: [], // 💰 Coin Chest
-        chest_energy: [], // 🔋 Energy Chest
-        chest_brown: [], // Brown Chest, Lv1-2
-        chest_blue: [],  // Blue Chest, Lv1-2
+        chest_coin: ['assets/items/special/chest_coin_1.png'],     // 💰 Coin Chest
+        chest_energy: ['assets/items/special/chest_energy_1.png'], // 🔋 Energy Chest
+        chest_brown: ['assets/items/special/chest_brown_1.png', 'assets/items/special/chest_brown_2.png'], // Brown Chest, Lv1-2
+        chest_blue: ['assets/items/special/chest_blue_1.png', 'assets/items/special/chest_blue_2.png'],    // Blue Chest, Lv1-2
         piggy: [],      // 🐷 Piggy Bank, Lv1-4
     },
 

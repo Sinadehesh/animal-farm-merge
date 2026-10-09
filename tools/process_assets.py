@@ -31,6 +31,7 @@ from PIL import Image
 BG_TOLERANCE = 40     # how far from pure white still counts as background
 EDGE_DARKNESS = 90    # edge pixels at least this much darker than white stay fully opaque
 MIN_SHAPE_PIXELS = 30 # smaller specks are treated as noise and dropped
+ALPHA_FLOOR = 12      # on transparent sheets, pixels fainter than this count as background
 
 
 def flood_from_edges(candidate):
@@ -109,9 +110,21 @@ def remove_background(rgb):
     return np.dstack([rgb, alpha * 255]).astype(np.uint8)
 
 
+def load_rgba(image_path):
+    """The sheet as RGBA: its own transparency if it has any (some AI tools
+    export transparent PNGs), otherwise with the white background removed."""
+    img = Image.open(image_path)
+    if img.mode in ('RGBA', 'LA', 'PA') or 'transparency' in img.info:
+        rgba = np.array(img.convert('RGBA'))
+        if (rgba[:, :, 3] < 255).any():
+            rgba[rgba[:, :, 3] < ALPHA_FLOOR] = 0  # drop faint haze so items stay separate
+            return rgba
+    return remove_background(np.array(img.convert('RGB')))
+
+
 def process_sheet(image_path, output_dir, cols, rows, target_size, padding_pct=0.08):
     os.makedirs(output_dir, exist_ok=True)
-    rgba = remove_background(np.array(Image.open(image_path).convert('RGB')))
+    rgba = load_rgba(image_path)
     h, w = rgba.shape[:2]
     cell_w, cell_h = w / cols, h / rows
 
