@@ -37,9 +37,9 @@ Both the Farm and Barn require exactly 11 tiers (as discovered in the Fruit Merg
 6. Calf
 7. Cow
 8. Horse
-9. Bear
-10. Elephant
-11. Blue Whale (Largest - Game winning animal)
+9. Alpaca
+10. Prize Bull
+11. Unicorn (Legendary - Game winning animal)
 
 ## 4. Core Physics Rules (From Cocos Creator Analysis)
 - **Colliders:** 100% Circle-based.
