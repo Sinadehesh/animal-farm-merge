@@ -92,6 +92,23 @@ Each prompt is: the style block + the line below + the subject.
 - Tier 0 is the input item made by the corner tile, such as the Feed in the Barn.
   Keep it small and plain.
 
+### Special items (`assets/items/special/*.png`, 256px)
+
+Coins, gems, energy, XP stars, Time Skips, Time Chargers, Unlimited Energy,
+chests and the Piggy Bank. They're the same on every board, so each needs one set.
+List them under `special` in `assets.js`, indexed by level. Each level should look
+fuller or bigger than the one before: a single coin, then a small stack, then a
+pile, and so on.
+
+> A single {subject}, filling most of the frame, round chunky silhouette, facing the viewer.
+
+- Coins: 1 gold coin → 2 coins → small stack → tall stack → pile → overflowing pot (6 levels)
+- Gems: 1 blue gem → 2 gems → 3 gems → gem cluster (4 levels)
+- Energy: a yellow lightning bolt in a bubble, bigger and brighter each level (5 levels)
+- XP stars: a golden star, bigger and more sparkly each level (5 levels)
+- Chests: a wooden brown chest, a fancy blue chest with gold trim, a gold coin chest, a green energy chest
+- Piggy Bank: a pink piggy bank, getting rounder and shinier each level (4 levels)
+
 ### Map buildings and town buildings (`assets/buildings/*.png`, `assets/town/*.png`, 512px)
 
 > A single {building}, seen from the front with a slight top-down angle, whole

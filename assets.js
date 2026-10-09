@@ -84,6 +84,23 @@ const ASSETS = {
         flower: [],
     },
 
+    // Currency items, boosters, chests and Piggy Banks, indexed by level - 1.
+    // These are the same on every board. Missing entries use the emoji tile.
+    special: {
+        coin: [],       // 🪙 Coins: 1, 3, 8, 20, 50, 120
+        gem: [],        // 💎 Gems: 1, 3, 8, 20
+        energy: [],     // ⚡ Energy: 2, 6, 16, 40, 100
+        xp: [],         // ⭐ XP stars: 1, 3, 8, 20, 50
+        skip: [],       // ⏳ Time Skip: 1h, 2h, 4h, 8h
+        charger: [],    // ⏱️ Time Charger: 2h, 4h, 8h, 16h
+        unlimited: [],  // ♾️ Unlimited Energy: 5m, 10m, 20m
+        chest_coin: [], // 💰 Coin Chest
+        chest_energy: [], // 🔋 Energy Chest
+        chest_brown: [], // Brown Chest, Lv1-2
+        chest_blue: [],  // Blue Chest, Lv1-2
+        piggy: [],      // 🐷 Piggy Bank, Lv1-4
+    },
+
     // Merge item sprites per board, indexed by tier (0 = the input item).
     // Missing or null entries fall back to the emoji placeholder.
     items: {

@@ -118,6 +118,10 @@
             letter-spacing: -2px;
         }
         .res-charge.on { background: linear-gradient(#ffe066, #f5a623); border-color: #fff; box-shadow: 0 0 10px #ffd34d; }
+        /* Player level with its XP bar. */
+        .res-level b { font-size: 15px; }
+        .xp-bar { display: inline-block; width: 42px; height: 8px; margin-left: 3px; vertical-align: 1px; background: rgba(255, 255, 255, 0.25); border-radius: 999px; overflow: hidden; }
+        .xp-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffe066, #f5a623); }
 
         /* --- STAGE & SCENES --- */
         #stage {
@@ -492,7 +496,37 @@
             text-shadow: none;
             white-space: nowrap;
         }
-        .item.time-skip { border-radius: 50%; background: radial-gradient(circle at 30% 30%, #bfe9ff, #3a8fd8); }
+        /* Boosters, currency, chests, piggy banks and Double Bubbles. */
+        .item.booster, .item.currency, .item.piggy { border-radius: 50%; }
+        .item.booster-skip { background: radial-gradient(circle at 30% 30%, #bfe9ff, #3a8fd8); }
+        .item.booster-charger { background: radial-gradient(circle at 30% 30%, #c8f7d8, #2fa86a); }
+        .item.booster-unlimited { background: radial-gradient(circle at 30% 30%, #f1d4ff, #9b4fd6); }
+        .item.booster.running { box-shadow: 0 0 0 3px #fff, 0 0 14px #5dff9c; animation: glow 1.2s ease-in-out infinite alternate; }
+        .item.cur-coin { background: radial-gradient(circle at 30% 30%, #fff1a8, #e0a400); color: #6b4a00; text-shadow: none; }
+        .item.cur-gem { background: radial-gradient(circle at 30% 30%, #d9f6ff, #36b3e0); }
+        .item.cur-energy { background: radial-gradient(circle at 30% 30%, #fffbb0, #f5c400); color: #6b4a00; text-shadow: none; }
+        .item.cur-xp { background: radial-gradient(circle at 30% 30%, #ffe8b0, #ff9a1f); }
+        .item.currency .name { font-size: 2.8cqw; }
+        .item.chest { border-radius: 18%; }
+        .item.chest-brown { background: linear-gradient(#d39a62, #8a5531); }
+        .item.chest-blue { background: linear-gradient(#9fd2ff, #3a6fd8); }
+        .item.chest-coin { background: linear-gradient(#ffe58a, #d69a00); }
+        .item.chest-energy { background: linear-gradient(#e9ff9a, #6cc43a); }
+        .item.chest.open { box-shadow: 0 0 0 3px #fff, 0 0 12px #ffe066, 0 3px 0 rgba(0, 0, 0, 0.25); }
+        .item .lock { position: absolute; left: -0.6cqw; top: -0.6cqw; font-size: 3.6cqw; text-shadow: none; }
+        .item.piggy { background: radial-gradient(circle at 30% 30%, #ffd6e6, #f07aa8); }
+        .item.bubble-item {
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 25%, #fff 0 9%, rgba(225, 247, 255, 0.85) 32%, rgba(150, 215, 255, 0.85));
+            border: 3px solid #fff;
+            box-shadow: 0 0 10px rgba(160, 225, 255, 0.9), inset 0 -4px 8px rgba(80, 160, 230, 0.35);
+            cursor: pointer;
+            animation: bob 1.6s ease-in-out infinite;
+        }
+        .item .bubble-inner { width: 72%; height: 72%; display: flex; align-items: center; justify-content: center; }
+        .item .bubble-inner img { width: 100%; height: 100%; object-fit: contain; }
+        .item.bubble-item .gen-timer { top: auto; bottom: -1.5cqw; transform: translateX(-50%); }
+        @keyframes glow { to { box-shadow: 0 0 0 3px #fff, 0 0 22px #5dff9c; } }
         .bubble .gift {
             position: absolute;
             left: -2.6cqw;
@@ -575,8 +609,46 @@
             line-height: 1;
             cursor: pointer;
         }
-        .skip-btn { background: #8a5cf0; }
-        .use-btn { background: #3a8fd8; }
+        .skip-btn, .rush-btn, .pop-btn { background: #8a5cf0; }
+        .use-btn, .unlock-btn { background: #3a8fd8; }
+        .collect-btn { background: #f5a623; }
+        /* Inventory: the 🎒 in the info bar and its dialog. */
+        .inv-btn {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.4cqw 1.6cqw;
+            background: var(--paper);
+            color: var(--ink);
+            border: 3px solid var(--ink);
+            border-radius: 12px;
+            box-shadow: 0 3px 0 var(--ink);
+            font-size: 4.4cqw;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .inv-btn small { font-size: 2.3cqw; font-weight: 900; }
+        .inv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5cqw; margin-bottom: 2cqw; }
+        .inv-slot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4cqw;
+            min-height: 15cqw;
+            padding: 1cqw;
+            background: #fff;
+            border: 2px solid var(--ink);
+            border-radius: 10px;
+            font-size: 5cqw;
+            cursor: pointer;
+        }
+        .inv-slot small { font-size: 2.2cqw; font-weight: 800; line-height: 1.1; }
+        .inv-slot .inline-item { height: 8cqw; }
+        .inv-slot.other { background: #efe6d6; }
+        .inv-slot.empty { background: rgba(255, 255, 255, 0.4); border-style: dashed; cursor: default; }
+        .xp-row .quest-bar.xp i { background: linear-gradient(90deg, #ffe066, #f5a623); }
         .dust-btn { background: #8a5cf0; }
         .undo-btn { background: #5a8fc9; }
         .chain-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5cqw; margin-bottom: 2cqw; }
@@ -757,7 +829,10 @@
                 <small id="energy-timer">full</small>
             </button>
             <button class="res res-charge" id="btn-charge" title="Supercharge" hidden>⚡</button>
-            <span class="res" title="Hearts"><span>❤️ <b id="hearts-val">0</b></span><small>hearts</small></span>
+            <button class="res res-level" id="btn-level" title="Level and quests">
+                <span>⭐ <b id="level-val">1</b> <span class="xp-bar"><i id="xp-fill"></i></span></span>
+                <small id="xp-text">0/6</small>
+            </button>
         </div>
     </header>
 

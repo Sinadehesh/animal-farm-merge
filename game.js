@@ -18,9 +18,10 @@ const NUM_CELLS = GAME_WIDTH * GAME_HEIGHT;
 // refilling until you're back under. Same numbers as Merge Mansion.
 const ENERGY_CAP = 100;
 const ENERGY_REFILL_SECONDS = 120;
-// Buying energy: ⚡100 for 💎5, doubling with each purchase that day.
+// Buying energy: ⚡100 for 💎5, doubling with each purchase that day up to 💎80.
 const ENERGY_PACK = 100;
 const ENERGY_PRICE = 5;
+const ENERGY_PRICE_CAP = 80;
 
 // Producers work as in Merge Mansion. Levels 1-3 are parts that can only be
 // merged. From level 4 a producer makes items for ⚡1 a tap: each charge gives
@@ -90,13 +91,120 @@ const CHARGE_MODES = [
     { name: 'Hypercharge', label: '⚡⚡⚡', cost: 4, boost: 2 },
 ];
 
-// Time Skip boosters (Merge Mansion): merge two to double the time, tap to skip
-// that much recharge time on every producer on the board.
-const TIME_SKIPS = [
-    { name: 'Small Time Skip',  hours: 1 },
-    { name: 'Medium Time Skip', hours: 2 },
-    { name: 'Big Time Skip',    hours: 4 },
-    { name: 'Huge Time Skip',   hours: 8 },
+// Boosters (Merge Mansion). Two alike merge into the next size; double-tap one
+// (or tap Use) to start it:
+//   ⏳ Time Skip: skips that many hours of recharging on every producer on its board.
+//   ⏱️ Time Charger: producers in the 8 cells around it recharge twice as fast
+//      for that many hours, then it's used up.
+//   ♾️ Unlimited Energy: producer taps cost no energy for that many minutes.
+const BOOSTERS = {
+    skip:      { emoji: '⏳', unit: 'h', values: [1, 2, 4, 8],  names: ['Small Time Skip', 'Medium Time Skip', 'Big Time Skip', 'Huge Time Skip'] },
+    charger:   { emoji: '⏱️', unit: 'h', values: [2, 4, 8, 16], names: ['Small Time Charger', 'Medium Time Charger', 'Big Time Charger', 'Huge Time Charger'] },
+    unlimited: { emoji: '♾️', unit: 'm', values: [5, 10, 20],   names: ['5m Unlimited Energy', '10m Unlimited Energy', '20m Unlimited Energy'] },
+};
+
+// Currency items (Merge Mansion): coins, gems, energy and XP stars that drop on
+// the board. Two alike merge into a bigger one; double-tap to collect what it's worth.
+const CURRENCY = {
+    coin:   { emoji: '🪙', name: 'Coins',  values: [1, 3, 8, 20, 50, 120] },
+    gem:    { emoji: '💎', name: 'Gems',   values: [1, 3, 8, 20] },
+    energy: { emoji: '⚡', name: 'Energy', values: [2, 6, 16, 40, 100] },
+    xp:     { emoji: '⭐', name: 'XP',     values: [1, 3, 8, 20, 50] },
+};
+
+// Player levels come from XP, as in Merge Mansion. XP to reach the next level,
+// from Merge Mansion's table; past its end each level needs 12% more.
+const XP_TO_NEXT = [6, 9, 17, 44, 96, 144, 182, 214, 264, 326, 383, 472, 552, 640, 748, 859, 983, 1106, 1227, 1405, 1610, 1834, 2090];
+// XP comes from three places:
+// - Merging to tier 4 or higher (Merge Mansion's level 5) drops an ⭐ XP star,
+//   one size bigger for each tier above that.
+// - Orders pay XP by the tier delivered, like Merge Mansion's tasks (1, 3, 8...).
+// - Each quest pays a quarter of its level's XP, so a level's three quests get
+//   you most of the way.
+function orderXp(tier) {
+    return CURRENCY.xp.values[Math.min(Math.max(tier, 1), CURRENCY.xp.values.length) - 1];
+}
+
+// Chests (Merge Mansion). They need no energy: each tap drops one item until
+// they're empty. Brown and Blue chests take a while to unlock (or 💎 to open
+// now), and two unopened ones merge into a bigger chest. Contents are
+// [what, level, weight]; a 'part' is a part of the board's own producer.
+const CHESTS = {
+    coin: {
+        emoji: '💰', name: 'Coin Chest',
+        levels: [{ drops: 5, contents: [['coin', 1, 40], ['coin', 2, 30], ['coin', 3, 20], ['coin', 4, 10]] }],
+    },
+    energy: {
+        emoji: '🔋', name: 'Energy Chest',
+        levels: [{ drops: 5, contents: [['energy', 1, 56], ['energy', 2, 31], ['energy', 3, 13]] }],
+    },
+    brown: {
+        emoji: '🧰', name: 'Brown Chest',
+        levels: [
+            { drops: 10, minutes: 1, skip: 2, contents: [['part', 1, 57], ['coin', 1, 11], ['coin', 2, 7], ['coin', 3, 3], ['energy', 1, 11], ['energy', 2, 7], ['energy', 3, 3]] },
+            { drops: 22, minutes: 5, skip: 10, contents: [['part', 1, 26], ['part', 2, 15], ['coin', 1, 14], ['coin', 2, 8], ['coin', 3, 7], ['energy', 1, 14], ['energy', 2, 8], ['energy', 3, 7]] },
+        ],
+    },
+    blue: {
+        emoji: '🧰', name: 'Blue Chest',
+        levels: [
+            { drops: 10, minutes: 5, skip: 10, contents: [['part', 1, 46], ['part', 2, 20], ['coin', 1, 9], ['coin', 2, 5], ['coin', 3, 3], ['energy', 1, 9], ['energy', 2, 5], ['energy', 3, 3]] },
+            { drops: 22, minutes: 10, skip: 19, contents: [['part', 1, 23], ['part', 2, 19], ['part', 3, 7], ['coin', 1, 13], ['coin', 2, 9], ['coin', 3, 5], ['energy', 1, 13], ['energy', 2, 9], ['energy', 3, 5]] },
+        ],
+    },
+};
+
+// Piggy Bank (Merge Mansion): a producer that costs ⚡1 a tap like any other but
+// drops coins and gems, and breaks when it's empty. Two unused ones merge.
+const PIGGY = {
+    emoji: '🐷', name: 'Piggy Bank',
+    levels: [
+        { drops: 20, contents: [['coin', 2, 29], ['coin', 1, 26], ['coin', 3, 18], ['gem', 1, 15], ['coin', 4, 12]] },
+        { drops: 33, contents: [['coin', 2, 25], ['coin', 3, 25], ['gem', 1, 25], ['coin', 4, 18], ['coin', 5, 7]] },
+        { drops: 45, contents: [['gem', 1, 45], ['coin', 5, 20], ['coin', 3, 14], ['coin', 4, 14], ['coin', 6, 8]] },
+        { drops: 70, contents: [['gem', 1, 30], ['coin', 6, 24], ['coin', 5, 20], ['gem', 2, 20], ['coin', 4, 7]] },
+    ],
+};
+
+// Double Bubbles (Merge Mansion): a merge sometimes also makes a bubble holding
+// a copy of the new item. Pop it with 💎 before its timer runs out, or it turns
+// into a coin. Chance and price by the new item's tier, from Merge Mansion's
+// Toolbox chain; producers use the Gardening Toolbox's (levels 2-7).
+const BUBBLE_ODDS = [0, 0, 0, 0.05, 0.10, 0.16, 0.22, 0.28, 0.34, 0.40, 0.50, 0.70];
+const BUBBLE_GEMS = [0, 0, 0, 3, 5, 7, 13, 23, 39, 64, 102, 163];
+const PRODUCER_BUBBLE_ODDS = [0, 0, 0.20, 0.20, 0.20, 0.20, 0.25, 0.30];
+const PRODUCER_BUBBLE_GEMS = [0, 0, 43, 84, 162, 309, 580, 1067];
+// How long a bubble lasts, by its price (Merge Mansion's brackets).
+function bubbleMinutes(gems) {
+    return gems < 15 ? 1 : gems < 40 ? 2 : gems < 100 ? 3 : gems < 300 ? 4 : 5;
+}
+
+// Inventory (Merge Mansion): 7 free slots, then more for 💵 at Merge Mansion's
+// prices. Timers stop while an item is stored.
+const INVENTORY_FREE_SLOTS = 7;
+const INVENTORY_SLOT_PRICES = [50, 57, 67, 81, 101, 129, 170, 220, 300, 420, 580, 800, 1125];
+
+// Flash Sale (Merge Mansion): 6 offers every 6 hours, each for 💵 or 💎 and a few
+// of each. Offers come from this list; `mode: true` = for one of your boards.
+const FLASH_SALE_HOURS = 6;
+const FLASH_SALE_OFFERS = [
+    { mode: true, item: { type: 'shop', level: 1 }, coins: 250, gems: 15, qty: 3 },
+    { mode: true, item: { type: 'shop', level: 2 }, coins: 600, gems: 35, qty: 2 },
+    { mode: true, item: { tier: 2 }, coins: 45, gems: 3, qty: 5 },
+    { mode: true, item: { tier: 3 }, coins: 90, gems: 6, qty: 5 },
+    { item: { type: 'energy', level: 3 }, gems: 6, qty: 5 },
+    { item: { type: 'energy', level: 4 }, gems: 14, qty: 3 },
+    { item: { type: 'skip', level: 1 }, gems: 12, qty: 3 },
+    { item: { type: 'charger', level: 1 }, gems: 18, qty: 2 },
+    { item: { type: 'unlimited', level: 1 }, gems: 15, qty: 2 },
+    { item: { type: 'chest', kind: 'brown', level: 1 }, coins: 400, gems: 20, qty: 3 },
+    { item: { type: 'chest', kind: 'blue', level: 1 }, gems: 35, qty: 2 },
+];
+// Daily Deals (Merge Mansion): a free Piggy Bank and an Energy Chest for 💎50,
+// once a day each.
+const DAILY_DEALS = [
+    { id: 'piggy', item: { type: 'piggy', level: 1 }, gems: 0 },
+    { id: 'energyChest', item: { type: 'chest', kind: 'energy', level: 1 }, gems: 50 },
 ];
 
 // Chance that an order also pays a level 1 part for its board's producer. The
@@ -125,9 +233,10 @@ const DAILY_GIFTS = [
     { gems: 30, energy: 100, part: 3 },
 ];
 
-// What finishing a player level's quests pays.
+// What reaching a player level pays. As in Merge Mansion: a Brown Chest on odd
+// levels, a Blue Chest on even ones, and energy (100 at levels 4 and 14).
 function levelReward(level) {
-    return { money: 100 * level, gems: 5 + level, energy: 50, part: Math.min(3, Math.ceil(level / 3)), timeSkip: level >= 3 ? 1 : 0 };
+    return { money: 100 * level, gems: 5 + level, energy: level === 4 || level === 14 ? 100 : 50, chest: level % 2 ? 'brown' : 'blue' };
 }
 
 // 💎 Gems are the only thing sold for real money, as in Merge Gardens. 💵 is
@@ -158,25 +267,33 @@ const SPECIAL_OFFER = { id: 'special_offer', name: 'Special Offer', gems: 200, m
 
 let unlocks = { barn: true, hay: false, farm: false, fert: false, aqua: false, flower: false };
 let maxTier = 3;
-const res = { money: 0, gems: 0, hearts: 0, energy: 0 };
+const res = { money: 0, gems: 0, energy: 0 };
 Object.assign(res, START);
 // When the next ⚡ arrives (ms timestamp), or null when the bar is full.
 let energyAt = null;
 // Counters the quests read from (saved with the game).
 const stats = { spawned: {}, made: {}, merges: 0, delivered: 0, sold: 0, upgrades: 0, gifts: 0, boxes: 0, webs: 0 };
-// Player toggles (saved with the game). charge = index into CHARGE_MODES.
-const settings = { charge: 0 };
-// Player level, and each quest's counter value when the level started.
-const quests = { level: 1, baselines: [], done: [] };
+// Player toggles (saved with the game). charge = index into CHARGE_MODES;
+// unlimitedUntil = when Unlimited Energy runs out (ms timestamp).
+const settings = { charge: 0, unlimitedUntil: 0 };
+// Player level, XP toward the next level, and each quest's counter value when
+// the level started.
+const quests = { level: 1, xp: 0, baselines: [], done: [] };
 // Daily gift track: the last day claimed and how many days in a row.
 const daily = { lastDay: null, streak: 0 };
-// Rewards (producer parts, Time Skips) waiting in each board's 🎁 until placed.
+// Rewards and purchases waiting in each board's 🎁 until placed.
 const crates = { barn: [], hay: [], farm: [], fert: [], aqua: [], flower: [] };
-// Daily Basket, Special Offer, energy purchases and ads (saved with the game).
+// Stored items, each with the board it belongs to, and how many slots you have.
+const inventory = { slots: INVENTORY_FREE_SLOTS, items: [] };
+// Daily Basket, Special Offer, energy purchases, ads, Flash Sale and Daily
+// Deals (saved with the game).
 const shop = {
     basketStart: null, basketClaimed: null, offerBought: false, offerShown: false,
     adsDay: null, adsWatched: 0, energyDay: null, energyBought: 0,
+    flash: null, dealsDay: null, dealsTaken: [],
 };
+// The last board you were on: where things you buy at the Market are sent.
+let lastBoard = 'barn';
 let currentScene = 'map';
 
 // UI Elements
@@ -184,7 +301,9 @@ const moneyEl = document.getElementById('money-val');
 const gemsEl = document.getElementById('gems-val');
 const energyEl = document.getElementById('energy-val');
 const energyTimerEl = document.getElementById('energy-timer');
-const heartsEl = document.getElementById('hearts-val');
+const levelEl = document.getElementById('level-val');
+const xpFillEl = document.getElementById('xp-fill');
+const xpTextEl = document.getElementById('xp-text');
 const chargeBtn = document.getElementById('btn-charge');
 
 const stageEl = document.getElementById('stage');
@@ -251,8 +370,13 @@ const AREAS = {
 
 // --- PRODUCERS ---
 
-function producerLevel(item) {
+// The level of anything that merges by level (producers, boosters, chests...).
+function levelOf(item) {
     return item.level || 1;
+}
+
+function producerLevel(item) {
+    return levelOf(item);
 }
 
 // e.g. "Big Feed Bin"
@@ -298,9 +422,65 @@ function tickProducer(mode, item, now = Date.now()) {
     return arrived;
 }
 
-// Ticks every producer on every board; returns the boards where a charge arrived.
-function tickProducers(now = Date.now()) {
-    return Object.keys(grids).filter(mode => grids[mode].map(item => tickProducer(mode, item, now)).some(Boolean));
+// The 8 cells around a cell (Time Chargers reach diagonals too).
+function getNeighbors8(index) {
+    const x = index % GAME_WIDTH;
+    const y = Math.floor(index / GAME_WIDTH);
+    const cells = [];
+    for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+            const nx = x + dx, ny = y + dy;
+            if ((dx || dy) && nx >= 0 && nx < GAME_WIDTH && ny >= 0 && ny < GAME_HEIGHT) cells.push(ny * GAME_WIDTH + nx);
+        }
+    }
+    return cells;
+}
+
+// When the boards were last ticked, so a Time Charger only speeds up time that
+// has passed since (including while the game was closed).
+let lastTickAt = Date.now();
+
+// Ticks everything with a timer on every board: Time Chargers, producer
+// recharges, chests unlocking and Double Bubbles. Returns the boards that
+// changed and need a redraw.
+function tickBoards(now = Date.now()) {
+    const since = Math.min(lastTickAt, now);
+    lastTickAt = now;
+    return Object.keys(grids).filter(mode => {
+        const board = grids[mode];
+        let changed = false;
+        // An active Time Charger doubles the speed of the recharges around it:
+        // they move forward again by the time that passed (once, even if two reach).
+        const boosted = new Set();
+        board.forEach((cell, c) => {
+            if (!cell || cell.type !== 'charger' || !cell.until) return;
+            const extra = Math.min(now, cell.until) - since;
+            getNeighbors8(c).forEach(n => {
+                const p = board[n];
+                if (extra > 0 && !boosted.has(n) && isWorkingProducer(p) && !p.web && p.readyAt) {
+                    p.readyAt -= extra;
+                    boosted.add(n);
+                }
+            });
+            if (now >= cell.until) {
+                board[c] = null;
+                changed = true;
+            }
+        });
+        board.forEach((cell, c) => {
+            if (!cell) return;
+            if (tickProducer(mode, cell, now)) changed = true;
+            if (cell.type === 'chest' && cell.openAt && !cell.opened && now >= cell.openAt) {
+                cell.opened = true;
+                changed = true;
+            }
+            if (cell.type === 'bubble' && now >= cell.until) {
+                board[c] = { type: 'coin', level: 1 }; // an unpopped bubble leaves a coin behind
+                changed = true;
+            }
+        });
+        return changed;
+    });
 }
 
 // Pays 💎 to finish the producer's current recharge at once.
@@ -332,11 +512,21 @@ function openRecharge(mode, index) {
     });
 }
 
+function boosterName(item) {
+    return BOOSTERS[item.type].names[levelOf(item) - 1];
+}
+
+// e.g. "2h" or "10m"
+function boosterAmount(item) {
+    const b = BOOSTERS[item.type];
+    return `${b.values[levelOf(item) - 1]}${b.unit}`;
+}
+
 // A Time Skip moves every recharge on the board forward by its hours.
 function useTimeSkip(mode, index) {
     const item = grids[mode][index];
     if (!item || item.type !== 'skip') return;
-    const { name, hours } = TIME_SKIPS[producerLevel(item) - 1];
+    const hours = BOOSTERS.skip.values[levelOf(item) - 1];
     const waiting = grids[mode].filter(cell => isWorkingProducer(cell) && !cell.web && cell.readyAt);
     if (!waiting.length) {
         toast('Nothing is recharging on this board right now. Save it for later!');
@@ -345,8 +535,53 @@ function useTimeSkip(mode, index) {
     waiting.forEach(cell => { cell.readyAt -= hours * 3600000; tickProducer(mode, cell); });
     grids[mode][index] = null;
     selected = null;
-    toast(`⏳ ${name}: ${hours}h skipped on the ${AREAS[mode].name}!`, 'good');
+    toast(`⏳ ${boosterName(item)}: ${hours}h skipped on the ${AREAS[mode].name}!`, 'good');
     refreshBoard(mode);
+}
+
+// A Time Charger runs for its hours, then disappears. Once started it can't be
+// merged or stored.
+function startCharger(mode, index) {
+    const item = grids[mode][index];
+    if (!item || item.type !== 'charger' || item.until) return;
+    const hours = BOOSTERS.charger.values[levelOf(item) - 1];
+    item.until = Date.now() + hours * 3600000;
+    toast(`⏱️ ${boosterName(item)} on: producers next to it recharge twice as fast for ${hours}h.`, 'good');
+    refreshBoard(mode, [index]);
+}
+
+function unlimitedActive() {
+    return settings.unlimitedUntil > Date.now();
+}
+
+// Unlimited Energy adds its minutes (on top of any that are left).
+function startUnlimited(mode, index) {
+    const item = grids[mode][index];
+    if (!item || item.type !== 'unlimited') return;
+    const minutes = BOOSTERS.unlimited.values[levelOf(item) - 1];
+    settings.unlimitedUntil = Math.max(Date.now(), settings.unlimitedUntil) + minutes * 60000;
+    grids[mode][index] = null;
+    selected = null;
+    toast(`♾️ Unlimited Energy for ${minutes} minutes: tap away!`, 'good');
+    updateUI();
+    refreshBoard(mode);
+}
+
+// Takes the energy for one tap, or explains why it can't. Free while Unlimited
+// Energy runs.
+function payTapEnergy(cost) {
+    if (unlimitedActive()) return true;
+    if (res.energy < 1) {
+        openEnergy(true);
+        return false;
+    }
+    if (res.energy < cost) {
+        toast(`${chargeMode().name} needs ⚡${cost} a tap. Tap ${chargeMode().label} by the energy bar to switch it off.`);
+        return false;
+    }
+    res.energy -= cost;
+    tickEnergy(); // starts the refill timer as soon as you drop below the cap
+    return true;
 }
 
 function chargeMode() {
@@ -399,10 +634,10 @@ function adsLeft() {
     return ADS_PER_DAY - shop.adsWatched;
 }
 
-// 💎5 for the first ⚡100 of the day, then 10, 20, 40...
+// 💎5 for the first ⚡100 of the day, then 10, 20, 40 and 80 from then on.
 function energyPrice() {
     if (shop.energyDay !== today()) { shop.energyDay = today(); shop.energyBought = 0; }
-    return ENERGY_PRICE * 2 ** shop.energyBought;
+    return Math.min(ENERGY_PRICE_CAP, ENERGY_PRICE * 2 ** shop.energyBought);
 }
 
 // Shown when you tap the energy bar or run out while playing.
@@ -425,7 +660,7 @@ function openEnergy(ranOut = false) {
     showDialog({
         title: ranOut ? 'Out of ⚡ Energy' : '⚡ Energy',
         body: `<p class="big-count">⚡ ${res.energy} / ${ENERGY_CAP}</p><p class="hint">${timing}</p>
-               <p class="hint">Every producer tap costs ⚡1. The price of ⚡${ENERGY_PACK} doubles with each buy and resets tomorrow.</p>`,
+               <p class="hint">Every producer tap costs ⚡1. The price of ⚡${ENERGY_PACK} doubles with each buy (up to 💎${ENERGY_PRICE_CAP}) and resets tomorrow.</p>`,
         actions,
     });
 }
@@ -472,6 +707,7 @@ function openShop(note = '') {
         : { label: `🧺 ${DAILY_BASKET.name}: 💎 ${DAILY_BASKET.gemsPerDay} every day · ${DAILY_BASKET.price}`,
             primary: true, wide: true, onClick: buyDailyBasket });
     actions.push({ label: `⚡ ${ENERGY_PACK} Energy · 💎 ${energyPrice()}`, wide: true, onClick: buyEnergy });
+    actions.push({ label: '🏷️ Flash Sale & 🎁 Daily Deals at the Market', wide: true, onClick: () => { goTo('market'); openFlashSale(); } });
     actions.push({ label: 'Close' });
     showDialog({
         title: 'Shop',
@@ -557,44 +793,88 @@ function showRewardedAd(onReward) {
 
 // --- REWARDS ---
 
-function timeSkipName(level) {
-    return TIME_SKIPS[level - 1].name;
+function chestName(item) {
+    return `${CHESTS[item.kind].name}${levelOf(item) > 1 ? ` Lv${levelOf(item)}` : ''}`;
 }
 
 function rewardText(r) {
     return [
         r.money && `💵${r.money}`, r.gems && `💎${r.gems}`, r.energy && `⚡${r.energy}`,
-        r.part && `🧩 Lv${r.part} part`, r.timeSkip && `⏳ ${TIME_SKIPS[r.timeSkip - 1].hours}h skip`,
+        r.part && `🧩 Lv${r.part} part`, r.timeSkip && `⏳ ${BOOSTERS.skip.values[r.timeSkip - 1]}h skip`,
+        r.chest && `🧰 ${CHESTS[r.chest].name}`,
     ].filter(Boolean).join(' ');
 }
 
-// Pays a reward. A producer part goes into the 🎁 of a random board you own; a
-// Time Skip into the 🎁 of your slowest board, where it saves the most time.
+// Pays a reward. A producer part or a chest goes into the 🎁 of a random board
+// you own; a Time Skip into the 🎁 of your slowest board, where it saves the most.
 function grantReward(r, title) {
     if (r.money) res.money += r.money;
     if (r.gems) res.gems += r.gems;
     if (r.energy) { res.energy += r.energy; tickEnergy(); }
     const owned = Object.keys(AREAS).filter(id => unlocks[id]);
+    const randomBoard = () => owned[Math.floor(Math.random() * owned.length)];
     const where = [];
     if (r.part) {
-        const mode = owned[Math.floor(Math.random() * owned.length)];
+        const mode = randomBoard();
         crates[mode].push({ type: 'shop', level: r.part });
         where.push(`${producerName(mode, r.part)}: tap 🎁 on your ${AREAS[mode].name} board`);
     }
     if (r.timeSkip) {
         const mode = owned.reduce((a, b) => (PRODUCERS[b].minutes > PRODUCERS[a].minutes ? b : a));
         crates[mode].push({ type: 'skip', level: r.timeSkip });
-        where.push(`${timeSkipName(r.timeSkip)} in your ${AREAS[mode].name} 🎁`);
+        where.push(`${BOOSTERS.skip.names[r.timeSkip - 1]} in your ${AREAS[mode].name} 🎁`);
+    }
+    if (r.chest) {
+        const mode = randomBoard();
+        crates[mode].push({ type: 'chest', kind: r.chest, level: 1 });
+        where.push(`${CHESTS[r.chest].name} in your ${AREAS[mode].name} 🎁`);
     }
     updateUI();
     toast(`${title} ${rewardText(r)}${where.length ? ` · ${where.join(' · ')}` : ''}`, 'good');
 }
 
-// --- QUESTS & PLAYER LEVEL ---
-// Three quests per level, like Merge Gardens' Daisy's Quests. Finishing them
-// levels you up, which pays a reward and unlocks the next piece of land.
+// --- XP, QUESTS & PLAYER LEVEL ---
+// XP levels you up, as in Merge Mansion. Each level also has three quests, like
+// Merge Gardens' Daisy's Quests: each one done pays XP, so they lead the way.
 // Progress counts only what happens after the level starts, except "owned"
 // quests, which check the current state.
+
+function xpToNext(level) {
+    const last = XP_TO_NEXT.length;
+    return level <= last ? XP_TO_NEXT[level - 1] : Math.round(XP_TO_NEXT[last - 1] * 1.12 ** (level - last));
+}
+
+function questXp(level) {
+    return Math.max(2, Math.round(xpToNext(level) / 4));
+}
+
+// Adds XP and levels up as many times as it covers; each new level pays its reward.
+function addXp(n) {
+    quests.xp += n;
+    while (quests.xp >= xpToNext(quests.level)) {
+        quests.xp -= xpToNext(quests.level);
+        quests.level++;
+        startLevel();
+        const reward = levelReward(quests.level);
+        grantReward(reward, `⭐ Level ${quests.level}!`);
+        // Shown after whatever called this has redrawn the scene.
+        setTimeout(() => showLevelUp(quests.level, reward), 350);
+    }
+    updateUI();
+}
+
+function showLevelUp(level, reward) {
+    if (level !== quests.level) return; // a later level-up has its own popup
+    const land = Object.keys(AREAS).find(id => AREAS[id].level === level);
+    showDialog({
+        title: `⭐ Level ${level}!`,
+        body: `<p class="big-count">⭐ ${level}</p>
+               <p><b>Rewards:</b> ${rewardText(reward)}</p>
+               ${land ? `<p>The <b>${AREAS[land].name}</b> is now for sale at the Market!</p>` : ''}
+               <p class="hint">New quests are waiting in 📋.</p>`,
+        actions: [{ label: 'Hooray!', primary: true }],
+    });
+}
 
 function madeCount(mode, tier) {
     return stats.made[`${mode}:${tier}`] || 0;
@@ -646,58 +926,54 @@ function questProgress(i) {
     return Math.min(q.target, Math.max(0, value));
 }
 
-function allQuestsDone() {
-    return questsFor(quests.level).every((q, i) => questProgress(i) >= q.target);
-}
-
 function startLevel() {
     const list = questsFor(quests.level);
     quests.baselines = list.map(q => (q.owned ? 0 : q.count()));
     quests.done = list.map(() => false);
 }
 
-// Called after anything that can move a quest forward; cheers each one once.
+// Called after anything that can move a quest forward; pays each one's XP once.
+// A level-up starts new quests, which may already be done (owned land), so it
+// checks again.
 function checkQuests() {
-    questsFor(quests.level).forEach((q, i) => {
-        if (!quests.done[i] && questProgress(i) >= q.target) {
-            quests.done[i] = true;
-            toast(`✅ Quest done: ${q.label}`, 'good');
-            if (allQuestsDone()) toast('All quests done! Tap 📋 on the map to level up.', 'good');
-        }
-    });
+    for (let guard = 0; guard < 50; guard++) {
+        const level = quests.level;
+        let xp = 0;
+        questsFor(level).forEach((q, i) => {
+            if (!quests.done[i] && questProgress(i) >= q.target) {
+                quests.done[i] = true;
+                xp += questXp(level);
+                toast(`✅ ${q.label} · +⭐${questXp(level)}`, 'good');
+            }
+        });
+        if (!xp) return;
+        addXp(xp);
+        if (quests.level === level) return;
+    }
 }
 
 function openQuests() {
     const list = questsFor(quests.level);
-    const reward = levelReward(quests.level);
+    const need = xpToNext(quests.level);
+    const reward = levelReward(quests.level + 1);
     const nextLand = Object.keys(AREAS).find(id => AREAS[id].level === quests.level + 1);
     const rows = list.map((q, i) => {
         const p = questProgress(i);
         const done = p >= q.target;
         return `<div class="quest${done ? ' done' : ''}">
-                    <span>${done ? '✅' : '⬜'} ${q.label}</span><small>${p}/${q.target}</small>
+                    <span>${done ? '✅' : '⬜'} ${q.label}</span><small>${done ? `+⭐${questXp(quests.level)}` : `${p}/${q.target}`}</small>
                     <span class="quest-bar"><i style="width:${(100 * p) / q.target}%"></i></span>
                 </div>`;
     }).join('');
     showDialog({
-        title: `⭐ Level ${quests.level} quests`,
-        body: `${rows}<p class="hint">Level-up reward: ${rewardText(reward)}${nextLand ? ` · unlocks the ${AREAS[nextLand].name}` : ''}</p>`,
-        actions: allQuestsDone()
-            ? [{ label: `Level up! ${rewardText(reward)}`, primary: true, wide: true, onClick: levelUp }, { label: 'Later' }]
-            : [{ label: 'OK' }],
+        title: `⭐ Level ${quests.level}`,
+        body: `<div class="quest xp-row"><span>⭐ XP to level ${quests.level + 1}</span><small>${quests.xp}/${need}</small>
+                   <span class="quest-bar xp"><i style="width:${(100 * quests.xp) / need}%"></i></span></div>
+               ${rows}
+               <p class="hint">Each quest pays ⭐${questXp(quests.level)}. Orders and ⭐ stars from big merges add XP too.
+               Level ${quests.level + 1} pays ${rewardText(reward)}${nextLand ? ` and unlocks the ${AREAS[nextLand].name}` : ''}.</p>`,
+        actions: [{ label: 'OK' }],
     });
-}
-
-function levelUp() {
-    if (!allQuestsDone()) return;
-    const reward = levelReward(quests.level);
-    quests.level++;
-    startLevel();
-    grantReward(reward, `⭐ Level ${quests.level}!`);
-    const unlocked = Object.keys(AREAS).find(id => AREAS[id].level === quests.level);
-    if (unlocked) toast(`The ${AREAS[unlocked].name} is now for sale!`, 'good');
-    checkQuests();
-    goTo(currentScene);
 }
 
 // --- DAILY GIFT ---
@@ -878,6 +1154,7 @@ function goTo(scene) {
     else if (scene === 'market') { titleEl.textContent = 'Market'; renderMarket(); }
     else {
         if (selected && selected.mode !== scene) selected = null;
+        lastBoard = scene;
         titleEl.textContent = AREAS[scene].name;
         refreshBoard(scene);
     }
@@ -896,7 +1173,9 @@ function renderMap() {
     if (readyCount > 0) addTag(town, 'badge', readyCount);
     scene.appendChild(town);
 
-    scene.appendChild(makeSpot({ ...MAP_LAYOUT.market, sprite: ASSETS.buildings.market, label: 'Market', onClick: () => goTo('market') }));
+    const market = makeSpot({ ...MAP_LAYOUT.market, sprite: ASSETS.buildings.market, label: 'Market', onClick: () => goTo('market') });
+    if (dealsWaiting()) addTag(market, 'badge', '🎁'); // today's free Piggy Bank
+    scene.appendChild(market);
 
     Object.keys(AREAS).forEach(id => {
         const area = AREAS[id];
@@ -923,7 +1202,7 @@ function renderMap() {
     side.className = 'side-buttons';
     side.innerHTML = `
         <button class="side-btn" id="btn-gift">🎁<small>Gift</small>${dailyAvailable() ? '<span class="badge">!</span>' : ''}</button>
-        <button class="side-btn" id="btn-quests">📋<small>Lv ${quests.level}</small>${allQuestsDone() ? '<span class="badge">!</span>' : ''}</button>`;
+        <button class="side-btn" id="btn-quests">📋<small>Lv ${quests.level}</small></button>`;
     side.querySelector('#btn-gift').addEventListener('click', openDailyGift);
     side.querySelector('#btn-quests').addEventListener('click', openQuests);
     scene.appendChild(side);
@@ -987,7 +1266,7 @@ function generateRequestFor(npc) {
         mode: mode,
         tier: targetTier,
         rewardMoney: Math.round(AREAS[mode].pay * 2 ** targetTier * (0.85 + Math.random() * 0.3)),
-        rewardHearts: targetTier,
+        rewardXp: orderXp(targetTier),
         rewardProducer: Math.random() < PRODUCER_REWARD_CHANCE,
     };
 }
@@ -998,9 +1277,10 @@ function initTown(newGame = false) {
     if (newGame) npcs.find(npc => npc.id === 'marnie').request.rewardProducer = true;
 }
 
-// Items that can be dragged, merged and handed in (not crates or cobwebbed).
+// Items that can be dragged, merged and handed in (not crates, Double Bubbles
+// or anything cobwebbed).
 function isFree(item) {
-    return !!item && item.type !== 'box' && !item.web;
+    return !!item && item.type !== 'box' && item.type !== 'bubble' && !item.web;
 }
 
 function findItem(mode, tier) {
@@ -1044,7 +1324,7 @@ function openNpc(npc) {
         artRound: true,
         title: `${npc.name} · Lv.${level}`,
         body: `<p>“Could you bring me a ${itemIcon(r.mode, r.tier)} <b>${itemName(r.mode, r.tier)}</b> from your ${area.name}?”</p>
-               <p><b>Reward:</b> 💵 ${r.rewardMoney} · ❤️ ${r.rewardHearts}${r.rewardProducer ? ` · 🎁 🧩 ${producerName(r.mode, 1)}` : ''}</p>
+               <p><b>Reward:</b> 💵 ${r.rewardMoney} · ⭐ ${r.rewardXp} XP${r.rewardProducer ? ` · 🎁 🧩 ${producerName(r.mode, 1)}` : ''}</p>
                <p class="hint">${ready ? 'You have one ready on your board!' : `Merge one on the ${area.name} board first.`}</p>`,
         actions: ready
             ? [{ label: 'Deliver', primary: true, onClick: () => deliver(npc) }, { label: 'Later' }]
@@ -1062,13 +1342,15 @@ function deliver(npc) {
     grids[r.mode][itemIndex] = null;
     lastSale = null;
     res.money += r.rewardMoney;
-    res.hearts += r.rewardHearts;
     npc.deliveries++;
     stats.delivered++;
+    // Pay the "deliver" quests at this level before the order's XP can level you up.
+    checkQuests();
+    addXp(r.rewardXp);
     const levelUp = npc.deliveries % 5 === 0;
     if (levelUp) res.gems += LEVEL_UP_GEMS;
     updateUI();
-    toast(`${npc.name} loved the ${itemName(r.mode, r.tier)}! +💵${r.rewardMoney} +❤️${r.rewardHearts}`, 'good');
+    toast(`${npc.name} loved the ${itemName(r.mode, r.tier)}! +💵${r.rewardMoney} +⭐${r.rewardXp}`, 'good');
     if (levelUp) toast(`${npc.name} reached Lv.${npc.deliveries / 5 + 1}! +💎 ${LEVEL_UP_GEMS}`, 'good');
     if (r.rewardProducer) {
         crates[r.mode].push({ type: 'shop', level: 1 });
@@ -1103,6 +1385,128 @@ function renderMarket() {
         addTag(guide, 'price-tag', `💵${maxTier * 100}`);
         scene.appendChild(guide);
     }
+
+    // Flash Sale and Daily Deals, as in Merge Mansion's shop.
+    const side = document.createElement('div');
+    side.className = 'side-buttons';
+    side.innerHTML = `
+        <button class="side-btn" id="btn-flash">🏷️<small>Flash Sale</small></button>
+        <button class="side-btn" id="btn-deals">🎁<small>Daily Deals</small>${dealsWaiting() ? '<span class="badge">!</span>' : ''}</button>`;
+    side.querySelector('#btn-flash').addEventListener('click', openFlashSale);
+    side.querySelector('#btn-deals').addEventListener('click', openDailyDeals);
+    scene.appendChild(side);
+}
+
+// --- FLASH SALE & DAILY DEALS ---
+// What you buy goes into the 🎁 of its board: the offer's own board, or else the
+// board you were on last.
+
+function deliveryBoard() {
+    if (AREAS[currentScene]) return currentScene;
+    return unlocks[lastBoard] ? lastBoard : 'barn';
+}
+
+function sendToBoard(mode, item) {
+    crates[mode].push(JSON.parse(JSON.stringify(item)));
+    toast(`${itemLabel(mode, item)} is in the 🎁 on your ${AREAS[mode].name} board.`, 'good');
+}
+
+function flashWindow(now = Date.now()) {
+    return Math.floor(now / (FLASH_SALE_HOURS * 3600000));
+}
+
+// This window's 6 offers, picked once and saved so they stay put until it ends.
+function flashSale() {
+    if (!shop.flash || shop.flash.window !== flashWindow()) {
+        const owned = Object.keys(AREAS).filter(id => unlocks[id]);
+        const pool = FLASH_SALE_OFFERS.slice().sort(() => Math.random() - 0.5).slice(0, 6);
+        shop.flash = {
+            window: flashWindow(),
+            offers: pool.map(o => {
+                const useGems = !o.coins || (o.gems && Math.random() < 0.5);
+                return {
+                    mode: o.mode ? owned[Math.floor(Math.random() * owned.length)] : null,
+                    item: o.item,
+                    price: useGems ? o.gems : o.coins,
+                    currency: useGems ? 'gems' : 'money',
+                    left: o.qty,
+                };
+            }),
+        };
+    }
+    return shop.flash.offers;
+}
+
+function openFlashSale() {
+    const offers = flashSale();
+    const ends = (flashWindow() + 1) * FLASH_SALE_HOURS * 3600000;
+    showDialog({
+        title: '🏷️ Flash Sale',
+        body: `<p class="hint">New offers in <span data-ready="${ends}">${formatDuration(ends - Date.now())}</span>.
+               ${offers.some(o => !o.mode) ? `Boosters and chests go to your ${AREAS[deliveryBoard()].name}.` : ''}</p>`,
+        actions: [
+            ...offers.map((o, i) => ({
+                label: `${itemLabel(o.mode || deliveryBoard(), o.item)}${o.mode ? ` (${AREAS[o.mode].name})` : ''} · ${o.currency === 'gems' ? '💎' : '💵'}${o.price}${o.left ? ` · ${o.left} left` : ' · sold out'}`,
+                wide: true, primary: o.left > 0, disabled: !o.left,
+                onClick: () => buyFlashOffer(i),
+            })),
+            { label: 'Close' },
+        ],
+    });
+}
+
+function buyFlashOffer(i) {
+    const o = flashSale()[i];
+    if (!o || o.left <= 0) return;
+    if (o.currency === 'gems') {
+        if (!spendGems(o.price)) return;
+    } else if (res.money < o.price) {
+        toast(`You need 💵${o.price - res.money} more.`);
+        return;
+    } else {
+        res.money -= o.price;
+    }
+    o.left--;
+    sendToBoard(o.mode || deliveryBoard(), o.item);
+    updateUI();
+    openFlashSale();
+}
+
+function dealsTaken() {
+    if (shop.dealsDay !== today()) { shop.dealsDay = today(); shop.dealsTaken = []; }
+    return shop.dealsTaken;
+}
+
+// The free Piggy Bank is still waiting today.
+function dealsWaiting() {
+    return !dealsTaken().includes('piggy');
+}
+
+function openDailyDeals() {
+    const taken = dealsTaken();
+    showDialog({
+        title: '🎁 Daily Deals',
+        body: `<p>One of each a day. They go to your ${AREAS[deliveryBoard()].name}.</p>
+               <p class="hint">New deals in ${formatDuration(msUntilTomorrow())}.</p>`,
+        actions: [
+            ...DAILY_DEALS.map(d => ({
+                label: `${itemLabel(deliveryBoard(), d.item)} · ${taken.includes(d.id) ? 'taken' : d.gems ? `💎${d.gems}` : 'FREE'}`,
+                wide: true, primary: !taken.includes(d.id), disabled: taken.includes(d.id),
+                onClick: () => takeDeal(d.id),
+            })),
+            { label: 'Close' },
+        ],
+    });
+}
+
+function takeDeal(id) {
+    const deal = DAILY_DEALS.find(d => d.id === id);
+    if (!deal || dealsTaken().includes(id)) return;
+    if (deal.gems && !spendGems(deal.gems)) return;
+    shop.dealsTaken.push(id);
+    sendToBoard(deliveryBoard(), deal.item);
+    updateUI();
+    goTo(currentScene);
 }
 
 function offerUpgrade() {
@@ -1138,8 +1542,13 @@ function updateUI() {
     moneyEl.textContent = shortNumber(res.money);
     gemsEl.textContent = shortNumber(res.gems);
     energyEl.textContent = shortNumber(res.energy);
-    energyTimerEl.textContent = energyAt ? `+1 in ${formatDuration(energyAt - Date.now())}` : 'full';
-    heartsEl.textContent = shortNumber(res.hearts);
+    energyTimerEl.textContent = unlimitedActive()
+        ? `♾️ ${formatDuration(settings.unlimitedUntil - Date.now())}`
+        : energyAt ? `+1 in ${formatDuration(energyAt - Date.now())}` : 'full';
+    const need = xpToNext(quests.level);
+    levelEl.textContent = quests.level;
+    xpFillEl.style.width = `${Math.min(100, (100 * quests.xp) / need)}%`;
+    xpTextEl.textContent = `${shortNumber(quests.xp)}/${shortNumber(need)}`;
     const mode = chargeMode();
     chargeBtn.textContent = mode.label;
     chargeBtn.title = mode.name;
@@ -1156,6 +1565,7 @@ function updateCountdowns() {
 }
 
 document.getElementById('btn-energy').addEventListener('click', () => openEnergy());
+document.getElementById('btn-level').addEventListener('click', openQuests);
 chargeBtn.addEventListener('click', cycleCharge);
 document.getElementById('btn-coins').addEventListener('click', openShop);
 document.getElementById('btn-gems').addEventListener('click', openShop);
@@ -1251,7 +1661,7 @@ function renderOrders(mode, el) {
         card.className = 'order-card' + (ready ? ' ready' : '');
         card.innerHTML = `
             <span class="order-who"><img class="face" src="${npcPicture(npc)}" alt="${npc.name}"><span class="want">${itemIcon(mode, r.tier)}</span></span>
-            <span class="order-pay">💵${r.rewardMoney}${r.rewardProducer ? ' 🎁' : ''}</span>
+            <span class="order-pay">💵${r.rewardMoney} ⭐${r.rewardXp}${r.rewardProducer ? ' 🎁' : ''}</span>
             ${ready ? '<span class="order-go">Deliver</span>' : `<span class="order-need">${itemName(mode, r.tier)}</span>`}`;
         card.addEventListener('click', () => (ready ? deliver(npc) : openNpc(npc)));
         el.appendChild(card);
@@ -1279,79 +1689,419 @@ function sellPrice(mode, item) {
     return SELL_PRICES[Math.min(item.tier, SELL_PRICES.length - 1)];
 }
 
-// What a board item is called, for toasts and the info bar.
-function boardItemName(mode, item) {
-    if (item.type === 'shop') return producerName(mode, producerLevel(item));
-    if (item.type === 'skip') return timeSkipName(producerLevel(item));
-    return itemName(mode, item.tier);
+// --- BOARD ITEMS ---
+// Plain merge items are { tier }. Everything else has a type: box (crate), shop
+// (producer or part), skip / charger / unlimited (boosters), coin / gem /
+// energy / xp (currency), chest, piggy (Piggy Bank) and bubble (Double Bubble).
+// Any of them can be cobwebbed (web: true).
+
+function currencyValue(item) {
+    return CURRENCY[item.type].values[levelOf(item) - 1];
 }
 
-// The bar under the orders: waiting rewards, then whatever item is selected.
+// What a board item is called, e.g. "Big Feed Bin", "8 Coins", "Brown Chest".
+function boardItemName(mode, item) {
+    switch (item.type) {
+        case 'box': return 'Crate';
+        case 'shop': return producerName(mode, levelOf(item));
+        case 'skip': case 'charger': case 'unlimited': return boosterName(item);
+        case 'coin': case 'gem': case 'energy': case 'xp': return `${currencyValue(item)} ${CURRENCY[item.type].name}`;
+        case 'chest': return chestName(item);
+        case 'piggy': return `${PIGGY.name}${levelOf(item) > 1 ? ` Lv${levelOf(item)}` : ''}`;
+        case 'bubble': return 'Double Bubble';
+        default: return itemName(mode, item.tier);
+    }
+}
+
+// The emoji of any board item.
+function itemEmojiFor(mode, item) {
+    switch (item.type) {
+        case 'box': return '📦';
+        case 'shop': return levelOf(item) < FIRST_WORKING_LEVEL ? '🧩' : PRODUCERS[mode].emoji;
+        case 'skip': case 'charger': case 'unlimited': return BOOSTERS[item.type].emoji;
+        case 'coin': case 'gem': case 'energy': case 'xp': return CURRENCY[item.type].emoji;
+        case 'chest': return CHESTS[item.kind].emoji;
+        case 'piggy': return PIGGY.emoji;
+        case 'bubble': return '🫧';
+        default: return itemEmoji(mode, item.tier);
+    }
+}
+
+// A small picture of any board item, for the info bar and dialogs.
+function itemIconFor(mode, item) {
+    return item.type ? `<span class="inline-item">${itemEmojiFor(mode, item)}</span>` : itemIcon(mode, item.tier);
+}
+
+// Picture and name as text, for toasts and buttons: "🧩 Feed Pail".
+function itemLabel(mode, item) {
+    return `${itemEmojiFor(mode, item)} ${boardItemName(mode, item)}`;
+}
+
+// Things that merge by level: the top level they reach, or 0 if this one can't
+// merge right now (a running Time Charger, an opened chest, a tapped Piggy Bank).
+function levelMergeTop(item) {
+    if (!item || !item.type) return 0;
+    if (item.type === 'shop') return PRODUCER_MAX_LEVEL;
+    if (BOOSTERS[item.type]) return item.until ? 0 : BOOSTERS[item.type].values.length;
+    if (CURRENCY[item.type]) return CURRENCY[item.type].values.length;
+    if (item.type === 'chest') return chestUnopened(item) ? CHESTS[item.kind].levels.length : 0;
+    if (item.type === 'piggy') return item.drops === undefined ? PIGGY.levels.length : 0;
+    return 0;
+}
+
+function sameLevelKind(a, b) {
+    return !!a && !!b && a.type === b.type && a.kind === b.kind && levelOf(a) === levelOf(b);
+}
+
+// The free cell closest to `index`, or -1 if the board is full.
+function nearestEmpty(mode, index) {
+    const x = index % GAME_WIDTH;
+    const y = Math.floor(index / GAME_WIDTH);
+    let best = -1;
+    let bestDistance = Infinity;
+    grids[mode].forEach((cell, i) => {
+        if (cell !== null) return;
+        const distance = (i % GAME_WIDTH - x) ** 2 + (Math.floor(i / GAME_WIDTH) - y) ** 2;
+        if (distance < bestDistance) { best = i; bestDistance = distance; }
+    });
+    return best;
+}
+
+// Puts an item in the free cell closest to `index`; returns where, or -1.
+function spawnNear(mode, index, item) {
+    const at = nearestEmpty(mode, index);
+    if (at !== -1) grids[mode][at] = item;
+    return at;
+}
+
+// Picks one entry of a chest's or piggy bank's [what, level, weight] contents.
+function rollDrop(contents) {
+    const total = contents.reduce((sum, c) => sum + c[2], 0);
+    let roll = Math.random() * total;
+    const [what, level] = contents.find(c => (roll -= c[2]) < 0) || contents[0];
+    return { type: what === 'part' ? 'shop' : what, level };
+}
+
+// After a merge: maybe a Double Bubble with a copy of the new item, and an ⭐ XP
+// star for a big merge, each in the nearest free cell (the bubble first, as in
+// Merge Mansion). Returns the cells they landed in.
+function afterMerge(mode, index, made) {
+    const landed = [];
+    const isProducer = made.type === 'shop';
+    const odds = !made.type ? BUBBLE_ODDS[made.tier] : isProducer ? PRODUCER_BUBBLE_ODDS[made.level] : 0;
+    if (odds && Math.random() < odds) {
+        const gems = !made.type ? BUBBLE_GEMS[made.tier] : PRODUCER_BUBBLE_GEMS[made.level];
+        const inner = isProducer ? { type: 'shop', level: made.level } : { tier: made.tier };
+        const at = spawnNear(mode, index, { type: 'bubble', inner, gems, until: Date.now() + bubbleMinutes(gems) * 60000 });
+        if (at !== -1) {
+            landed.push(at);
+            toast(`🫧 A Double Bubble! Pop it for 💎${gems} before it's gone.`);
+        }
+    }
+    const star = !made.type && made.tier >= 4 ? made.tier - 3 : isProducer && made.level >= 5 ? made.level - 4 : 0;
+    if (star) {
+        const at = spawnNear(mode, index, { type: 'xp', level: Math.min(star, CURRENCY.xp.values.length) });
+        if (at !== -1) landed.push(at);
+    }
+    return landed;
+}
+
+// Pays the bubble's gems for the copy inside it.
+function popBubble(mode, index) {
+    const bubble = grids[mode][index];
+    if (!bubble || bubble.type !== 'bubble' || !spendGems(bubble.gems)) return;
+    grids[mode][index] = bubble.inner;
+    tickProducer(mode, bubble.inner);
+    updateUI();
+    toast(`🫧 Popped! The ${boardItemName(mode, bubble.inner)} is yours.`, 'good');
+    refreshBoard(mode, [index]);
+}
+
+// --- Chests and Piggy Banks ---
+
+function chestStage(item) {
+    return CHESTS[item.kind].levels[levelOf(item) - 1];
+}
+
+// Never unlocked or tapped: only these merge.
+function chestUnopened(item) {
+    return !item.openAt && item.drops === undefined;
+}
+
+function chestReady(item, now = Date.now()) {
+    return !chestStage(item).minutes || (!!item.openAt && now >= item.openAt);
+}
+
+// Starts a Brown or Blue chest's unlock timer.
+function unlockChest(mode, index) {
+    const item = grids[mode][index];
+    if (!item || item.type !== 'chest' || item.openAt || chestReady(item)) return;
+    item.openAt = Date.now() + chestStage(item).minutes * 60000;
+    refreshBoard(mode, [index]);
+}
+
+// Opens it now for gems.
+function rushChest(mode, index) {
+    const item = grids[mode][index];
+    if (!item || item.type !== 'chest' || chestReady(item) || !spendGems(chestStage(item).skip)) return;
+    item.openAt = Date.now();
+    item.opened = true;
+    updateUI();
+    toast(`${chestName(item)} is open! Tap it to take things out.`, 'good');
+    refreshBoard(mode, [index]);
+}
+
+// One tap on an open chest or a Piggy Bank drops one thing next to it; it
+// disappears when it's empty.
+function dropFrom(mode, index, stage, name) {
+    const source = grids[mode][index];
+    const at = nearestEmpty(mode, index);
+    if (source.drops === undefined) source.drops = stage.drops;
+    grids[mode][at] = rollDrop(stage.contents);
+    source.drops--;
+    lastSale = null;
+    if (source.drops <= 0) {
+        grids[mode][index] = null;
+        toast(`The ${name} is empty.`);
+        selected = { mode, index: at };
+    } else {
+        selected = { mode, index };
+    }
+    updateUI();
+    refreshBoard(mode, [at]);
+}
+
+function boardFull(mode) {
+    if (grids[mode].includes(null)) return false;
+    toast('The board is full! Sell, merge or deliver something first.');
+    return true;
+}
+
+function tapChest(mode, index) {
+    if (boardFull(mode)) return;
+    const chest = grids[mode][index];
+    dropFrom(mode, index, chestStage(chest), chestName(chest));
+}
+
+function tapPiggy(mode, index) {
+    if (boardFull(mode) || !payTapEnergy(1)) return;
+    const piggy = grids[mode][index];
+    dropFrom(mode, index, PIGGY.levels[levelOf(piggy) - 1], PIGGY.name);
+}
+
+// --- Collecting and using (double tap, or the info bar button) ---
+
+function canActivate(item) {
+    return !!item && !item.web && (!!CURRENCY[item.type] || (!!BOOSTERS[item.type] && !item.until));
+}
+
+function activateItem(mode, index) {
+    const item = grids[mode][index];
+    if (!canActivate(item)) return;
+    if (CURRENCY[item.type]) collectCurrency(mode, index);
+    else if (item.type === 'skip') useTimeSkip(mode, index);
+    else if (item.type === 'charger') startCharger(mode, index);
+    else startUnlimited(mode, index);
+}
+
+function collectCurrency(mode, index) {
+    const item = grids[mode][index];
+    const value = currencyValue(item);
+    grids[mode][index] = null;
+    selected = null;
+    lastSale = null;
+    if (item.type === 'xp') addXp(value);
+    else if (item.type === 'coin') res.money += value;
+    else if (item.type === 'gem') res.gems += value;
+    else { res.energy += value; tickEnergy(); }
+    toast(`+${CURRENCY[item.type].emoji}${value}`, 'good');
+    updateUI();
+    checkQuests();
+    refreshBoard(mode);
+}
+
+// --- Inventory ---
+
+// Anything you can pick up, except Double Bubbles and running Time Chargers.
+function canStore(item) {
+    return isFree(item) && !(item.type === 'charger' && item.until);
+}
+
+function storeItem(mode, index) {
+    const item = grids[mode][index];
+    if (!canStore(item)) {
+        toast('That can\'t go in the 🎒.');
+        return false;
+    }
+    if (inventory.items.length >= inventory.slots) {
+        toast('Your 🎒 is full. Tap it to buy another slot.');
+        return false;
+    }
+    // Timers stop while stored.
+    const now = Date.now();
+    if (item.readyAt) { item.pausedLeft = item.readyAt - now; delete item.readyAt; }
+    if (item.type === 'chest' && item.openAt && !chestReady(item)) { item.pausedOpen = item.openAt - now; delete item.openAt; }
+    inventory.items.push({ mode, item });
+    grids[mode][index] = null;
+    if (selected && selected.mode === mode && selected.index === index) selected = null;
+    toast(`🎒 Stored: ${itemLabel(mode, item)}`);
+    return true;
+}
+
+// Puts a stored item back on its own board (and goes there).
+function takeFromInventory(i) {
+    const entry = inventory.items[i];
+    if (!entry) return;
+    const { mode, item } = entry;
+    const at = grids[mode].indexOf(null);
+    if (at === -1) {
+        toast(`No room on your ${AREAS[mode].name} board.`);
+        return;
+    }
+    const now = Date.now();
+    if (item.pausedLeft !== undefined) { item.readyAt = now + item.pausedLeft; delete item.pausedLeft; }
+    if (item.pausedOpen !== undefined) { item.openAt = now + item.pausedOpen; delete item.pausedOpen; }
+    inventory.items.splice(i, 1);
+    grids[mode][at] = item;
+    selected = { mode, index: at };
+    lastSale = null;
+    if (currentScene !== mode) goTo(mode);
+    else refreshBoard(mode, [at]);
+}
+
+// 💵 for the next slot, or undefined when you have them all.
+function inventorySlotPrice() {
+    return INVENTORY_SLOT_PRICES[inventory.slots - INVENTORY_FREE_SLOTS];
+}
+
+function buyInventorySlot() {
+    const price = inventorySlotPrice();
+    if (!price || res.money < price) return;
+    res.money -= price;
+    inventory.slots++;
+    updateUI();
+    toast(`🎒 You have ${inventory.slots} slots now.`, 'good');
+    openInventory(currentScene);
+}
+
+function openInventory(mode) {
+    const price = inventorySlotPrice();
+    const slots = Array.from({ length: inventory.slots }, (_, i) => {
+        const entry = inventory.items[i];
+        if (!entry) return '<span class="inv-slot empty"></span>';
+        const here = entry.mode === mode;
+        return `<button class="inv-slot${here ? '' : ' other'}" data-i="${i}">
+                    ${itemIconFor(entry.mode, entry.item)}<small>${here ? boardItemName(entry.mode, entry.item) : AREAS[entry.mode].name}</small>
+                </button>`;
+    }).join('');
+    showDialog({
+        title: `🎒 Inventory · ${inventory.items.length}/${inventory.slots}`,
+        body: `<div class="inv-grid">${slots}</div>
+               <p class="hint">Drag an item onto 🎒 to store it, tap it here to take it out. Timers stop while stored.</p>`,
+        actions: [price ? buyAction(price, buyInventorySlot, `+1 slot · 💵${price}`) : null, { label: 'Close' }].filter(Boolean),
+    });
+    dialogBody.querySelectorAll('.inv-slot[data-i]').forEach(btn => btn.addEventListener('click', () => {
+        closeDialog();
+        takeFromInventory(Number(btn.dataset.i));
+    }));
+}
+
+// --- Info bar ---
+
+// The bar under the orders: 🎒 and waiting rewards, then whatever item is selected.
 function renderInfoBar(mode) {
     const el = document.querySelector(`#scene-${mode} .info-bar`);
     if (!el) return;
     const prod = PRODUCERS[mode];
     const item = selected && selected.mode === mode ? grids[mode][selected.index] : null;
     const chainBtn = '<button class="chain-btn" title="See the whole chain">ⓘ</button>';
-    let html = crates[mode].length ? `<button class="crate-btn">🎁 ${crates[mode].length}</button>` : '';
+    const icon = item ? `<span class="info-icon">${itemIconFor(mode, item)}</span>` : '';
+    const text = (title, small) => `<span class="info-text"><b>${title}</b><br><small>${small}</small></span>`;
+    const button = (cls, label) => `<button class="sell-btn ${cls}">${label}</button>`;
+    const countdown = at => `<span data-ready="${at}">${formatDuration(at - Date.now())}</span>`;
+    let html = `<button class="inv-btn" title="Inventory: drag items here">🎒<small>${inventory.items.length}/${inventory.slots}</small></button>`;
+    if (crates[mode].length) html += `<button class="crate-btn">🎁 ${crates[mode].length}</button>`;
 
     if (!item && lastSale && lastSale.mode === mode) {
         html += `<span class="info-icon">${itemIcon(mode, lastSale.item.tier)}</span>
                  <span class="info-text"><b>Sold ${itemName(mode, lastSale.item.tier)}</b> for 💵${lastSale.price}<br><small>Changed your mind?</small></span>
-                 <button class="sell-btn undo-btn">Undo</button>`;
+                 ${button('undo-btn', 'Undo')}`;
     } else if (!item) {
         html += `<span class="info-text">Tap a ${prod.emoji} ${producerBaseName(mode)} to make items for ⚡1. Drag two alike together to merge. Tap an item to see it.</span>`;
+    } else if (item.web) {
+        const name = boardItemName(mode, item);
+        html += icon + text(`${name} · 🕸️`, `Covered in cobwebs. Merge a free ${name} into it to free it.`) + button('dust-btn', `Dust<br>💎${dustPrice(item)}`);
     } else if (item.type === 'box') {
-        html += `<span class="info-icon">📦</span>
-                 <span class="info-text"><b>Crate</b><br><small>Merge anything next to it to open it.</small></span>`;
-    } else if (item.type === 'skip') {
-        const level = producerLevel(item);
-        const { hours } = TIME_SKIPS[level - 1];
-        const tip = level < TIME_SKIPS.length ? ' Merge two to double it.' : '';
-        html += `<span class="info-icon">⏳</span>
-                 <span class="info-text"><b>${timeSkipName(level)}</b> · ${hours}h<br><small>Skips ${hours}h of recharging on every producer here.${tip}</small></span>
-                 <button class="sell-btn use-btn">Use</button>`;
+        html += `<span class="info-icon">📦</span>` + text('Crate', 'Merge anything next to it to open it.');
+    } else if (item.type === 'bubble') {
+        html += icon + text('Double Bubble', `A free ${boardItemName(mode, item.inner)} inside! Pop it before it's gone: ${countdown(item.until)}`)
+            + button('pop-btn', `Pop<br>💎${item.gems}`);
     } else if (item.type === 'shop') {
-        const level = producerLevel(item);
+        const level = levelOf(item);
         const name = producerName(mode, level);
         const next = level < PRODUCER_MAX_LEVEL ? `Merge two to make a ${producerName(mode, level + 1)}.` : 'Top level!';
-        if (item.web) {
-            html += `<span class="info-icon">${prod.emoji}</span>
-                     <span class="info-text"><b>${name}</b> · 🕸️<br><small>Merge a free ${name} into it to free it.</small></span>
-                     <button class="sell-btn dust-btn">Dust<br>💎${dustPrice(item)}</button>`;
-        } else if (level < FIRST_WORKING_LEVEL) {
-            html += `<span class="info-icon">🧩</span>
-                     <span class="info-text"><b>${name}</b> · part Lv${level}<br><small>${next} At Lv${FIRST_WORKING_LEVEL} it becomes a ${producerBaseName(mode)} that makes items.</small></span>
-                     ${chainBtn}`;
+        if (level < FIRST_WORKING_LEVEL) {
+            html += icon + text(`${name} · part Lv${level}`, `${next} At Lv${FIRST_WORKING_LEVEL} it becomes a ${producerBaseName(mode)} that makes items.`) + chainBtn;
         } else {
             const s = producerStats(mode, level);
-            const timer = item.readyAt ? ` · next charge <span data-ready="${item.readyAt}">${formatDuration(item.readyAt - Date.now())}</span>` : '';
-            html += `<span class="info-icon">${prod.emoji}</span>
-                     <span class="info-text"><b>${name}</b> · Lv${level}<br><small>${item.drops}/${s.charges * s.drops} taps left${timer}. ${next}</small></span>
-                     ${chainBtn}
-                     ${item.readyAt ? `<button class="sell-btn skip-btn">Recharge<br>💎${s.skip}</button>` : ''}`;
+            const timer = item.readyAt ? ` · next charge ${countdown(item.readyAt)}` : '';
+            html += icon + text(`${name} · Lv${level}`, `${item.drops}/${s.charges * s.drops} taps left${timer}. ${next}`) + chainBtn
+                + (item.readyAt ? button('skip-btn', `Recharge<br>💎${s.skip}`) : '');
         }
+    } else if (BOOSTERS[item.type]) {
+        const amount = boosterAmount(item);
+        const merge = levelOf(item) < BOOSTERS[item.type].values.length ? ' Merge two to double it.' : '';
+        const what = {
+            skip: `Skips ${amount} of recharging on every producer here.${merge}`,
+            charger: item.until ? `Running: producers next to it recharge twice as fast for ${countdown(item.until)}.`
+                : `Producers in the 8 cells around it recharge twice as fast for ${amount}.${merge}`,
+            unlimited: `Producer taps cost no energy for ${amount}.${merge}`,
+        }[item.type];
+        html += icon + text(boosterName(item), what) + (item.until ? '' : button('use-btn', 'Use'));
+    } else if (CURRENCY[item.type]) {
+        const values = CURRENCY[item.type].values;
+        const merge = levelOf(item) < values.length ? ` Merge two to make ${values[levelOf(item)]}.` : '';
+        html += icon + text(boardItemName(mode, item), `Double-tap to collect.${merge}`) + button('collect-btn', 'Collect');
+    } else if (item.type === 'chest') {
+        const stage = chestStage(item);
+        const left = item.drops === undefined ? stage.drops : item.drops;
+        const merge = chestUnopened(item) && levelOf(item) < CHESTS[item.kind].levels.length ? ' Merge two unopened ones for a bigger chest.' : '';
+        if (chestReady(item)) {
+            html += icon + text(chestName(item), `Tap it to take things out: ${left} left. No energy needed.`);
+        } else if (item.openAt) {
+            html += icon + text(chestName(item), `Unlocking: ${countdown(item.openAt)}`) + button('rush-btn', `Open now<br>💎${stage.skip}`);
+        } else {
+            html += icon + text(chestName(item), `Unlock it to take out ${stage.drops} things (${formatDuration(stage.minutes * 60000)}).${merge}`)
+                + button('unlock-btn', 'Unlock') + button('rush-btn', `Now<br>💎${stage.skip}`);
+        }
+    } else if (item.type === 'piggy') {
+        const stage = PIGGY.levels[levelOf(item) - 1];
+        const left = item.drops === undefined ? stage.drops : item.drops;
+        const merge = item.drops === undefined && levelOf(item) < PIGGY.levels.length ? ' Merge two unused ones for a bigger one.' : '';
+        html += icon + text(boardItemName(mode, item), `Tap it for coins and gems, ⚡1 each: ${left} left.${merge}`);
     } else {
         const last = NAMES[mode].length - 1;
-        const tip = item.web ? `Covered in cobwebs. Merge a free ${itemName(mode, item.tier)} into it to free it.`
-            : item.tier >= last ? 'The best there is!'
+        const tip = item.tier >= last ? 'The best there is!'
             : item.tier >= maxTier ? 'Max tier for now: buy the Growth Guide at the Market.'
             : `Merge two to make ${itemIcon(mode, item.tier + 1)} ${itemName(mode, item.tier + 1)}.`;
-        html += `<span class="info-icon">${itemIcon(mode, item.tier)}</span>
-                 <span class="info-text"><b>${itemName(mode, item.tier)}</b> · tier ${item.tier}${item.web ? ' · 🕸️' : ''}<br><small>${tip}</small></span>
-                 ${chainBtn}
-                 ${item.web ? `<button class="sell-btn dust-btn">Dust<br>💎${dustPrice(item)}</button>` : `<button class="sell-btn">Sell<br>💵${sellPrice(mode, item)}</button>`}`;
+        html += icon + text(`${itemName(mode, item.tier)} · tier ${item.tier}`, tip) + chainBtn + button('sell-item-btn', `Sell<br>💵${sellPrice(mode, item)}`);
     }
 
     el.innerHTML = html;
+    const index = selected && selected.index;
     const on = (sel, fn) => { const btn = el.querySelector(sel); if (btn) btn.addEventListener('click', fn); };
+    on('.inv-btn', () => openInventory(mode));
     on('.crate-btn', () => placeFromCrate(mode));
     on('.undo-btn', () => undoSale(mode));
     on('.dust-btn', () => dustSelected(mode));
-    on('.skip-btn', () => skipRecharge(mode, selected.index));
-    on('.use-btn', () => useTimeSkip(mode, selected.index));
+    on('.skip-btn', () => skipRecharge(mode, index));
+    on('.pop-btn', () => popBubble(mode, index));
+    on('.use-btn', () => activateItem(mode, index));
+    on('.collect-btn', () => activateItem(mode, index));
+    on('.unlock-btn', () => unlockChest(mode, index));
+    on('.rush-btn', () => rushChest(mode, index));
     on('.chain-btn', () => (item.type === 'shop' ? openProducerInfo(mode) : openChain(mode, item.tier)));
-    on('.sell-btn:not(.undo-btn):not(.dust-btn):not(.skip-btn):not(.use-btn)', () => sellSelected(mode));
+    on('.sell-item-btn', () => sellSelected(mode));
 }
 
 // Selling frees space; big items ask first because orders pay far more.
@@ -1462,14 +2212,20 @@ function placeFromCrate(mode) {
     }
     const item = crates[mode].shift();
     grids[mode][idx] = item;
+    tickProducer(mode, item);
     lastSale = null;
     selected = { mode, index: idx };
     toast(`${boardItemName(mode, item)} added!`, 'good');
     refreshBoard(mode, [idx]);
 }
 
+// --- Dragging, tapping and merging ---
+
 let draggedItemInfo = null;
 let dragElement = null;
+// The last tap, to spot a double tap.
+let lastTap = null;
+const DOUBLE_TAP_MS = 400;
 
 // The drag preview lives inside the stage so its cqw-based sizes match the board.
 function placeDragElement(e) {
@@ -1511,10 +2267,30 @@ function handleDragMove(e) {
     if (!dragElement) {
         const moved = Math.hypot(e.clientX - draggedItemInfo.startX, e.clientY - draggedItemInfo.startY);
         if (moved < DRAG_THRESHOLD) return;
-        if (!isFree(grids[draggedItemInfo.mode][draggedItemInfo.index])) return; // crates and cobwebs stay put
+        if (!isFree(grids[draggedItemInfo.mode][draggedItemInfo.index])) return; // crates, cobwebs and bubbles stay put
         beginDragPreview();
     }
     placeDragElement(e);
+}
+
+// A tap: producers, piggy banks and open chests drop something; a double tap
+// collects currency or uses a booster; anything else is shown in the info bar.
+function onTap(mode, index) {
+    const item = grids[mode][index];
+    const now = Date.now();
+    const twice = !!lastTap && lastTap.mode === mode && lastTap.index === index && now - lastTap.at < DOUBLE_TAP_MS;
+    lastTap = { mode, index, at: now };
+    if (isFree(item)) {
+        if (isWorkingProducer(item)) return handleGeneratorClick(mode, index);
+        if (item.type === 'piggy') return tapPiggy(mode, index);
+        if (item.type === 'chest' && chestReady(item)) return tapChest(mode, index);
+        if (twice && canActivate(item)) {
+            lastTap = null;
+            return activateItem(mode, index);
+        }
+    }
+    selected = { mode, index };
+    refreshBoard(mode);
 }
 
 function handleDragEnd(e) {
@@ -1531,19 +2307,18 @@ function handleDragEnd(e) {
     const { mode, index } = draggedItemInfo;
     draggedItemInfo = null;
 
-    // A tap: working producers make an item; any item gets shown in the info bar.
     if (!wasDragged) {
-        const item = grids[mode][index];
-        if (isWorkingProducer(item) && isFree(item)) {
-            handleGeneratorClick(mode, index);
-        } else {
-            selected = { mode, index };
-            refreshBoard(mode);
-        }
+        onTap(mode, index);
         return;
     }
 
     const elements = document.elementsFromPoint(e.clientX, e.clientY);
+    // Dropped on 🎒: store it.
+    if (elements.some(el => el.closest && el.closest(`#scene-${mode} .inv-btn`))) {
+        storeItem(mode, index);
+        refreshBoard(mode);
+        return;
+    }
     let targetCell = null;
     for (const el of elements) {
         if (el.classList.contains('grid-cell') && el.closest('.game-grid').id === `grid-${mode}`) {
@@ -1558,36 +2333,31 @@ function handleDragEnd(e) {
         if (targetIndex !== index) {
             const sourceItem = grids[mode][index];
             const targetItem = grids[mode][targetIndex];
-            // Producers (and their parts) and Time Skips merge by level, items by tier.
-            const topLevel = { shop: PRODUCER_MAX_LEVEL, skip: TIME_SKIPS.length }[sourceItem.type];
-            const sameLevel = !!topLevel && targetItem && targetItem.type === sourceItem.type
-                && producerLevel(targetItem) === producerLevel(sourceItem);
+            // Producers and their parts, boosters, currency, chests and piggy banks
+            // merge by level; plain items by tier.
+            const topLevel = levelMergeTop(sourceItem);
+            const sameLevel = !!topLevel && sameLevelKind(sourceItem, targetItem) && levelMergeTop(targetItem) > 0;
             const sameKind = targetItem && !sourceItem.type && !targetItem.type && targetItem.tier === sourceItem.tier;
-            let merged = false;
+            let made = null;
 
-            if (sameLevel && producerLevel(sourceItem) < topLevel) {
+            if (sameLevel && levelOf(sourceItem) < topLevel) {
                 // Two of the same level make the next level. A new producer starts fully charged.
-                const level = producerLevel(sourceItem) + 1;
-                grids[mode][index] = null;
-                grids[mode][targetIndex] = { type: sourceItem.type, level };
-                tickProducer(mode, grids[mode][targetIndex]);
-                merged = true;
-                if (sourceItem.type === 'skip') {
-                    toast(`${timeSkipName(level)}: ${TIME_SKIPS[level - 1].hours}h!`, 'good');
-                } else {
+                const level = levelOf(sourceItem) + 1;
+                made = sourceItem.kind ? { type: sourceItem.type, kind: sourceItem.kind, level } : { type: sourceItem.type, level };
+                tickProducer(mode, made);
+                if (made.type === 'shop') {
                     stats.upgrades++;
                     toast(level === FIRST_WORKING_LEVEL
                         ? `🎉 A ${producerName(mode, level)}! Tap it to make items.`
                         : `Merged into a ${producerName(mode, level)}!`, 'good');
+                } else {
+                    toast(`${itemLabel(mode, made)}!`, 'good');
                 }
             } else if (sameKind && sourceItem.tier < maxTier) {
                 // Direct Merge 2
-                const nextTier = sourceItem.tier + 1;
-                grids[mode][index] = null;
-                grids[mode][targetIndex] = { tier: nextTier };
-                stats.made[`${mode}:${nextTier}`] = madeCount(mode, nextTier) + 1;
+                made = { tier: sourceItem.tier + 1 };
+                stats.made[`${mode}:${made.tier}`] = madeCount(mode, made.tier) + 1;
                 stats.merges++;
-                merged = true;
             } else if (sameKind) {
                 toast(`Tier ${maxTier} is the max for now. Buy the Growth Guide at the Market!`);
             } else if (sameLevel) {
@@ -1596,21 +2366,25 @@ function handleDragEnd(e) {
                 toast('Crates stay put. Merge something next to one to open it.');
             } else if (targetItem && targetItem.web) {
                 toast('Cobwebbed items stay put. Merge a matching item into one to free it.');
+            } else if (targetItem && targetItem.type === 'bubble') {
+                toast('Bubbles stay put. Pop it, or let it float away.');
             }
 
-            const swapped = !merged && !sameKind && !sameLevel && (!targetItem || isFree(targetItem));
+            const swapped = !made && !sameKind && !sameLevel && (!targetItem || isFree(targetItem));
             if (swapped) {
                 grids[mode][index] = targetItem;
                 grids[mode][targetIndex] = sourceItem;
             }
-            if (merged) {
+            if (made) {
+                grids[mode][index] = null;
+                grids[mode][targetIndex] = made;
                 if (targetItem.web) {
                     stats.webs++;
                     toast('🕸️ Freed!', 'good');
                 }
-                popped = [targetIndex, ...openBoxesAround(mode, targetIndex)];
+                popped = [targetIndex, ...openBoxesAround(mode, targetIndex), ...afterMerge(mode, targetIndex, made)];
             }
-            selected = { mode, index: merged || swapped ? targetIndex : index };
+            selected = { mode, index: made || swapped ? targetIndex : index };
         }
     }
 
@@ -1638,34 +2412,9 @@ function handleGeneratorClick(mode, index) {
         openRecharge(mode, index);
         return;
     }
-
-    let emptyIdx = -1;
-    for (const n of getNeighbors(index)) {
-        if (!grids[mode][n]) {
-            emptyIdx = n;
-            break;
-        }
-    }
-    if (emptyIdx === -1) {
-        emptyIdx = grids[mode].findIndex(cell => cell === null);
-    }
-
-    if (emptyIdx === -1) {
-        toast('The board is full! Sell, merge or deliver something first.');
-        return;
-    }
-
+    if (boardFull(mode)) return;
     const charge = chargeMode();
-    if (res.energy < 1) {
-        openEnergy(true);
-        return;
-    }
-    if (res.energy < charge.cost) {
-        toast(`${charge.name} needs ⚡${charge.cost} a tap. Tap ${charge.label} by the energy bar to switch it off.`);
-        return;
-    }
-    res.energy -= charge.cost;
-    tickEnergy(); // starts the refill timer as soon as you drop below the cap
+    if (!payTapEnergy(charge.cost)) return;
     producer.drops--;
     tickProducer(mode, producer); // starts recharging once a whole charge is used
     lastSale = null;
@@ -1682,11 +2431,76 @@ function handleGeneratorClick(mode, index) {
         if (tier === -1) tier = 0;
         drop = { tier: Math.min(tier + charge.boost, maxTier) };
     }
-    grids[mode][emptyIdx] = drop;
+    const at = spawnNear(mode, index, drop);
     stats.spawned[mode] = (stats.spawned[mode] || 0) + 1;
     selected = { mode, index };
     checkQuests();
-    refreshBoard(mode, [emptyIdx]);
+    refreshBoard(mode, [at]);
+}
+
+// --- Drawing the board ---
+
+// Art for a currency item, booster, chest or Piggy Bank from ASSETS.special, if any.
+function specialSprite(item) {
+    const key = item.type === 'chest' ? `chest_${item.kind}` : item.type;
+    return ((ASSETS.special || {})[key] || [])[levelOf(item) - 1] || null;
+}
+
+// How an item looks: extra CSS classes, its inside, an inline style, and the
+// small badge in the corner (tier, level or amount).
+function itemFace(mode, item) {
+    const emoji = e => `<span class="emoji">${e}</span>`;
+    const named = (e, name) => `${emoji(e)}<span class="name">${name}</span>`;
+    const sprite = src => `<img src="${src}" alt="" draggable="false">`;
+    const art = specialSprite(item);
+    if (art) return { cls: ['has-sprite'], html: sprite(art), badge: levelOf(item) };
+    switch (item.type) {
+        case 'box':
+            return ASSETS.props.crate ? { cls: ['box', 'has-sprite'], html: sprite(ASSETS.props.crate) } : { cls: ['box'], html: emoji('📦') };
+        case 'shop': {
+            const level = levelOf(item);
+            const art = (ASSETS.producers[mode] || [])[level - 1];
+            const part = level < FIRST_WORKING_LEVEL;
+            return {
+                cls: art ? ['has-sprite'] : ['generator', part ? 'part' : `gen-lv${level}`],
+                html: art ? sprite(art) : named(itemEmojiFor(mode, item), producerName(mode, level)),
+                badge: level, badgeCls: 'gen-level',
+            };
+        }
+        case 'skip': case 'charger': case 'unlimited':
+            return { cls: ['booster', `booster-${item.type}`].concat(item.until ? ['running'] : []), html: named(itemEmojiFor(mode, item), boosterAmount(item)), badge: levelOf(item) };
+        case 'coin': case 'gem': case 'energy': case 'xp':
+            return { cls: ['currency', `cur-${item.type}`], html: named(itemEmojiFor(mode, item), currencyValue(item)), badge: levelOf(item) };
+        case 'chest':
+            return { cls: ['chest', `chest-${item.kind}`].concat(chestReady(item) ? ['open'] : item.openAt ? [] : ['locked']), html: named(itemEmojiFor(mode, item), CHESTS[item.kind].name), badge: levelOf(item) };
+        case 'piggy':
+            return { cls: ['piggy'], html: named(PIGGY.emoji, PIGGY.name), badge: levelOf(item) };
+        case 'bubble': {
+            const inner = item.inner;
+            const art = !inner.type && itemSprite(mode, inner.tier);
+            return { cls: ['bubble-item'], html: `<span class="bubble-inner">${art ? sprite(art) : emoji(itemEmojiFor(mode, inner))}</span>` };
+        }
+        default: {
+            const art = itemSprite(mode, item.tier);
+            if (art) return { cls: ['has-sprite'], html: sprite(art), badge: item.tier || null };
+            const hue = getHue(mode, item.tier);
+            return {
+                cls: [],
+                style: `radial-gradient(circle at 30% 30%, hsl(${hue}, 80%, 70%), hsl(${hue}, 80%, 40%))`,
+                html: named(itemEmoji(mode, item.tier), itemName(mode, item.tier)),
+                badge: item.tier || null,
+            };
+        }
+    }
+}
+
+// When the countdown shown on an item ends, or 0 for none.
+function itemTimer(item) {
+    if (isWorkingProducer(item) && !item.web && item.drops <= 0 && item.readyAt) return item.readyAt;
+    if (item.type === 'charger' && item.until) return item.until;
+    if (item.type === 'chest' && item.openAt && !chestReady(item)) return item.openAt;
+    if (item.type === 'bubble') return item.until;
+    return 0;
 }
 
 function renderGrid(mode, poppedIndices = []) {
@@ -1702,69 +2516,30 @@ function renderGrid(mode, poppedIndices = []) {
 
         const item = grids[mode][i];
         if (item !== null) {
+            const face = itemFace(mode, item);
             const itemEl = document.createElement('div');
-            itemEl.className = 'item';
+            itemEl.className = ['item', ...face.cls].join(' ');
             if (poppedIndices.includes(i)) itemEl.classList.add('pop');
-
-            if (item.type === 'box') {
-                itemEl.classList.add('box');
-                itemEl.title = 'Crate';
-                if (ASSETS.props.crate) {
-                    itemEl.classList.add('has-sprite');
-                    itemEl.innerHTML = `<img src="${ASSETS.props.crate}" alt="" draggable="false">`;
-                } else {
-                    itemEl.innerHTML = '<span class="emoji">📦</span>';
-                }
-                itemEl.addEventListener('pointerdown', (e) => handleDragStart(e, mode, i));
-            } else if (item.type === 'shop') {
-                // Producers, and the parts (levels 1-3) that merge into them.
-                const level = producerLevel(item);
-                const sprite = (ASSETS.producers[mode] || [])[level - 1];
-                itemEl.title = producerName(mode, level);
-                if (sprite) {
-                    itemEl.classList.add('has-sprite');
-                    itemEl.innerHTML = `<img src="${sprite}" alt="" draggable="false">`;
-                } else {
-                    itemEl.classList.add('generator', level < FIRST_WORKING_LEVEL ? 'part' : `gen-lv${level}`);
-                    itemEl.innerHTML = `<span class="emoji">${level < FIRST_WORKING_LEVEL ? '🧩' : PRODUCERS[mode].emoji}</span><span class="name">${producerName(mode, level)}</span>`;
-                }
-                addTag(itemEl, 'tier gen-level', level);
-                // Out of charges: dimmed, with the time until the next charge.
-                if (isWorkingProducer(item) && !item.web && item.drops <= 0 && item.readyAt) {
-                    itemEl.classList.add('empty');
-                    addTag(itemEl, 'gen-timer', formatDuration(item.readyAt - Date.now())).dataset.ready = item.readyAt;
-                }
-                itemEl.addEventListener('pointerdown', (e) => handleDragStart(e, mode, i));
-            } else if (item.type === 'skip') {
-                const level = producerLevel(item);
-                itemEl.title = timeSkipName(level);
-                itemEl.classList.add('generator', 'time-skip');
-                itemEl.innerHTML = `<span class="emoji">⏳</span><span class="name">${TIME_SKIPS[level - 1].hours}h skip</span>`;
-                addTag(itemEl, 'tier', level);
-                itemEl.addEventListener('pointerdown', (e) => handleDragStart(e, mode, i));
-            } else {
-                const sprite = itemSprite(mode, item.tier);
-                itemEl.title = itemName(mode, item.tier);
-                if (sprite) {
-                    itemEl.classList.add('has-sprite');
-                    itemEl.innerHTML = `<img src="${sprite}" alt="" draggable="false">`;
-                } else {
-                    const hue = getHue(mode, item.tier);
-                    itemEl.style.background = `radial-gradient(circle at 30% 30%, hsl(${hue}, 80%, 70%), hsl(${hue}, 80%, 40%))`;
-                    itemEl.innerHTML = `<span class="emoji">${itemEmoji(mode, item.tier)}</span><span class="name">${itemName(mode, item.tier)}</span>`;
-                }
-                if (item.tier > 0) addTag(itemEl, 'tier', item.tier);
-                if (isFree(item) && wanted.has(item.tier)) {
-                    itemEl.classList.add('wanted');
-                    addTag(itemEl, 'tick', '✓');
-                }
-                itemEl.addEventListener('pointerdown', (e) => handleDragStart(e, mode, i));
+            if (face.style) itemEl.style.background = face.style;
+            itemEl.innerHTML = face.html;
+            itemEl.title = boardItemName(mode, item);
+            if (face.badge) addTag(itemEl, `tier${face.badgeCls ? ` ${face.badgeCls}` : ''}`, face.badge);
+            if (!item.type && isFree(item) && wanted.has(item.tier)) {
+                itemEl.classList.add('wanted');
+                addTag(itemEl, 'tick', '✓');
             }
+            const timer = itemTimer(item);
+            if (timer) {
+                if (item.type === 'shop') itemEl.classList.add('empty');
+                addTag(itemEl, 'gen-timer', formatDuration(timer - Date.now())).dataset.ready = timer;
+            }
+            if (item.type === 'chest' && !item.openAt && !chestReady(item)) addTag(itemEl, 'lock', '🔒');
             if (item.web) {
                 itemEl.classList.add('webbed');
                 addTag(itemEl, 'web', '');
             }
             if (selected && selected.mode === mode && selected.index === i) itemEl.classList.add('selected');
+            itemEl.addEventListener('pointerdown', (e) => handleDragStart(e, mode, i));
             cell.appendChild(itemEl);
         }
         gridEl.appendChild(cell);
@@ -1777,13 +2552,15 @@ function renderGrid(mode, poppedIndices = []) {
 // is closed. Open the game with ?reset at the end of the link to start over.
 const SAVE_KEY = 'merge-farmstead-save-v1';
 // 2: one ⚡ Energy bar instead of five essentials, and producers with parts.
-const SAVE_VERSION = 2;
+// 3: XP levels, inventory, chests and boosters.
+const SAVE_VERSION = 3;
 
 function saveGame() {
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
             version: SAVE_VERSION,
-            res, energyAt, shop, crates, stats, quests, daily, settings, unlocks, maxTier, grids,
+            res, energyAt, shop, crates, inventory, stats, quests, daily, settings, unlocks, maxTier, grids, lastBoard,
+            tickedAt: lastTickAt,
             npcs: npcs.map(({ id, deliveries, request }) => ({ id, deliveries, request })),
         }));
     } catch (e) {
@@ -1811,15 +2588,25 @@ function loadGame() {
         }
         const save = JSON.parse(localStorage.getItem(SAVE_KEY));
         if (!save) return false;
-        if ((save.version || 1) < 2) migrateProducers(save);
+        const version = save.version || 1;
+        if (version < 2) migrateProducers(save);
         Object.keys(res).forEach(key => { if (typeof save.res[key] === 'number') res[key] = save.res[key]; });
         energyAt = save.energyAt || null;
         Object.assign(shop, save.shop);
         Object.assign(crates, save.crates);
         Object.assign(stats, save.stats);
         Object.assign(quests, save.quests);
+        Object.assign(inventory, save.inventory);
+        if (version < 3) {
+            // Levels came from quests alone before: quests already done this level
+            // count as the XP they pay now.
+            quests.xp = (quests.done || []).filter(Boolean).length * questXp(quests.level);
+        }
         Object.assign(daily, save.daily);
         if (save.settings && typeof save.settings.charge === 'number') settings.charge = save.settings.charge;
+        if (save.settings && save.settings.unlimitedUntil) settings.unlimitedUntil = save.settings.unlimitedUntil;
+        if (save.lastBoard && AREAS[save.lastBoard]) lastBoard = save.lastBoard;
+        if (save.tickedAt) lastTickAt = save.tickedAt;
         Object.assign(unlocks, save.unlocks);
         maxTier = save.maxTier;
         Object.keys(grids).forEach(mode => {
@@ -1828,6 +2615,8 @@ function loadGame() {
         save.npcs.forEach(saved => {
             const npc = npcs.find(n => n.id === saved.id);
             if (npc) Object.assign(npc, saved);
+            // Orders paid ❤️ hearts before version 3; now they pay XP.
+            if (npc && npc.request && npc.request.rewardXp === undefined) npc.request.rewardXp = orderXp(npc.request.tier);
         });
         return true;
     } catch (e) {
@@ -1844,8 +2633,9 @@ if (!loadGame()) {
     grids.barn = clutterBoard();
 }
 if (!quests.baselines.length) startLevel(); // new game, or a save from before quests
-tickEnergy(); // catch up on energy and recharges that arrived while the game was closed
-tickProducers();
+tickEnergy(); // catch up on energy and timers that ran while the game was closed
+tickBoards();
+addXp(0); // a migrated save may already have enough XP for its next level
 claimDailyBasket();
 Object.keys(grids).forEach(mode => renderGrid(mode));
 updateUI();
@@ -1855,9 +2645,9 @@ if (dailyAvailable()) setTimeout(openDailyGift, 600);
 
 setInterval(() => {
     tickEnergy();
-    const recharged = tickProducers();
-    // Redraw a board when a charge arrives, but not mid-drag (the drop redraws it).
-    if (recharged.includes(currentScene) && !draggedItemInfo) refreshBoard(currentScene);
+    const changed = tickBoards();
+    // Redraw a board when one of its timers ends, but not mid-drag (the drop redraws it).
+    if (changed.includes(currentScene) && !draggedItemInfo) refreshBoard(currentScene);
     claimDailyBasket();
     updateUI();
     updateCountdowns();
