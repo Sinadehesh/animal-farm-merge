@@ -752,11 +752,11 @@
         .chain-tile.locked { opacity: 0.4; }
 
         /* Map: daily gift and jobs buttons. */
-        .side-buttons { position: absolute; left: 3%; bottom: 3%; z-index: 120; display: flex; gap: 3cqw; }
+        .side-buttons { position: absolute; left: 3%; bottom: 3%; z-index: 120; display: flex; gap: 2.4cqw; }
         .side-btn {
             position: relative;
-            width: 14cqw;
-            height: 14cqw;
+            width: 12.6cqw;
+            height: 12.6cqw;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -764,9 +764,10 @@
             border: 3px solid var(--ink);
             border-radius: 50%;
             box-shadow: 0 3px 0 var(--ink);
-            font-size: 7cqw;
+            font-size: 6.4cqw;
             cursor: pointer;
         }
+        .side-btn.offer-btn { background: linear-gradient(#ffd27a, #ff7a3d); animation: bob 1.2s ease-in-out infinite; }
         .side-btn small {
             position: absolute;
             left: 50%;
@@ -781,6 +782,46 @@
             white-space: nowrap;
         }
         .side-btn .badge { right: -2cqw; top: -2cqw; }
+        .offer-reward { font-size: 4.6cqw; font-weight: 900; color: #c2410c; }
+        .gift-track.daily-chests { grid-template-columns: repeat(3, 1fr); margin-top: 2cqw; }
+        /* First-play tutorial: a hand pointing at what to tap, and Marnie saying why.
+           Taps go straight through it, except on Skip. */
+        #tutorial { position: absolute; inset: 0; z-index: 150; pointer-events: none; }
+        #tutorial[hidden] { display: none; }
+        .tut-bubble {
+            position: absolute;
+            left: 3%;
+            right: 3%;
+            bottom: 2%;
+            display: flex;
+            align-items: center;
+            gap: 2.5cqw;
+            padding: 2.4cqw;
+            background: var(--paper);
+            border: 3px solid var(--ink);
+            border-radius: 16px;
+            box-shadow: 0 4px 0 var(--ink);
+            font-size: 3.6cqw;
+            font-weight: 800;
+            line-height: 1.3;
+            animation: popIn 0.25s ease-out;
+        }
+        #tutorial.bubble-top .tut-bubble { top: 2%; bottom: auto; }
+        .tut-bubble .face { width: 11cqw; height: 11cqw; border-radius: 50%; object-fit: cover; object-position: top; border: 2px solid var(--ink); flex: 0 0 auto; }
+        .tut-text { flex: 1; }
+        .tut-skip { pointer-events: auto; padding: 1cqw 2.4cqw; background: #fff; border: 2px solid var(--ink); border-radius: 999px; font-size: 2.8cqw; font-weight: 900; cursor: pointer; }
+        .tut-hand {
+            position: absolute;
+            font-size: 10cqw;
+            line-height: 1;
+            transform: translate(-30%, -10%);
+            filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.4));
+            animation: tap-hint 1s ease-in-out infinite;
+        }
+        .tut-hand.dragging { animation: drag-hint 1.6s ease-in-out infinite; }
+        @keyframes tap-hint { 0%, 100% { translate: 0 0; } 50% { translate: 0 2.5cqw; } }
+        @keyframes drag-hint { 0%, 15% { translate: 0 0; opacity: 1; } 75% { translate: var(--dx) var(--dy); opacity: 1; } 100% { translate: var(--dx) var(--dy); opacity: 0; } }
+        .gift-track.daily-chests .gift-day:last-child { grid-column: auto; }
 
         .gift-track { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5cqw; margin-bottom: 2cqw; }
         .gift-day {
@@ -830,6 +871,11 @@
         .dialog-backdrop[hidden] { display: none; }
         .dialog {
             width: 100%;
+            /* On small phones a tall dialog keeps its title and buttons and
+               scrolls its middle, so it always fits the screen. */
+            max-height: 100%;
+            display: flex;
+            flex-direction: column;
             padding: 5cqw;
             background: var(--paper);
             border: 4px solid var(--ink);
@@ -838,10 +884,11 @@
             text-align: center;
             animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .dialog-art { width: 30cqw; margin-top: -15cqw; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.2)); }
+        .dialog-art { width: 30cqw; margin-top: -15cqw; align-self: center; flex: 0 0 auto; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.2)); }
         .dialog-art[hidden] { display: none; }
         .dialog h2 { margin: 1cqw 0 2cqw; font-size: 5.4cqw; font-weight: 900; }
-        .dialog-body { font-size: 3.9cqw; line-height: 1.45; max-height: 112cqw; overflow-y: auto; }
+        .dialog-body { font-size: 3.9cqw; line-height: 1.45; max-height: 112cqw; min-height: 0; flex: 0 1 auto; overflow-y: auto; }
+        .dialog-actions { flex: 0 0 auto; }
         .dialog-body p { margin: 0 0 2cqw; }
         .dialog-body .hint { color: #8a6a50; font-size: 3.4cqw; }
         .inline-item { display: inline-block; height: 1.5em; vertical-align: middle; }

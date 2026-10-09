@@ -28,7 +28,8 @@ const ENERGY_PRICE_CAP = 80;
 // `drops` taps, then it recharges for `minutes`. While you're away it stores up
 // to `charges` charges. 💎`skip` recharges it at once.
 // Each board copies a real Merge Mansion chain's numbers (named in the comment),
-// from fast on the first boards to slow on the expensive ones.
+// from fast on the first boards to slow on the expensive ones, so the first
+// hour or two flows and the waiting (and the 💎 to skip it) comes later.
 const FIRST_WORKING_LEVEL = 4;
 const PRODUCERS = {
     // Gardening Toolbox
@@ -43,23 +44,23 @@ const PRODUCERS = {
         names: ['Torn Fert Pouch', 'Fert Pouch', 'Small Fert Bag', 'Fert Bag', 'Big Fert Bag', 'Fert Sack', 'Fert Barrel', 'Golden Fert Barrel'],
         levels: [[2, 5, 2], [3, 6, 3], [4, 7, 3], [4, 8, 5], [4, 10, 7]],
     },
-    // Workbench
+    // Workbench, recharging in 20 minutes instead of an hour so level 3 isn't a wall
     hay: {
-        emoji: '🌾', minutes: 60,
+        emoji: '🌾', minutes: 20,
         names: ['Seed Pouch', 'Wheat Bag', 'Small Wheat Sack', 'Wheat Sack', 'Big Wheat Sack', 'Wheat Barrel', 'Wheat Cart', 'Golden Granary'],
         levels: [[4, 9, 5], [4, 10, 7], [4, 12, 9], [4, 13, 13], [4, 14, 18]],
     },
-    // Sewing Kit
-    fert: {
-        emoji: '🪣', minutes: 90,
-        names: ['Dented Pail', 'Old Pail', 'Muck Pail', 'Muck Bucket', 'Big Muck Bucket', 'Muck Barrow', 'Muck Cart', 'Golden Muck Wagon'],
-        levels: [[4, 6, 9], [4, 7, 12], [4, 8, 17], [4, 10, 26], [4, 12, 38]],
-    },
     // Planted Bush
-    aqua: {
-        emoji: '🥫', minutes: 60,
-        names: ['Empty Tin', 'Small Tin', 'Fish Food Pouch', 'Fish Food Tin', 'Big Fish Food Tin', 'Fish Food Jar', 'Fish Feeder', 'Golden Feeder'],
+    fert: {
+        emoji: '🪣', minutes: 60,
+        names: ['Dented Pail', 'Old Pail', 'Muck Pail', 'Muck Bucket', 'Big Muck Bucket', 'Muck Barrow', 'Muck Cart', 'Golden Muck Wagon'],
         levels: [[2, 5, 20], [2, 5, 24], [4, 5, 29], [6, 5, 36], [7, 5, 48]],
+    },
+    // Sewing Kit
+    aqua: {
+        emoji: '🥫', minutes: 90,
+        names: ['Empty Tin', 'Small Tin', 'Fish Food Pouch', 'Fish Food Tin', 'Big Fish Food Tin', 'Fish Food Jar', 'Fish Feeder', 'Golden Feeder'],
+        levels: [[4, 6, 9], [4, 7, 12], [4, 8, 17], [4, 10, 26], [4, 12, 38]],
     },
     // Broom Cabinet
     flower: {
@@ -223,6 +224,11 @@ const SEASON_THEMES = [
     { name: 'Golden Acorns', emoji: '🌰', item: 'Acorns' },
 ];
 const GOLDEN_PASS = { id: 'golden_pass', name: 'Golden Pass', price: '$4.99', gemsPerDay: 5, slots: 5 };
+// The bigger pass: the Golden Pass plus a jump of points (about 10 levels) at once.
+// Two prices side by side make the cheaper one feel safe and the bigger one a deal.
+const GOLDEN_PASS_DELUXE = { id: 'golden_pass_deluxe', name: 'Golden Pass Deluxe', price: '$9.99', points: 300 };
+// Skipping to the next pass level costs 💎1 per point it still needs.
+const PASS_GEMS_PER_POINT = 1;
 // Points to finish each level: 20, 22, 24... (1,470 for all 30).
 function passLevelCost(level) {
     return 20 + 2 * (level - 1);
@@ -298,9 +304,10 @@ function levelReward(level) {
 const COINS_PER_GEM = 10;
 const LEVEL_UP_GEMS = 5; // a few free gems each time a townsperson levels up
 
-// Rewarded ads: a free energy top-up, a few times a day.
+// Rewarded ads, a few a day in all: a free energy top-up, an instant producer
+// recharge, or a doubled daily gift.
 const AD_ENERGY = 20;
-const ADS_PER_DAY = 5;
+const ADS_PER_DAY = 8;
 
 // Merge Mansion's start: a full energy bar, 100 coins and 100 gems.
 const START = { money: 100, gems: 100, energy: 100 };
@@ -319,6 +326,44 @@ const DAILY_BASKET = { id: 'daily_basket', name: '30 Day Daily Basket', gemsPerD
 // One-time offer, shown the first time you run out of energy.
 const SPECIAL_OFFER = { id: 'special_offer', name: 'Special Offer', gems: 200, money: 1000, energy: 200, price: '$1.99' };
 
+// Gem Jar (the "piggy bank" of Candy Crush and Royal Match): gems pile up in it
+// as you play, and you break it open for real money. It opens once it holds
+// `min` and stops filling at `cap`. A full jar is a better deal than any gem
+// pack, which is the point: the gems feel already earned.
+const GEM_JAR = { id: 'gem_jar', name: 'Gem Jar', price: '$2.99', min: 150, cap: 400, perMerge: 1, perOrder: 5, perJob: 10 };
+
+// Time-limited offers: each opens when its moment comes, lasts `hours` with a
+// countdown on the map, and is shown once when it opens. `again`: days before it
+// can come back (one-time without it).
+const OFFERS = [
+    { id: 'starter', name: 'Starter Pack', price: '$2.99', hours: 48,
+      reward: { gems: 300, energy: 200, chest: 'blue', part: 3 },
+      note: 'A head start for new farmers. Only once, and only for 48 hours!',
+      when: () => quests.level >= 3 },
+    { id: 'energy_bundle', name: 'Energy Bundle', price: '$1.99', hours: 24, again: 7,
+      reward: { energy: 400, item: { type: 'unlimited', level: 2 } },
+      note: 'Out of energy again? Keep playing with ⚡400 and 10 minutes of free taps.',
+      when: state => stats.outOfEnergy - (state.base || 0) >= 3 },
+    { id: 'builder', name: 'Builder Pack', price: '$4.99', hours: 24,
+      reward: { gems: 400, part: 4, item: { type: 'charger', level: 2 } },
+      note: 'A whole working producer, and a Time Charger to speed it up.',
+      when: () => quests.level >= 5 },
+];
+
+// Daily tasks (Merge Mansion's Daily Scoop): three goals a day picked from this
+// list. Each one done moves today's chest track on; it pays at 1, 2 and 3 goals.
+const DAILY_GOALS = [
+    { id: 'merge', label: 'Merge 30 times', stat: 'merges', n: 30 },
+    { id: 'tap', label: 'Tap producers 40 times', stat: 'taps', n: 40 },
+    { id: 'energy', label: 'Spend ⚡60', stat: 'energySpent', n: 60 },
+    { id: 'deliver', label: 'Deliver 3 orders', stat: 'delivered', n: 3 },
+    { id: 'sell', label: 'Sell 5 items', stat: 'sold', n: 5 },
+    { id: 'xp', label: 'Earn ⭐10 XP', stat: 'xpEarned', n: 10 },
+    { id: 'collect', label: 'Collect 8 coins, gems or stars', stat: 'collected', n: 8 },
+    { id: 'chest', label: 'Take 10 things out of chests or piggy banks', stat: 'chestDrops', n: 10, level: 3 },
+];
+const DAILY_CHEST = [{ money: 100, energy: 20 }, { energy: 50, gems: 5 }, { chest: 'brown', gems: 15 }];
+
 let unlocks = { barn: true, hay: false, farm: false, fert: false, aqua: false, flower: false };
 let maxTier = 3;
 const res = { money: 0, gems: 0, energy: 0 };
@@ -326,7 +371,10 @@ Object.assign(res, START);
 // When the next ⚡ arrives (ms timestamp), or null when the bar is full.
 let energyAt = null;
 // Counters the restoration jobs read from (saved with the game).
-const stats = { spawned: {}, made: {}, merges: 0, delivered: 0, sold: 0, upgrades: 0, gifts: 0, boxes: 0, webs: 0 };
+const stats = {
+    spawned: {}, made: {}, merges: 0, delivered: 0, sold: 0, upgrades: 0, gifts: 0, boxes: 0, webs: 0,
+    outOfEnergy: 0, energySpent: 0, jobs: 0, chestDrops: 0, xpEarned: 0, collected: 0,
+};
 // Player toggles (saved with the game). charge = index into CHARGE_MODES;
 // unlimitedUntil = when Unlimited Energy runs out (ms timestamp).
 const settings = { charge: 0, unlimitedUntil: 0 };
@@ -346,7 +394,10 @@ const shop = {
     basketStart: null, basketClaimed: null, offerBought: false, offerShown: false,
     adsDay: null, adsWatched: 0, energyDay: null, energyBought: 0,
     flash: null, dealsDay: null, dealsTaken: [],
+    jar: 0, offers: {},
 };
+// Today's daily goals and the counters they count from.
+const dailyGoals = { day: null, ids: [], base: {}, claimed: 0 };
 // The last board you were on: where things you buy at the Market are sent.
 let lastBoard = 'barn';
 // This season's pass: points, the Golden Pass, rewards claimed per track.
@@ -379,7 +430,7 @@ const NAMES = {
     'hay': ['🌾 Wheat', '🌱 Stalk', '🌾 Bundle', '🟨 Small Bale', '🟨 Medium Bale', '🟨 Large Bale', '🥞 Hay Stack', '🗼 Hay Tower', '🏭 Hay Silo', '⭐ Golden Hay', '✨ Magic Hay', '♾️ Infinite Hay'],
     'barn': ['🌿 Feed', '🥚 Egg', '🐤 Chick', '🐔 Chicken', '🐽 Piglet', '🐷 Pig', '🐮 Calf', '🐄 Cow', '🐴 Horse', '🦙 Alpaca', '🐂 Prize Bull', '🦄 Unicorn'],
     'fert': ['💩 Raw Fert', '💨 Dust', '🌑 Ash', '🦴 Scraps', '🍂 Compost', '💩 Manure', '✨ Basic Fert', '🌟 Quality Fert', '⚡ Speed-Gro', '💎 Deluxe Fert', '🔮 Magic Fert', '🌌 Iridium Fert'],
-    'aqua': ['🌾 Fish Food', '🦠 Algae', '🦐 Plankton', '🦐 Shrimp', '🐟 Goldfish', '🐠 Clownfish', '🐢 Turtle', '🦑 Squid', '🐬 Dolphin', '🦈 Shark', '🐋 Whale Shark', '🐙 Kraken'],
+    'aqua': ['🌾 Fish Food', '🐌 Snail', '🐟 Minnow', '🐸 Frog', '🐠 Goldfish', '🎏 Koi', '🐢 Turtle', '🦦 Otter', '🦆 Duck', '🦢 Swan', '🦩 Flamingo', '🐉 Pond Dragon'],
     'flower': ['💧 Water Drop', '🌱 Seedling', '🌷 Bud', '🌼 Daisy', '🌷 Tulip', '🌹 Rose', '🌺 Lily', '🌸 Orchid', '🪷 Lotus', '🍄 Rafflesia', '💎 Crystal Flower', '🌳 Tree of Life']
 };
 
@@ -421,7 +472,7 @@ const AREAS = {
     farm:   { name: 'Crop Field',    cost: 200,  level: 2, pay: 10, desc: 'Grow crops with fertilizer.' },
     hay:    { name: 'Hay Field',     cost: 400,  level: 3, pay: 15, desc: 'Grow hay from wheat.' },
     fert:   { name: 'Compost Yard',  cost: 800,  level: 4, pay: 20, desc: 'Make your own fertilizer.' },
-    aqua:   { name: 'Fish Pond',     cost: 2000, level: 5, pay: 20, desc: 'Raise fish with fish food.' },
+    aqua:   { name: 'Fish Pond',     cost: 2000, level: 5, pay: 20, desc: 'Raise frogs, fish and ducks with fish food.' },
     flower: { name: 'Flower Garden', cost: 5000, level: 6, pay: 30, desc: 'Grow flowers with your watering can.' },
 };
 
@@ -564,8 +615,21 @@ function openRecharge(mode, index) {
                <p class="hint">Each charge gives ${s.drops} taps and takes ${formatDuration(rechargeMs(mode))}. It stores up to ${s.charges} charges while you're away.</p>`,
         actions: [
             { label: `Recharge now · 💎 ${s.skip}`, primary: true, wide: true, onClick: () => skipRecharge(mode, index) },
+            adsLeft() > 0 ? { label: `Watch an ad · recharge now (${adsLeft()} left today)`, wide: true, onClick: () => watchAdForRecharge(mode, index) } : null,
             { label: 'Wait' },
-        ],
+        ].filter(Boolean),
+    });
+}
+
+function watchAdForRecharge(mode, index) {
+    const item = grids[mode][index];
+    if (adsLeft() <= 0 || !isWorkingProducer(item) || !item.readyAt) return;
+    showRewardedAd(() => {
+        shop.adsWatched++;
+        item.readyAt = Date.now();
+        tickProducer(mode, item);
+        toast(`${PRODUCERS[mode].emoji} Recharged!`, 'good');
+        refreshBoard(mode, [index]);
     });
 }
 
@@ -637,6 +701,7 @@ function payTapEnergy(cost) {
         return false;
     }
     res.energy -= cost;
+    stats.energySpent += cost;
     tickEnergy(); // starts the refill timer as soon as you drop below the cap
     return true;
 }
@@ -701,6 +766,7 @@ function energyPrice() {
 // Shown when you tap the energy bar or run out while playing.
 function openEnergy(ranOut = false) {
     tickEnergy();
+    if (ranOut) stats.outOfEnergy++;
     // The first time you run out, show the one-time offer instead.
     if (ranOut && !shop.offerBought && !shop.offerShown) {
         shop.offerShown = true;
@@ -765,7 +831,7 @@ function openShop(note = '') {
         : { label: `🧺 ${DAILY_BASKET.name}: 💎 ${DAILY_BASKET.gemsPerDay} every day · ${DAILY_BASKET.price}`,
             primary: true, wide: true, onClick: buyDailyBasket });
     actions.push({ label: `⚡ ${ENERGY_PACK} Energy · 💎 ${energyPrice()}`, wide: true, onClick: buyEnergy });
-    if (!pass.golden) actions.push({ label: `🎟️ ${GOLDEN_PASS.name}: golden rewards, 💎${GOLDEN_PASS.gemsPerDay} a day · ${GOLDEN_PASS.price}`, primary: true, wide: true, onClick: buyGoldenPass });
+    if (!pass.golden) actions.push({ label: `🎟️ ${GOLDEN_PASS.name}: golden rewards, 💎${GOLDEN_PASS.gemsPerDay} a day · ${GOLDEN_PASS.price}`, primary: true, wide: true, onClick: () => buyGoldenPass() });
     actions.push({ label: '🏷️ Flash Sale & 🎁 Daily Deals at the Market', wide: true, onClick: () => { goTo('market'); openFlashSale(); } });
     actions.push({ label: 'Close' });
     showDialog({
@@ -910,6 +976,7 @@ function xpToNext(level) {
 // Adds XP and levels up as many times as it covers; each new level pays its reward.
 function addXp(n) {
     quests.xp += n;
+    stats.xpEarned += n;
     while (quests.xp >= xpToNext(quests.level)) {
         quests.xp -= xpToNext(quests.level);
         quests.level++;
@@ -1016,8 +1083,8 @@ const TASKS = [
       line: 'A pond of your own! I\'ll teach you everything I know.' },
     { id: 'aqua2', land: 'aqua', name: 'Clean the pond', who: 'willy', xp: 10, needs: [{ stat: 'webs', n: 4 }],
       line: 'Clear water at last. I can see the bottom!' },
-    { id: 'aqua3', land: 'aqua', name: 'Feed the shrimp', who: 'willy', xp: 15, needs: [{ item: 'aqua', tier: 3, n: 2 }],
-      line: 'Tiny but hungry. Just like me.' },
+    { id: 'aqua3', land: 'aqua', name: 'Welcome the frogs', who: 'willy', xp: 15, needs: [{ item: 'aqua', tier: 3, n: 2 }],
+      line: 'Ribbit! Hear that? The pond is singing again.' },
     { id: 'aqua4', land: 'aqua', name: 'Release the goldfish', who: 'willy', xp: 25, reward: { chest: 'blue' },
       needs: [{ item: 'aqua', tier: 4, n: 2 }], line: 'Look at them shine! Best pond in the valley.' },
     { id: 'aqua5', land: 'aqua', name: 'Build a little dock', who: 'robin', xp: 40,
@@ -1116,6 +1183,8 @@ function completeTask(id) {
         for (let k = 0; k < need.n; k++) grids[need.item][findItem(need.item, need.tier)] = null;
     });
     restoration.done.push(task.id);
+    stats.jobs++;
+    fillJar(GEM_JAR.perJob);
     delete restoration.baselines[task.id];
     lastSale = null;
     const npc = npcs.find(n => n.id === task.who);
@@ -1149,7 +1218,7 @@ function openTaskLog() {
                         <b>${task.name}</b> <small>${AREAS[task.land].name} ${done}/${landTasks(task.land).length}</small>
                         <div class="needs">${task.needs.map(n => needLabel(task, n)).join('')}</div>
                     </div>
-                    <button class="task-go" data-id="${task.id}" data-ready="${ready ? 1 : ''}">${ready ? `Do it<br>+⭐${task.xp}` : `Go<br>+⭐${task.xp}`}</button>
+                    <button class="task-go" data-id="${task.id}" data-can="${ready ? 1 : ''}">${ready ? `Do it<br>+⭐${task.xp}` : `Go<br>+⭐${task.xp}`}</button>
                 </div>`;
     }).join('');
     showDialog({
@@ -1164,7 +1233,7 @@ function openTaskLog() {
     dialogBody.querySelectorAll('.task-go').forEach(btn => btn.addEventListener('click', () => {
         const task = TASKS.find(t => t.id === btn.dataset.id);
         closeDialog();
-        if (btn.dataset.ready) return completeTask(task.id);
+        if (btn.dataset.can) return completeTask(task.id);
         // Not ready: go where it can be worked on.
         const itemNeed = task.needs.find(n => n.item && needProgress(task, n).have < n.n);
         if (task.needs[0].own) goTo('market');
@@ -1200,18 +1269,22 @@ function openDailyGift() {
         title: '🎁 Daily gift',
         body: `<div class="gift-track">${track}</div><p class="hint">A new gift every day. Miss a day and the track starts over.</p>`,
         actions: available
-            ? [{ label: `Claim day ${day}: ${rewardText(DAILY_GIFTS[day - 1])}`, primary: true, wide: true, onClick: claimDailyGift }]
+            ? [
+                { label: `Claim day ${day}: ${rewardText(DAILY_GIFTS[day - 1])}`, primary: true, wide: true, onClick: () => claimDailyGift() },
+                adsLeft() > 0 ? { label: '📺 Watch an ad · claim it twice', wide: true, onClick: () => showRewardedAd(() => { shop.adsWatched++; claimDailyGift(true); }) } : null,
+            ].filter(Boolean)
             : [{ label: `Next gift in ${formatDuration(msUntilTomorrow())}`, disabled: true }, { label: 'OK' }],
     });
 }
 
-function claimDailyGift() {
+function claimDailyGift(twice = false) {
     if (!dailyAvailable()) return;
     const day = nextGiftDay();
     daily.streak = daily.lastDay === today() - 1 ? daily.streak + 1 : 1;
     daily.lastDay = today();
     stats.gifts++;
     grantReward(DAILY_GIFTS[day - 1], `🎁 Day ${day} gift:`);
+    if (twice) grantReward(DAILY_GIFTS[day - 1], '📺 And again:');
     checkTasks();
     goTo(currentScene);
 }
@@ -1251,8 +1324,9 @@ let shopkeeperLine = 0;
 // --- SCENE HELPERS ---
 
 // A sprite placed on a scene. With onClick it's a button, otherwise decoration.
-function makeSpot({ x, y, w, z, sprite, alt = '', label, onClick, locked = false }) {
+function makeSpot({ x, y, w, z, sprite, alt = '', label, onClick, locked = false, id }) {
     const el = document.createElement(onClick ? 'button' : 'div');
+    if (id) el.dataset.id = id;
     el.className = 'spot' + (locked ? ' locked' : '');
     el.style.left = x + '%';
     el.style.top = y + '%';
@@ -1284,6 +1358,8 @@ function addTag(el, className, html) {
 }
 
 function showDialog({ art, artRound = false, title, body, actions }) {
+    const tut = document.getElementById('tutorial');
+    if (tut) tut.hidden = true;
     dialogArt.hidden = !art;
     if (art) dialogArt.src = art;
     dialogArt.classList.toggle('round', artRound);
@@ -1306,6 +1382,7 @@ function showDialog({ art, artRound = false, title, body, actions }) {
 
 function closeDialog() {
     dialogEl.hidden = true;
+    setTimeout(updateTutorial, 0); // the tutorial hand comes back once the dialog is gone
 }
 
 dialogEl.addEventListener('click', e => { if (e.target === dialogEl) closeDialog(); });
@@ -1354,6 +1431,7 @@ function goTo(scene) {
         titleEl.textContent = AREAS[scene].name;
         refreshBoard(scene);
     }
+    updateTutorial();
 }
 
 backBtn.addEventListener('click', () => goTo('map'));
@@ -1378,6 +1456,7 @@ function renderMap() {
         const restored = landRestored(id);
         const spot = makeSpot({
             ...MAP_LAYOUT[id],
+            id,
             sprite: (restored && (ASSETS.buildingsRestored || {})[id]) || ASSETS.buildings[id],
             label: area.name,
             locked: !unlocks[id],
@@ -1406,10 +1485,17 @@ function renderMap() {
     side.innerHTML = `
         <button class="side-btn" id="btn-gift">🎁<small>Gift</small>${dailyAvailable() ? '<span class="badge">!</span>' : ''}</button>
         <button class="side-btn" id="btn-quests">📋<small>Jobs</small>${openTasks().some(taskReady) ? '<span class="badge">!</span>' : ''}</button>
-        <button class="side-btn" id="btn-pass">🎟️<small>Pass</small>${passClaimable() ? `<span class="badge">${passClaimable()}</span>` : ''}</button>`;
+        <button class="side-btn" id="btn-pass">🎟️<small>Pass</small>${passClaimable() ? `<span class="badge">${passClaimable()}</span>` : ''}</button>
+        <button class="side-btn" id="btn-daily">📅<small>Daily</small>${dailyClaimable() > 0 ? '<span class="badge">!</span>' : ''}</button>
+        <button class="side-btn" id="btn-jar">🫙<small>💎${shop.jar}</small>${jarReady() ? '<span class="badge">!</span>' : ''}</button>
+        ${activeOffers().length ? `<button class="side-btn offer-btn" id="btn-offer">🔥<small data-ready="${shop.offers[activeOffers()[0].id].until}">${formatDuration(shop.offers[activeOffers()[0].id].until - Date.now())}</small></button>` : ''}`;
     side.querySelector('#btn-gift').addEventListener('click', openDailyGift);
     side.querySelector('#btn-quests').addEventListener('click', openTaskLog);
     side.querySelector('#btn-pass').addEventListener('click', openPass);
+    side.querySelector('#btn-daily').addEventListener('click', openDailyGoals);
+    side.querySelector('#btn-jar').addEventListener('click', openGemJar);
+    const offerBtn = side.querySelector('#btn-offer');
+    if (offerBtn) offerBtn.addEventListener('click', () => openOffer(activeOffers()[0].id));
     scene.appendChild(side);
 }
 
@@ -1478,8 +1564,12 @@ function generateRequestFor(npc) {
 
 function initTown(newGame = false) {
     npcs.forEach(npc => generateRequestFor(npc));
-    // Guarantee one early: Marnie always asks for Barn items.
-    if (newGame) npcs.find(npc => npc.id === 'marnie').request.rewardProducer = true;
+    // A new game's first order is an easy one with a producer part in it: Marnie
+    // wants an Egg, which the tutorial walks you through.
+    if (newGame) {
+        const marnie = npcs.find(npc => npc.id === 'marnie');
+        Object.assign(marnie.request, { mode: 'barn', tier: 1, rewardMoney: 25, rewardXp: orderXp(1), rewardProducer: true });
+    }
 }
 
 // Items that can be dragged, merged and handed in (not crates, Double Bubbles
@@ -1549,6 +1639,7 @@ function deliver(npc) {
     res.money += r.rewardMoney;
     npc.deliveries++;
     stats.delivered++;
+    fillJar(GEM_JAR.perOrder);
     addXp(r.rewardXp);
     const levelUp = npc.deliveries % 5 === 0;
     if (levelUp) res.gems += LEVEL_UP_GEMS;
@@ -1598,6 +1689,258 @@ function renderMarket() {
     side.querySelector('#btn-flash').addEventListener('click', openFlashSale);
     side.querySelector('#btn-deals').addEventListener('click', openDailyDeals);
     scene.appendChild(side);
+}
+
+// --- FIRST-PLAY TUTORIAL ---
+// A few pointers for a new farmer, one at a time. Each step points a hand at
+// what to tap, says why in Marnie's words, and ends by itself once it's done.
+// `scene`: where the step happens; elsewhere the hand points the way there.
+
+const TUTORIAL = [
+    { scene: 'map', text: 'Welcome to your farm! Tap the Barn to start.',
+      target: () => document.querySelector('#scene-map button.spot[data-id="barn"]'), done: () => currentScene === 'barn' || stats.merges > 0 },
+    { scene: 'barn', text: 'Tap the Feed Bin to make feed. Each tap costs ⚡1.',
+      target: () => cellItem('barn', grids.barn.findIndex(c => isWorkingProducer(c) && isFree(c))), done: () => statNow('taps') >= 2 },
+    { scene: 'barn', text: 'Drag one Feed onto another to merge them into an Egg!', drag: true,
+      target: () => feedPair().map(i => cellItem('barn', i)), done: () => stats.merges >= 1,
+      // Not two Feed to merge (a lucky part dropped instead): make another first.
+      fallback: { text: 'Tap the Feed Bin again for a second Feed.', target: () => cellItem('barn', grids.barn.findIndex(c => isWorkingProducer(c) && isFree(c))) } },
+    { scene: 'barn', text: 'Merge right next to a 📦 crate and it pops open.',
+      target: () => cellItem('barn', grids.barn.findIndex(c => c && c.type === 'box')), done: () => stats.boxes >= 1 },
+    { scene: 'barn', text: 'Marnie wants an Egg. When her order turns green, tap Deliver!',
+      target: () => document.querySelector('#scene-barn .order-card.ready:not(.task-card)') || document.querySelector('#scene-barn .order-card:not(.task-card):not(.other)'),
+      done: () => stats.delivered >= 1 },
+    { scene: 'map', text: 'Jobs fix up your farm and pay ⭐ XP. Tap 📋 Jobs and do the first one!',
+      target: () => document.querySelector('#btn-quests'), done: () => stats.jobs >= 1 },
+];
+const tutorial = { step: 0, done: false };
+
+function cellItem(mode, index) {
+    return index >= 0 ? document.querySelector(`#grid-${mode} .grid-cell[data-index="${index}"] .item`) : null;
+}
+
+// Two free Feed on the Barn board, for the "merge" step.
+function feedPair() {
+    const feed = grids.barn.map((c, i) => (isFree(c) && !c.type && c.tier === 0 ? i : -1)).filter(i => i >= 0);
+    return feed.length >= 2 ? feed.slice(0, 2) : [];
+}
+
+const tutorialEl = document.createElement('div');
+tutorialEl.id = 'tutorial';
+tutorialEl.innerHTML = `<div class="tut-bubble"><img class="face" alt=""><span class="tut-text"></span><button class="tut-skip">Skip</button></div>
+                        <div class="tut-hand">👆</div>`;
+tutorialEl.hidden = true;
+tutorialEl.querySelector('.tut-skip').addEventListener('click', () => endTutorial());
+
+function endTutorial(finished = false) {
+    tutorial.done = true;
+    tutorialEl.hidden = true;
+    if (finished) toast('You\'re all set, farmer! 🎉', 'good');
+}
+
+// Moves the tutorial on and points at the current step's target.
+function updateTutorial() {
+    if (tutorial.done) return;
+    while (tutorial.step < TUTORIAL.length && TUTORIAL[tutorial.step].done()) tutorial.step++;
+    if (tutorial.step >= TUTORIAL.length) return endTutorial(true);
+    const step = TUTORIAL[tutorial.step];
+    // Not where the step happens: point the way there.
+    let target;
+    let text = step.text;
+    if (currentScene !== step.scene) {
+        if (step.scene === 'map') {
+            target = backBtn;
+            text = 'Head back to the map.';
+        } else if (currentScene === 'map') {
+            target = document.querySelector(`#scene-map button.spot[data-id="${step.scene}"]`);
+            text = `Tap the ${AREAS[step.scene].name}.`;
+        } else {
+            target = backBtn;
+            text = `Go back to the map, then into the ${AREAS[step.scene].name}.`;
+        }
+    } else {
+        target = step.target();
+        const none = !target || (Array.isArray(target) && target.length < (step.drag ? 2 : 1));
+        if (none && step.fallback) {
+            target = step.fallback.target();
+            text = step.fallback.text;
+        }
+    }
+    const targets = (Array.isArray(target) ? target : [target]).filter(Boolean);
+    tutorialEl.hidden = !dialogEl.hidden || !targets.length;
+    if (tutorialEl.hidden) return;
+    tutorialEl.querySelector('.face').src = npcPicture(npcs.find(n => n.id === 'marnie'));
+    tutorialEl.querySelector('.tut-text').textContent = text;
+    const stage = stageEl.getBoundingClientRect();
+    const centre = el => { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2 - stage.left, y: r.top + r.height / 2 - stage.top }; };
+    const from = centre(targets[0]);
+    const to = targets[1] ? centre(targets[1]) : from;
+    const hand = tutorialEl.querySelector('.tut-hand');
+    hand.style.left = `${from.x}px`;
+    hand.style.top = `${from.y}px`;
+    hand.style.setProperty('--dx', `${to.x - from.x}px`);
+    hand.style.setProperty('--dy', `${to.y - from.y}px`);
+    hand.classList.toggle('dragging', targets.length > 1);
+    // Keep the bubble out of the way of what it points at.
+    tutorialEl.classList.toggle('bubble-top', from.y > stage.height / 2);
+}
+
+// --- GEM JAR ---
+
+function fillJar(n) {
+    const before = shop.jar;
+    shop.jar = Math.min(GEM_JAR.cap, shop.jar + n);
+    if (before < GEM_JAR.min && shop.jar >= GEM_JAR.min) toast(`🫙 Your Gem Jar has 💎${shop.jar}. Break it open on the map!`, 'good');
+}
+
+function jarReady() {
+    return shop.jar >= GEM_JAR.min;
+}
+
+function openGemJar() {
+    const ready = jarReady();
+    showDialog({
+        title: `🫙 ${GEM_JAR.name}`,
+        body: `<p class="big-count">💎 ${shop.jar}</p>
+               <div class="quest xp-row"><span>${shop.jar >= GEM_JAR.cap ? 'Full!' : `Fills up to 💎${GEM_JAR.cap}`}</span><small>${shop.jar}/${GEM_JAR.cap}</small>
+                   <span class="quest-bar xp"><i style="width:${(100 * shop.jar) / GEM_JAR.cap}%"></i></span></div>
+               <p class="hint">Gems drop in as you play: 💎${GEM_JAR.perMerge} a merge, 💎${GEM_JAR.perOrder} an order, 💎${GEM_JAR.perJob} a job.
+               ${ready ? 'Break it open to keep them all!' : `It opens at 💎${GEM_JAR.min}.`}</p>`,
+        actions: [
+            ready ? { label: `Break it open · ${GEM_JAR.price}`, primary: true, wide: true, onClick: breakJar }
+                : { label: `Opens at 💎${GEM_JAR.min}`, wide: true, disabled: true },
+            { label: 'Close' },
+        ],
+    });
+}
+
+function breakJar() {
+    if (!jarReady()) return;
+    purchase(GEM_JAR.id, () => {
+        const gems = shop.jar;
+        res.gems += gems;
+        shop.jar = 0;
+        return `🫙 +💎${gems}`;
+    });
+}
+
+// --- LIMITED-TIME OFFERS ---
+
+function offerState(id) {
+    return shop.offers[id] || (shop.offers[id] = {});
+}
+
+function offerActive(offer) {
+    const s = shop.offers[offer.id];
+    return !!s && !!s.until && !s.bought && Date.now() < s.until;
+}
+
+function activeOffers() {
+    return OFFERS.filter(offerActive);
+}
+
+// An offer that just opened, to show as soon as nothing else is on screen.
+let pendingOffer = null;
+
+// Opens any offer whose moment has come (once, or again after `again` days).
+function checkOffers() {
+    const now = Date.now();
+    OFFERS.forEach(offer => {
+        const s = offerState(offer.id);
+        if (s.until && (!offer.again || now < s.until + offer.again * DAY_MS)) return;
+        if (!offer.when(s)) return;
+        Object.assign(s, { until: now + offer.hours * 3600000, bought: false, base: stats.outOfEnergy });
+        pendingOffer = offer.id;
+    });
+    if (pendingOffer && dialogEl.hidden && !draggedItemInfo) {
+        const id = pendingOffer;
+        pendingOffer = null;
+        openOffer(id);
+    }
+}
+
+function openOffer(id) {
+    const offer = OFFERS.find(o => o.id === id);
+    if (!offerActive(offer)) return;
+    const until = shop.offers[id].until;
+    showDialog({
+        title: `🔥 ${offer.name}`,
+        body: `<p>${offer.note}</p>
+               <p class="offer-reward">${rewardText(offer.reward)}</p>
+               <p class="hint">Ends in <span data-ready="${until}">${formatDuration(until - Date.now())}</span></p>`,
+        actions: [{ label: `Get it · ${offer.price}`, primary: true, wide: true, onClick: () => buyOffer(id) }, { label: 'No thanks' }],
+    });
+}
+
+function buyOffer(id) {
+    const offer = OFFERS.find(o => o.id === id);
+    if (!offerActive(offer)) return;
+    purchase(offer.id, () => {
+        shop.offers[id].bought = true;
+        grantReward(offer.reward, `🔥 ${offer.name}:`);
+        return offer.name;
+    });
+}
+
+// --- DAILY GOALS ---
+
+function statNow(name) {
+    return name === 'taps' ? Object.values(stats.spawned).reduce((a, b) => a + b, 0) : stats[name] || 0;
+}
+
+// A new day picks three new goals (counting from now).
+function syncDailyGoals() {
+    if (dailyGoals.day === today()) return;
+    const pool = DAILY_GOALS.filter(g => !g.level || quests.level >= g.level).sort(() => Math.random() - 0.5).slice(0, 3);
+    Object.assign(dailyGoals, {
+        day: today(),
+        ids: pool.map(g => g.id),
+        base: Object.fromEntries(pool.map(g => [g.id, statNow(g.stat)])),
+        claimed: 0,
+    });
+}
+
+function goalProgress(id) {
+    const goal = DAILY_GOALS.find(g => g.id === id);
+    return Math.min(goal.n, Math.max(0, statNow(goal.stat) - (dailyGoals.base[id] || 0)));
+}
+
+function goalsDone() {
+    return dailyGoals.ids.filter(id => goalProgress(id) >= DAILY_GOALS.find(g => g.id === id).n).length;
+}
+
+function dailyClaimable() {
+    return goalsDone() - dailyGoals.claimed;
+}
+
+function openDailyGoals() {
+    syncDailyGoals();
+    const rows = dailyGoals.ids.map(id => {
+        const goal = DAILY_GOALS.find(g => g.id === id);
+        const p = goalProgress(id);
+        return `<div class="quest${p >= goal.n ? ' done' : ''}"><span>${p >= goal.n ? '✅' : '⬜'} ${goal.label}</span><small>${p}/${goal.n}</small>
+                    <span class="quest-bar"><i style="width:${(100 * p) / goal.n}%"></i></span></div>`;
+    }).join('');
+    const chests = DAILY_CHEST.map((reward, i) => {
+        const state = i < dailyGoals.claimed ? 'claimed' : i < goalsDone() ? 'today' : '';
+        return `<div class="gift-day ${state}"><small>${i + 1} goal${i ? 's' : ''}</small><span>${rewardText(reward)}</span></div>`;
+    }).join('');
+    showDialog({
+        title: '📅 Daily goals',
+        body: `${rows}<div class="gift-track daily-chests">${chests}</div>
+               <p class="hint">New goals in ${formatDuration(msUntilTomorrow())}.</p>`,
+        actions: [
+            dailyClaimable() > 0 ? { label: `Claim: ${rewardText(DAILY_CHEST[dailyGoals.claimed])}`, primary: true, wide: true, onClick: claimDailyChest } : null,
+            { label: 'Close' },
+        ].filter(Boolean),
+    });
+}
+
+function claimDailyChest() {
+    if (dailyClaimable() <= 0) return;
+    grantReward(DAILY_CHEST[dailyGoals.claimed], `📅 Daily goal ${dailyGoals.claimed + 1}:`);
+    dailyGoals.claimed++;
+    openDailyGoals();
 }
 
 // --- SEASON PASS ---
@@ -1666,13 +2009,29 @@ function claimPassGems() {
     toast(`🎟️ ${GOLDEN_PASS.name}: +💎${GOLDEN_PASS.gemsPerDay}`, 'good');
 }
 
-function buyGoldenPass() {
+function buyGoldenPass(deluxe = false) {
     if (pass.golden) return;
-    purchase(GOLDEN_PASS.id, () => {
+    purchase(deluxe ? GOLDEN_PASS_DELUXE.id : GOLDEN_PASS.id, () => {
         pass.golden = true;
+        if (deluxe) addPassPoints(GOLDEN_PASS_DELUXE.points);
         claimPassGems();
-        return `🎟️ ${GOLDEN_PASS.name} for ${seasonTheme().name}`;
+        return `🎟️ ${deluxe ? GOLDEN_PASS_DELUXE.name : GOLDEN_PASS.name} for ${seasonTheme().name}`;
     });
+}
+
+// 💎 to finish the current pass level right now (0 at the top).
+function passSkipPrice() {
+    const { into, need } = passProgress();
+    return need ? (need - into) * PASS_GEMS_PER_POINT : 0;
+}
+
+function buyPassLevel() {
+    const price = passSkipPrice();
+    if (!price || !spendGems(price)) return;
+    const { into, need } = passProgress();
+    addPassPoints(need - into);
+    updateUI();
+    openPass();
 }
 
 function claimPassReward(track, level) {
@@ -1709,7 +2068,9 @@ function openPass() {
                <div class="pass-track">${rows}</div>
                ${pass.golden ? `<p class="hint">Golden Pass on: 💎${GOLDEN_PASS.gemsPerDay} a day and +${GOLDEN_PASS.slots} 🎒 slots this season.</p>` : ''}`,
         actions: [
-            pass.golden ? null : { label: `Get the ${GOLDEN_PASS.name} · ${GOLDEN_PASS.price}`, primary: true, wide: true, onClick: buyGoldenPass },
+            pass.golden ? null : { label: `Get the ${GOLDEN_PASS.name} · ${GOLDEN_PASS.price}`, primary: true, wide: true, onClick: () => buyGoldenPass() },
+            pass.golden ? null : { label: `⭐ ${GOLDEN_PASS_DELUXE.name}: +${GOLDEN_PASS_DELUXE.points} points now · ${GOLDEN_PASS_DELUXE.price}`, primary: true, wide: true, onClick: () => buyGoldenPass(true) },
+            need ? { label: `Level ${level + 1} now · 💎${passSkipPrice()}`, wide: true, onClick: buyPassLevel } : null,
             { label: 'Close' },
         ].filter(Boolean),
     });
@@ -1970,6 +2331,7 @@ function renderBoardHeader(mode) {
 function refreshBoard(mode, poppedIndices = []) {
     renderGrid(mode, poppedIndices);
     renderBoardHeader(mode);
+    updateTutorial();
 }
 
 // Orders for this board, Merge Mansion style: who wants what, the reward, and a
@@ -2200,6 +2562,7 @@ function dropFrom(mode, index, stage, name) {
     if (source.drops === undefined) source.drops = stage.drops;
     grids[mode][at] = rollDrop(stage.contents);
     source.drops--;
+    stats.chestDrops++;
     lastSale = null;
     if (source.drops <= 0) {
         grids[mode][index] = null;
@@ -2256,6 +2619,7 @@ function collectCurrency(mode, index) {
     else if (item.type === 'gem') res.gems += value;
     else if (item.type === 'season') addPassPoints(value);
     else { res.energy += value; tickEnergy(); }
+    stats.collected++;
     toast(`+${CURRENCY[item.type].emoji}${value}`, 'good');
     updateUI();
     checkTasks();
@@ -2725,6 +3089,7 @@ function handleDragEnd(e) {
             if (made) {
                 grids[mode][index] = null;
                 grids[mode][targetIndex] = made;
+                fillJar(GEM_JAR.perMerge);
                 if (targetItem.web) {
                     stats.webs++;
                     toast('🕸️ Freed!', 'good');
@@ -2901,13 +3266,14 @@ const SAVE_KEY = 'merge-farmstead-save-v1';
 // 2: one ⚡ Energy bar instead of five essentials, and producers with parts.
 // 3: XP levels, inventory, chests and boosters.
 // 4: restoration jobs instead of level quests.
-const SAVE_VERSION = 4;
+// 5: the first-play tutorial (older saves skip it).
+const SAVE_VERSION = 5;
 
 function saveGame() {
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
             version: SAVE_VERSION,
-            res, energyAt, shop, crates, inventory, stats, quests, restoration, pass, daily, settings, unlocks, maxTier, grids, lastBoard,
+            res, energyAt, shop, crates, inventory, stats, quests, restoration, pass, dailyGoals, tutorial, daily, settings, unlocks, maxTier, grids, lastBoard,
             tickedAt: lastTickAt,
             npcs: npcs.map(({ id, deliveries, request }) => ({ id, deliveries, request })),
         }));
@@ -2947,6 +3313,8 @@ function loadGame() {
         quests.xp = save.quests.xp || 0;
         if (save.restoration) Object.assign(restoration, save.restoration);
         if (save.pass) Object.assign(pass, save.pass);
+        if (save.dailyGoals) Object.assign(dailyGoals, save.dailyGoals);
+        Object.assign(tutorial, save.tutorial || { done: true }); // players from before the tutorial know the ropes
         Object.assign(inventory, save.inventory);
         if (version < 4) {
             // Land bought before restoration jobs existed counts as its first job done.
@@ -2978,6 +3346,7 @@ function loadGame() {
 }
 
 // Initial setup
+stageEl.insertBefore(tutorialEl, document.getElementById('toasts'));
 ['map', 'town', 'market'].forEach(id => {
     document.getElementById(`scene-${id}`).style.backgroundImage = `url("${ASSETS.scenes[id]}")`;
 });
@@ -2994,6 +3363,7 @@ tickBoards();
 addXp(0); // a migrated save may already have enough XP for its next level
 claimDailyBasket();
 claimPassGems();
+syncDailyGoals();
 Object.keys(grids).forEach(mode => renderGrid(mode));
 updateUI();
 goTo('map');
@@ -3008,6 +3378,9 @@ setInterval(() => {
     claimDailyBasket();
     syncSeason();
     claimPassGems();
+    syncDailyGoals();
+    checkOffers();
+    updateTutorial();
     updateUI();
     updateCountdowns();
     saveGame();

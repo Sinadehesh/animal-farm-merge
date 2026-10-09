@@ -171,22 +171,20 @@ below it by its outline alone, bigger and fancier as it goes up; tiers 9-11 get 
 
 ### Fish Pond
 
-Not settled: this chain ends in ocean animals (dolphin, shark, whale shark, kraken). Say if you want pond creatures instead before drawing them.
-
 | | Tier | Item | File | Draw as |
 |---|---|---|---|---|
 | ⬜ | 0 | Fish Food | `assets/items/aqua/00_fish_food.png` | a small pile of fish flakes |
-| ⬜ | 1 | Algae | `assets/items/aqua/01_algae.png` |  |
-| ⬜ | 2 | Plankton | `assets/items/aqua/02_plankton.png` |  |
-| ⬜ | 3 | Shrimp | `assets/items/aqua/03_shrimp.png` |  |
+| ⬜ | 1 | Snail | `assets/items/aqua/01_snail.png` | a round little pond snail with a swirly shell |
+| ⬜ | 2 | Minnow | `assets/items/aqua/02_minnow.png` | a tiny silver fish |
+| ⬜ | 3 | Frog | `assets/items/aqua/03_frog.png` |  |
 | ⬜ | 4 | Goldfish | `assets/items/aqua/04_goldfish.png` |  |
-| ⬜ | 5 | Clownfish | `assets/items/aqua/05_clownfish.png` |  |
+| ⬜ | 5 | Koi | `assets/items/aqua/05_koi.png` | a chubby orange-and-white koi fish |
 | ⬜ | 6 | Turtle | `assets/items/aqua/06_turtle.png` |  |
-| ⬜ | 7 | Squid | `assets/items/aqua/07_squid.png` |  |
-| ⬜ | 8 | Dolphin | `assets/items/aqua/08_dolphin.png` |  |
-| ⬜ | 9 | Shark | `assets/items/aqua/09_shark.png` |  |
-| ⬜ | 10 | Whale Shark | `assets/items/aqua/10_whale_shark.png` |  |
-| ⬜ | 11 | Kraken | `assets/items/aqua/11_kraken.png` |  |
+| ⬜ | 7 | Otter | `assets/items/aqua/07_otter.png` |  |
+| ⬜ | 8 | Duck | `assets/items/aqua/08_duck.png` |  |
+| ⬜ | 9 | Swan | `assets/items/aqua/09_swan.png` |  |
+| ⬜ | 10 | Flamingo | `assets/items/aqua/10_flamingo.png` |  |
+| ⬜ | 11 | Pond Dragon | `assets/items/aqua/11_pond_dragon.png` | a small friendly green dragon with lily-pad wings |
 
 ### Flower Garden
 
