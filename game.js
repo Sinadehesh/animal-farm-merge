@@ -65,7 +65,7 @@ const PRODUCERS = {
     // Broom Cabinet
     flower: {
         emoji: '🚿', minutes: 200,
-        names: ['Leaky Can', 'Patched Can', 'Small Can', 'Watering Can', 'Big Watering Can', 'Sprinkler', 'Rain Barrel', 'Golden Fountain'],
+        names: ['Patched Can', 'Leaky Can', 'Small Can', 'Watering Can', 'Big Watering Can', 'Sprinkler', 'Rain Barrel', 'Golden Fountain'],
         levels: [[1, 8, 20], [2, 9, 26], [2, 11, 38], [2, 13, 56], [2, 15, 80]],
     },
 };
@@ -2696,7 +2696,7 @@ function itemEmojiFor(mode, item) {
 // A small picture of any board item, for the info bar and dialogs.
 function itemIconFor(mode, item) {
     if (!item.type) return itemIcon(mode, item.tier);
-    const art = specialSprite(item);
+    const art = item.type === 'shop' ? (ASSETS.producers[artKey(mode)] || [])[levelOf(item) - 1] : specialSprite(item);
     return art ? `<img class="inline-item" src="${art}" alt="">` : `<span class="inline-item">${itemEmojiFor(mode, item)}</span>`;
 }
 
@@ -3185,7 +3185,7 @@ function openProducerInfo(mode) {
         if (mode === 'fair' && level < FIRST_WORKING_LEVEL) return '';
         const s = producerStats(mode, level);
         const odds = s && DROP_ODDS[level - FIRST_WORKING_LEVEL].map((p, t) => p && `${Math.round(p * 100)}% t${t}`).filter(Boolean).join(' ');
-        return `<div class="quest"><span>${s ? PRODUCERS[mode].emoji : '🧩'} Lv${level} ${name}</span>
+        return `<div class="quest"><span>${itemIconFor(mode, { type: 'shop', level })} Lv${level} ${name}</span>
                 <small>${s ? `${s.charges}×${s.drops} taps · ${odds}` : 'part'}</small></div>`;
     }).join('');
     showDialog({

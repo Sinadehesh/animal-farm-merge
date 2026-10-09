@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**260 assets:** 74 done ✅, 25 placeholders 🟡, 161 missing ⬜.
+**260 assets:** 114 done ✅, 25 placeholders 🟡, 121 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -212,40 +212,40 @@ levels 4-8 get bigger and fancier; level 8 is golden.
 
 | | Level | Name | File |
 |---|---|---|---|
-| ⬜ | 1 (part) | Feed Scoop | `assets/producers/barn/1_feed_scoop.png` |
-| ⬜ | 2 (part) | Feed Pail | `assets/producers/barn/2_feed_pail.png` |
-| ⬜ | 3 (part) | Feed Sack | `assets/producers/barn/3_feed_sack.png` |
-| ⬜ | 4 (producer) | Feed Bin | `assets/producers/barn/4_feed_bin.png` |
-| ⬜ | 5 (producer) | Big Feed Bin | `assets/producers/barn/5_big_feed_bin.png` |
-| ⬜ | 6 (producer) | Feed Trough | `assets/producers/barn/6_feed_trough.png` |
-| ⬜ | 7 (producer) | Feed Cart | `assets/producers/barn/7_feed_cart.png` |
-| ⬜ | 8 (producer) | Golden Feed Silo | `assets/producers/barn/8_golden_feed_silo.png` |
+| ✅ | 1 (part) | Feed Scoop | `assets/producers/barn/1_feed_scoop.png` |
+| ✅ | 2 (part) | Feed Pail | `assets/producers/barn/2_feed_pail.png` |
+| ✅ | 3 (part) | Feed Sack | `assets/producers/barn/3_feed_sack.png` |
+| ✅ | 4 (producer) | Feed Bin | `assets/producers/barn/4_feed_bin.png` |
+| ✅ | 5 (producer) | Big Feed Bin | `assets/producers/barn/5_big_feed_bin.png` |
+| ✅ | 6 (producer) | Feed Trough | `assets/producers/barn/6_feed_trough.png` |
+| ✅ | 7 (producer) | Feed Cart | `assets/producers/barn/7_feed_cart.png` |
+| ✅ | 8 (producer) | Golden Feed Silo | `assets/producers/barn/8_golden_feed_silo.png` |
 
 ### Crop Field (✨ Fert Bag)
 
 | | Level | Name | File |
 |---|---|---|---|
-| ⬜ | 1 (part) | Torn Fert Pouch | `assets/producers/farm/1_torn_fert_pouch.png` |
-| ⬜ | 2 (part) | Fert Pouch | `assets/producers/farm/2_fert_pouch.png` |
-| ⬜ | 3 (part) | Small Fert Bag | `assets/producers/farm/3_small_fert_bag.png` |
-| ⬜ | 4 (producer) | Fert Bag | `assets/producers/farm/4_fert_bag.png` |
-| ⬜ | 5 (producer) | Big Fert Bag | `assets/producers/farm/5_big_fert_bag.png` |
-| ⬜ | 6 (producer) | Fert Sack | `assets/producers/farm/6_fert_sack.png` |
-| ⬜ | 7 (producer) | Fert Barrel | `assets/producers/farm/7_fert_barrel.png` |
-| ⬜ | 8 (producer) | Golden Fert Barrel | `assets/producers/farm/8_golden_fert_barrel.png` |
+| ✅ | 1 (part) | Torn Fert Pouch | `assets/producers/farm/1_torn_fert_pouch.png` |
+| ✅ | 2 (part) | Fert Pouch | `assets/producers/farm/2_fert_pouch.png` |
+| ✅ | 3 (part) | Small Fert Bag | `assets/producers/farm/3_small_fert_bag.png` |
+| ✅ | 4 (producer) | Fert Bag | `assets/producers/farm/4_fert_bag.png` |
+| ✅ | 5 (producer) | Big Fert Bag | `assets/producers/farm/5_big_fert_bag.png` |
+| ✅ | 6 (producer) | Fert Sack | `assets/producers/farm/6_fert_sack.png` |
+| ✅ | 7 (producer) | Fert Barrel | `assets/producers/farm/7_fert_barrel.png` |
+| ✅ | 8 (producer) | Golden Fert Barrel | `assets/producers/farm/8_golden_fert_barrel.png` |
 
 ### Hay Field (🌾 Wheat Sack)
 
 | | Level | Name | File |
 |---|---|---|---|
-| ⬜ | 1 (part) | Seed Pouch | `assets/producers/hay/1_seed_pouch.png` |
-| ⬜ | 2 (part) | Wheat Bag | `assets/producers/hay/2_wheat_bag.png` |
-| ⬜ | 3 (part) | Small Wheat Sack | `assets/producers/hay/3_small_wheat_sack.png` |
-| ⬜ | 4 (producer) | Wheat Sack | `assets/producers/hay/4_wheat_sack.png` |
-| ⬜ | 5 (producer) | Big Wheat Sack | `assets/producers/hay/5_big_wheat_sack.png` |
-| ⬜ | 6 (producer) | Wheat Barrel | `assets/producers/hay/6_wheat_barrel.png` |
-| ⬜ | 7 (producer) | Wheat Cart | `assets/producers/hay/7_wheat_cart.png` |
-| ⬜ | 8 (producer) | Golden Granary | `assets/producers/hay/8_golden_granary.png` |
+| ✅ | 1 (part) | Seed Pouch | `assets/producers/hay/1_seed_pouch.png` |
+| ✅ | 2 (part) | Wheat Bag | `assets/producers/hay/2_wheat_bag.png` |
+| ✅ | 3 (part) | Small Wheat Sack | `assets/producers/hay/3_small_wheat_sack.png` |
+| ✅ | 4 (producer) | Wheat Sack | `assets/producers/hay/4_wheat_sack.png` |
+| ✅ | 5 (producer) | Big Wheat Sack | `assets/producers/hay/5_big_wheat_sack.png` |
+| ✅ | 6 (producer) | Wheat Barrel | `assets/producers/hay/6_wheat_barrel.png` |
+| ✅ | 7 (producer) | Wheat Cart | `assets/producers/hay/7_wheat_cart.png` |
+| ✅ | 8 (producer) | Golden Granary | `assets/producers/hay/8_golden_granary.png` |
 
 ### Compost Yard (🪣 Muck Bucket)
 
@@ -264,27 +264,27 @@ levels 4-8 get bigger and fancier; level 8 is golden.
 
 | | Level | Name | File |
 |---|---|---|---|
-| ⬜ | 1 (part) | Empty Tin | `assets/producers/aqua/1_empty_tin.png` |
-| ⬜ | 2 (part) | Small Tin | `assets/producers/aqua/2_small_tin.png` |
-| ⬜ | 3 (part) | Fish Food Pouch | `assets/producers/aqua/3_fish_food_pouch.png` |
-| ⬜ | 4 (producer) | Fish Food Tin | `assets/producers/aqua/4_fish_food_tin.png` |
-| ⬜ | 5 (producer) | Big Fish Food Tin | `assets/producers/aqua/5_big_fish_food_tin.png` |
-| ⬜ | 6 (producer) | Fish Food Jar | `assets/producers/aqua/6_fish_food_jar.png` |
-| ⬜ | 7 (producer) | Fish Feeder | `assets/producers/aqua/7_fish_feeder.png` |
-| ⬜ | 8 (producer) | Golden Feeder | `assets/producers/aqua/8_golden_feeder.png` |
+| ✅ | 1 (part) | Empty Tin | `assets/producers/aqua/1_empty_tin.png` |
+| ✅ | 2 (part) | Small Tin | `assets/producers/aqua/2_small_tin.png` |
+| ✅ | 3 (part) | Fish Food Pouch | `assets/producers/aqua/3_fish_food_pouch.png` |
+| ✅ | 4 (producer) | Fish Food Tin | `assets/producers/aqua/4_fish_food_tin.png` |
+| ✅ | 5 (producer) | Big Fish Food Tin | `assets/producers/aqua/5_big_fish_food_tin.png` |
+| ✅ | 6 (producer) | Fish Food Jar | `assets/producers/aqua/6_fish_food_jar.png` |
+| ✅ | 7 (producer) | Fish Feeder | `assets/producers/aqua/7_fish_feeder.png` |
+| ✅ | 8 (producer) | Golden Feeder | `assets/producers/aqua/8_golden_feeder.png` |
 
 ### Flower Garden (🚿 Watering Can)
 
 | | Level | Name | File |
 |---|---|---|---|
-| ⬜ | 1 (part) | Leaky Can | `assets/producers/flower/1_leaky_can.png` |
-| ⬜ | 2 (part) | Patched Can | `assets/producers/flower/2_patched_can.png` |
-| ⬜ | 3 (part) | Small Can | `assets/producers/flower/3_small_can.png` |
-| ⬜ | 4 (producer) | Watering Can | `assets/producers/flower/4_watering_can.png` |
-| ⬜ | 5 (producer) | Big Watering Can | `assets/producers/flower/5_big_watering_can.png` |
-| ⬜ | 6 (producer) | Sprinkler | `assets/producers/flower/6_sprinkler.png` |
-| ⬜ | 7 (producer) | Rain Barrel | `assets/producers/flower/7_rain_barrel.png` |
-| ⬜ | 8 (producer) | Golden Fountain | `assets/producers/flower/8_golden_fountain.png` |
+| ✅ | 1 (part) | Patched Can | `assets/producers/flower/1_patched_can.png` |
+| ✅ | 2 (part) | Leaky Can | `assets/producers/flower/2_leaky_can.png` |
+| ✅ | 3 (part) | Small Can | `assets/producers/flower/3_small_can.png` |
+| ✅ | 4 (producer) | Watering Can | `assets/producers/flower/4_watering_can.png` |
+| ✅ | 5 (producer) | Big Watering Can | `assets/producers/flower/5_big_watering_can.png` |
+| ✅ | 6 (producer) | Sprinkler | `assets/producers/flower/6_sprinkler.png` |
+| ✅ | 7 (producer) | Rain Barrel | `assets/producers/flower/7_rain_barrel.png` |
+| ✅ | 8 (producer) | Golden Fountain | `assets/producers/flower/8_golden_fountain.png` |
 
 ## 9. Country Fair (4 themes × 8 items + 4 producers = 36)
 

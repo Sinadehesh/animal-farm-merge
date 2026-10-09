@@ -105,12 +105,62 @@ const ASSETS = {
     // then the five working levels (4-8). Names are in PRODUCERS in game.js.
     // Missing entries use the emoji tile.
     producers: {
-        barn: [],
-        hay: [],
-        farm: [],
+        // Cut from assets/raw/producers_barn.webp, each level a little bigger.
+        barn: [
+            'assets/producers/barn/1_feed_scoop.png',
+            'assets/producers/barn/2_feed_pail.png',
+            'assets/producers/barn/3_feed_sack.png',
+            'assets/producers/barn/4_feed_bin.png',
+            'assets/producers/barn/5_big_feed_bin.png',
+            'assets/producers/barn/6_feed_trough.png',
+            'assets/producers/barn/7_feed_cart.png',
+            'assets/producers/barn/8_golden_feed_silo.png',
+        ],
+        // Cut from assets/raw/producers_hay.webp, each level a little bigger.
+        hay: [
+            'assets/producers/hay/1_seed_pouch.png',
+            'assets/producers/hay/2_wheat_bag.png',
+            'assets/producers/hay/3_small_wheat_sack.png',
+            'assets/producers/hay/4_wheat_sack.png',
+            'assets/producers/hay/5_big_wheat_sack.png',
+            'assets/producers/hay/6_wheat_barrel.png',
+            'assets/producers/hay/7_wheat_cart.png',
+            'assets/producers/hay/8_golden_granary.png',
+        ],
+        // Cut from assets/raw/producers_farm.webp, each level a little bigger.
+        farm: [
+            'assets/producers/farm/1_torn_fert_pouch.png',
+            'assets/producers/farm/2_fert_pouch.png',
+            'assets/producers/farm/3_small_fert_bag.png',
+            'assets/producers/farm/4_fert_bag.png',
+            'assets/producers/farm/5_big_fert_bag.png',
+            'assets/producers/farm/6_fert_sack.png',
+            'assets/producers/farm/7_fert_barrel.png',
+            'assets/producers/farm/8_golden_fert_barrel.png',
+        ],
         fert: [],
-        aqua: [],
-        flower: [],
+        // Cut from assets/raw/producers_aqua.webp, each level a little bigger.
+        aqua: [
+            'assets/producers/aqua/1_empty_tin.png',
+            'assets/producers/aqua/2_small_tin.png',
+            'assets/producers/aqua/3_fish_food_pouch.png',
+            'assets/producers/aqua/4_fish_food_tin.png',
+            'assets/producers/aqua/5_big_fish_food_tin.png',
+            'assets/producers/aqua/6_fish_food_jar.png',
+            'assets/producers/aqua/7_fish_feeder.png',
+            'assets/producers/aqua/8_golden_feeder.png',
+        ],
+        // Cut from assets/raw/producers_flower.webp, each level a little bigger.
+        flower: [
+            'assets/producers/flower/1_patched_can.png',
+            'assets/producers/flower/2_leaky_can.png',
+            'assets/producers/flower/3_small_can.png',
+            'assets/producers/flower/4_watering_can.png',
+            'assets/producers/flower/5_big_watering_can.png',
+            'assets/producers/flower/6_sprinkler.png',
+            'assets/producers/flower/7_rain_barrel.png',
+            'assets/producers/flower/8_golden_fountain.png',
+        ],
         // Each Fair theme's producer has one level: put its picture at index 3.
         fair_pie: [],
         fair_flowers: [],
