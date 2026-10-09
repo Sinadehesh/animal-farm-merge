@@ -48,15 +48,16 @@ cut the image out cleanly. The game adds its own shadows.
    buildings, a character when making characters.
 2. **Generate 3–4 variants and keep one.** Reject anything with gradients, 3D
    shading, a missing outline, or a background that isn't flat.
-3. **Clean it up:**
+3. **Cut it up:**
    ```
-   python3 tools/process_assets.py raw/chick.jpg assets/items/barn/02_chick.png
-   python3 tools/process_assets.py raw/barn.jpg assets/buildings/barn.png --size 512
+   python3 tools/process_assets.py assets/raw/barn_sheet.jpg out 4 3 256
    ```
-   This removes the background, trims, centres it in a square and saves a
-   transparent PNG. Use `--size 256` for items, `512` for buildings and
-   characters. If it eats into a white subject, lower `--tolerance`. Backgrounds
-   don't need this step; resize them to 1080×1920.
+   This finds each item on the sheet (so ears, tails and sparkles that cross a
+   grid line stay with their item), removes the white background and its pale
+   edge, centres each item in a square and saves `00.png`, `01.png`… as
+   transparent PNGs. Use `1 1` for a single image, `256` for items and `512` for
+   buildings and characters. Backgrounds don't need this step; resize them to
+   1080×1920.
 4. **Register it** in `assets.js` and look at it in the game. Check items next to
    the tiers above and below them, and buildings on the map next to their neighbours.
 

@@ -74,17 +74,20 @@ const ASSETS = {
     // Merge item sprites per board, indexed by tier (0 = the input item).
     // Missing or null entries fall back to the emoji placeholder.
     items: {
-        // Cut out from the originals in assets/ghibli/ with tools/process_assets.py.
+        // Cut from assets/raw/barn_sheet_v2.jpg with tools/process_assets.py.
         barn: [
-            null,
+            'assets/items/barn/00_feed.png',
             'assets/items/barn/01_egg.png',
             'assets/items/barn/02_chick.png',
-            'assets/items/barn/03_chicken.png',
+            'assets/items/barn/03_hen.png',
             'assets/items/barn/04_piglet.png',
             'assets/items/barn/05_pig.png',
             'assets/items/barn/06_calf.png',
-            null, // 7 Cow: no art yet
+            'assets/items/barn/07_cow.png',
             'assets/items/barn/08_horse.png',
+            'assets/items/barn/09_alpaca.png',
+            'assets/items/barn/10_bull.png',
+            'assets/items/barn/11_unicorn.png',
         ],
         hay: [],
         farm: [],
