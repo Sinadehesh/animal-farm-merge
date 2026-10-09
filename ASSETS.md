@@ -93,8 +93,8 @@ Each prompt is: the style block + the line below + the subject.
 - Generate a whole chain in one session, in order, attaching the previous tier as a reference.
 - Tier names come from `NAMES` in `game.js`. Some names are abstract and need a
   concrete subject in the prompt:
-  - *Dust* → a small grey dust bunny
-  - *Ash* → a little pile of grey ash with an ember
+  - *Compost* → a small heap of dark crumbly compost with a sprout on top
+  - *Rich Soil* → a clay pot full of dark rich soil
   - *Infinite Hay* → a glowing hay bale with an infinity ribbon
   - *Iridium Fert* → a purple crystal sack of fertilizer
   - *Tree of Life* → a tiny glowing tree in a pot

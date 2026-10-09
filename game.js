@@ -52,8 +52,8 @@ const PRODUCERS = {
     },
     // Planted Bush
     fert: {
-        emoji: '🪣', minutes: 60,
-        names: ['Dented Pail', 'Old Pail', 'Muck Pail', 'Muck Bucket', 'Big Muck Bucket', 'Muck Barrow', 'Muck Cart', 'Golden Muck Wagon'],
+        emoji: '🧹', minutes: 60,
+        names: ['Broken Rake', 'Mended Rake', 'Small Rake', 'Leaf Rake', 'Leaf Basket', 'Leaf Barrow', 'Compost Bin', 'Golden Compost Tumbler'],
         levels: [[2, 5, 20], [2, 5, 24], [4, 5, 29], [6, 5, 36], [7, 5, 48]],
     },
     // Sewing Kit
@@ -462,10 +462,10 @@ const toastLayer = document.getElementById('toasts');
 
 // Flavor Names for the Tiers
 const NAMES = {
-    'farm': ['💩 Fertilizer', '🌱 Seed', '🌿 Sprout', '🍓 Strawberry', '🍅 Tomato', '🌽 Corn', '🥕 Carrot', '🥬 Cabbage', '🎃 Pumpkin', '🍉 Watermelon', '🍎 Golden Apple', '🌻 Giant Sun'],
+    'farm': ['🧪 Fertilizer', '🌱 Seed', '🌿 Sprout', '🍓 Strawberry', '🍅 Tomato', '🌽 Corn', '🥕 Carrot', '🥬 Cabbage', '🎃 Pumpkin', '🍉 Watermelon', '🍎 Golden Apple', '🌻 Giant Sun'],
     'hay': ['🌾 Wheat', '🌱 Stalk', '🌾 Bundle', '🟨 Small Bale', '🟨 Medium Bale', '🟨 Large Bale', '🥞 Hay Stack', '🗼 Hay Tower', '🏭 Hay Silo', '⭐ Golden Hay', '✨ Magic Hay', '♾️ Infinite Hay'],
     'barn': ['🌿 Feed', '🥚 Egg', '🐤 Chick', '🐔 Chicken', '🐽 Piglet', '🐷 Pig', '🐮 Calf', '🐄 Cow', '🐴 Horse', '🦙 Alpaca', '🐂 Prize Bull', '🦄 Unicorn'],
-    'fert': ['💩 Raw Fert', '💨 Dust', '🌑 Ash', '🦴 Scraps', '🍂 Compost', '💩 Manure', '✨ Basic Fert', '🌟 Quality Fert', '⚡ Speed-Gro', '💎 Deluxe Fert', '🔮 Magic Fert', '🌌 Iridium Fert'],
+    'fert': ['🍂 Fallen Leaf', '🍁 Leaf Pile', '🥕 Veggie Scraps', '🌱 Compost', '🪴 Rich Soil', '🍄 Mushroom', '✨ Basic Fert', '🌟 Quality Fert', '⚡ Speed-Gro', '💎 Deluxe Fert', '🔮 Magic Fert', '🌌 Iridium Fert'],
     'aqua': ['🌾 Fish Food', '🐌 Snail', '🐟 Minnow', '🐸 Frog', '🐠 Goldfish', '🎏 Koi', '🐢 Turtle', '🦦 Otter', '🦆 Duck', '🦢 Swan', '🦩 Flamingo', '🐉 Pond Dragon'],
     'flower': ['💧 Water Drop', '🌱 Seedling', '🌷 Bud', '🌼 Daisy', '🌷 Tulip', '🌹 Rose', '🌺 Lily', '🌸 Orchid', '🪷 Lotus', '🍄 Rafflesia', '💎 Crystal Flower', '🌳 Tree of Life']
 };
@@ -672,7 +672,7 @@ function openRecharge(mode, index) {
                <p class="hint">Each charge gives ${s.drops} taps and takes ${formatDuration(rechargeMs(mode))}. It stores up to ${s.charges} charges while you're away.</p>`,
         actions: [
             { label: `Recharge now · 💎 ${s.skip}`, primary: true, wide: true, onClick: () => skipRecharge(mode, index) },
-            adsLeft() > 0 ? { label: `Watch an ad · recharge now (${adsLeft()} left today)`, wide: true, onClick: () => watchAdForRecharge(mode, index) } : null,
+            adsLeft() > 0 ? { icon: uiIcon('ad', '📺'), label: `Watch an ad · recharge now (${adsLeft()} left today)`, wide: true, onClick: () => watchAdForRecharge(mode, index) } : null,
             { label: 'Wait' },
         ].filter(Boolean),
     });
@@ -836,7 +836,7 @@ function openEnergy(ranOut = false) {
         ? 'Full! It refills again once you drop below 100.'
         : `+1 every ${formatDuration(ENERGY_REFILL_SECONDS * 1000)} · next in <span data-ready="${energyAt}">${formatDuration(energyAt - Date.now())}</span> · full in ${formatDuration(timeUntilFullEnergy())}`;
     const actions = [{ label: `Buy ⚡ ${ENERGY_PACK} · 💎 ${energyPrice()}`, primary: true, wide: true, onClick: buyEnergy }];
-    if (ads > 0) actions.push({ label: `Watch an ad · +⚡ ${AD_ENERGY} (${ads} left today)`, wide: true, onClick: watchAdForEnergy });
+    if (ads > 0) actions.push({ icon: uiIcon('ad', '📺'), label: `Watch an ad · +⚡ ${AD_ENERGY} (${ads} left today)`, wide: true, onClick: watchAdForEnergy });
     actions.push({ label: full ? 'OK' : 'Wait' });
     showDialog({
         title: ranOut ? 'Out of ⚡ Energy' : '⚡ Energy',
@@ -1330,7 +1330,7 @@ function openDailyGift() {
         actions: available
             ? [
                 { label: `Claim day ${day}: ${rewardText(DAILY_GIFTS[day - 1])}`, primary: true, wide: true, onClick: () => claimDailyGift() },
-                adsLeft() > 0 ? { label: '📺 Watch an ad · claim it twice', wide: true, onClick: () => showRewardedAd(() => { shop.adsWatched++; claimDailyGift(true); }) } : null,
+                adsLeft() > 0 ? { icon: uiIcon('ad', '📺'), label: 'Watch an ad · claim it twice', wide: true, onClick: () => showRewardedAd(() => { shop.adsWatched++; claimDailyGift(true); }) } : null,
             ].filter(Boolean)
             : [{ label: `Next gift in ${formatDuration(msUntilTomorrow())}`, disabled: true }, { label: 'OK' }],
     });
@@ -1428,7 +1428,8 @@ function showDialog({ art, artRound = false, title, body, actions }) {
     actions.forEach(action => {
         const btn = document.createElement('button');
         btn.className = 'btn' + (action.primary ? ' btn-primary' : '') + (action.wide ? ' btn-wide' : '');
-        btn.textContent = action.label;
+        if (action.icon) btn.innerHTML = `${action.icon} `;
+        btn.append(action.label);
         btn.disabled = !!action.disabled;
         btn.addEventListener('click', () => {
             closeDialog();
@@ -1533,7 +1534,7 @@ function renderMap() {
             const done = list.filter(taskDone).length;
             spot.classList.add(restored ? 'restored' : 'worn');
             spot.style.setProperty('--worn', (1 - done / list.length).toFixed(2));
-            addTag(spot, 'restore-tag', restored ? '✨' : `🔨${done}/${list.length}`);
+            addTag(spot, 'restore-tag', restored ? '✨' : `${uiIcon('hammer', '🔨')}${done}/${list.length}`);
         }
         scene.appendChild(spot);
     });
@@ -1544,7 +1545,7 @@ function renderMap() {
         ribbon.className = 'fair-ribbon' + (fairOpen() ? ' open' : '');
         ribbon.id = 'btn-fair';
         ribbon.innerHTML = fairOpen()
-            ? `${fairTheme().emoji} ${fairTheme().name} <small>🏆 ${ordinal(fairRank())} · <span data-ready="${fairEndsAt()}">${formatDuration(fairEndsAt() - Date.now())}</span></small>`
+            ? `${fairTheme().emoji} ${fairTheme().name} <small>${uiIcon('trophy', '🏆')} ${ordinal(fairRank())} · <span data-ready="${fairEndsAt()}">${formatDuration(fairEndsAt() - Date.now())}</span></small>`
             : `🎪 Next Fair <small>in ${formatDuration(dayStart(nextFairDay()) - Date.now())}</small>`;
         ribbon.addEventListener('click', () => (fairOpen() ? goTo('fair') : openFairInfo()));
         scene.appendChild(ribbon);
@@ -1755,7 +1756,7 @@ function renderMarket() {
     const side = document.createElement('div');
     side.className = 'side-buttons';
     side.innerHTML = `
-        <button class="side-btn" id="btn-flash">🏷️<small>Flash Sale</small></button>
+        <button class="side-btn" id="btn-flash">${uiIcon('sale', '🏷️')}<small>Flash Sale</small></button>
         <button class="side-btn" id="btn-deals">${uiIcon('gift', '🎁')}<small>Daily Deals</small>${dealsWaiting() ? '<span class="badge">!</span>' : ''}</button>`;
     side.querySelector('#btn-flash').addEventListener('click', openFlashSale);
     side.querySelector('#btn-deals').addEventListener('click', openDailyDeals);
@@ -2006,7 +2007,7 @@ function renderFairHeader(el) {
     el.innerHTML = `<button class="fair-header">
         <span class="fair-top"><b>${fairTheme().emoji} ${fairTheme().name}</b>
             <span>⏳ <span data-ready="${fairEndsAt()}">${formatDuration(fairEndsAt() - Date.now())}</span></span>
-            <span class="fair-rank">🏆 ${ordinal(fairRank())}</span></span>
+            <span class="fair-rank">${uiIcon('trophy', '🏆')} ${ordinal(fairRank())}</span></span>
         <span class="quest-bar xp"><i style="width:${Math.min(100, width)}%"></i></span>
         <span class="fair-next">${fair.points} pts${next ? ` · next at ${next[0]}: ${rewardText(next[1])}` : ' · every milestone done!'}${fairBoosted() ? ' · ⚡2× points' : ''}</span>
     </button>`;
@@ -2030,7 +2031,7 @@ function openFairInfo() {
     showDialog({
         title: `${fairTheme().emoji} ${fairTheme().name}`,
         body: `<p class="hint">Ends in ${formatDuration(fairEndsAt() - Date.now())}. Merge here to score: the bigger the merge, the more points.</p>
-               <h3 class="fair-h">🏆 The race</h3>${race}
+               <h3 class="fair-h">${uiIcon('trophy', '🏆')} The race</h3>${race}
                <h3 class="fair-h">🎯 Milestones</h3>${miles}`,
         actions: [
             currentScene !== 'fair' ? { label: 'Go to the Fair', primary: true, wide: true, onClick: () => goTo('fair') } : null,
@@ -2612,7 +2613,7 @@ function renderOrders(mode, el) {
         const card = document.createElement('button');
         card.className = 'order-card task-card' + (ready ? ' ready' : '');
         card.innerHTML = `
-            <span class="order-who"><span class="hammer">🔨</span><span class="want">${itemIcon(mode, need.tier)}</span></span>
+            <span class="order-who"><span class="hammer">${uiIcon('hammer', '🔨')}</span><span class="want">${itemIcon(mode, need.tier)}</span></span>
             <span class="order-pay">${p.have}/${p.of} · ⭐${task.xp}</span>
             ${ready ? '<span class="order-go">Do it</span>' : `<span class="order-need">${task.name}</span>`}`;
         card.addEventListener('click', () => (ready ? completeTask(task.id) : openTaskLog()));
@@ -3018,7 +3019,7 @@ function renderInfoBar(mode) {
         html += `<span class="info-text">Tap a ${prod.emoji} ${producerBaseName(mode)} to make items for ⚡1. Drag two alike together to merge. Tap an item to see it.</span>`;
     } else if (item.web) {
         const name = boardItemName(mode, item);
-        html += icon + text(`${name} · 🕸️`, `Covered in cobwebs. Merge a free ${name} into it to free it.`) + button('dust-btn', `Dust<br>💎${dustPrice(item)}`);
+        html += icon + text(`${name} · ${uiIcon('cobweb', '🕸️')}`, `Covered in cobwebs. Merge a free ${name} into it to free it.`) + button('dust-btn', `Dust<br>💎${dustPrice(item)}`);
     } else if (item.type === 'box') {
         html += `<span class="info-icon">📦</span>` + text('Crate', 'Merge anything next to it to open it.');
     } else if (item.type === 'bubble') {

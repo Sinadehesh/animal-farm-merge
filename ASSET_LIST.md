@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**260 assets:** 114 done ✅, 25 placeholders 🟡, 121 missing ⬜.
+**263 assets:** 114 done ✅, 25 placeholders 🟡, 124 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -156,12 +156,12 @@ below it by its outline alone, bigger and fancier as it goes up; tiers 9-11 get 
 
 | | Tier | Item | File | Draw as |
 |---|---|---|---|---|
-| ⬜ | 0 | Raw Fert | `assets/items/fert/00_raw_fert.png` | a small cute poop |
-| ⬜ | 1 | Dust | `assets/items/fert/01_dust.png` | a small grey dust bunny |
-| ⬜ | 2 | Ash | `assets/items/fert/02_ash.png` | a little pile of grey ash with an ember |
-| ⬜ | 3 | Scraps | `assets/items/fert/03_scraps.png` | a few veggie scraps and an apple core |
-| ⬜ | 4 | Compost | `assets/items/fert/04_compost.png` |  |
-| ⬜ | 5 | Manure | `assets/items/fert/05_manure.png` |  |
+| ⬜ | 0 | Fallen Leaf | `assets/items/fert/00_fallen_leaf.png` | a single orange autumn leaf |
+| ⬜ | 1 | Leaf Pile | `assets/items/fert/01_leaf_pile.png` | a little pile of red and orange autumn leaves |
+| ⬜ | 2 | Veggie Scraps | `assets/items/fert/02_veggie_scraps.png` | carrot tops and an apple core |
+| ⬜ | 3 | Compost | `assets/items/fert/03_compost.png` | a small heap of dark crumbly compost with a sprout on top |
+| ⬜ | 4 | Rich Soil | `assets/items/fert/04_rich_soil.png` | a clay pot full of dark rich soil |
+| ⬜ | 5 | Mushroom | `assets/items/fert/05_mushroom.png` | a cute red-capped mushroom with white spots |
 | ⬜ | 6 | Basic Fert | `assets/items/fert/06_basic_fert.png` |  |
 | ⬜ | 7 | Quality Fert | `assets/items/fert/07_quality_fert.png` |  |
 | ⬜ | 8 | Speed-Gro | `assets/items/fert/08_speed_gro.png` | a fertilizer bottle with a lightning label |
@@ -247,18 +247,18 @@ levels 4-8 get bigger and fancier; level 8 is golden.
 | ✅ | 7 (producer) | Wheat Cart | `assets/producers/hay/7_wheat_cart.png` |
 | ✅ | 8 (producer) | Golden Granary | `assets/producers/hay/8_golden_granary.png` |
 
-### Compost Yard (🪣 Muck Bucket)
+### Compost Yard (🧹 Leaf Rake)
 
 | | Level | Name | File |
 |---|---|---|---|
-| ⬜ | 1 (part) | Dented Pail | `assets/producers/fert/1_dented_pail.png` |
-| ⬜ | 2 (part) | Old Pail | `assets/producers/fert/2_old_pail.png` |
-| ⬜ | 3 (part) | Muck Pail | `assets/producers/fert/3_muck_pail.png` |
-| ⬜ | 4 (producer) | Muck Bucket | `assets/producers/fert/4_muck_bucket.png` |
-| ⬜ | 5 (producer) | Big Muck Bucket | `assets/producers/fert/5_big_muck_bucket.png` |
-| ⬜ | 6 (producer) | Muck Barrow | `assets/producers/fert/6_muck_barrow.png` |
-| ⬜ | 7 (producer) | Muck Cart | `assets/producers/fert/7_muck_cart.png` |
-| ⬜ | 8 (producer) | Golden Muck Wagon | `assets/producers/fert/8_golden_muck_wagon.png` |
+| ⬜ | 1 (part) | Broken Rake | `assets/producers/fert/1_broken_rake.png` |
+| ⬜ | 2 (part) | Mended Rake | `assets/producers/fert/2_mended_rake.png` |
+| ⬜ | 3 (part) | Small Rake | `assets/producers/fert/3_small_rake.png` |
+| ⬜ | 4 (producer) | Leaf Rake | `assets/producers/fert/4_leaf_rake.png` |
+| ⬜ | 5 (producer) | Leaf Basket | `assets/producers/fert/5_leaf_basket.png` |
+| ⬜ | 6 (producer) | Leaf Barrow | `assets/producers/fert/6_leaf_barrow.png` |
+| ⬜ | 7 (producer) | Compost Bin | `assets/producers/fert/7_compost_bin.png` |
+| ⬜ | 8 (producer) | Golden Compost Tumbler | `assets/producers/fert/8_golden_compost_tumbler.png` |
 
 ### Fish Pond (🥫 Fish Food Tin)
 
@@ -368,7 +368,7 @@ The same on every board. Each level looks fuller or bigger than the one before.
 | ✅ | Piggy Bank | 4 | `assets/items/special/piggy_1.png` … `_4.png` | a pink piggy bank, rounder and shinier each level |
 | ✅ | Double Bubble | 1 | `assets/items/special/bubble.png` | an empty, see-through soap bubble with a rainbow sheen (the item shows inside it) |
 
-## 11. Interface icons (15)
+## 11. Interface icons (18)
 
 Small square PNGs with a transparent background in `assets/ui/` (listed in `ui` in `assets.js`). Anything
 missing shows its emoji.
@@ -387,9 +387,12 @@ missing shows its emoji.
 | ✅ | 🔥 offers | map button | `assets/ui/offer.png` |
 | ✅ | 🎒 inventory | board info bar | `assets/ui/inventory.png` |
 | ✅ | 🔒 lock | locked chests, lands and deeds | `assets/ui/lock.png` |
-| ⬜ | 🏷️ Flash Sale | Market button | not wired yet (needs a small code change) |
-| ⬜ | 🕸️ cobweb | on board items | not wired yet (needs a small code change) |
-| ⬜ | 🧩 part | producer parts with no picture | not wired yet (needs a small code change) |
+| ⬜ | 🏷️ Flash Sale (price tag) | Market button | `assets/ui/sale.png` |
+| ⬜ | 🕸️ cobweb | info bar for cobwebbed items | `assets/ui/cobweb.png` |
+| ⬜ | 🔨 hammer | job tags on the map and job cards | `assets/ui/hammer.png` |
+| ⬜ | 🏆 trophy | Country Fair ribbon, header and race | `assets/ui/trophy.png` |
+| ⬜ | 📺 TV with a play button | "Watch an ad" buttons | `assets/ui/ad.png` |
+| ⬜ | 🧩 part | producer parts in reward texts | not wired yet (needs a small code change) |
 
 ## Not used by the game
 

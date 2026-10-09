@@ -457,8 +457,8 @@
         .race-row.me { background: #fff3c4; }
         .game-grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            grid-template-rows: repeat(8, 1fr);
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            grid-template-rows: repeat(8, minmax(0, 1fr));
             width: 100%;
             aspect-ratio: 6 / 8;
             gap: 1cqw;
@@ -582,7 +582,8 @@
         .ui-icon { height: 1.25em; width: auto; vertical-align: -0.28em; pointer-events: none; }
         .side-btn .ui-icon { height: 8.4cqw; vertical-align: middle; }
         .inv-btn .ui-icon { height: 5.6cqw; }
-        .spot .sale-sign .ui-icon, .spot .price-tag .ui-icon { display: inline; width: auto; height: 1.2em; filter: none; }
+        .spot span > .ui-icon { display: inline; width: auto; height: 1.2em; filter: none; }
+        .order-who .hammer .ui-icon { height: 7cqw; }
         .item.piggy { background: radial-gradient(circle at 30% 30%, #ffd6e6, #f07aa8); }
         .item.bubble-item {
             border-radius: 50%;
