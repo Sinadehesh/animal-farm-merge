@@ -1355,12 +1355,12 @@ function claimDailyGift(twice = false) {
 const MAP_LAYOUT = {
     town:   { x: 50, y: 1,  w: 48 },
     market: { x: 3,  y: 5,  w: 44 },
-    barn:   { x: 50, y: 24, w: 47 },
-    farm:   { x: 2,  y: 31, w: 46 },
-    hay:    { x: 52, y: 49, w: 45 },
-    fert:   { x: 3,  y: 55, w: 36 },
-    aqua:   { x: 33, y: 72, w: 40 },
-    flower: { x: 70, y: 70, w: 29 },
+    barn:   { x: 50, y: 24, w: 46 },
+    farm:   { x: 2,  y: 31, w: 45 },
+    hay:    { x: 55, y: 49, w: 40 },
+    fert:   { x: 3,  y: 53, w: 36 },
+    aqua:   { x: 33, y: 68, w: 36 },
+    flower: { x: 70, y: 70, w: 28 },
 };
 
 const MARKET_LAYOUT = {

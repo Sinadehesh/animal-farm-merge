@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**263 assets:** 182 done ✅, 25 placeholders 🟡, 56 missing ⬜.
+**263 assets:** 190 done ✅, 17 placeholders 🟡, 56 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -25,14 +25,14 @@ Same camera angle for all: front view, slightly from above, whole building with 
 
 | | Building | File | What it shows |
 |---|---|---|---|
-| 🟡 | Town | `assets/buildings/town.svg` → `assets/buildings/town.png` | a distant little town with a clock tower |
-| 🟡 | Market | `assets/buildings/market.svg` → `assets/buildings/market.png` | a market storefront with a striped awning |
-| 🟡 | Barn | `assets/buildings/barn.svg` → `assets/buildings/barn.png` | a red barn with a silo |
-| 🟡 | Crop Field | `assets/buildings/farm.svg` → `assets/buildings/farm.png` | a crop field patch with rows of veggies |
-| 🟡 | Hay Field | `assets/buildings/hay.svg` → `assets/buildings/hay.png` | a hay field with round bales |
-| 🟡 | Compost Yard | `assets/buildings/fert.svg` → `assets/buildings/fert.png` | a compost yard with bins |
-| 🟡 | Fish Pond | `assets/buildings/aqua.svg` → `assets/buildings/aqua.png` | a fish pond with lily pads |
-| 🟡 | Flower Garden | `assets/buildings/flower.svg` → `assets/buildings/flower.png` | a flower garden with an arch |
+| ✅ | Town | `assets/buildings/town.png` | a distant little town with a clock tower |
+| ✅ | Market | `assets/buildings/market.png` | a market storefront with a striped awning |
+| ✅ | Barn | `assets/buildings/barn.png` | a red barn with a silo |
+| ✅ | Crop Field | `assets/buildings/farm.png` | a crop field patch with rows of veggies |
+| ✅ | Hay Field | `assets/buildings/hay.png` | a hay field with round bales |
+| ✅ | Compost Yard | `assets/buildings/fert.png` | a compost yard with bins |
+| ✅ | Fish Pond | `assets/buildings/aqua.png` | a fish pond with lily pads |
+| ✅ | Flower Garden | `assets/buildings/flower.png` | a flower garden with an arch |
 
 ### Restored versions (6, optional)
 

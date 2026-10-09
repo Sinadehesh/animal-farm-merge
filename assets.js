@@ -14,14 +14,14 @@ const ASSETS = {
 
     // Places on the farm map.
     buildings: {
-        town: 'assets/buildings/town.svg',
-        market: 'assets/buildings/market.svg',
-        barn: 'assets/buildings/barn.svg',
-        farm: 'assets/buildings/farm.svg',
-        hay: 'assets/buildings/hay.svg',
-        fert: 'assets/buildings/fert.svg',
-        aqua: 'assets/buildings/aqua.svg',
-        flower: 'assets/buildings/flower.svg',
+        town: 'assets/buildings/town.png',
+        market: 'assets/buildings/market.png',
+        barn: 'assets/buildings/barn.png',
+        farm: 'assets/buildings/farm.png',
+        hay: 'assets/buildings/hay.png',
+        fert: 'assets/buildings/fert.png',
+        aqua: 'assets/buildings/aqua.png',
+        flower: 'assets/buildings/flower.png',
     },
 
     // The same buildings once their restoration jobs are all done (null = keep
