@@ -129,7 +129,9 @@ const ASSETS = {
     // Merge item sprites per board, indexed by tier (0 = the input item).
     // Missing or null entries fall back to the emoji placeholder.
     items: {
-        // Cut from assets/raw/barn_sheet_v3.jpg with tools/process_assets.py.
+        // Cut with tools/process_assets.py (auto mode): tiers 0-5 and the cow from
+        // assets/raw/barn_sheet_v4_eyes.webp, the calf and tiers 8-11 from
+        // assets/raw/barn_sheet_v4.webp.
         barn: [
             'assets/items/barn/00_feed.png',
             'assets/items/barn/01_egg.png',

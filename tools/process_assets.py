@@ -2,11 +2,14 @@
 
 Usage:
     python tools/process_assets.py <image_path> <output_dir> <cols> <rows> <target_size> [padding_pct]
+    python tools/process_assets.py <image_path> <output_dir> auto <target_size> [padding_pct]
 
 Example (a 4x3 sheet of 12 merge items, saved as 00.png ... 11.png at 256px):
     python tools/process_assets.py assets/raw/barn_sheet_v2.jpg out 4 3 256
 
-For a single image, use 1 1 as cols and rows.
+For a single image, use 1 1 as cols and rows. For a sheet whose rows don't
+line up in a grid (2 items, then 4, then 3...), use `auto`: every item is found
+wherever it is and numbered row by row, left to right.
 
 How it works:
   1. The white background is found by flood-filling near-white pixels from the
@@ -32,6 +35,10 @@ BG_TOLERANCE = 40     # how far from pure white still counts as background
 EDGE_DARKNESS = 90    # edge pixels at least this much darker than white stay fully opaque
 MIN_SHAPE_PIXELS = 30 # smaller specks are treated as noise and dropped
 ALPHA_FLOOR = 12      # on transparent sheets, pixels fainter than this count as background
+ITEM_SHARE = 0.12     # in auto mode, shapes this share of the biggest one or more are items;
+                      # smaller ones (sparkles, hearts) join the nearest item
+SOLID_ALPHA = 128     # in auto mode, items are found by their solid pixels, so a soft glow
+EDGE_GROW = 6         # can't join two items; then this many pixels of soft edge are added back
 
 
 def flood_from_edges(candidate):
@@ -122,15 +129,10 @@ def load_rgba(image_path):
     return remove_background(np.array(img.convert('RGB')))
 
 
-def process_sheet(image_path, output_dir, cols, rows, target_size, padding_pct=0.08):
-    os.makedirs(output_dir, exist_ok=True)
-    rgba = load_rgba(image_path)
-    h, w = rgba.shape[:2]
+def grid_groups(labels, count, w, h, cols, rows):
+    """The shapes in each grid cell, in reading order: each shape belongs to
+    the cell its centre falls in."""
     cell_w, cell_h = w / cols, h / rows
-
-    labels, count = label_shapes(rgba[:, :, 3] > 0)
-
-    # Give every shape to the cell its centre falls in.
     owner = {}
     for shape_id in range(1, count + 1):
         ys, xs = np.nonzero(labels == shape_id)
@@ -139,16 +141,79 @@ def process_sheet(image_path, output_dir, cols, rows, target_size, padding_pct=0
         col = min(int(xs.mean() // cell_w), cols - 1)
         row = min(int(ys.mean() // cell_h), rows - 1)
         owner.setdefault(row * cols + col, []).append(shape_id)
+    return [owner.get(idx) for idx in range(cols * rows)]
 
-    for idx in range(cols * rows):
+
+def auto_groups(labels, count):
+    """Items wherever they are on the sheet. Big shapes are items; small ones
+    join the item they are nearest to. Numbered row by row, left to right."""
+    shapes = []
+    for shape_id in range(1, count + 1):
+        ys, xs = np.nonzero(labels == shape_id)
+        if len(ys) >= MIN_SHAPE_PIXELS:
+            shapes.append({'id': shape_id, 'area': len(ys), 'box': (ys.min(), ys.max(), xs.min(), xs.max()),
+                           'cy': ys.mean(), 'cx': xs.mean()})
+    if not shapes:
+        return []
+    biggest = max(s['area'] for s in shapes)
+    items = [s for s in shapes if s['area'] >= biggest * ITEM_SHARE]
+    for s in items:
+        s['members'] = [s['id']]
+
+    def gap(s, item):  # distance from a small shape's centre to an item's box
+        y0, y1, x0, x1 = item['box']
+        dy = max(y0 - s['cy'], 0, s['cy'] - y1)
+        dx = max(x0 - s['cx'], 0, s['cx'] - x1)
+        return dx * dx + dy * dy
+
+    for s in shapes:
+        if s not in items:
+            min(items, key=lambda item: gap(s, item))['members'].append(s['id'])
+
+    # Rows: items whose centres sit within half a typical item height of each other.
+    height = float(np.median([s['box'][1] - s['box'][0] for s in items]))
+    rows, current = [], []
+    for s in sorted(items, key=lambda s: s['cy']):
+        if current and s['cy'] - np.mean([c['cy'] for c in current]) > height / 2:
+            rows.append(current)
+            current = []
+        current.append(s)
+    rows.append(current)
+    return [s['members'] for row in rows for s in sorted(row, key=lambda s: s['cx'])]
+
+
+def grow(mask, steps):
+    """`mask` widened by `steps` pixels."""
+    for _ in range(steps):
+        wider = mask.copy()
+        wider[1:, :] |= mask[:-1, :]
+        wider[:-1, :] |= mask[1:, :]
+        wider[:, 1:] |= mask[:, :-1]
+        wider[:, :-1] |= mask[:, 1:]
+        mask = wider
+    return mask
+
+
+def process_sheet(image_path, output_dir, cols, rows, target_size, padding_pct=0.08):
+    """Cut a sheet into items; cols = 'auto' finds them wherever they are."""
+    os.makedirs(output_dir, exist_ok=True)
+    rgba = load_rgba(image_path)
+    h, w = rgba.shape[:2]
+    auto = cols == 'auto'
+    labels, count = label_shapes(rgba[:, :, 3] >= SOLID_ALPHA if auto else rgba[:, :, 3] > 0)
+    groups = auto_groups(labels, count) if auto else grid_groups(labels, count, w, h, cols, rows)
+
+    for idx, shape_ids in enumerate(groups):
         out_path = os.path.join(output_dir, f"{idx:02d}.png")
-        shape_ids = owner.get(idx)
         if not shape_ids:
             Image.new('RGBA', (target_size, target_size)).save(out_path)
             print(f"Saved {out_path} (empty cell)")
             continue
 
         mine = np.isin(labels, shape_ids)
+        if auto:  # add back the soft edge, but never another item's pixels
+            others = (labels > 0) & ~mine
+            mine = grow(mine, EDGE_GROW) & (rgba[:, :, 3] > 0) & ~others
         ys, xs = np.nonzero(mine)
         y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
         item = rgba[y0:y1, x0:x1].copy()
@@ -165,15 +230,12 @@ def process_sheet(image_path, output_dir, cols, rows, target_size, padding_pct=0
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 6:
+    args = sys.argv[1:]
+    if len(args) >= 4 and args[2] == 'auto':
+        process_sheet(args[0], args[1], 'auto', None, int(args[3]), float(args[4]) if len(args) > 4 else 0.08)
+    elif len(args) >= 5:
+        process_sheet(args[0], args[1], int(args[2]), int(args[3]), int(args[4]), float(args[5]) if len(args) > 5 else 0.08)
+    else:
         print("Usage: python process_assets.py <image_path> <output_dir> <cols> <rows> <target_size> [padding_pct]")
+        print("       python process_assets.py <image_path> <output_dir> auto <target_size> [padding_pct]")
         sys.exit(1)
-
-    process_sheet(
-        sys.argv[1],
-        sys.argv[2],
-        int(sys.argv[3]),
-        int(sys.argv[4]),
-        int(sys.argv[5]),
-        float(sys.argv[6]) if len(sys.argv) > 6 else 0.08,
-    )
