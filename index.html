@@ -166,6 +166,8 @@
         button.spot:active { transform: scale(0.97); }
         .spot.locked img { filter: grayscale(1) brightness(1.1) opacity(0.65); }
         /* Restoration: a land looks worn (--worn from 1 to 0) until its jobs are done. */
+        /* The town square before its fog is cleared. */
+        .spot.foggy img { filter: grayscale(0.7) brightness(1.15) blur(1.2px) opacity(0.7); }
         .spot.worn img { filter: sepia(calc(var(--worn) * 0.75)) saturate(calc(1 - var(--worn) * 0.45)) brightness(calc(1 - var(--worn) * 0.08)) drop-shadow(0 4px 0 rgba(0, 0, 0, 0.15)); }
         .restore-tag {
             position: absolute;
@@ -453,6 +455,9 @@
         .fair-next { font-size: 2.8cqw; font-weight: 800; color: #8a6a50; }
         .fair-h { margin: 2cqw 0 1cqw; font-size: 3.8cqw; text-align: left; }
         .race-row { display: grid; grid-template-columns: 1fr auto; gap: 0 2cqw; padding: 1cqw 1.6cqw; border-radius: 8px; font-size: 3.3cqw; text-align: left; }
+        /* Story: chapter headings in the job log, a chapter's goal in its scene. */
+        .chapter-h { margin: 2.4cqw 0 1cqw; font-size: 3.4cqw; text-align: left; color: #8a5a2b; }
+        .chapter-goal { font-weight: 800; }
         .race-row small { grid-column: 1 / -1; font-size: 2.5cqw; color: #8a6a50; }
         .race-row.me { background: #fff3c4; }
         .game-grid {
