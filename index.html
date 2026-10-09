@@ -197,6 +197,16 @@
             box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
             animation: bob 1.2s ease-in-out infinite;
         }
+        /* Townspeople: a round portrait medallion. */
+        .portrait-spot img, .dialog-art.round {
+            aspect-ratio: 1;
+            object-fit: cover;
+            object-position: top;
+            border-radius: 50%;
+            border: 3px solid var(--ink);
+            background: var(--paper);
+        }
+        .dialog-art.round { border-width: 4px; }
         .bubble {
             position: absolute;
             left: 50%;

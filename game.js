@@ -460,9 +460,10 @@ function addTag(el, className, html) {
     return tag;
 }
 
-function showDialog({ art, title, body, actions }) {
+function showDialog({ art, artRound = false, title, body, actions }) {
     dialogArt.hidden = !art;
     if (art) dialogArt.src = art;
+    dialogArt.classList.toggle('round', artRound);
     dialogTitle.textContent = title;
     dialogBody.innerHTML = body;
     dialogActions.innerHTML = '';
@@ -581,15 +582,15 @@ function buyDeed(id) {
 // Each NPC lives in a building on the town square and stands in front of it.
 const npcs = [
     { id: 'mayor',  name: 'Mayor Pelican', pref: ['farm', 'fert'], deliveries: 0, request: null,
-      home: 'townhall',   building: { x: 27, y: 2,  w: 46 }, spot: { x: 42, y: 25, w: 16 } },
+      home: 'townhall',   building: { x: 27, y: 2,  w: 46 }, spot: { x: 41, y: 28, w: 18 } },
     { id: 'robin',  name: 'Robin',         pref: ['hay'],          deliveries: 0, request: null,
-      home: 'carpenter',  building: { x: 1,  y: 21, w: 34 }, spot: { x: 9,  y: 39, w: 15 } },
+      home: 'carpenter',  building: { x: 1,  y: 21, w: 34 }, spot: { x: 8,  y: 42, w: 17 } },
     { id: 'marnie', name: 'Marnie',        pref: ['barn'],         deliveries: 0, request: null,
-      home: 'ranch',      building: { x: 65, y: 21, w: 34 }, spot: { x: 76, y: 39, w: 15 } },
+      home: 'ranch',      building: { x: 65, y: 21, w: 34 }, spot: { x: 75, y: 42, w: 17 } },
     { id: 'willy',  name: 'Willy',         pref: ['aqua'],         deliveries: 0, request: null,
-      home: 'fishshop',   building: { x: 1,  y: 58, w: 36 }, spot: { x: 12, y: 76, w: 15 } },
+      home: 'fishshop',   building: { x: 1,  y: 58, w: 36 }, spot: { x: 11, y: 79, w: 17 } },
     { id: 'sandy',  name: 'Sandy',         pref: ['flower'],       deliveries: 0, request: null,
-      home: 'flowershop', building: { x: 63, y: 58, w: 36 }, spot: { x: 73, y: 76, w: 15 } },
+      home: 'flowershop', building: { x: 63, y: 58, w: 36 }, spot: { x: 72, y: 79, w: 17 } },
 ];
 
 function generateRequestFor(npc) {
@@ -620,6 +621,11 @@ function canFulfill(npc) {
     return !!npc.request && findItem(npc.request.mode, npc.request.tier) !== -1;
 }
 
+// The portrait if there is one, otherwise the full-body drawing (framed the same way).
+function npcPicture(npc) {
+    return ASSETS.portraits[npc.id] || ASSETS.characters[npc.id];
+}
+
 function renderTown() {
     const scene = document.getElementById('scene-town');
     scene.innerHTML = '';
@@ -627,7 +633,8 @@ function renderTown() {
         const talk = () => openNpc(npc);
         scene.appendChild(makeSpot({ ...npc.building, sprite: ASSETS.town[npc.home], alt: `${npc.name}'s place`, onClick: talk }));
 
-        const person = makeSpot({ ...npc.spot, sprite: ASSETS.characters[npc.id], label: npc.name, onClick: talk });
+        const person = makeSpot({ ...npc.spot, sprite: npcPicture(npc), label: npc.name, onClick: talk });
+        person.classList.add('portrait-spot');
         if (npc.request) {
             const bubble = addTag(person, 'bubble', itemIcon(npc.request.mode, npc.request.tier));
             if (canFulfill(npc)) bubble.classList.add('ready');
@@ -642,7 +649,8 @@ function openNpc(npc) {
     const area = AREAS[r.mode];
     const ready = canFulfill(npc);
     showDialog({
-        art: ASSETS.characters[npc.id],
+        art: npcPicture(npc),
+        artRound: true,
         title: `${npc.name} · Lv.${level}`,
         body: `<p>“Could you bring me a ${itemIcon(r.mode, r.tier)} <b>${itemName(r.mode, r.tier)}</b> from your ${area.name}?”</p>
                <p><b>Reward:</b> 💵 ${r.rewardMoney} · ❤️ ${r.rewardHearts}</p>

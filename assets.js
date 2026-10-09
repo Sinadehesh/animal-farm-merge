@@ -43,6 +43,17 @@ const ASSETS = {
         shopkeeper: 'assets/characters/shopkeeper.svg',
     },
 
+    // Head-and-shoulders portraits, shown in a round frame in the town and in
+    // each townsperson's popup. 384px copies of the originals in assets/ghibli/.
+    // null = frame the full-body character drawing above instead.
+    portraits: {
+        mayor: 'assets/characters/portraits/mayor.jpg',
+        marnie: 'assets/characters/portraits/marnie.jpg',
+        robin: null,
+        willy: 'assets/characters/portraits/willy.jpg',
+        sandy: 'assets/characters/portraits/sandy.jpg',
+    },
+
     // Things inside the market.
     props: {
         counter: 'assets/props/counter.svg',
