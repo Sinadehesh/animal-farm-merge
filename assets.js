@@ -72,8 +72,9 @@ const ASSETS = {
         flower: null,
     },
 
-    // Producer sprites per board (Feed Bin, Wheat Sack, ...), indexed by level - 1:
-    // [Basic, Sturdy, Big, Grand, Golden]. Missing entries use the emoji tile.
+    // Producer sprites per board, indexed by level - 1: three parts (levels 1-3),
+    // then the five working levels (4-8). Names are in PRODUCERS in game.js.
+    // Missing entries use the emoji tile.
     producers: {
         barn: [],
         hay: [],
