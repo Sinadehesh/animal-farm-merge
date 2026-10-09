@@ -112,10 +112,35 @@ const ASSETS = {
             'assets/items/special/coin_5.png',
             'assets/items/special/coin_6.png',
         ],
-        gem: [],        // 💎 Gems: 1, 3, 8, 20
-        energy: [],     // ⚡ Energy: 2, 6, 16, 40, 100
-        xp: [],         // ⭐ XP stars: 1, 3, 8, 20, 50
-        season: [],     // 🍀 Season Pass items: 1, 3, 8, 20 points (one look for every season)
+        // Gems, piggy banks and tickets: assets/raw/icons_3_gems_piggy_tickets.webp
+        // (the gems keep their sizes; the 2nd ticket is from the _alt sheet).
+        gem: [
+            'assets/items/special/gem_1.png',
+            'assets/items/special/gem_2.png',
+            'assets/items/special/gem_3.png',
+            'assets/items/special/gem_4.png',
+        ],        // 💎 Gems: 1, 3, 8, 20
+        // Energy and XP stars: assets/raw/icons_2_energy_stars.png.
+        energy: [
+            'assets/items/special/energy_1.png',
+            'assets/items/special/energy_2.png',
+            'assets/items/special/energy_3.png',
+            'assets/items/special/energy_4.png',
+            'assets/items/special/energy_5.png',
+        ],     // ⚡ Energy: 2, 6, 16, 40, 100
+        xp: [
+            'assets/items/special/xp_1.png',
+            'assets/items/special/xp_2.png',
+            'assets/items/special/xp_3.png',
+            'assets/items/special/xp_4.png',
+            'assets/items/special/xp_5.png',
+        ],         // ⭐ XP stars: 1, 3, 8, 20, 50
+        season: [
+            'assets/items/special/season_1.png',
+            'assets/items/special/season_2.png',
+            'assets/items/special/season_3.png',
+            'assets/items/special/season_4.png',
+        ],     // 🍀 Season Pass items: 1, 3, 8, 20 points (one look for every season)
         skip: [],       // ⏳ Time Skip: 1h, 2h, 4h, 8h
         charger: [],    // ⏱️ Time Charger: 2h, 4h, 8h, 16h
         unlimited: [],  // ♾️ Unlimited Energy: 5m, 10m, 20m
@@ -123,7 +148,12 @@ const ASSETS = {
         chest_energy: ['assets/items/special/chest_energy_1.png'], // 🔋 Energy Chest
         chest_brown: ['assets/items/special/chest_brown_1.png', 'assets/items/special/chest_brown_2.png'], // Brown Chest, Lv1-2
         chest_blue: ['assets/items/special/chest_blue_1.png', 'assets/items/special/chest_blue_2.png'],    // Blue Chest, Lv1-2
-        piggy: [],      // 🐷 Piggy Bank, Lv1-4
+        piggy: [
+            'assets/items/special/piggy_1.png',
+            'assets/items/special/piggy_2.png',
+            'assets/items/special/piggy_3.png',
+            'assets/items/special/piggy_4.png',
+        ],      // 🐷 Piggy Bank, Lv1-4
     },
 
     // Merge item sprites per board, indexed by tier (0 = the input item).
