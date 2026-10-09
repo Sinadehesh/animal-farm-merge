@@ -165,6 +165,21 @@
         button.spot:focus-visible img { filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 2px #fff); }
         button.spot:active { transform: scale(0.97); }
         .spot.locked img { filter: grayscale(1) brightness(1.1) opacity(0.65); }
+        /* Restoration: a land looks worn (--worn from 1 to 0) until its jobs are done. */
+        .spot.worn img { filter: sepia(calc(var(--worn) * 0.75)) saturate(calc(1 - var(--worn) * 0.45)) brightness(calc(1 - var(--worn) * 0.08)) drop-shadow(0 4px 0 rgba(0, 0, 0, 0.15)); }
+        .restore-tag {
+            position: absolute;
+            left: 4%;
+            top: 4%;
+            padding: 0.2em 0.5em;
+            background: rgba(255, 248, 231, 0.95);
+            border: 2px solid var(--ink);
+            border-radius: 999px;
+            font-weight: 900;
+            font-size: max(9px, 2.7cqw);
+            white-space: nowrap;
+        }
+        .spot.restored .restore-tag { font-size: max(12px, 4cqw); background: none; border: 0; animation: bob 1.4s ease-in-out infinite; }
         .spot-label {
             position: absolute;
             left: 50%;
@@ -649,6 +664,44 @@
         .inv-slot.other { background: #efe6d6; }
         .inv-slot.empty { background: rgba(255, 255, 255, 0.4); border-style: dashed; cursor: default; }
         .xp-row .quest-bar.xp i { background: linear-gradient(90deg, #ffe066, #f5a623); }
+        /* Restoration jobs: the 📋 list and the cards on the boards. */
+        .task-row {
+            display: flex;
+            align-items: center;
+            gap: 2cqw;
+            margin-bottom: 2cqw;
+            padding: 1.5cqw;
+            background: #fff;
+            border: 2px solid var(--ink);
+            border-radius: 12px;
+            text-align: left;
+        }
+        .task-row.ready { background: #e3fbdf; border-color: #2e8c3c; }
+        .task-row .face { width: 10cqw; height: 10cqw; border-radius: 50%; object-fit: cover; object-position: top; border: 2px solid var(--ink); }
+        .task-body { flex: 1; font-size: 3.2cqw; line-height: 1.25; }
+        .task-body small { color: #8a6a50; font-size: 2.6cqw; }
+        .needs { display: flex; flex-wrap: wrap; gap: 1cqw; margin-top: 0.8cqw; }
+        .need { padding: 0.3cqw 1.4cqw; background: #f2ebe0; border-radius: 999px; font-size: 2.7cqw; font-weight: 800; white-space: nowrap; }
+        .need .inline-item { height: 1.3em; }
+        .need.met { background: #c9f2c2; }
+        .task-go {
+            flex: 0 0 auto;
+            padding: 1cqw 2.2cqw;
+            background: #3a8fd8;
+            color: #fff;
+            border: 3px solid var(--ink);
+            border-radius: 12px;
+            box-shadow: 0 3px 0 var(--ink);
+            font-weight: 900;
+            font-size: 2.8cqw;
+            line-height: 1.15;
+            cursor: pointer;
+        }
+        .task-row.ready .task-go { background: #5cc15a; }
+        .restored-note { font-weight: 900; color: #2e8c3c; }
+        .order-card.task-card { border-color: #b8862b; box-shadow: 0 3px 0 #b8862b; background: #fff3c4; }
+        .order-card.task-card.ready { background: #e3fbdf; border-color: #2e8c3c; box-shadow: 0 3px 0 #2e8c3c; }
+        .order-who .hammer { width: 9cqw; height: 9cqw; display: flex; align-items: center; justify-content: center; font-size: 6cqw; }
         .dust-btn { background: #8a5cf0; }
         .undo-btn { background: #5a8fc9; }
         .chain-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5cqw; margin-bottom: 2cqw; }
@@ -668,7 +721,7 @@
         .chain-tile.current { background: #fff3c4; box-shadow: 0 0 0 3px #f5a623; }
         .chain-tile.locked { opacity: 0.4; }
 
-        /* Map: daily gift and quests buttons. */
+        /* Map: daily gift and jobs buttons. */
         .side-buttons { position: absolute; left: 3%; bottom: 3%; z-index: 120; display: flex; gap: 3cqw; }
         .side-btn {
             position: relative;
@@ -758,7 +811,7 @@
         .dialog-art { width: 30cqw; margin-top: -15cqw; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.2)); }
         .dialog-art[hidden] { display: none; }
         .dialog h2 { margin: 1cqw 0 2cqw; font-size: 5.4cqw; font-weight: 900; }
-        .dialog-body { font-size: 3.9cqw; line-height: 1.45; }
+        .dialog-body { font-size: 3.9cqw; line-height: 1.45; max-height: 112cqw; overflow-y: auto; }
         .dialog-body p { margin: 0 0 2cqw; }
         .dialog-body .hint { color: #8a6a50; font-size: 3.4cqw; }
         .inline-item { display: inline-block; height: 1.5em; vertical-align: middle; }
@@ -829,7 +882,7 @@
                 <small id="energy-timer">full</small>
             </button>
             <button class="res res-charge" id="btn-charge" title="Supercharge" hidden>⚡</button>
-            <button class="res res-level" id="btn-level" title="Level and quests">
+            <button class="res res-level" id="btn-level" title="Level and jobs">
                 <span>⭐ <b id="level-val">1</b> <span class="xp-bar"><i id="xp-fill"></i></span></span>
                 <small id="xp-text">0/6</small>
             </button>

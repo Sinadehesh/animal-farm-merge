@@ -119,8 +119,7 @@ const XP_TO_NEXT = [6, 9, 17, 44, 96, 144, 182, 214, 264, 326, 383, 472, 552, 64
 // - Merging to tier 4 or higher (Merge Mansion's level 5) drops an ⭐ XP star,
 //   one size bigger for each tier above that.
 // - Orders pay XP by the tier delivered, like Merge Mansion's tasks (1, 3, 8...).
-// - Each quest pays a quarter of its level's XP, so a level's three quests get
-//   you most of the way.
+// - Restoration jobs (TASKS, further down) pay the most.
 function orderXp(tier) {
     return CURRENCY.xp.values[Math.min(Math.max(tier, 1), CURRENCY.xp.values.length) - 1];
 }
@@ -271,14 +270,15 @@ const res = { money: 0, gems: 0, energy: 0 };
 Object.assign(res, START);
 // When the next ⚡ arrives (ms timestamp), or null when the bar is full.
 let energyAt = null;
-// Counters the quests read from (saved with the game).
+// Counters the restoration jobs read from (saved with the game).
 const stats = { spawned: {}, made: {}, merges: 0, delivered: 0, sold: 0, upgrades: 0, gifts: 0, boxes: 0, webs: 0 };
 // Player toggles (saved with the game). charge = index into CHARGE_MODES;
 // unlimitedUntil = when Unlimited Energy runs out (ms timestamp).
 const settings = { charge: 0, unlimitedUntil: 0 };
-// Player level, XP toward the next level, and each quest's counter value when
-// the level started.
-const quests = { level: 1, xp: 0, baselines: [], done: [] };
+// Player level and XP toward the next level.
+const quests = { level: 1, xp: 0 };
+// Restoration jobs done, and for open jobs the counters they count from.
+const restoration = { done: [], baselines: {} };
 // Daily gift track: the last day claimed and how many days in a row.
 const daily = { lastDay: null, streak: 0 };
 // Rewards and purchases waiting in each board's 🎁 until placed.
@@ -833,19 +833,13 @@ function grantReward(r, title) {
     toast(`${title} ${rewardText(r)}${where.length ? ` · ${where.join(' · ')}` : ''}`, 'good');
 }
 
-// --- XP, QUESTS & PLAYER LEVEL ---
-// XP levels you up, as in Merge Mansion. Each level also has three quests, like
-// Merge Gardens' Daisy's Quests: each one done pays XP, so they lead the way.
-// Progress counts only what happens after the level starts, except "owned"
-// quests, which check the current state.
+// --- XP & PLAYER LEVEL ---
+// XP levels you up, as in Merge Mansion. Most of it comes from restoration jobs
+// (below); orders and ⭐ stars from big merges add the rest.
 
 function xpToNext(level) {
     const last = XP_TO_NEXT.length;
     return level <= last ? XP_TO_NEXT[level - 1] : Math.round(XP_TO_NEXT[last - 1] * 1.12 ** (level - last));
-}
-
-function questXp(level) {
-    return Math.max(2, Math.round(xpToNext(level) / 4));
 }
 
 // Adds XP and levels up as many times as it covers; each new level pays its reward.
@@ -854,7 +848,6 @@ function addXp(n) {
     while (quests.xp >= xpToNext(quests.level)) {
         quests.xp -= xpToNext(quests.level);
         quests.level++;
-        startLevel();
         const reward = levelReward(quests.level);
         grantReward(reward, `⭐ Level ${quests.level}!`);
         // Shown after whatever called this has redrawn the scene.
@@ -870,8 +863,7 @@ function showLevelUp(level, reward) {
         title: `⭐ Level ${level}!`,
         body: `<p class="big-count">⭐ ${level}</p>
                <p><b>Rewards:</b> ${rewardText(reward)}</p>
-               ${land ? `<p>The <b>${AREAS[land].name}</b> is now for sale at the Market!</p>` : ''}
-               <p class="hint">New quests are waiting in 📋.</p>`,
+               ${land ? `<p>The <b>${AREAS[land].name}</b> is now for sale at the Market!</p>` : ''}`,
         actions: [{ label: 'Hooray!', primary: true }],
     });
 }
@@ -880,100 +872,239 @@ function madeCount(mode, tier) {
     return stats.made[`${mode}:${tier}`] || 0;
 }
 
-function makeQuest(mode, tier, target) {
-    return { label: `Make ${itemEmoji(mode, tier)} ${itemName(mode, tier)} ×${target}`, count: () => madeCount(mode, tier), target };
+// --- RESTORATION ---
+// Merge Mansion's tasks (and Merge Gardens' quests): each land has a list of jobs
+// that fix it up, done in order. The first job is buying the land, open from the
+// level its deed unlocks. A job asks for items from your boards (used up when you
+// do it), for something to be done since the job opened, or for owning the land.
+// It pays ⭐ XP and sometimes a chest, and each job done brings the building on
+// the map a little more back to life.
+//   needs: { item: board, tier, n } · { stat, n } · { own: board }
+//   who:   the townsperson who thanks you (their line is shown when it's done)
+
+const TASK_STATS = {
+    boxes: { emoji: '📦', label: 'Open crates' },
+    webs: { emoji: '🕸️', label: 'Free cobwebbed items' },
+    upgrades: { emoji: '🧩', label: 'Merge producer parts' },
+    sold: { emoji: '💵', label: 'Sell items' },
+};
+
+const TASKS = [
+    // Barn: the tutorial, then hens.
+    { id: 'barn1', land: 'barn', name: 'Clear the doorway', who: 'robin', xp: 2, needs: [{ stat: 'boxes', n: 2 }],
+      line: 'Those old crates were blocking everything! Merge next to a crate and it pops open.' },
+    { id: 'barn2', land: 'barn', name: 'Collect the first eggs', who: 'marnie', xp: 2, needs: [{ item: 'barn', tier: 1, n: 2 }],
+      line: 'Eggs already? This old barn still has some life in it!' },
+    { id: 'barn3', land: 'barn', name: 'Brush off the cobwebs', who: 'marnie', xp: 3, needs: [{ stat: 'webs', n: 3 }],
+      line: 'Merge a matching item into a cobwebbed one and it comes right off. Much better!' },
+    { id: 'barn4', land: 'barn', name: 'Fix the feed bin', who: 'robin', xp: 3, needs: [{ stat: 'upgrades', n: 1 }],
+      line: 'Two parts that match make a better one. Keep merging and you\'ll build a whole new Feed Bin!' },
+    { id: 'barn5', land: 'barn', name: 'Make a nest for the chicks', who: 'marnie', xp: 4, reward: { chest: 'brown' },
+      needs: [{ item: 'barn', tier: 2, n: 2 }], line: 'Look at them all snuggled up. Adorable! Here, take this chest.' },
+    { id: 'barn6', land: 'barn', name: 'Haul away the junk', who: 'mayor', xp: 3, needs: [{ stat: 'sold', n: 3 }],
+      line: 'Selling what you don\'t need makes room for what you do. Very tidy!' },
+    { id: 'barn7', land: 'barn', name: 'Welcome the hens', who: 'marnie', xp: 6, needs: [{ item: 'barn', tier: 3, n: 1 }],
+      line: 'A proper hen house at last. They\'ll keep you in eggs forever.' },
+    { id: 'barn8', land: 'barn', name: 'Paint the barn red', who: 'robin', xp: 8, reward: { chest: 'blue' },
+      needs: [{ item: 'barn', tier: 3, n: 2 }], line: 'Now that\'s a barn! You can see it from the whole valley.' },
+    // Crop Field
+    { id: 'farm1', land: 'farm', name: 'Buy the Crop Field', who: 'mayor', xp: 3, needs: [{ own: 'farm' }],
+      line: 'The old field is yours! Let\'s get it growing again.' },
+    { id: 'farm2', land: 'farm', name: 'Pull the weeds', who: 'sandy', xp: 3, needs: [{ stat: 'boxes', n: 3 }],
+      line: 'Weeds out, sunshine in. The soil is waking up!' },
+    { id: 'farm3', land: 'farm', name: 'Sow the first seeds', who: 'sandy', xp: 4, needs: [{ item: 'farm', tier: 1, n: 3 }],
+      line: 'Tuck them in nice and deep. They\'ll be up in no time.' },
+    { id: 'farm4', land: 'farm', name: 'Water the sprouts', who: 'sandy', xp: 5, needs: [{ item: 'farm', tier: 2, n: 2 }],
+      line: 'Little green shoots everywhere!' },
+    { id: 'farm5', land: 'farm', name: 'Fix the scarecrow', who: 'robin', xp: 5, needs: [{ stat: 'upgrades', n: 1 }],
+      line: 'He\'s got his hat back. The crows won\'t dare come near.' },
+    { id: 'farm6', land: 'farm', name: 'Pick the first strawberries', who: 'mayor', xp: 10, reward: { chest: 'brown' },
+      needs: [{ item: 'farm', tier: 3, n: 2 }], line: 'The sweetest strawberries in the valley, I\'d say!' },
+    { id: 'farm7', land: 'farm', name: 'Mend the fence', who: 'robin', xp: 10,
+      needs: [{ item: 'farm', tier: 3, n: 1 }, { item: 'barn', tier: 2, n: 2 }], line: 'A good fence keeps the chicks out of the strawberries.' },
+    // Hay Field
+    { id: 'hay1', land: 'hay', name: 'Buy the Hay Field', who: 'mayor', xp: 4, needs: [{ own: 'hay' }],
+      line: 'More land! You\'re becoming quite the farmer.' },
+    { id: 'hay2', land: 'hay', name: 'Clear out the old straw', who: 'marnie', xp: 5, needs: [{ stat: 'webs', n: 4 }],
+      line: 'That straw was older than me!' },
+    { id: 'hay3', land: 'hay', name: 'Tie the first bundles', who: 'marnie', xp: 6, needs: [{ item: 'hay', tier: 2, n: 2 }],
+      line: 'Neat little bundles, just like your grandma used to make.' },
+    { id: 'hay4', land: 'hay', name: 'Stack the bales', who: 'robin', xp: 10, needs: [{ item: 'hay', tier: 3, n: 2 }],
+      line: 'Stacked nice and high. That\'ll last all winter.' },
+    { id: 'hay5', land: 'hay', name: 'Repair the hay loft', who: 'robin', xp: 12, reward: { chest: 'blue' },
+      needs: [{ item: 'hay', tier: 3, n: 1 }, { item: 'barn', tier: 3, n: 1 }], line: 'Good as new, and the hens found a new hiding spot.' },
+    { id: 'hay6', land: 'hay', name: 'Fill the horse stalls', who: 'marnie', xp: 20, needs: [{ item: 'hay', tier: 4, n: 1 }],
+      line: 'Fresh hay for the horses. Listen to them whinny!' },
+    // Compost Yard
+    { id: 'fert1', land: 'fert', name: 'Buy the Compost Yard', who: 'mayor', xp: 6, needs: [{ own: 'fert' }],
+      line: 'Every great farm starts with great dirt.' },
+    { id: 'fert2', land: 'fert', name: 'Dig the compost pit', who: 'robin', xp: 8, needs: [{ item: 'fert', tier: 2, n: 2 }],
+      line: 'Deep enough to lose a cow in. Not that we would!' },
+    { id: 'fert3', land: 'fert', name: 'Build the compost bins', who: 'robin', xp: 12, needs: [{ item: 'fert', tier: 3, n: 2 }],
+      line: 'Sturdy bins, no smell. Well, less smell.' },
+    { id: 'fert4', land: 'fert', name: 'Turn the compost', who: 'sandy', xp: 20, reward: { chest: 'brown' },
+      needs: [{ item: 'fert', tier: 4, n: 1 }], line: 'Rich, dark compost. My flowers are going to love you.' },
+    { id: 'fert5', land: 'fert', name: 'Feed the field', who: 'sandy', xp: 25,
+      needs: [{ item: 'fert', tier: 4, n: 1 }, { item: 'farm', tier: 3, n: 2 }], line: 'The strawberries are growing twice as fast!' },
+    // Fish Pond
+    { id: 'aqua1', land: 'aqua', name: 'Buy the Fish Pond', who: 'willy', xp: 10, needs: [{ own: 'aqua' }],
+      line: 'A pond of your own! I\'ll teach you everything I know.' },
+    { id: 'aqua2', land: 'aqua', name: 'Clean the pond', who: 'willy', xp: 10, needs: [{ stat: 'webs', n: 4 }],
+      line: 'Clear water at last. I can see the bottom!' },
+    { id: 'aqua3', land: 'aqua', name: 'Feed the shrimp', who: 'willy', xp: 15, needs: [{ item: 'aqua', tier: 3, n: 2 }],
+      line: 'Tiny but hungry. Just like me.' },
+    { id: 'aqua4', land: 'aqua', name: 'Release the goldfish', who: 'willy', xp: 25, reward: { chest: 'blue' },
+      needs: [{ item: 'aqua', tier: 4, n: 2 }], line: 'Look at them shine! Best pond in the valley.' },
+    { id: 'aqua5', land: 'aqua', name: 'Build a little dock', who: 'robin', xp: 40,
+      needs: [{ item: 'aqua', tier: 5, n: 1 }, { item: 'hay', tier: 4, n: 1 }], line: 'Now there\'s somewhere to sit and fish.' },
+    // Flower Garden
+    { id: 'flower1', land: 'flower', name: 'Buy the Flower Garden', who: 'sandy', xp: 15, needs: [{ own: 'flower' }],
+      line: 'Oh, a garden! I\'ve dreamed of this.' },
+    { id: 'flower2', land: 'flower', name: 'Plant a row of daisies', who: 'sandy', xp: 20, needs: [{ item: 'flower', tier: 3, n: 3 }],
+      line: 'Daisies make everyone smile.' },
+    { id: 'flower3', land: 'flower', name: 'Grow tulips for the Mayor', who: 'mayor', xp: 30, needs: [{ item: 'flower', tier: 4, n: 2 }],
+      line: 'Tulips! You remembered my favourite.' },
+    { id: 'flower4', land: 'flower', name: 'Build the rose arch', who: 'robin', xp: 50, reward: { chest: 'blue' },
+      needs: [{ item: 'flower', tier: 5, n: 1 }, { item: 'fert', tier: 4, n: 1 }], line: 'Roses over an arch. Very fancy!' },
+    { id: 'flower5', land: 'flower', name: 'Throw a grand reopening', who: 'mayor', xp: 80, reward: { gems: 50 },
+      needs: [{ item: 'flower', tier: 6, n: 1 }, { item: 'barn', tier: 7, n: 1 }], line: 'The whole town came! The farm is truly alive again.' },
+];
+
+function landTasks(land) {
+    return TASKS.filter(t => t.land === land);
 }
 
-function ownQuest(id) {
-    return { label: `Own the ${AREAS[id].name}`, count: () => (unlocks[id] ? 1 : 0), target: 1, owned: true };
+function taskDone(task) {
+    return restoration.done.includes(task.id);
 }
 
-function deliverQuest(target) {
-    return { label: `Deliver ${target} order${target > 1 ? 's' : ''}`, count: () => stats.delivered, target };
+// Open: not done, the job before it in its land is done, and for a land's first
+// job (buying it), the level its deed unlocks at is reached.
+function taskOpen(task) {
+    if (taskDone(task)) return false;
+    const list = landTasks(task.land);
+    const i = list.indexOf(task);
+    return i === 0 ? quests.level >= AREAS[task.land].level : taskDone(list[i - 1]);
 }
 
-function questsFor(level) {
-    switch (level) {
-        case 1: return [
-            makeQuest('barn', 1, 2),
-            { label: 'Open 📦 crates ×2 (merge next to them)', count: () => stats.boxes, target: 2 },
-            deliverQuest(1),
-        ];
-        case 2: return [
-            makeQuest('barn', 2, 2),
-            { label: 'Free 🕸️ cobwebbed items ×3', count: () => stats.webs, target: 3 },
-            { label: 'Merge two producer parts 🧩', count: () => stats.upgrades, target: 1 },
-        ];
-        case 3: return [ownQuest('farm'), makeQuest('farm', 1, 3), deliverQuest(3)];
-        case 4: return [ownQuest('hay'), makeQuest('barn', 3, 2), { label: 'Sell 3 items', count: () => stats.sold, target: 3 }];
-        case 5: return [ownQuest('fert'), makeQuest('hay', 2, 3), deliverQuest(5)];
-        case 6: return [ownQuest('aqua'), { label: 'Claim 2 daily gifts', count: () => stats.gifts, target: 2 }, deliverQuest(6)];
-        case 7: return [ownQuest('flower'), makeQuest('aqua', 2, 3), deliverQuest(6)];
-        default: {
-            const n = level - 7;
-            return [
-                deliverQuest(5 + n),
-                { label: `Merge ${10 + 5 * n} times`, count: () => stats.merges, target: 10 + 5 * n },
-                { label: `Tap producers ${20 + 10 * n} times`, count: () => Object.values(stats.spawned).reduce((a, b) => a + b, 0), target: 20 + 10 * n },
-            ];
+function openTasks() {
+    return TASKS.filter(taskOpen);
+}
+
+// How far a need has got, out of how many.
+function needProgress(task, need) {
+    if (need.own) return { have: unlocks[need.own] ? 1 : 0, of: 1 };
+    if (need.stat) {
+        const base = (restoration.baselines[task.id] || {})[need.stat] || 0;
+        return { have: Math.min(need.n, Math.max(0, stats[need.stat] - base)), of: need.n };
+    }
+    const have = grids[need.item].filter(c => isFree(c) && !c.type && c.tier === need.tier).length;
+    return { have: Math.min(need.n, have), of: need.n };
+}
+
+function taskReady(task) {
+    return taskOpen(task) && task.needs.every(need => { const p = needProgress(task, need); return p.have >= p.of; });
+}
+
+// A need as a picture and a count, e.g. "🥚 1/2".
+function needLabel(task, need) {
+    const p = needProgress(task, need);
+    const what = need.own ? `🏡 ${AREAS[need.own].name}`
+        : need.stat ? `${TASK_STATS[need.stat].emoji} ${TASK_STATS[need.stat].label}`
+        : `${itemIcon(need.item, need.tier)} ${itemName(need.item, need.tier)}`;
+    return `<span class="need${p.have >= p.of ? ' met' : ''}">${what} ${need.own ? (p.have ? '✓' : '') : `${p.have}/${p.of}`}</span>`;
+}
+
+// Tiers wanted on a board by open jobs, so they glow there like order items.
+function taskWantedTiers(mode) {
+    return openTasks().flatMap(t => t.needs.filter(n => n.item === mode).map(n => n.tier));
+}
+
+function landRestored(land) {
+    return landTasks(land).every(taskDone);
+}
+
+// Jobs that were ready the last time we looked, so each one is announced once.
+const announcedTasks = new Set();
+
+// Called after anything that can move a job forward: starts the count for jobs
+// that just opened, and announces jobs that just became ready.
+function checkTasks() {
+    openTasks().forEach(task => {
+        if (!restoration.baselines[task.id]) {
+            restoration.baselines[task.id] = {};
+            task.needs.forEach(need => { if (need.stat) restoration.baselines[task.id][need.stat] = stats[need.stat]; });
         }
-    }
+        if (taskReady(task) && !announcedTasks.has(task.id)) {
+            announcedTasks.add(task.id);
+            toast(`🔨 Ready: ${task.name}! Tap 📋 to do it.`, 'good');
+        }
+    });
 }
 
-function questProgress(i) {
-    const q = questsFor(quests.level)[i];
-    const value = q.owned ? q.count() : q.count() - (quests.baselines[i] || 0);
-    return Math.min(q.target, Math.max(0, value));
+// Does a job: uses up its items, pays its XP and reward, and shows who's happy.
+function completeTask(id) {
+    const task = TASKS.find(t => t.id === id);
+    if (!task || !taskReady(task)) return;
+    task.needs.forEach(need => {
+        if (!need.item) return;
+        for (let k = 0; k < need.n; k++) grids[need.item][findItem(need.item, need.tier)] = null;
+    });
+    restoration.done.push(task.id);
+    delete restoration.baselines[task.id];
+    lastSale = null;
+    const npc = npcs.find(n => n.id === task.who);
+    const restored = landRestored(task.land);
+    if (task.reward) grantReward(task.reward, '🔨');
+    showDialog({
+        art: npcPicture(npc),
+        artRound: true,
+        title: `✅ ${task.name}`,
+        body: `<p>“${task.line}”</p><p class="hint">— ${npc.name}</p>
+               <p><b>+⭐${task.xp}</b>${task.reward ? ` · ${rewardText(task.reward)}` : ''}</p>
+               ${restored ? `<p class="restored-note">✨ The ${AREAS[task.land].name} is fully restored!</p>` : ''}`,
+        actions: [{ label: 'Lovely!', primary: true }],
+    });
+    // XP last: a level-up popup follows this one.
+    addXp(task.xp);
+    checkTasks();
+    if (AREAS[currentScene]) refreshBoard(currentScene);
 }
 
-function startLevel() {
-    const list = questsFor(quests.level);
-    quests.baselines = list.map(q => (q.owned ? 0 : q.count()));
-    quests.done = list.map(() => false);
-}
-
-// Called after anything that can move a quest forward; pays each one's XP once.
-// A level-up starts new quests, which may already be done (owned land), so it
-// checks again.
-function checkQuests() {
-    for (let guard = 0; guard < 50; guard++) {
-        const level = quests.level;
-        let xp = 0;
-        questsFor(level).forEach((q, i) => {
-            if (!quests.done[i] && questProgress(i) >= q.target) {
-                quests.done[i] = true;
-                xp += questXp(level);
-                toast(`✅ ${q.label} · +⭐${questXp(level)}`, 'good');
-            }
-        });
-        if (!xp) return;
-        addXp(xp);
-        if (quests.level === level) return;
-    }
-}
-
-function openQuests() {
-    const list = questsFor(quests.level);
+// The 📋 job list: XP bar, then each land's open job with what it needs.
+function openTaskLog() {
     const need = xpToNext(quests.level);
-    const reward = levelReward(quests.level + 1);
-    const nextLand = Object.keys(AREAS).find(id => AREAS[id].level === quests.level + 1);
-    const rows = list.map((q, i) => {
-        const p = questProgress(i);
-        const done = p >= q.target;
-        return `<div class="quest${done ? ' done' : ''}">
-                    <span>${done ? '✅' : '⬜'} ${q.label}</span><small>${done ? `+⭐${questXp(quests.level)}` : `${p}/${q.target}`}</small>
-                    <span class="quest-bar"><i style="width:${(100 * p) / q.target}%"></i></span>
+    const nextLand = Object.keys(AREAS).find(id => AREAS[id].level > quests.level);
+    const rows = openTasks().map(task => {
+        const ready = taskReady(task);
+        const done = landTasks(task.land).filter(taskDone).length;
+        return `<div class="task-row${ready ? ' ready' : ''}">
+                    <img class="face" src="${npcPicture(npcs.find(n => n.id === task.who))}" alt="">
+                    <div class="task-body">
+                        <b>${task.name}</b> <small>${AREAS[task.land].name} ${done}/${landTasks(task.land).length}</small>
+                        <div class="needs">${task.needs.map(n => needLabel(task, n)).join('')}</div>
+                    </div>
+                    <button class="task-go" data-id="${task.id}" data-ready="${ready ? 1 : ''}">${ready ? `Do it<br>+⭐${task.xp}` : `Go<br>+⭐${task.xp}`}</button>
                 </div>`;
     }).join('');
     showDialog({
         title: `⭐ Level ${quests.level}`,
         body: `<div class="quest xp-row"><span>⭐ XP to level ${quests.level + 1}</span><small>${quests.xp}/${need}</small>
                    <span class="quest-bar xp"><i style="width:${(100 * quests.xp) / need}%"></i></span></div>
-               ${rows}
-               <p class="hint">Each quest pays ⭐${questXp(quests.level)}. Orders and ⭐ stars from big merges add XP too.
-               Level ${quests.level + 1} pays ${rewardText(reward)}${nextLand ? ` and unlocks the ${AREAS[nextLand].name}` : ''}.</p>`,
+               ${rows || '<p>Every job is done. You restored the whole farm! 🎉</p>'}
+               <p class="hint">Jobs restore your farm and pay ⭐ XP. Orders and ⭐ stars from big merges add XP too.
+               ${nextLand ? `More jobs open at level ${AREAS[nextLand].level} with the ${AREAS[nextLand].name}.` : ''}</p>`,
         actions: [{ label: 'OK' }],
     });
+    dialogBody.querySelectorAll('.task-go').forEach(btn => btn.addEventListener('click', () => {
+        const task = TASKS.find(t => t.id === btn.dataset.id);
+        closeDialog();
+        if (btn.dataset.ready) return completeTask(task.id);
+        // Not ready: go where it can be worked on.
+        const itemNeed = task.needs.find(n => n.item && needProgress(task, n).have < n.n);
+        if (task.needs[0].own) goTo('market');
+        else goTo(itemNeed ? itemNeed.item : unlocks[task.land] ? task.land : 'map');
+    }));
 }
 
 // --- DAILY GIFT ---
@@ -1016,7 +1147,7 @@ function claimDailyGift() {
     daily.lastDay = today();
     stats.gifts++;
     grantReward(DAILY_GIFTS[day - 1], `🎁 Day ${day} gift:`);
-    checkQuests();
+    checkTasks();
     goTo(currentScene);
 }
 
@@ -1179,9 +1310,10 @@ function renderMap() {
 
     Object.keys(AREAS).forEach(id => {
         const area = AREAS[id];
+        const restored = landRestored(id);
         const spot = makeSpot({
             ...MAP_LAYOUT[id],
-            sprite: ASSETS.buildings[id],
+            sprite: (restored && (ASSETS.buildingsRestored || {})[id]) || ASSETS.buildings[id],
             label: area.name,
             locked: !unlocks[id],
             onClick: () => unlocks[id] ? goTo(id) : offerDeed(id),
@@ -1193,18 +1325,24 @@ function renderMap() {
             const ready = npcs.filter(n => n.request && n.request.mode === id && canFulfill(n)).length;
             const parts = [ready && `✓${ready}`, crates[id].length && `🎁${crates[id].length}`].filter(Boolean);
             if (parts.length) addTag(spot, 'badge', parts.join(' '));
+            // Restoration: the building looks worn until its jobs are done.
+            const list = landTasks(id);
+            const done = list.filter(taskDone).length;
+            spot.classList.add(restored ? 'restored' : 'worn');
+            spot.style.setProperty('--worn', (1 - done / list.length).toFixed(2));
+            addTag(spot, 'restore-tag', restored ? '✨' : `🔨${done}/${list.length}`);
         }
         scene.appendChild(spot);
     });
 
-    // Daily gift and quests, always one tap away on the map.
+    // Daily gift and jobs, always one tap away on the map.
     const side = document.createElement('div');
     side.className = 'side-buttons';
     side.innerHTML = `
         <button class="side-btn" id="btn-gift">🎁<small>Gift</small>${dailyAvailable() ? '<span class="badge">!</span>' : ''}</button>
-        <button class="side-btn" id="btn-quests">📋<small>Lv ${quests.level}</small></button>`;
+        <button class="side-btn" id="btn-quests">📋<small>Jobs</small>${openTasks().some(taskReady) ? '<span class="badge">!</span>' : ''}</button>`;
     side.querySelector('#btn-gift').addEventListener('click', openDailyGift);
-    side.querySelector('#btn-quests').addEventListener('click', openQuests);
+    side.querySelector('#btn-quests').addEventListener('click', openTaskLog);
     scene.appendChild(side);
 }
 
@@ -1214,8 +1352,8 @@ function offerDeed(id) {
         showDialog({
             art: ASSETS.buildings[id],
             title: area.name,
-            body: `<p>${area.desc}</p><p class="hint">Reach level ${area.level} to buy this land. Finish your quests to level up.</p>`,
-            actions: [{ label: '📋 Open quests', primary: true, onClick: openQuests }, { label: 'OK' }],
+            body: `<p>${area.desc}</p><p class="hint">Reach level ${area.level} to buy this land. Jobs in 📋 pay the XP to level up.</p>`,
+            actions: [{ label: '📋 Open jobs', primary: true, onClick: openTaskLog }, { label: 'OK' }],
         });
         return;
     }
@@ -1235,7 +1373,7 @@ function buyDeed(id) {
     if (grids[id].filter(Boolean).length <= 1) grids[id] = clutterBoard();
     updateUI();
     toast(`The ${area.name} is yours! Find it on the map.`, 'good');
-    checkQuests();
+    checkTasks();
     goTo(currentScene);
 }
 
@@ -1344,8 +1482,6 @@ function deliver(npc) {
     res.money += r.rewardMoney;
     npc.deliveries++;
     stats.delivered++;
-    // Pay the "deliver" quests at this level before the order's XP can level you up.
-    checkQuests();
     addXp(r.rewardXp);
     const levelUp = npc.deliveries % 5 === 0;
     if (levelUp) res.gems += LEVEL_UP_GEMS;
@@ -1358,7 +1494,7 @@ function deliver(npc) {
     }
 
     generateRequestFor(npc);
-    checkQuests();
+    checkTasks();
     goTo(currentScene); // the town, or the board you delivered from
 }
 
@@ -1565,7 +1701,7 @@ function updateCountdowns() {
 }
 
 document.getElementById('btn-energy').addEventListener('click', () => openEnergy());
-document.getElementById('btn-level').addEventListener('click', openQuests);
+document.getElementById('btn-level').addEventListener('click', openTaskLog);
 chargeBtn.addEventListener('click', cycleCharge);
 document.getElementById('btn-coins').addEventListener('click', openShop);
 document.getElementById('btn-gems').addEventListener('click', openShop);
@@ -1654,6 +1790,21 @@ function refreshBoard(mode, poppedIndices = []) {
 // Deliver button as soon as the item is on the board. Cards for other boards
 // with orders jump straight there.
 function renderOrders(mode, el) {
+    // Restoration jobs that need items from this board come first.
+    openTasks().filter(t => t.needs.some(n => n.item === mode)).forEach(task => {
+        const ready = taskReady(task);
+        const need = task.needs.find(n => n.item === mode);
+        const p = needProgress(task, need);
+        const card = document.createElement('button');
+        card.className = 'order-card task-card' + (ready ? ' ready' : '');
+        card.innerHTML = `
+            <span class="order-who"><span class="hammer">🔨</span><span class="want">${itemIcon(mode, need.tier)}</span></span>
+            <span class="order-pay">${p.have}/${p.of} · ⭐${task.xp}</span>
+            ${ready ? '<span class="order-go">Do it</span>' : `<span class="order-need">${task.name}</span>`}`;
+        card.addEventListener('click', () => (ready ? completeTask(task.id) : openTaskLog()));
+        el.appendChild(card);
+    });
+
     npcs.filter(n => n.request && n.request.mode === mode).forEach(npc => {
         const r = npc.request;
         const ready = canFulfill(npc);
@@ -1916,7 +2067,7 @@ function collectCurrency(mode, index) {
     else { res.energy += value; tickEnergy(); }
     toast(`+${CURRENCY[item.type].emoji}${value}`, 'good');
     updateUI();
-    checkQuests();
+    checkTasks();
     refreshBoard(mode);
 }
 
@@ -2117,7 +2268,7 @@ function sellSelected(mode) {
         selected = null;
         lastSale = { mode, index, item, price };
         updateUI();
-        checkQuests();
+        checkTasks();
         refreshBoard(mode);
     };
     if (item.tier < 5) {
@@ -2159,7 +2310,7 @@ function dustSelected(mode) {
     stats.webs++;
     updateUI();
     toast('🕸️ Dusted off!', 'good');
-    checkQuests();
+    checkTasks();
     refreshBoard(mode, [selected.index]);
 }
 
@@ -2388,7 +2539,7 @@ function handleDragEnd(e) {
         }
     }
 
-    checkQuests();
+    checkTasks();
     refreshBoard(mode, popped);
 }
 
@@ -2434,7 +2585,7 @@ function handleGeneratorClick(mode, index) {
     const at = spawnNear(mode, index, drop);
     stats.spawned[mode] = (stats.spawned[mode] || 0) + 1;
     selected = { mode, index };
-    checkQuests();
+    checkTasks();
     refreshBoard(mode, [at]);
 }
 
@@ -2507,7 +2658,7 @@ function renderGrid(mode, poppedIndices = []) {
     const gridEl = document.getElementById(`grid-${mode}`);
     if (!gridEl) return;
     gridEl.innerHTML = '';
-    const wanted = new Set(npcs.filter(n => n.request && n.request.mode === mode).map(n => n.request.tier));
+    const wanted = new Set(npcs.filter(n => n.request && n.request.mode === mode).map(n => n.request.tier).concat(taskWantedTiers(mode)));
 
     for (let i = 0; i < NUM_CELLS; i++) {
         const cell = document.createElement('div');
@@ -2553,13 +2704,14 @@ function renderGrid(mode, poppedIndices = []) {
 const SAVE_KEY = 'merge-farmstead-save-v1';
 // 2: one ⚡ Energy bar instead of five essentials, and producers with parts.
 // 3: XP levels, inventory, chests and boosters.
-const SAVE_VERSION = 3;
+// 4: restoration jobs instead of level quests.
+const SAVE_VERSION = 4;
 
 function saveGame() {
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
             version: SAVE_VERSION,
-            res, energyAt, shop, crates, inventory, stats, quests, daily, settings, unlocks, maxTier, grids, lastBoard,
+            res, energyAt, shop, crates, inventory, stats, quests, restoration, daily, settings, unlocks, maxTier, grids, lastBoard,
             tickedAt: lastTickAt,
             npcs: npcs.map(({ id, deliveries, request }) => ({ id, deliveries, request })),
         }));
@@ -2595,12 +2747,16 @@ function loadGame() {
         Object.assign(shop, save.shop);
         Object.assign(crates, save.crates);
         Object.assign(stats, save.stats);
-        Object.assign(quests, save.quests);
+        quests.level = save.quests.level || 1;
+        quests.xp = save.quests.xp || 0;
+        if (save.restoration) Object.assign(restoration, save.restoration);
         Object.assign(inventory, save.inventory);
-        if (version < 3) {
-            // Levels came from quests alone before: quests already done this level
-            // count as the XP they pay now.
-            quests.xp = (quests.done || []).filter(Boolean).length * questXp(quests.level);
+        if (version < 4) {
+            // Land bought before restoration jobs existed counts as its first job done.
+            Object.keys(AREAS).forEach(id => { if (unlocks[id] || (save.unlocks || {})[id]) {
+                const first = landTasks(id)[0];
+                if (first.needs[0].own && !restoration.done.includes(first.id)) restoration.done.push(first.id);
+            } });
         }
         Object.assign(daily, save.daily);
         if (save.settings && typeof save.settings.charge === 'number') settings.charge = save.settings.charge;
@@ -2632,7 +2788,9 @@ if (!loadGame()) {
     initTown(true);
     grids.barn = clutterBoard();
 }
-if (!quests.baselines.length) startLevel(); // new game, or a save from before quests
+// Jobs already ready when the game opens are shown by the 📋 badge, not announced.
+openTasks().filter(taskReady).forEach(task => announcedTasks.add(task.id));
+checkTasks();
 tickEnergy(); // catch up on energy and timers that ran while the game was closed
 tickBoards();
 addXp(0); // a migrated save may already have enough XP for its next level

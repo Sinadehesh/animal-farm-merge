@@ -24,6 +24,17 @@ const ASSETS = {
         flower: 'assets/buildings/flower.svg',
     },
 
+    // The same buildings once their restoration jobs are all done (null = keep
+    // the picture above; until then it is shown faded and worn).
+    buildingsRestored: {
+        barn: null,
+        farm: null,
+        hay: null,
+        fert: null,
+        aqua: null,
+        flower: null,
+    },
+
     // Shops and houses around the town square.
     town: {
         townhall: 'assets/town/townhall.svg',

@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**198 assets:** 16 done ✅, 25 placeholders 🟡, 157 missing ⬜.
+**204 assets:** 16 done ✅, 25 placeholders 🟡, 163 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -33,6 +33,21 @@ Same camera angle for all: front view, slightly from above, whole building with 
 | 🟡 | Compost Yard | `assets/buildings/fert.svg` → `assets/buildings/fert.png` | a compost yard with bins |
 | 🟡 | Fish Pond | `assets/buildings/aqua.svg` → `assets/buildings/aqua.png` | a fish pond with lily pads |
 | 🟡 | Flower Garden | `assets/buildings/flower.svg` → `assets/buildings/flower.png` | a flower garden with an arch |
+
+### Restored versions (6, optional)
+
+Each land shows faded and worn on the map until its restoration jobs are done, then in full colour. A
+second picture of the fixed-up building (fresh paint, flowers, a little sparkle) makes that moment better.
+List them under `buildingsRestored` in `assets.js`.
+
+| | Land | File |
+|---|---|---|
+| ⬜ | Barn restored | `assets/buildings/barn_restored.png` |
+| ⬜ | Crop Field restored | `assets/buildings/farm_restored.png` |
+| ⬜ | Hay Field restored | `assets/buildings/hay_restored.png` |
+| ⬜ | Compost Yard restored | `assets/buildings/fert_restored.png` |
+| ⬜ | Fish Pond restored | `assets/buildings/aqua_restored.png` |
+| ⬜ | Flower Garden restored | `assets/buildings/flower_restored.png` |
 
 ## 3. Town houses (5)
 
