@@ -1081,142 +1081,124 @@ const TASK_STATS = {
 };
 
 const TASKS = [
-    // Barn (chapters 1 and 2): the tutorial, then the animals come home.
+    // Barn (days 1 and 2): the tutorial, then the animals come home.
     { id: 'barn1', land: 'barn', name: 'Clear the doorway', who: 'mayor', xp: 2, needs: [{ stat: 'boxes', n: 2 }],
-      line: 'You did it! Keep merging, we have a lot of work to do!' },
+      line: 'Great job!' },
     { id: 'barn2', land: 'barn', name: 'Collect the first eggs', who: 'marnie', xp: 2, needs: [{ item: 'barn', tier: 1, n: 2 }],
-      line: 'Hi, I\'m Marnie! Eggs already? This old barn still has some life in it!' },
+      line: 'Eggs! Yay!' },
     { id: 'barn3', land: 'barn', name: 'Brush off the cobwebs', who: 'marnie', xp: 3, needs: [{ stat: 'webs', n: 3 }],
-      line: 'Much better! Merge a matching item into a cobwebbed one and it comes right off.' },
+      line: 'So clean!' },
     { id: 'barn4', land: 'barn', name: 'Fix the feed bin', who: 'robin', xp: 3, needs: [{ stat: 'upgrades', n: 1 }],
-      line: 'Ha! Perfect. Two matching parts make a better one, just like a good hammer.' },
+      line: 'Perfect!' },
     { id: 'barn5', land: 'barn', name: 'Make a nest for the chicks', who: 'marnie', xp: 4, reward: { chest: 'brown' },
-      needs: [{ item: 'barn', tier: 2, n: 2 }], line: 'Look at them all snuggled up. Amazing! Here, take this chest.' },
+      needs: [{ item: 'barn', tier: 2, n: 2 }], line: 'So cute!' },
     { id: 'barn6', land: 'barn', name: 'Haul away the junk', who: 'mayor', xp: 3, needs: [{ stat: 'sold', n: 3 }],
-      line: 'The storm left junk everywhere. Selling it makes room. You\'re a hero!' },
+      line: 'Much tidier!' },
     { id: 'barn7', land: 'barn', name: 'Welcome the hens', who: 'marnie', xp: 6, needs: [{ item: 'barn', tier: 3, n: 1 }],
-      line: 'The hens are coming home! I knew they would.' },
+      line: 'The hens are back!' },
     { id: 'barn8', land: 'barn', name: 'Paint the barn red', who: 'marnie', xp: 8, reward: { chest: 'blue' },
-      needs: [{ item: 'barn', tier: 3, n: 2 }], line: 'The barn is beautiful! Look, the animals are already coming back!' },
-    // Crop Field (chapter 3)
+      needs: [{ item: 'barn', tier: 3, n: 2 }], line: 'Beautiful barn!' },
+    // Crop Field (day 3)
     { id: 'farm1', land: 'farm', name: 'Buy the Crop Field', who: 'mayor', xp: 3, needs: [{ own: 'farm' }],
-      line: 'The old field is yours! Marnie will show you how to get it growing.' },
+      line: 'Your field!' },
     { id: 'farm2', land: 'farm', name: 'Pull the weeds', who: 'marnie', xp: 3, needs: [{ stat: 'boxes', n: 3 }],
-      line: 'Weeds out, sunshine in. The soil is waking up!' },
+      line: 'Weeds gone!' },
     { id: 'farm3', land: 'farm', name: 'Sow the first seeds', who: 'marnie', xp: 4, needs: [{ item: 'farm', tier: 1, n: 3 }],
-      line: 'Tuck them in nice and deep. We\'re so hungry, every seed counts!' },
+      line: 'Seeds in!' },
     { id: 'farm4', land: 'farm', name: 'Water the sprouts', who: 'marnie', xp: 5, needs: [{ item: 'farm', tier: 2, n: 2 }],
-      line: 'Little green shoots everywhere. Amazing!' },
+      line: 'Sprouts!' },
     { id: 'farm5', land: 'farm', name: 'Fix the scarecrow', who: 'robin', xp: 5, needs: [{ stat: 'upgrades', n: 1 }],
-      line: 'He\'s got his hat back. The crows won\'t dare come near.' },
+      line: 'Scarecrow fixed!' },
     { id: 'farm6', land: 'farm', name: 'Pick the first strawberries', who: 'marnie', xp: 10, reward: { chest: 'brown' },
-      needs: [{ item: 'farm', tier: 3, n: 2 }], line: 'Now we have food! The sweetest strawberries in Sunnyvale.' },
+      needs: [{ item: 'farm', tier: 3, n: 2 }], line: 'Food!' },
     { id: 'farm7', land: 'farm', name: 'Mend the fence', who: 'robin', xp: 10,
-      needs: [{ item: 'farm', tier: 3, n: 1 }, { item: 'barn', tier: 2, n: 2 }], line: 'A good fence keeps the chicks out of the strawberries. Perfect!' },
-    // Hay Field (chapter 3)
+      needs: [{ item: 'farm', tier: 3, n: 1 }, { item: 'barn', tier: 2, n: 2 }], line: 'Nice fence!' },
+    // Hay Field (day 3)
     { id: 'hay1', land: 'hay', name: 'Buy the Hay Field', who: 'mayor', xp: 4, needs: [{ own: 'hay' }],
-      line: 'More land! Now the animals will have hay all winter.' },
+      line: 'More land!' },
     { id: 'hay2', land: 'hay', name: 'Clear out the old straw', who: 'marnie', xp: 5, needs: [{ stat: 'webs', n: 4 }],
-      line: 'The storm soaked every bit of it. Fresh straw, here we come!' },
+      line: 'Fresh straw!' },
     { id: 'hay3', land: 'hay', name: 'Tie the first bundles', who: 'marnie', xp: 6, needs: [{ item: 'hay', tier: 2, n: 2 }],
-      line: 'Neat little bundles. You\'re a natural!' },
+      line: 'Neat bundles!' },
     { id: 'hay4', land: 'hay', name: 'Stack the bales', who: 'robin', xp: 10, needs: [{ item: 'hay', tier: 3, n: 2 }],
-      line: 'Stacked nice and high. That\'ll last all winter.' },
+      line: 'Stacked!' },
     { id: 'hay5', land: 'hay', name: 'Repair the hay loft', who: 'robin', xp: 12, reward: { chest: 'blue' },
-      needs: [{ item: 'hay', tier: 3, n: 1 }, { item: 'barn', tier: 3, n: 1 }], line: 'Good as new. Ha! I\'m getting my touch back.' },
+      needs: [{ item: 'hay', tier: 3, n: 1 }, { item: 'barn', tier: 3, n: 1 }], line: 'Good as new!' },
     { id: 'hay6', land: 'hay', name: 'Fill the horse stalls', who: 'marnie', xp: 20, needs: [{ item: 'hay', tier: 4, n: 1 }],
-      line: 'Fresh hay for the horses. The old farm is alive again!' },
-    // Compost Yard (chapter 4)
+      line: 'Happy horses!' },
+    // Compost Yard (day 4)
     { id: 'fert1', land: 'fert', name: 'Buy the Compost Yard', who: 'mayor', xp: 6, needs: [{ own: 'fert' }],
-      line: 'Every great town starts with great soil.' },
+      line: 'Your yard!' },
     { id: 'fert2', land: 'fert', name: 'Dig the compost pit', who: 'robin', xp: 8, needs: [{ item: 'fert', tier: 2, n: 2 }],
-      line: 'The storm blew leaves everywhere. Into the pit they go!' },
+      line: 'Great pit!' },
     { id: 'fert3', land: 'fert', name: 'Build the compost bins', who: 'robin', xp: 12, needs: [{ item: 'fert', tier: 3, n: 2 }],
-      line: 'Sturdy bins, built to last. Perfect!' },
+      line: 'Sturdy bins!' },
     { id: 'fert4', land: 'fert', name: 'Turn the compost', who: 'sandy', xp: 20, reward: { chest: 'brown' },
-      needs: [{ item: 'fert', tier: 4, n: 1 }], line: 'Rich, dark compost. My flowers are going to love you.' },
+      needs: [{ item: 'fert', tier: 4, n: 1 }], line: 'Rich soil!' },
     { id: 'fert5', land: 'fert', name: 'Feed the field', who: 'marnie', xp: 25,
-      needs: [{ item: 'fert', tier: 4, n: 1 }, { item: 'farm', tier: 3, n: 2 }], line: 'The strawberries are growing twice as fast!' },
-    // Fish Pond (chapter 4)
+      needs: [{ item: 'fert', tier: 4, n: 1 }, { item: 'farm', tier: 3, n: 2 }], line: 'Growing fast!' },
+    // Fish Pond (day 4)
     { id: 'aqua1', land: 'aqua', name: 'Buy the Fish Pond', who: 'willy', xp: 10, needs: [{ own: 'aqua' }],
-      line: 'A pond of your own! I\'ll teach you everything I know.' },
+      line: 'Your pond!' },
     { id: 'aqua2', land: 'aqua', name: 'Clean the pond', who: 'willy', xp: 10, needs: [{ stat: 'webs', n: 4 }],
-      line: 'The storm filled it with mud. Now I can see the bottom!' },
+      line: 'Clean water!' },
     { id: 'aqua3', land: 'aqua', name: 'Welcome the frogs', who: 'willy', xp: 15, needs: [{ item: 'aqua', tier: 3, n: 2 }],
-      line: 'Ribbit! Hear that? The pond is singing again.' },
+      line: 'Ribbit!' },
     { id: 'aqua4', land: 'aqua', name: 'Release the goldfish', who: 'willy', xp: 25, reward: { chest: 'blue' },
-      needs: [{ item: 'aqua', tier: 4, n: 2 }], line: 'Look at them shine! Best pond in Sunnyvale.' },
+      needs: [{ item: 'aqua', tier: 4, n: 2 }], line: 'So shiny!' },
     { id: 'aqua5', land: 'aqua', name: 'Build a little dock', who: 'robin', xp: 40,
-      needs: [{ item: 'aqua', tier: 5, n: 1 }, { item: 'hay', tier: 4, n: 1 }], line: 'Now there\'s somewhere to sit and fish.' },
-    // Flower Garden (chapter 5)
+      needs: [{ item: 'aqua', tier: 5, n: 1 }, { item: 'hay', tier: 4, n: 1 }], line: 'Nice dock!' },
+    // Flower Garden (day 5)
     { id: 'flower1', land: 'flower', name: 'Buy the Flower Garden', who: 'sandy', xp: 15, needs: [{ own: 'flower' }],
-      line: 'Oh, a garden! The storm took every one of my flowers.' },
+      line: 'A garden!' },
     { id: 'flower2', land: 'flower', name: 'Plant a row of daisies', who: 'sandy', xp: 20, needs: [{ item: 'flower', tier: 3, n: 3 }],
-      line: 'Daisies make everyone smile.' },
+      line: 'Daisies!' },
     { id: 'flower3', land: 'flower', name: 'Grow tulips for the Mayor', who: 'mayor', xp: 30, needs: [{ item: 'flower', tier: 4, n: 2 }],
-      line: 'Tulips! You remembered my favourite.' },
+      line: 'My favourite!' },
     { id: 'flower4', land: 'flower', name: 'Build the rose arch', who: 'robin', xp: 50, reward: { chest: 'blue' },
-      needs: [{ item: 'flower', tier: 5, n: 1 }, { item: 'fert', tier: 4, n: 1 }], line: 'Roses over an arch. Very fancy!' },
+      needs: [{ item: 'flower', tier: 5, n: 1 }, { item: 'fert', tier: 4, n: 1 }], line: 'Fancy!' },
     { id: 'flower5', land: 'flower', name: 'Plant the festival garden', who: 'sandy', xp: 80, reward: { chest: 'blue' },
-      needs: [{ item: 'flower', tier: 6, n: 1 }, { item: 'barn', tier: 7, n: 1 }], line: 'The garden is ready for a festival. It\'s perfect!' },
-    // Sunnyvale itself (chapters 4 and 5): clear the fog, then rebuild each house
-    // on the town square. Opens once the old farm is back (chapter 3).
+      needs: [{ item: 'flower', tier: 6, n: 1 }, { item: 'barn', tier: 7, n: 1 }], line: 'Party ready!' },
+    // Sunnyvale itself (days 4 and 5): clear the fog, then rebuild each house
+    // on the town square. Opens once the old farm is back (day 3).
     { id: 'town1', land: 'town', after: ['farm7', 'hay6'], name: 'Clear the fog from the square', who: 'mayor', xp: 15,
-      needs: [{ stat: 'sold', n: 5 }], line: 'The fog is lifting! I can see the fountain again.' },
+      needs: [{ stat: 'sold', n: 5 }], line: 'Fog gone!' },
     { id: 'town2', land: 'town', house: 'carpenter', name: 'Rebuild Robin\'s workshop', who: 'robin', xp: 20, reward: { chest: 'brown' },
-      needs: [{ item: 'hay', tier: 4, n: 1 }, { item: 'barn', tier: 4, n: 1 }], line: 'Ha! Perfect. With my workshop back, I can fix anything.' },
+      needs: [{ item: 'hay', tier: 4, n: 1 }, { item: 'barn', tier: 4, n: 1 }], line: 'My workshop!' },
     { id: 'town3', land: 'town', house: 'ranch', name: 'Fix up Marnie\'s ranch', who: 'marnie', xp: 25,
-      needs: [{ item: 'barn', tier: 5, n: 1 }, { item: 'farm', tier: 4, n: 2 }], line: 'Home sweet home! The animals have a proper ranch again.' },
+      needs: [{ item: 'barn', tier: 5, n: 1 }, { item: 'farm', tier: 4, n: 2 }], line: 'Home sweet home!' },
     { id: 'town4', land: 'town', house: 'fishshop', name: 'Reopen Willy\'s fish shop', who: 'willy', xp: 35, reward: { chest: 'blue' },
-      needs: [{ item: 'aqua', tier: 4, n: 1 }, { item: 'fert', tier: 4, n: 1 }], line: 'Fresh fish for everyone! The villagers are finally smiling again.' },
+      needs: [{ item: 'aqua', tier: 4, n: 1 }, { item: 'fert', tier: 4, n: 1 }], line: 'Fish for all!' },
     { id: 'town5', land: 'town', house: 'flowershop', name: 'Reopen Sandy\'s flower shop', who: 'sandy', xp: 45,
-      needs: [{ item: 'flower', tier: 4, n: 2 }], line: 'Flowers in every window. Sunnyvale smells wonderful again!' },
+      needs: [{ item: 'flower', tier: 4, n: 2 }], line: 'Flowers!' },
     { id: 'town6', land: 'town', house: 'townhall', name: 'Restore the Town Hall', who: 'mayor', xp: 80, reward: { chest: 'blue' },
       needs: [{ item: 'barn', tier: 6, n: 1 }, { item: 'hay', tier: 5, n: 1 }, { item: 'aqua', tier: 5, n: 1 }],
-      line: 'The Town Hall shines again! You\'re a hero!' },
+      line: 'You\'re a hero!' },
     { id: 'town7', land: 'town', name: 'Throw the Sunnyvale festival', who: 'marnie', xp: 100, reward: { gems: 50 },
-      needs: [{ item: 'flower', tier: 6, n: 1 }, { item: 'farm', tier: 6, n: 1 }], line: 'What a party! Thank you for saving our home!' },
+      needs: [{ item: 'flower', tier: 6, n: 1 }, { item: 'farm', tier: 6, n: 1 }], line: 'Thank you!' },
 ];
 
 // --- STORY ---
-// Sunnyvale after the storm: an intro with the Mayor, then five chapters. Each
-// chapter is a set of jobs. Its scene plays on the map once it becomes the first
-// chapter with jobs left, and a last scene plays when every job is done.
+// Sunnyvale after the storm, told in as few words as possible: the Mayor's
+// "Save us!", then five days. Each day is a set of jobs; its bubble plays on the
+// map once it's the first day with jobs left, and a last one when every job is done.
 const TOWN_NAME = 'Sunnyvale';
 
-// Speech bubbles: [who, line, answer button].
-const STORY_INTRO = [
-    ['mayor', 'Oh, thank goodness you\'re here! A terrible storm wrecked our beautiful Sunnyvale.'],
-    ['mayor', 'We\'ve lost almost everything. Please, can you help us?', 'Yes, I\'ll help!'],
-    ['mayor', 'Wonderful! Let\'s start by clearing the mess at the old barn.'],
-];
+// Speech bubbles: [who, line, answer button]. Kept tiny: players want to merge.
+const STORY_INTRO = [['mayor', 'Save us!', 'OK!']];
 
+// Each "day" is a set of jobs, with one bubble when it starts.
 const CHAPTERS = [
-    { title: 'The Arrival', goal: 'Clear the barn doorway and learn to merge.',
-      scene: [['mayor', 'A terrible storm wrecked our beautiful Sunnyvale. Let\'s start with the old barn!']],
-      jobs: ['barn1', 'barn2'] },
-    { title: 'Fixing the Barn', goal: 'Mend the barn so the animals come home.',
-      scene: [['robin', 'Name\'s Robin. I build things. Or I did, before the storm rusted my tools.'],
-              ['marnie', 'And I\'m Marnie! The barn is falling apart. Fix it up and the animals will come back.']],
-      jobs: ['barn3', 'barn4', 'barn5', 'barn6', 'barn7', 'barn8'] },
-    { title: 'The Old Farm', goal: 'Get the fields growing and the hay in.',
-      scene: [['marnie', 'My fields are a total disaster after that storm.'],
-              ['marnie', 'Merge some seeds and we can grow food again. We\'re so hungry!']],
+    { scene: [['mayor', 'Save us!']], jobs: ['barn1', 'barn2'] },
+    { scene: [['robin', 'Fix the barn!']], jobs: ['barn3', 'barn4', 'barn5', 'barn6', 'barn7', 'barn8'] },
+    { scene: [['marnie', 'Grow food!']],
       jobs: ['farm1', 'farm2', 'farm3', 'farm4', 'farm5', 'farm6', 'farm7', 'hay1', 'hay2', 'hay3', 'hay4', 'hay5', 'hay6'] },
-    { title: 'The Town Center', goal: 'Clear the fog and reopen the shops.',
-      scene: [['mayor', 'You\'ve saved the farm! But look at the town square... it\'s still a mess.'],
-              ['mayor', 'Let\'s clear that thick fog and get the shops open again!']],
+    { scene: [['mayor', 'Fix the town!']],
       jobs: ['town1', 'town2', 'town3', 'town4', 'fert1', 'fert2', 'fert3', 'fert4', 'fert5', 'aqua1', 'aqua2', 'aqua3', 'aqua4', 'aqua5'] },
-    { title: 'A Town Reborn', goal: 'Restore the Town Hall and throw a festival.',
-      scene: [['robin', 'Town\'s looking good. Just one thing left: the Town Hall.'],
-              ['robin', 'It\'s gonna take a lot of merging. Think you can handle it?']],
-      jobs: ['town5', 'town6', 'town7', 'flower1', 'flower2', 'flower3', 'flower4', 'flower5'] },
+    { scene: [['robin', 'Fix the Town Hall!']], jobs: ['town5', 'town6', 'town7', 'flower1', 'flower2', 'flower3', 'flower4', 'flower5'] },
 ];
 
-const STORY_END = [
-    ['mayor', 'I can hardly believe my eyes. Sunnyvale is even better than before!'],
-    ['marnie', 'And the Country Fair is back every weekend. Thank you for saving our home!'],
-];
+const STORY_END = [['mayor', 'You saved us!', 'Yay!']];
 
 // Which scenes have played. Saved.
 const story = { intro: false, seen: [], ended: false };
@@ -1227,7 +1209,7 @@ function chapterOf(id) {
     return CHAPTERS.findIndex(c => c.jobs.includes(id));
 }
 
-// The first chapter with jobs left, or -1 once every job is done.
+// The first day (chapter) with jobs left, or -1 once every job is done.
 function currentChapter() {
     return CHAPTERS.findIndex(c => !c.jobs.every(id => restoration.done.includes(id)));
 }
@@ -1241,8 +1223,8 @@ function playScene(title, lines, extra = '', then = null) {
         art: npcPicture(npc),
         artRound: true,
         title,
-        body: `<p>“${text}”</p><p class="hint">— ${npc.name}</p>${last ? extra : ''}`,
-        actions: [{ label: answer || (last ? 'Let\'s go!' : 'Next'), primary: true,
+        body: `<p class="story-line">“${text}”</p><p class="hint">— ${npc.name}</p>${last ? extra : ''}`,
+        actions: [{ label: answer || 'OK!', primary: true,
             onClick: () => (last ? then && then() : playScene(title, lines.slice(1), extra, then)) }],
     });
 }
@@ -1250,20 +1232,18 @@ function playScene(title, lines, extra = '', then = null) {
 function playIntro() {
     story.intro = true;
     if (!story.seen.includes(0)) story.seen.push(0);
-    playScene(`📖 Chapter 1: ${CHAPTERS[0].title}`, STORY_INTRO);
+    playScene('📖 Day 1', STORY_INTRO);
 }
 
-// A chapter's scene, ending with its goal and the first job it asks for.
+// A day's bubble, with the items its first job asks for.
 function playChapter(i) {
-    const ch = CHAPTERS[i];
-    const first = openTasks().find(t => ch.jobs.includes(t.id));
-    const extra = `<p class="chapter-goal">🎯 ${ch.goal}</p>`
-        + (first ? `<div class="needs"><b>${first.name}:</b> ${first.needs.map(n => needLabel(first, n)).join('')}</div>` : '');
-    playScene(`📖 Chapter ${i + 1}: ${ch.title}`, ch.scene, extra);
+    const first = openTasks().find(t => CHAPTERS[i].jobs.includes(t.id));
+    const extra = first ? `<div class="needs">${first.needs.map(n => needLabel(first, n)).join('')}</div>` : '';
+    playScene(`📖 Day ${i + 1}`, CHAPTERS[i].scene, extra);
 }
 
 // Every second: the first daily gift after the tutorial, then (on the map, with
-// no dialog open) a new chapter's scene or the ending.
+// no dialog open) a new day's bubble or the ending.
 function syncStory() {
     if (!tutorial.done || !dialogEl.hidden) return;
     if (giftAfterTutorial) {
@@ -1275,7 +1255,7 @@ function syncStory() {
     if (i === -1) {
         if (!story.ended) {
             story.ended = true;
-            playScene(`🎉 ${TOWN_NAME} is reborn!`, STORY_END);
+            playScene(`🎉 ${TOWN_NAME} saved!`, STORY_END);
         }
     } else if (!story.seen.includes(i)) {
         story.seen.push(i);
@@ -1385,8 +1365,8 @@ function completeTask(id) {
         title: `✅ ${task.name}`,
         body: `<p>“${task.line}”</p><p class="hint">— ${npc.name}</p>
                <p><b>+⭐${task.xp}</b>${task.reward ? ` · ${rewardText(task.reward)}` : ''}</p>
-               ${restored ? `<p class="restored-note">✨ ${AREAS[task.land] ? `The ${AREAS[task.land].name} is` : `${TOWN_NAME} is`} fully restored!</p>` : ''}`,
-        actions: [{ label: 'Lovely!', primary: true }],
+               ${restored ? `<p class="restored-note">✨ ${landName(task.land)} restored!</p>` : ''}`,
+        actions: [{ label: 'Yay!', primary: true }],
     });
     // XP last: a level-up popup follows this one.
     addXp(task.xp);
@@ -1403,7 +1383,7 @@ function openTaskLog() {
         const ready = taskReady(task);
         const done = landTasks(task.land).filter(taskDone).length;
         const ch = chapterOf(task.id);
-        const heading = ch !== chapter ? `<h3 class="chapter-h">📖 Chapter ${ch + 1}: ${CHAPTERS[ch].title}</h3>` : '';
+        const heading = ch !== chapter ? `<h3 class="chapter-h">📖 Day ${ch + 1}</h3>` : '';
         chapter = ch;
         return `${heading}<div class="task-row${ready ? ' ready' : ''}">
                     <img class="face" src="${npcPicture(npcs.find(n => n.id === task.who))}" alt="">
@@ -1418,9 +1398,8 @@ function openTaskLog() {
         title: `⭐ Level ${quests.level}`,
         body: `<div class="quest xp-row"><span>⭐ XP to level ${quests.level + 1}</span><small>${quests.xp}/${need}</small>
                    <span class="quest-bar xp"><i style="width:${(100 * quests.xp) / need}%"></i></span></div>
-               ${rows || `<p>Every job is done. You brought ${TOWN_NAME} back to life! 🎉</p>`}
-               <p class="hint">Jobs rebuild ${TOWN_NAME} and pay ⭐ XP. Orders and ⭐ stars from big merges add XP too.
-               ${nextLand ? `More jobs open at level ${AREAS[nextLand].level} with the ${AREAS[nextLand].name}.` : ''}</p>`,
+               ${rows || '<p>All done! 🎉</p>'}
+               ${nextLand ? `<p class="hint">More jobs at level ${AREAS[nextLand].level}.</p>` : ''}`,
         actions: [{ label: 'OK' }],
     });
     dialogBody.querySelectorAll('.task-go').forEach(btn => btn.addEventListener('click', () => {
@@ -1921,20 +1900,20 @@ function renderMarket() {
 // `scene`: where the step happens; elsewhere the hand points the way there.
 
 const TUTORIAL = [
-    { scene: 'map', who: 'mayor', text: 'Let\'s start by clearing the mess at the old barn. Tap the Barn!',
+    { scene: 'map', who: 'mayor', text: 'Tap the Barn!',
       target: () => document.querySelector('#scene-map button.spot[data-id="barn"]'), done: () => currentScene === 'barn' || stats.merges > 0 },
-    { scene: 'barn', who: 'mayor', text: 'Tap the Feed Bin to make feed. Each tap costs ⚡1.',
+    { scene: 'barn', who: 'mayor', text: 'Tap the Feed Bin!',
       target: () => cellItem('barn', grids.barn.findIndex(c => isWorkingProducer(c) && isFree(c))), done: () => statNow('taps') >= 2 },
-    { scene: 'barn', who: 'mayor', text: 'Now drag one Feed onto another to merge them into an Egg!', drag: true,
+    { scene: 'barn', who: 'mayor', text: 'Drag Feed onto Feed to merge them!', drag: true,
       target: () => feedPair().map(i => cellItem('barn', i)), done: () => stats.merges >= 1,
       // Not two Feed to merge (a lucky part dropped instead): make another first.
-      fallback: { text: 'Tap the Feed Bin again for a second Feed.', target: () => cellItem('barn', grids.barn.findIndex(c => isWorkingProducer(c) && isFree(c))) } },
-    { scene: 'barn', who: 'mayor', text: 'You did it! Merge right next to a 📦 crate and it pops open.',
+      fallback: { text: 'Tap the Feed Bin again!', target: () => cellItem('barn', grids.barn.findIndex(c => isWorkingProducer(c) && isFree(c))) } },
+    { scene: 'barn', who: 'mayor', text: 'Merge next to a 📦 crate!',
       target: () => cellItem('barn', grids.barn.findIndex(c => c && c.type === 'box')), done: () => stats.boxes >= 1 },
-    { scene: 'barn', who: 'marnie', text: 'Hi, I\'m Marnie! I\'d love an Egg. When my order turns green, tap Deliver!',
+    { scene: 'barn', who: 'marnie', text: 'Deliver my Egg!',
       target: () => document.querySelector('#scene-barn .order-card.ready:not(.task-card)') || document.querySelector('#scene-barn .order-card:not(.task-card):not(.other)'),
       done: () => stats.delivered >= 1 },
-    { scene: 'map', who: 'mayor', text: 'Jobs rebuild Sunnyvale and pay ⭐ XP. Tap 📋 Jobs and do the first one!',
+    { scene: 'map', who: 'mayor', text: 'Tap 📋 Jobs!',
       target: () => document.querySelector('#btn-quests'), done: () => stats.jobs >= 1 },
 ];
 const tutorial = { step: 0, done: false };
@@ -1960,7 +1939,7 @@ function endTutorial(finished = false) {
     tutorial.done = true;
     tutorialEl.hidden = true;
     giftAfterTutorial = true;
-    if (finished) toast('You\'re all set! Keep merging, there\'s a lot to rebuild. 🎉', 'good');
+    if (finished) toast('All set! 🎉', 'good');
 }
 
 // Moves the tutorial on and points at the current step's target.
@@ -1975,13 +1954,13 @@ function updateTutorial() {
     if (currentScene !== step.scene) {
         if (step.scene === 'map') {
             target = backBtn;
-            text = 'Head back to the map.';
+            text = 'Back to the map!';
         } else if (currentScene === 'map') {
             target = document.querySelector(`#scene-map button.spot[data-id="${step.scene}"]`);
-            text = `Tap the ${AREAS[step.scene].name}.`;
+            text = `Tap the ${AREAS[step.scene].name}!`;
         } else {
             target = backBtn;
-            text = `Go back to the map, then into the ${AREAS[step.scene].name}.`;
+            text = 'Back to the map!';
         }
     } else {
         target = step.target();
@@ -3792,7 +3771,7 @@ function loadGame() {
         });
         if (save.story) Object.assign(story, save.story);
         else {
-            // Saves from before the story skip the intro and see their current chapter's scene once.
+            // Saves from before the story skip the intro and see their current day once.
             const now = currentChapter();
             Object.assign(story, { intro: true, seen: CHAPTERS.map((_, i) => i).filter(i => now === -1 || i < now), ended: now === -1 });
         }
