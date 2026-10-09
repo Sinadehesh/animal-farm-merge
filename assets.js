@@ -271,8 +271,37 @@ const ASSETS = {
             'assets/items/barn/10_bull.png',
             'assets/items/barn/11_unicorn.png',
         ],
-        hay: [],
-        farm: [],
+        // Cut from assets/raw/items_hay.webp.
+        hay: [
+            'assets/items/hay/00_wheat.png',
+            'assets/items/hay/01_stalk.png',
+            'assets/items/hay/02_bundle.png',
+            'assets/items/hay/03_small_bale.png',
+            'assets/items/hay/04_medium_bale.png',
+            'assets/items/hay/05_large_bale.png',
+            'assets/items/hay/06_hay_stack.png',
+            'assets/items/hay/07_hay_tower.png',
+            'assets/items/hay/08_hay_silo.png',
+            'assets/items/hay/09_golden_hay.png',
+            'assets/items/hay/10_magic_hay.png',
+            'assets/items/hay/11_infinite_hay.png',
+        ],
+        // Cut from assets/raw/items_farm.webp, with the seed and the watermelon
+        // from assets/raw/items_farm_alt.webp.
+        farm: [
+            'assets/items/farm/00_fertilizer.png',
+            'assets/items/farm/01_seed.png',
+            'assets/items/farm/02_sprout.png',
+            'assets/items/farm/03_strawberry.png',
+            'assets/items/farm/04_tomato.png',
+            'assets/items/farm/05_corn.png',
+            'assets/items/farm/06_carrot.png',
+            'assets/items/farm/07_cabbage.png',
+            'assets/items/farm/08_pumpkin.png',
+            'assets/items/farm/09_watermelon.png',
+            'assets/items/farm/10_golden_apple.png',
+            'assets/items/farm/11_giant_sun.png',
+        ],
         // Cut from assets/raw/items_fert.webp: the carrot and apple core are one
         // item, and the gem sack (Deluxe) comes before the gold-trimmed one (Magic).
         fert: [
@@ -289,8 +318,36 @@ const ASSETS = {
             'assets/items/fert/10_magic_fert.png',
             'assets/items/fert/11_iridium_fert.png',
         ],
-        aqua: [],
-        flower: [],
+        // Cut from assets/raw/items_aqua.webp.
+        aqua: [
+            'assets/items/aqua/00_fish_food.png',
+            'assets/items/aqua/01_snail.png',
+            'assets/items/aqua/02_minnow.png',
+            'assets/items/aqua/03_frog.png',
+            'assets/items/aqua/04_goldfish.png',
+            'assets/items/aqua/05_koi.png',
+            'assets/items/aqua/06_turtle.png',
+            'assets/items/aqua/07_otter.png',
+            'assets/items/aqua/08_duck.png',
+            'assets/items/aqua/09_swan.png',
+            'assets/items/aqua/10_flamingo.png',
+            'assets/items/aqua/11_pond_dragon.png',
+        ],
+        // Cut from assets/raw/items_flower.webp.
+        flower: [
+            'assets/items/flower/00_water_drop.png',
+            'assets/items/flower/01_seedling.png',
+            'assets/items/flower/02_bud.png',
+            'assets/items/flower/03_daisy.png',
+            'assets/items/flower/04_tulip.png',
+            'assets/items/flower/05_rose.png',
+            'assets/items/flower/06_lily.png',
+            'assets/items/flower/07_orchid.png',
+            'assets/items/flower/08_lotus.png',
+            'assets/items/flower/09_rafflesia.png',
+            'assets/items/flower/10_crystal_flower.png',
+            'assets/items/flower/11_tree_of_life.png',
+        ],
         // Country Fair chains, one per weekly theme (8 tiers each).
         fair_pie: [],
         fair_flowers: [],

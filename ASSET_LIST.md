@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**263 assets:** 134 done ✅, 25 placeholders 🟡, 104 missing ⬜.
+**263 assets:** 182 done ✅, 25 placeholders 🟡, 56 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -122,35 +122,35 @@ below it by its outline alone, bigger and fancier as it goes up; tiers 9-11 get 
 
 | | Tier | Item | File | Draw as |
 |---|---|---|---|---|
-| ⬜ | 0 | Fertilizer | `assets/items/farm/00_fertilizer.png` | a small bag of fertilizer |
-| ⬜ | 1 | Seed | `assets/items/farm/01_seed.png` |  |
-| ⬜ | 2 | Sprout | `assets/items/farm/02_sprout.png` |  |
-| ⬜ | 3 | Strawberry | `assets/items/farm/03_strawberry.png` |  |
-| ⬜ | 4 | Tomato | `assets/items/farm/04_tomato.png` |  |
-| ⬜ | 5 | Corn | `assets/items/farm/05_corn.png` |  |
-| ⬜ | 6 | Carrot | `assets/items/farm/06_carrot.png` |  |
-| ⬜ | 7 | Cabbage | `assets/items/farm/07_cabbage.png` |  |
-| ⬜ | 8 | Pumpkin | `assets/items/farm/08_pumpkin.png` |  |
-| ⬜ | 9 | Watermelon | `assets/items/farm/09_watermelon.png` |  |
-| ⬜ | 10 | Golden Apple | `assets/items/farm/10_golden_apple.png` | a shiny golden apple |
-| ⬜ | 11 | Giant Sun | `assets/items/farm/11_giant_sun.png` | a giant sunflower |
+| ✅ | 0 | Fertilizer | `assets/items/farm/00_fertilizer.png` | a small bag of fertilizer |
+| ✅ | 1 | Seed | `assets/items/farm/01_seed.png` |  |
+| ✅ | 2 | Sprout | `assets/items/farm/02_sprout.png` |  |
+| ✅ | 3 | Strawberry | `assets/items/farm/03_strawberry.png` |  |
+| ✅ | 4 | Tomato | `assets/items/farm/04_tomato.png` |  |
+| ✅ | 5 | Corn | `assets/items/farm/05_corn.png` |  |
+| ✅ | 6 | Carrot | `assets/items/farm/06_carrot.png` |  |
+| ✅ | 7 | Cabbage | `assets/items/farm/07_cabbage.png` |  |
+| ✅ | 8 | Pumpkin | `assets/items/farm/08_pumpkin.png` |  |
+| ✅ | 9 | Watermelon | `assets/items/farm/09_watermelon.png` |  |
+| ✅ | 10 | Golden Apple | `assets/items/farm/10_golden_apple.png` | a shiny golden apple |
+| ✅ | 11 | Giant Sun | `assets/items/farm/11_giant_sun.png` | a giant sunflower |
 
 ### Hay Field
 
 | | Tier | Item | File | Draw as |
 |---|---|---|---|---|
-| ⬜ | 0 | Wheat | `assets/items/hay/00_wheat.png` |  |
-| ⬜ | 1 | Stalk | `assets/items/hay/01_stalk.png` |  |
-| ⬜ | 2 | Bundle | `assets/items/hay/02_bundle.png` |  |
-| ⬜ | 3 | Small Bale | `assets/items/hay/03_small_bale.png` |  |
-| ⬜ | 4 | Medium Bale | `assets/items/hay/04_medium_bale.png` |  |
-| ⬜ | 5 | Large Bale | `assets/items/hay/05_large_bale.png` |  |
-| ⬜ | 6 | Hay Stack | `assets/items/hay/06_hay_stack.png` |  |
-| ⬜ | 7 | Hay Tower | `assets/items/hay/07_hay_tower.png` | a tall stack of hay bales |
-| ⬜ | 8 | Hay Silo | `assets/items/hay/08_hay_silo.png` | a tiny silo full of hay |
-| ⬜ | 9 | Golden Hay | `assets/items/hay/09_golden_hay.png` | a golden hay bale |
-| ⬜ | 10 | Magic Hay | `assets/items/hay/10_magic_hay.png` | a hay bale with sparkles |
-| ⬜ | 11 | Infinite Hay | `assets/items/hay/11_infinite_hay.png` | a glowing hay bale with an infinity ribbon |
+| ✅ | 0 | Wheat | `assets/items/hay/00_wheat.png` |  |
+| ✅ | 1 | Stalk | `assets/items/hay/01_stalk.png` |  |
+| ✅ | 2 | Bundle | `assets/items/hay/02_bundle.png` |  |
+| ✅ | 3 | Small Bale | `assets/items/hay/03_small_bale.png` |  |
+| ✅ | 4 | Medium Bale | `assets/items/hay/04_medium_bale.png` |  |
+| ✅ | 5 | Large Bale | `assets/items/hay/05_large_bale.png` |  |
+| ✅ | 6 | Hay Stack | `assets/items/hay/06_hay_stack.png` |  |
+| ✅ | 7 | Hay Tower | `assets/items/hay/07_hay_tower.png` | a tall stack of hay bales |
+| ✅ | 8 | Hay Silo | `assets/items/hay/08_hay_silo.png` | a tiny silo full of hay |
+| ✅ | 9 | Golden Hay | `assets/items/hay/09_golden_hay.png` | a golden hay bale |
+| ✅ | 10 | Magic Hay | `assets/items/hay/10_magic_hay.png` | a hay bale with sparkles |
+| ✅ | 11 | Infinite Hay | `assets/items/hay/11_infinite_hay.png` | a glowing hay bale with an infinity ribbon |
 
 ### Compost Yard
 
@@ -173,35 +173,35 @@ below it by its outline alone, bigger and fancier as it goes up; tiers 9-11 get 
 
 | | Tier | Item | File | Draw as |
 |---|---|---|---|---|
-| ⬜ | 0 | Fish Food | `assets/items/aqua/00_fish_food.png` | a small pile of fish flakes |
-| ⬜ | 1 | Snail | `assets/items/aqua/01_snail.png` | a round little pond snail with a swirly shell |
-| ⬜ | 2 | Minnow | `assets/items/aqua/02_minnow.png` | a tiny silver fish |
-| ⬜ | 3 | Frog | `assets/items/aqua/03_frog.png` |  |
-| ⬜ | 4 | Goldfish | `assets/items/aqua/04_goldfish.png` |  |
-| ⬜ | 5 | Koi | `assets/items/aqua/05_koi.png` | a chubby orange-and-white koi fish |
-| ⬜ | 6 | Turtle | `assets/items/aqua/06_turtle.png` |  |
-| ⬜ | 7 | Otter | `assets/items/aqua/07_otter.png` |  |
-| ⬜ | 8 | Duck | `assets/items/aqua/08_duck.png` |  |
-| ⬜ | 9 | Swan | `assets/items/aqua/09_swan.png` |  |
-| ⬜ | 10 | Flamingo | `assets/items/aqua/10_flamingo.png` |  |
-| ⬜ | 11 | Pond Dragon | `assets/items/aqua/11_pond_dragon.png` | a small friendly green dragon with lily-pad wings |
+| ✅ | 0 | Fish Food | `assets/items/aqua/00_fish_food.png` | a small pile of fish flakes |
+| ✅ | 1 | Snail | `assets/items/aqua/01_snail.png` | a round little pond snail with a swirly shell |
+| ✅ | 2 | Minnow | `assets/items/aqua/02_minnow.png` | a tiny silver fish |
+| ✅ | 3 | Frog | `assets/items/aqua/03_frog.png` |  |
+| ✅ | 4 | Goldfish | `assets/items/aqua/04_goldfish.png` |  |
+| ✅ | 5 | Koi | `assets/items/aqua/05_koi.png` | a chubby orange-and-white koi fish |
+| ✅ | 6 | Turtle | `assets/items/aqua/06_turtle.png` |  |
+| ✅ | 7 | Otter | `assets/items/aqua/07_otter.png` |  |
+| ✅ | 8 | Duck | `assets/items/aqua/08_duck.png` |  |
+| ✅ | 9 | Swan | `assets/items/aqua/09_swan.png` |  |
+| ✅ | 10 | Flamingo | `assets/items/aqua/10_flamingo.png` |  |
+| ✅ | 11 | Pond Dragon | `assets/items/aqua/11_pond_dragon.png` | a small friendly green dragon with lily-pad wings |
 
 ### Flower Garden
 
 | | Tier | Item | File | Draw as |
 |---|---|---|---|---|
-| ⬜ | 0 | Water Drop | `assets/items/flower/00_water_drop.png` | a single round water drop |
-| ⬜ | 1 | Seedling | `assets/items/flower/01_seedling.png` |  |
-| ⬜ | 2 | Bud | `assets/items/flower/02_bud.png` |  |
-| ⬜ | 3 | Daisy | `assets/items/flower/03_daisy.png` |  |
-| ⬜ | 4 | Tulip | `assets/items/flower/04_tulip.png` |  |
-| ⬜ | 5 | Rose | `assets/items/flower/05_rose.png` |  |
-| ⬜ | 6 | Lily | `assets/items/flower/06_lily.png` |  |
-| ⬜ | 7 | Orchid | `assets/items/flower/07_orchid.png` |  |
-| ⬜ | 8 | Lotus | `assets/items/flower/08_lotus.png` |  |
-| ⬜ | 9 | Rafflesia | `assets/items/flower/09_rafflesia.png` |  |
-| ⬜ | 10 | Crystal Flower | `assets/items/flower/10_crystal_flower.png` | a flower made of pink crystal |
-| ⬜ | 11 | Tree of Life | `assets/items/flower/11_tree_of_life.png` | a tiny glowing tree in a pot |
+| ✅ | 0 | Water Drop | `assets/items/flower/00_water_drop.png` | a single round water drop |
+| ✅ | 1 | Seedling | `assets/items/flower/01_seedling.png` |  |
+| ✅ | 2 | Bud | `assets/items/flower/02_bud.png` |  |
+| ✅ | 3 | Daisy | `assets/items/flower/03_daisy.png` |  |
+| ✅ | 4 | Tulip | `assets/items/flower/04_tulip.png` |  |
+| ✅ | 5 | Rose | `assets/items/flower/05_rose.png` |  |
+| ✅ | 6 | Lily | `assets/items/flower/06_lily.png` |  |
+| ✅ | 7 | Orchid | `assets/items/flower/07_orchid.png` |  |
+| ✅ | 8 | Lotus | `assets/items/flower/08_lotus.png` |  |
+| ✅ | 9 | Rafflesia | `assets/items/flower/09_rafflesia.png` |  |
+| ✅ | 10 | Crystal Flower | `assets/items/flower/10_crystal_flower.png` | a flower made of pink crystal |
+| ✅ | 11 | Tree of Life | `assets/items/flower/11_tree_of_life.png` | a tiny glowing tree in a pot |
 
 ## 8. Producers (6 boards × 8 levels = 48)
 
