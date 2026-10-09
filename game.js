@@ -48,6 +48,27 @@ const PRODUCER_LEVELS = [
 // order of a new game always does, so players learn to merge producers early.
 const PRODUCER_REWARD_CHANCE = 0.25;
 
+// Selling an item pays this much 💵 per unit of input that went into it, far
+// less than ORDER_PAY on purpose: selling is for clearing space, orders for money.
+const SELL_PRICE_PER_INPUT = 1;
+
+// Daily gift: one per calendar day on a 7-day track, as in Merge Gardens. Missing
+// a day starts the track over at day 1, and gifts never pile up. Day 7 is special.
+const DAILY_GIFTS = [
+    { money: 100 },
+    { feed: 20 },
+    { gems: 10 },
+    { producer: 1 },
+    { money: 250 },
+    { gems: 15 },
+    { gems: 30, money: 500, producer: 1 },
+];
+
+// What finishing a player level's quests pays.
+function levelReward(level) {
+    return { money: 100 * level, gems: 5 + level, producer: level % 2 === 0 ? 1 : 0 };
+}
+
 // 💎 Gems are the only thing sold for real money, as in Merge Gardens. 💵 is
 // earned by playing. Gems pay for instant refills and cover any 💵 you're short.
 // A unit earns about 💵10 in orders and costs 💎2 = 💵20 to refill, so refills
@@ -96,6 +117,12 @@ const res = { money: 0, gems: 0, hearts: 0, feed: 0, wheat: 0, fertilizer: 0, ra
 Object.assign(res, START);
 // When the next unit of each essential arrives (ms timestamp), or null when full.
 const refillAt = {};
+// Counters the quests read from (saved with the game).
+const stats = { spawned: {}, made: {}, merges: 0, delivered: 0, sold: 0, upgrades: 0, gifts: 0 };
+// Player level, and each quest's counter value when the level started.
+const quests = { level: 1, baselines: [], done: [] };
+// Daily gift track: the last day claimed and how many days in a row.
+const daily = { lastDay: null, streak: 0 };
 // Rewarded producers waiting in each board's delivery crate until placed.
 const crates = { barn: [], hay: [], farm: [], fert: [], aqua: [], flower: [] };
 // Daily Basket, Special Offer and ad state (saved with the game).
@@ -157,15 +184,16 @@ function itemIcon(mode, tier) {
         : `<span class="inline-item">${itemEmoji(mode, tier)}</span>`;
 }
 
-// Land on the farm map. `cost` is the price of its deed, `input` is what one tap
-// of the board's corner tile spends, `output` is what each merge produces.
+// Land on the farm map. `cost` is the price of its deed, `level` the player level
+// it unlocks at, `input` what one tap of its producer spends, `output` what each
+// merge produces.
 const AREAS = {
-    barn:   { name: 'Barn',          cost: 0,    input: { feed: 1 },                  output: 'rawFertilizer', desc: 'Raise animals from feed.' },
-    farm:   { name: 'Crop Field',    cost: 200,  input: { fertilizer: 1 },            output: 'wheat',         desc: 'Grow crops using fertilizer.' },
-    hay:    { name: 'Hay Field',     cost: 400,  input: { wheat: 1 },                 output: 'feed',          desc: 'Harvest hay using wheat.' },
-    fert:   { name: 'Compost Yard',  cost: 800,  input: { rawFertilizer: 1 },         output: 'fertilizer',    desc: 'Make your own fertilizer.' },
-    aqua:   { name: 'Fish Pond',     cost: 2000, input: { wheat: 1 },                 output: 'water',         desc: 'Feed wheat to fish to generate water.' },
-    flower: { name: 'Flower Garden', cost: 5000, input: { water: 1, fertilizer: 1 },  output: 'nectar',        desc: 'Use Water + Fert to grow Nectar.' },
+    barn:   { name: 'Barn',          cost: 0,    level: 1, input: { feed: 1 },                  output: 'rawFertilizer', desc: 'Raise animals from feed.' },
+    farm:   { name: 'Crop Field',    cost: 200,  level: 2, input: { fertilizer: 1 },            output: 'wheat',         desc: 'Grow crops using fertilizer.' },
+    hay:    { name: 'Hay Field',     cost: 400,  level: 3, input: { wheat: 1 },                 output: 'feed',          desc: 'Harvest hay using wheat.' },
+    fert:   { name: 'Compost Yard',  cost: 800,  level: 4, input: { rawFertilizer: 1 },         output: 'fertilizer',    desc: 'Make your own fertilizer.' },
+    aqua:   { name: 'Fish Pond',     cost: 2000, level: 5, input: { wheat: 1 },                 output: 'water',         desc: 'Feed wheat to fish to generate water.' },
+    flower: { name: 'Flower Garden', cost: 5000, level: 6, input: { water: 1, fertilizer: 1 },  output: 'nectar',        desc: 'Use Water + Fert to grow Nectar.' },
 };
 
 // The corner tile on every board that spawns new tier-0 items.
@@ -420,6 +448,183 @@ function showRewardedAd(onReward) {
     onReward();
 }
 
+// --- REWARDS ---
+
+function rewardText(r) {
+    return [r.money && `💵${r.money}`, r.gems && `💎${r.gems}`, r.feed && `🌿${r.feed}`, r.producer && '🎁 bin']
+        .filter(Boolean).join(' ');
+}
+
+// Pays a reward. A producer goes into the crate of a random board you own.
+function grantReward(r, title) {
+    if (r.money) res.money += r.money;
+    if (r.gems) res.gems += r.gems;
+    if (r.feed) res.feed += r.feed;
+    let where = '';
+    if (r.producer) {
+        const owned = Object.keys(AREAS).filter(id => unlocks[id]);
+        const mode = owned[Math.floor(Math.random() * owned.length)];
+        crates[mode].push({ type: 'shop', level: 1 });
+        where = ` · ${producerName(mode, 1)} in the 📦 on your ${AREAS[mode].name} board`;
+    }
+    updateUI();
+    toast(`${title} ${rewardText(r)}${where}`, 'good');
+}
+
+// --- QUESTS & PLAYER LEVEL ---
+// Three quests per level, like Merge Gardens' Daisy's Quests. Finishing them
+// levels you up, which pays a reward and unlocks the next piece of land.
+// Progress counts only what happens after the level starts, except "owned"
+// quests, which check the current state.
+
+function madeCount(mode, tier) {
+    return stats.made[`${mode}:${tier}`] || 0;
+}
+
+function makeQuest(mode, tier, target) {
+    return { label: `Make ${itemEmoji(mode, tier)} ${itemName(mode, tier)} ×${target}`, count: () => madeCount(mode, tier), target };
+}
+
+function ownQuest(id) {
+    return { label: `Own the ${AREAS[id].name}`, count: () => (unlocks[id] ? 1 : 0), target: 1, owned: true };
+}
+
+function deliverQuest(target) {
+    return { label: `Deliver ${target} order${target > 1 ? 's' : ''}`, count: () => stats.delivered, target };
+}
+
+function questsFor(level) {
+    switch (level) {
+        case 1: return [
+            { label: 'Tap the 🧺 Feed Bin ×6', count: () => stats.spawned.barn || 0, target: 6 },
+            makeQuest('barn', 1, 2),
+            deliverQuest(1),
+        ];
+        case 2: return [
+            makeQuest('barn', 2, 2),
+            deliverQuest(2),
+            { label: 'Upgrade a producer (merge two alike)', count: () => stats.upgrades, target: 1 },
+        ];
+        case 3: return [ownQuest('farm'), makeQuest('farm', 1, 3), deliverQuest(3)];
+        case 4: return [ownQuest('hay'), makeQuest('barn', 3, 2), { label: 'Sell 3 items', count: () => stats.sold, target: 3 }];
+        case 5: return [ownQuest('fert'), makeQuest('hay', 2, 3), deliverQuest(5)];
+        case 6: return [ownQuest('aqua'), { label: 'Claim 2 daily gifts', count: () => stats.gifts, target: 2 }, deliverQuest(6)];
+        case 7: return [ownQuest('flower'), makeQuest('aqua', 2, 3), deliverQuest(6)];
+        default: {
+            const n = level - 7;
+            return [
+                deliverQuest(5 + n),
+                { label: `Merge ${10 + 5 * n} times`, count: () => stats.merges, target: 10 + 5 * n },
+                { label: `Tap producers ${20 + 10 * n} times`, count: () => Object.values(stats.spawned).reduce((a, b) => a + b, 0), target: 20 + 10 * n },
+            ];
+        }
+    }
+}
+
+function questProgress(i) {
+    const q = questsFor(quests.level)[i];
+    const value = q.owned ? q.count() : q.count() - (quests.baselines[i] || 0);
+    return Math.min(q.target, Math.max(0, value));
+}
+
+function allQuestsDone() {
+    return questsFor(quests.level).every((q, i) => questProgress(i) >= q.target);
+}
+
+function startLevel() {
+    const list = questsFor(quests.level);
+    quests.baselines = list.map(q => (q.owned ? 0 : q.count()));
+    quests.done = list.map(() => false);
+}
+
+// Called after anything that can move a quest forward; cheers each one once.
+function checkQuests() {
+    questsFor(quests.level).forEach((q, i) => {
+        if (!quests.done[i] && questProgress(i) >= q.target) {
+            quests.done[i] = true;
+            toast(`✅ Quest done: ${q.label}`, 'good');
+            if (allQuestsDone()) toast('All quests done! Tap 📋 on the map to level up.', 'good');
+        }
+    });
+}
+
+function openQuests() {
+    const list = questsFor(quests.level);
+    const reward = levelReward(quests.level);
+    const nextLand = Object.keys(AREAS).find(id => AREAS[id].level === quests.level + 1);
+    const rows = list.map((q, i) => {
+        const p = questProgress(i);
+        const done = p >= q.target;
+        return `<div class="quest${done ? ' done' : ''}">
+                    <span>${done ? '✅' : '⬜'} ${q.label}</span><small>${p}/${q.target}</small>
+                    <span class="quest-bar"><i style="width:${(100 * p) / q.target}%"></i></span>
+                </div>`;
+    }).join('');
+    showDialog({
+        title: `⭐ Level ${quests.level} quests`,
+        body: `${rows}<p class="hint">Level-up reward: ${rewardText(reward)}${nextLand ? ` · unlocks the ${AREAS[nextLand].name}` : ''}</p>`,
+        actions: allQuestsDone()
+            ? [{ label: `Level up! ${rewardText(reward)}`, primary: true, wide: true, onClick: levelUp }, { label: 'Later' }]
+            : [{ label: 'OK' }],
+    });
+}
+
+function levelUp() {
+    if (!allQuestsDone()) return;
+    const reward = levelReward(quests.level);
+    quests.level++;
+    startLevel();
+    grantReward(reward, `⭐ Level ${quests.level}!`);
+    const unlocked = Object.keys(AREAS).find(id => AREAS[id].level === quests.level);
+    if (unlocked) toast(`The ${AREAS[unlocked].name} is now for sale!`, 'good');
+    checkQuests();
+    goTo(currentScene);
+}
+
+// --- DAILY GIFT ---
+
+function dailyAvailable() {
+    return daily.lastDay !== today();
+}
+
+// The track carries on only if yesterday's gift was claimed; otherwise day 1.
+function nextGiftDay() {
+    return daily.lastDay === today() - 1 ? (daily.streak % DAILY_GIFTS.length) + 1 : 1;
+}
+
+function msUntilTomorrow() {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) - now;
+}
+
+function openDailyGift() {
+    const available = dailyAvailable();
+    const day = available ? nextGiftDay() : ((daily.streak - 1) % DAILY_GIFTS.length) + 1;
+    const track = DAILY_GIFTS.map((gift, i) => {
+        const n = i + 1;
+        const state = n < day || (!available && n === day) ? 'claimed' : n === day ? 'today' : '';
+        return `<div class="gift-day ${state}"><small>Day ${n}</small><span>${rewardText(gift)}</span></div>`;
+    }).join('');
+    showDialog({
+        title: '🎁 Daily gift',
+        body: `<div class="gift-track">${track}</div><p class="hint">A new gift every day. Miss a day and the track starts over.</p>`,
+        actions: available
+            ? [{ label: `Claim day ${day}: ${rewardText(DAILY_GIFTS[day - 1])}`, primary: true, wide: true, onClick: claimDailyGift }]
+            : [{ label: `Next gift in ${formatDuration(msUntilTomorrow())}`, disabled: true }, { label: 'OK' }],
+    });
+}
+
+function claimDailyGift() {
+    if (!dailyAvailable()) return;
+    const day = nextGiftDay();
+    daily.streak = daily.lastDay === today() - 1 ? daily.streak + 1 : 1;
+    daily.lastDay = today();
+    stats.gifts++;
+    grantReward(DAILY_GIFTS[day - 1], `🎁 Day ${day} gift:`);
+    checkQuests();
+    goTo(currentScene);
+}
+
 // --- SCENE LAYOUTS ---
 // Positions are percentages of the 9:16 stage: x/y = top-left corner, w = width.
 // Height follows the sprite's own aspect ratio.
@@ -551,7 +756,11 @@ function goTo(scene) {
     if (scene === 'map') { titleEl.textContent = 'Farmstead'; renderMap(); }
     else if (scene === 'town') { titleEl.textContent = 'Town Square'; renderTown(); }
     else if (scene === 'market') { titleEl.textContent = 'Market'; renderMarket(); }
-    else { titleEl.textContent = AREAS[scene].name; renderBoardHeader(scene); renderGrid(scene); }
+    else {
+        if (selected && selected.mode !== scene) selected = null;
+        titleEl.textContent = AREAS[scene].name;
+        refreshBoard(scene);
+    }
 }
 
 backBtn.addEventListener('click', () => goTo('map'));
@@ -578,14 +787,39 @@ function renderMap() {
             locked: !unlocks[id],
             onClick: () => unlocks[id] ? goTo(id) : offerDeed(id),
         });
-        if (!unlocks[id]) addTag(spot, 'sale-sign', `FOR SALE<br>💵 ${area.cost}`);
-        else if (crates[id].length) addTag(spot, 'badge', `📦${crates[id].length}`);
+        if (!unlocks[id]) {
+            addTag(spot, 'sale-sign', quests.level < area.level ? `🔒 Level ${area.level}` : `FOR SALE<br>💵 ${area.cost}`);
+        } else {
+            // Orders ready to hand in on this board, and rewards waiting in its crate.
+            const ready = npcs.filter(n => n.request && n.request.mode === id && canFulfill(n)).length;
+            const parts = [ready && `✓${ready}`, crates[id].length && `📦${crates[id].length}`].filter(Boolean);
+            if (parts.length) addTag(spot, 'badge', parts.join(' '));
+        }
         scene.appendChild(spot);
     });
+
+    // Daily gift and quests, always one tap away on the map.
+    const side = document.createElement('div');
+    side.className = 'side-buttons';
+    side.innerHTML = `
+        <button class="side-btn" id="btn-gift">🎁<small>Gift</small>${dailyAvailable() ? '<span class="badge">!</span>' : ''}</button>
+        <button class="side-btn" id="btn-quests">📋<small>Lv ${quests.level}</small>${allQuestsDone() ? '<span class="badge">!</span>' : ''}</button>`;
+    side.querySelector('#btn-gift').addEventListener('click', openDailyGift);
+    side.querySelector('#btn-quests').addEventListener('click', openQuests);
+    scene.appendChild(side);
 }
 
 function offerDeed(id) {
     const area = AREAS[id];
+    if (quests.level < area.level) {
+        showDialog({
+            art: ASSETS.buildings[id],
+            title: area.name,
+            body: `<p>${area.desc}</p><p class="hint">Reach level ${area.level} to buy this land. Finish your quests to level up.</p>`,
+            actions: [{ label: '📋 Open quests', primary: true, onClick: openQuests }, { label: 'OK' }],
+        });
+        return;
+    }
     showDialog({
         art: ASSETS.buildings[id],
         title: `${area.name} is for sale`,
@@ -596,13 +830,14 @@ function offerDeed(id) {
 
 function buyDeed(id) {
     const area = AREAS[id];
-    if (unlocks[id] || res.money < area.cost) return;
+    if (unlocks[id] || res.money < area.cost || quests.level < area.level) return;
     res.money -= area.cost;
     unlocks[id] = true;
     // New land comes with a full bar of what it uses, so it's playable right away.
     Object.keys(area.input).forEach(k => { res[k] = Math.max(res[k], ESSENTIALS[k].cap); });
     updateUI();
     toast(`The ${area.name} is yours! Find it on the map.`, 'good');
+    checkQuests();
     goTo(currentScene);
 }
 
@@ -704,6 +939,7 @@ function deliver(npc) {
     res.money += r.rewardMoney;
     res.hearts += r.rewardHearts;
     npc.deliveries++;
+    stats.delivered++;
     const levelUp = npc.deliveries % 5 === 0;
     if (levelUp) res.gems += LEVEL_UP_GEMS;
     updateUI();
@@ -715,7 +951,8 @@ function deliver(npc) {
     }
 
     generateRequestFor(npc);
-    renderTown();
+    checkQuests();
+    goTo(currentScene); // the town, or the board you delivered from
 }
 
 // --- MARKET ---
@@ -727,7 +964,7 @@ function renderMarket() {
     // One land deed per locked area sits on the shelves.
     Object.keys(AREAS).filter(id => !unlocks[id]).forEach((id, i) => {
         const deed = makeSpot({ ...MARKET_LAYOUT.shelf[i], sprite: ASSETS.props.deed, label: AREAS[id].name, onClick: () => offerDeed(id) });
-        addTag(deed, 'price-tag', `💵${AREAS[id].cost}`);
+        addTag(deed, 'price-tag', quests.level < AREAS[id].level ? `🔒Lv${AREAS[id].level}` : `💵${AREAS[id].cost}`);
         scene.appendChild(deed);
     });
 
@@ -828,35 +1065,133 @@ Object.keys(AREAS).forEach(mode => {
     stageEl.insertBefore(scene, dialogEl);
 });
 
+// The item shown in the info bar under the orders: { mode, index } or null.
+let selected = null;
+
+// Above each board: the orders it can fill, then the info bar.
 function renderBoardHeader(mode) {
-    const area = AREAS[mode];
-    const gen = GENERATORS[mode];
     const header = document.querySelector(`#scene-${mode} .board-header`);
-    const waiting = crates[mode].length;
-    header.innerHTML = `
-        <img src="${ASSETS.buildings[mode]}" alt="">
-        <div>
-            <b>${area.name}</b> · max tier ${maxTier}<br>
-            Tap a ${gen.emoji} ${gen.label} to add items.<br>
-            Merge two alike to upgrade them.<br>
-            Each merge makes ${resLabel(area.output)}.
-            ${waiting ? `<button class="crate-btn">📦 ${waiting} waiting · tap to add</button>` : ''}
-        </div>`;
-    if (waiting) header.querySelector('.crate-btn').addEventListener('click', () => placeFromCrate(mode));
+    header.innerHTML = '<div class="orders"></div><div class="info-bar"></div>';
+    renderOrders(mode, header.querySelector('.orders'));
+    renderInfoBar(mode);
+}
+
+// Redraws everything on a board after it changes.
+function refreshBoard(mode, poppedIndices = []) {
+    renderGrid(mode, poppedIndices);
+    renderBoardHeader(mode);
+}
+
+// Orders for this board, Merge Mansion style: who wants what, the reward, and a
+// Deliver button as soon as the item is on the board. Cards for other boards
+// with orders jump straight there.
+function renderOrders(mode, el) {
+    npcs.filter(n => n.request && n.request.mode === mode).forEach(npc => {
+        const r = npc.request;
+        const ready = canFulfill(npc);
+        const card = document.createElement('button');
+        card.className = 'order-card' + (ready ? ' ready' : '');
+        card.innerHTML = `
+            <span class="order-who"><img class="face" src="${npcPicture(npc)}" alt="${npc.name}"><span class="want">${itemIcon(mode, r.tier)}</span></span>
+            <span class="order-pay">💵${r.rewardMoney}${r.rewardProducer ? ' 🎁' : ''}</span>
+            ${ready ? '<span class="order-go">Deliver</span>' : `<span class="order-need">${itemName(mode, r.tier)}</span>`}`;
+        card.addEventListener('click', () => (ready ? deliver(npc) : openNpc(npc)));
+        el.appendChild(card);
+    });
+
+    const elsewhere = {};
+    npcs.forEach(n => {
+        if (n.request && n.request.mode !== mode) elsewhere[n.request.mode] = (elsewhere[n.request.mode] || 0) + 1;
+    });
+    Object.entries(elsewhere).forEach(([other, count]) => {
+        const card = document.createElement('button');
+        card.className = 'order-card other';
+        card.innerHTML = `
+            <span class="order-who"><img class="building" src="${ASSETS.buildings[other]}" alt=""></span>
+            <span class="order-pay">${count} order${count > 1 ? 's' : ''}</span>
+            <span class="order-need">${AREAS[other].name} →</span>`;
+        card.addEventListener('click', () => goTo(other));
+        el.appendChild(card);
+    });
+
+    if (!el.children.length) el.innerHTML = '<p class="no-orders">No orders right now. Check the Town Square later.</p>';
+}
+
+function sellPrice(mode, item) {
+    return inputsPerItem(mode, item.tier) * SELL_PRICE_PER_INPUT;
+}
+
+// The bar under the orders: the crate, then whatever item is selected.
+function renderInfoBar(mode) {
+    const el = document.querySelector(`#scene-${mode} .info-bar`);
+    if (!el) return;
+    const gen = GENERATORS[mode];
+    const item = selected && selected.mode === mode ? grids[mode][selected.index] : null;
+    let html = crates[mode].length ? `<button class="crate-btn">📦 ${crates[mode].length}</button>` : '';
+
+    if (!item) {
+        html += `<span class="info-text">Tap a ${gen.emoji} ${gen.label} to make items. Drag two alike together to merge. Tap an item to see it.</span>`;
+    } else if (item.type === 'shop') {
+        const level = producerLevel(item);
+        const tip = level < PRODUCER_LEVELS.length ? 'Merge two alike to upgrade.' : 'Top level!';
+        html += `<span class="info-icon">${gen.emoji}</span>
+                 <span class="info-text"><b>${producerName(mode, level)}</b> · Lv${level}<br><small>Tap to make items (${inputText(mode)} each). ${tip}</small></span>`;
+    } else {
+        const last = NAMES[mode].length - 1;
+        const tip = item.tier >= last ? 'The best there is!'
+            : item.tier >= maxTier ? 'Max tier for now: buy the Growth Guide at the Market.'
+            : `Merge two to make ${itemIcon(mode, item.tier + 1)} ${itemName(mode, item.tier + 1)}.`;
+        html += `<span class="info-icon">${itemIcon(mode, item.tier)}</span>
+                 <span class="info-text"><b>${itemName(mode, item.tier)}</b> · tier ${item.tier}<br><small>${tip}</small></span>
+                 <button class="sell-btn">Sell<br>💵${sellPrice(mode, item)}</button>`;
+    }
+
+    el.innerHTML = html;
+    const crateBtn = el.querySelector('.crate-btn');
+    if (crateBtn) crateBtn.addEventListener('click', () => placeFromCrate(mode));
+    const sellBtn = el.querySelector('.sell-btn');
+    if (sellBtn) sellBtn.addEventListener('click', () => sellSelected(mode));
+}
+
+// Selling frees space; big items ask first because orders pay far more.
+function sellSelected(mode) {
+    const index = selected && selected.mode === mode ? selected.index : -1;
+    const item = grids[mode][index];
+    if (!item || item.type === 'shop') return;
+    const price = sellPrice(mode, item);
+    const sell = () => {
+        grids[mode][index] = null;
+        res.money += price;
+        stats.sold++;
+        selected = null;
+        updateUI();
+        toast(`Sold ${itemName(mode, item.tier)} for 💵${price}`);
+        checkQuests();
+        refreshBoard(mode);
+    };
+    if (item.tier < 5) {
+        sell();
+        return;
+    }
+    showDialog({
+        title: `Sell the ${itemName(mode, item.tier)}?`,
+        body: `<p>It sells for 💵${price}. Orders usually pay much more.</p>`,
+        actions: [{ label: `Sell for 💵${price}`, primary: true, onClick: sell }, { label: 'Keep it' }],
+    });
 }
 
 // Puts the next waiting reward from the crate onto the first empty cell.
 function placeFromCrate(mode) {
     const idx = grids[mode].findIndex(cell => cell === null);
     if (idx === -1) {
-        toast('No room on the board. Merge or deliver something first.');
+        toast('No room on the board. Sell, merge or deliver something first.');
         return;
     }
     const item = crates[mode].shift();
     grids[mode][idx] = item;
+    selected = { mode, index: idx };
     toast(`${producerName(mode, producerLevel(item))} added!`, 'good');
-    renderBoardHeader(mode);
-    renderGrid(mode, [idx]);
+    refreshBoard(mode, [idx]);
 }
 
 let draggedItemInfo = null;
@@ -920,10 +1255,15 @@ function handleDragEnd(e) {
     const { mode, index } = draggedItemInfo;
     draggedItemInfo = null;
 
-    // A tap: producers make an item, anything else does nothing.
+    // A tap: producers make an item; any item gets shown in the info bar.
     if (!wasDragged) {
         const item = grids[mode][index];
-        if (item && item.type === 'shop') handleGeneratorClick(mode, index);
+        if (item && item.type === 'shop') {
+            handleGeneratorClick(mode, index);
+        } else {
+            selected = { mode, index };
+            refreshBoard(mode);
+        }
         return;
     }
 
@@ -952,6 +1292,7 @@ function handleDragEnd(e) {
                 grids[mode][index] = null;
                 grids[mode][targetIndex] = { type: 'shop', level };
                 mergedIdx = targetIndex;
+                stats.upgrades++;
                 toast(`Upgraded to a ${producerName(mode, level)}!`, 'good');
             } else if (sameKind && sourceItem.tier < maxTier) {
                 // Direct Merge 2
@@ -959,6 +1300,8 @@ function handleDragEnd(e) {
                 grids[mode][index] = null;
                 grids[mode][targetIndex] = { tier: nextTier };
                 mergedIdx = targetIndex;
+                stats.made[`${mode}:${nextTier}`] = madeCount(mode, nextTier) + 1;
+                stats.merges++;
 
                 res[AREAS[mode].output] += MERGE_OUTPUT;
                 updateUI();
@@ -969,10 +1312,12 @@ function handleDragEnd(e) {
                 grids[mode][index] = targetItem;
                 grids[mode][targetIndex] = sourceItem;
             }
+            selected = { mode, index: targetIndex };
         }
     }
 
-    renderGrid(mode, mergedIdx !== -1 ? [mergedIdx] : []);
+    checkQuests();
+    refreshBoard(mode, mergedIdx !== -1 ? [mergedIdx] : []);
 }
 
 function getNeighbors(index) {
@@ -999,7 +1344,7 @@ function handleGeneratorClick(mode, index) {
     }
 
     if (emptyIdx === -1) {
-        toast("The board is full! Merge or deliver something first.");
+        toast('The board is full! Sell, merge or deliver something first.');
         return;
     }
 
@@ -1017,13 +1362,17 @@ function handleGeneratorClick(mode, index) {
     const roll = Math.random();
     const tier = roll < tier2Odds ? 2 : roll < tier2Odds + tier1Odds ? 1 : 0;
     grids[mode][emptyIdx] = { tier: Math.min(tier, maxTier) };
-    renderGrid(mode, [emptyIdx]);
+    stats.spawned[mode] = (stats.spawned[mode] || 0) + 1;
+    selected = { mode, index };
+    checkQuests();
+    refreshBoard(mode, [emptyIdx]);
 }
 
 function renderGrid(mode, poppedIndices = []) {
     const gridEl = document.getElementById(`grid-${mode}`);
     if (!gridEl) return;
     gridEl.innerHTML = '';
+    const wanted = new Set(npcs.filter(n => n.request && n.request.mode === mode).map(n => n.request.tier));
 
     for (let i = 0; i < NUM_CELLS; i++) {
         const cell = document.createElement('div');
@@ -1062,8 +1411,13 @@ function renderGrid(mode, poppedIndices = []) {
                     itemEl.innerHTML = `<span class="emoji">${itemEmoji(mode, item.tier)}</span><span class="name">${itemName(mode, item.tier)}</span>`;
                 }
                 if (item.tier > 0) addTag(itemEl, 'tier', item.tier);
+                if (wanted.has(item.tier)) {
+                    itemEl.classList.add('wanted');
+                    addTag(itemEl, 'tick', '✓');
+                }
                 itemEl.addEventListener('pointerdown', (e) => handleDragStart(e, mode, i));
             }
+            if (selected && selected.mode === mode && selected.index === i) itemEl.classList.add('selected');
             cell.appendChild(itemEl);
         }
         gridEl.appendChild(cell);
@@ -1079,7 +1433,7 @@ const SAVE_KEY = 'merge-farmstead-save-v1';
 function saveGame() {
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
-            res, refillAt, shop, crates, unlocks, maxTier, grids,
+            res, refillAt, shop, crates, stats, quests, daily, unlocks, maxTier, grids,
             npcs: npcs.map(({ id, deliveries, request }) => ({ id, deliveries, request })),
         }));
     } catch (e) {
@@ -1099,6 +1453,9 @@ function loadGame() {
         Object.assign(refillAt, save.refillAt);
         Object.assign(shop, save.shop);
         Object.assign(crates, save.crates);
+        Object.assign(stats, save.stats);
+        Object.assign(quests, save.quests);
+        Object.assign(daily, save.daily);
         Object.assign(unlocks, save.unlocks);
         maxTier = save.maxTier;
         Object.keys(grids).forEach(mode => {
@@ -1119,11 +1476,14 @@ function loadGame() {
     document.getElementById(`scene-${id}`).style.backgroundImage = `url("${ASSETS.scenes[id]}")`;
 });
 if (!loadGame()) initTown(true);
+if (!quests.baselines.length) startLevel(); // new game, or a save from before quests
 tickEssentials(); // catch up on refills that arrived while the game was closed
 claimDailyBasket();
 Object.keys(grids).forEach(mode => renderGrid(mode));
 updateUI();
 goTo('map');
+// The first visit each day opens the daily gift, as in Merge Gardens.
+if (dailyAvailable()) setTimeout(openDailyGift, 600);
 
 setInterval(() => {
     tickEssentials();

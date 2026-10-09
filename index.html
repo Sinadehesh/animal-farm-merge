@@ -264,19 +264,112 @@
 
         /* --- MERGE BOARDS --- */
         .board { display: flex; flex-direction: column; }
+        /* Above the grid: the orders this board can fill, then the info bar. */
         .board-header {
             flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 1.5cqw;
+            padding: 2cqw 2.5cqw;
+        }
+        .orders {
+            display: flex;
+            gap: 2cqw;
+            overflow-x: auto;
+            scrollbar-width: none;
+            padding-bottom: 1cqw;
+        }
+        .orders::-webkit-scrollbar { display: none; }
+        .order-card {
+            flex: 0 0 auto;
+            width: 21cqw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6cqw;
+            padding: 1.2cqw;
+            background: var(--paper);
+            color: var(--ink);
+            border: 3px solid var(--ink);
+            border-radius: 14px;
+            box-shadow: 0 3px 0 var(--ink);
+            font-weight: 900;
+            cursor: pointer;
+        }
+        .order-card.ready { background: #e3fbdf; border-color: #2e8c3c; box-shadow: 0 3px 0 #2e8c3c; }
+        .order-card.other { background: rgba(255, 248, 231, 0.75); }
+        .order-who { display: flex; align-items: center; }
+        .order-who .face {
+            width: 9cqw;
+            height: 9cqw;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: top;
+            border: 2px solid var(--ink);
+            background: #fff;
+        }
+        .order-who .want {
+            margin-left: -1.5cqw;
+            width: 9cqw;
+            height: 9cqw;
             display: flex;
             align-items: center;
-            gap: 3cqw;
-            padding: 2cqw 4cqw;
-            color: #fff;
-            font-size: 3.4cqw;
-            line-height: 1.45;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            background: #fff;
+            border: 2px solid var(--ink);
+            border-radius: 10px;
+            font-size: 5.5cqw;
         }
-        .board-header img { width: 26cqw; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.2)); }
-        .board-header b { font-size: 5cqw; }
+        .order-who .want .inline-item { height: 7.5cqw; line-height: 7.5cqw; }
+        .order-who .building { height: 9cqw; }
+        .order-pay { font-size: 2.8cqw; }
+        .order-need {
+            max-width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            font-size: 2.5cqw;
+            color: #8a6a50;
+        }
+        .order-go {
+            padding: 0.4cqw 2cqw;
+            background: #5cc15a;
+            color: #fff;
+            border: 2px solid var(--ink);
+            border-radius: 999px;
+            font-size: 2.8cqw;
+        }
+        .no-orders { margin: 0; color: #fff; font-weight: 800; font-size: 3.4cqw; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); }
+        .info-bar {
+            display: flex;
+            align-items: center;
+            gap: 2cqw;
+            min-height: 12cqw;
+            padding: 1.2cqw 2cqw;
+            background: rgba(255, 248, 231, 0.95);
+            color: var(--ink);
+            border: 3px solid var(--ink);
+            border-radius: 14px;
+        }
+        .info-icon { font-size: 7cqw; line-height: 1; }
+        .info-icon .inline-item { height: 9cqw; }
+        .info-text { flex: 1; font-size: 3.1cqw; line-height: 1.25; }
+        .info-text small { font-size: 2.7cqw; color: #8a6a50; }
+        .sell-btn {
+            padding: 1cqw 2.5cqw;
+            background: #5cc15a;
+            color: #fff;
+            border: 3px solid var(--ink);
+            border-radius: 12px;
+            box-shadow: 0 3px 0 var(--ink);
+            font-weight: 900;
+            font-size: 2.9cqw;
+            line-height: 1.15;
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+            cursor: pointer;
+        }
         .board-barn { background: repeating-linear-gradient(90deg, #a5683d 0 13cqw, #8f5631 13cqw 13.6cqw); }
         .board-hay { background: linear-gradient(#f2c45a, #d99a32); }
         .board-farm { background: repeating-linear-gradient(0deg, #8a5a3b 0 6cqw, #774b30 6cqw 7cqw); }
@@ -374,8 +467,8 @@
             font-size: 4.5cqw;
         }
         .crate-btn {
-            margin-top: 1.5cqw;
-            padding: 1cqw 3cqw;
+            flex: 0 0 auto;
+            padding: 1cqw 2.5cqw;
             background: var(--paper);
             color: var(--ink);
             border: 3px solid var(--ink);
@@ -395,6 +488,90 @@
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
         }
         .item.has-sprite.dragging { box-shadow: none; }
+        /* An item some order on this board wants: green glow and a tick. */
+        .item.wanted { box-shadow: 0 0 0 3px #3ccf5a, 0 0 12px rgba(60, 207, 90, 0.8); }
+        .item.has-sprite.wanted { background: rgba(92, 220, 110, 0.35); border-radius: 18%; }
+        .item .tick {
+            position: absolute;
+            right: -0.6cqw;
+            top: -0.6cqw;
+            width: 4.4cqw;
+            height: 4.4cqw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #2e8c3c;
+            color: #fff;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            font-size: 2.6cqw;
+            text-shadow: none;
+        }
+        .item.selected { outline: 3px dashed #fff; outline-offset: 2px; }
+
+        /* Map: daily gift and quests buttons. */
+        .side-buttons { position: absolute; left: 3%; bottom: 3%; z-index: 120; display: flex; gap: 3cqw; }
+        .side-btn {
+            position: relative;
+            width: 14cqw;
+            height: 14cqw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--paper);
+            border: 3px solid var(--ink);
+            border-radius: 50%;
+            box-shadow: 0 3px 0 var(--ink);
+            font-size: 7cqw;
+            cursor: pointer;
+        }
+        .side-btn small {
+            position: absolute;
+            left: 50%;
+            bottom: -3cqw;
+            transform: translateX(-50%);
+            padding: 0 1.4cqw;
+            background: var(--paper);
+            border: 2px solid var(--ink);
+            border-radius: 999px;
+            font-size: 2.8cqw;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+        .side-btn .badge { right: -2cqw; top: -2cqw; }
+
+        .gift-track { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5cqw; margin-bottom: 2cqw; }
+        .gift-day {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4cqw;
+            padding: 1cqw;
+            background: #fff;
+            border: 2px solid var(--ink);
+            border-radius: 10px;
+            font-size: 2.8cqw;
+            font-weight: 800;
+        }
+        .gift-day small { color: #8a6a50; }
+        .gift-day.claimed { background: #e2d8c8; opacity: 0.7; }
+        .gift-day.claimed small::after { content: ' ✓'; color: #2e8c3c; }
+        .gift-day.today { background: #fff3c4; border-color: #f5a623; box-shadow: 0 0 0 2px #f5a623; }
+        .gift-day:last-child { grid-column: span 2; background: #ffe3f0; }
+        .gift-day.claimed:last-child { background: #e2d8c8; }
+        .gift-day.today:last-child { background: #fff3c4; }
+
+        .quest {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.8cqw 2cqw;
+            margin-bottom: 2.5cqw;
+            text-align: left;
+            font-size: 3.4cqw;
+            font-weight: 800;
+        }
+        .quest small { color: #8a6a50; }
+        .quest-bar { grid-column: 1 / -1; height: 2cqw; background: #e2d8c8; border-radius: 999px; overflow: hidden; }
+        .quest-bar i { display: block; height: 100%; background: #5cc15a; }
         .item.pop { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
         /* --- DIALOG & TOASTS --- */
