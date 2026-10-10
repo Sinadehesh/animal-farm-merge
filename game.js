@@ -1469,7 +1469,7 @@ function claimDailyGift(twice = false) {
 const MAP_LAYOUT = {
     town:   { x: 50, y: 1,  w: 48 },
     market: { x: 3,  y: 5,  w: 44 },
-    barn:   { x: 50, y: 24, w: 46 },
+    barn:   { x: 52, y: 24, w: 46 },
     farm:   { x: 2,  y: 31, w: 45 },
     hay:    { x: 55, y: 49, w: 40 },
     fert:   { x: 3,  y: 53, w: 36 },
@@ -1616,7 +1616,8 @@ function renderMap() {
     const scene = document.getElementById('scene-map');
     scene.innerHTML = '';
 
-    const town = makeSpot({ ...MAP_LAYOUT.town, id: 'town', sprite: ASSETS.buildings.town, label: TOWN_NAME, onClick: () => goTo('town') });
+    const town = makeSpot({ ...MAP_LAYOUT.town, z: 30, id: 'town', // in front of the Barn so its label shows
+        sprite: ASSETS.buildings.town, label: TOWN_NAME, onClick: () => goTo('town') });
     const readyCount = npcs.filter(canFulfill).length;
     if (readyCount > 0) addTag(town, 'badge', readyCount);
     // The town looks worn until its own jobs are done; their count shows once they start.
@@ -2625,6 +2626,7 @@ function updateUI() {
     energyTimerEl.textContent = unlimitedActive()
         ? `♾️ ${formatDuration(settings.unlimitedUntil - Date.now())}`
         : energyAt ? `+1 in ${formatDuration(energyAt - Date.now())}` : 'full';
+    energyEl.closest('.res').classList.toggle('full', !unlimitedActive() && !energyAt);
     const need = xpToNext(quests.level);
     levelEl.textContent = quests.level;
     xpFillEl.style.width = `${Math.min(100, (100 * quests.xp) / need)}%`;

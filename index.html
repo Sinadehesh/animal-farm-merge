@@ -2,137 +2,119 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <!-- Added to the home screen, it opens full screen with no browser bars. -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4a3426">
+    <link rel="apple-touch-icon" href="assets/items/barn/02_chick.png">
     <title>Merge Farmstead</title>
     <style>
         :root {
             --ink: #4a3426;
             --paper: #fff8e7;
-            --hud-h: 96px;
-            /* The stage is 9:16 and as large as fits under the HUD. */
-            --stage-w: min(100vw, 450px, calc((100dvh - var(--hud-h)) * 9 / 16));
+            /* One slim bar of info on top, under the phone's notch. */
+            --safe-top: env(safe-area-inset-top, 0px);
+            --hud-h: calc(44px + var(--safe-top));
+            --avail-h: calc(100dvh - var(--hud-h) - env(safe-area-inset-bottom, 0px));
+            /* The stage fills the screen: as wide as fits (at most 9:16 of the height
+               left), and as tall as the screen allows, up to 9:20 on tall phones. */
+            --stage-w: min(100vw, 520px, calc(var(--avail-h) * 9 / 16));
+            --stage-h: min(var(--avail-h), calc(var(--stage-w) * 20 / 9));
         }
         * { box-sizing: border-box; }
         html, body { margin: 0; height: 100%; }
         body {
-            background: linear-gradient(170deg, #8fd3f4 0%, #c2e9fb 45%, #9bd56b 100%);
+            background: #3b2a1e;
             font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, sans-serif;
             color: var(--ink);
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
         }
         button { font: inherit; color: inherit; }
 
-        /* --- HUD --- */
+        /* --- HUD: one slim bar --- */
         .hud {
-            width: var(--stage-w);
+            width: 100%;
+            max-width: 520px;
             height: var(--hud-h);
-            padding: 8px 2px;
+            padding: var(--safe-top) 5px 0;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 6px;
-        }
-        .hud-row { display: flex; align-items: center; gap: 6px; }
-        .hud h1 {
-            flex: 1;
-            min-width: 0;
-            margin: 0;
-            font-size: 21px;
-            font-weight: 900;
+            align-items: center;
+            gap: 4px;
+            background: var(--ink);
             color: #fff;
-            text-shadow: 0 2px 0 var(--ink), 2px 0 0 var(--ink), -2px 0 0 var(--ink), 0 -2px 0 var(--ink);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 14px;
         }
-        .btn-back, .pill {
-            background: var(--paper);
-            border: 3px solid var(--ink);
+        /* The scene's name is kept for screen readers; the bar has no room for it. */
+        .hud h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); margin: 0; }
+        .btn-back, .pill, .res {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            height: 32px;
+            padding: 0 7px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 0;
             border-radius: 999px;
-            padding: 3px 11px;
+            color: #fff;
             font-weight: 900;
-            box-shadow: 0 3px 0 var(--ink);
             white-space: nowrap;
+            cursor: pointer;
         }
-        .btn-back { cursor: pointer; }
-        /* The top row holds back, title and three pills; keep them compact so it fits. */
-        .hud-row { gap: 4px; }
-        .hud h1 { font-size: 18px; }
-        .btn-back, .pill { padding: 2px 8px; font-size: 15px; }
-        .btn-back:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
-        .btn-back[hidden] { display: none; }
-        .pill-btn { cursor: pointer; }
-        .pill-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+        .btn-back { padding: 0 9px; font-size: 16px; }
+        .btn-back[hidden], .res[hidden] { display: none; }
+        .btn-back:active, .pill:active, .res:active { transform: translateY(1px); background: rgba(255, 255, 255, 0.2); }
         .pill .plus, .res .plus {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 18px;
-            height: 18px;
-            margin-left: 2px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             background: #5cc15a;
             color: #fff;
-            font-size: 14px;
+            font-size: 13px;
             line-height: 1;
         }
-        .resources {
-            justify-content: space-around;
-            min-height: 36px;
-            background: rgba(74, 52, 38, 0.85);
-            color: #fff;
-            border-radius: 10px;
-            padding: 3px 4px;
-            font-size: min(12px, calc(var(--stage-w) / 29)); /* shrinks a little on the smallest screens */
-        }
-        .res {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 0 2px;
-            background: none;
-            border: 0;
-            color: #fff;
-            line-height: 1.15;
-            white-space: nowrap;
-        }
-        button.res { cursor: pointer; }
-        .res[hidden] { display: none; }
-        .res small { font-size: 10px; opacity: 0.8; }
-        .res .plus { width: 15px; height: 15px; font-size: 12px; vertical-align: 1px; }
-        .res-energy b { font-size: 15px; }
-        /* Supercharge / Hypercharge switch, only on the boards. */
-        .res-charge {
-            justify-content: center;
-            min-width: 46px;
-            padding: 3px 8px;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            border-radius: 999px;
-            font-size: 13px;
-            letter-spacing: -2px;
-        }
-        .res-charge.on { background: linear-gradient(#ffe066, #f5a623); border-color: #fff; box-shadow: 0 0 10px #ffd34d; }
-        /* Player level with its XP bar. */
-        .res-level b { font-size: 15px; }
-        .xp-bar { display: inline-block; width: 42px; height: 8px; margin-left: 3px; vertical-align: 1px; background: rgba(255, 255, 255, 0.25); border-radius: 999px; overflow: hidden; }
+        .hud .ui-icon { height: 20px; vertical-align: middle; }
+        /* Level with a thin XP bar under it. */
+        .res-level { flex-direction: column; justify-content: center; gap: 2px; padding: 0 9px; }
+        .res-level > span { display: inline-flex; align-items: center; gap: 3px; }
+        .res-level small, .res-energy .max { display: none; }
+        .xp-bar { display: block; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.25); border-radius: 999px; overflow: hidden; }
         .xp-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffe066, #f5a623); }
+        /* Energy: the countdown shows small under the number while it refills. */
+        .res-energy { flex-direction: column; justify-content: center; gap: 0; line-height: 1.05; }
+        .res-energy > span { display: inline-flex; align-items: center; gap: 3px; }
+        .res-energy #energy-timer { font-size: 9px; font-weight: 700; opacity: 0.85; }
+        .res-energy.full #energy-timer { display: none; }
+        .hud .spacer { flex: 1; }
+        /* Supercharge / Hypercharge switch, only on the boards. */
+        .res-charge { padding: 0 6px; font-size: 13px; letter-spacing: -2px; }
+        .res-charge.on { background: linear-gradient(#ffe066, #f5a623); color: var(--ink); box-shadow: 0 0 10px #ffd34d; }
+        /* Narrow phones: a little tighter so everything stays on one line. */
+        @media (max-width: 380px) {
+            .hud { gap: 3px; padding-left: 3px; padding-right: 3px; font-size: 13px; }
+            .btn-back, .pill, .res { padding: 0 5px; gap: 2px; }
+            .hud .ui-icon { height: 17px; }
+            .pill .plus, .res .plus { width: 14px; height: 14px; font-size: 12px; }
+        }
 
         /* --- STAGE & SCENES --- */
         #stage {
             position: relative;
             width: var(--stage-w);
-            aspect-ratio: 9 / 16;
-            border: 4px solid var(--ink);
-            border-radius: 16px;
+            height: var(--stage-h);
             overflow: hidden;
             background: #7cc35b;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
             container-type: inline-size; /* lets children size text with cqw */
         }
         .scene {
@@ -305,7 +287,7 @@
             min-height: 0;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: space-evenly;
             gap: 1.5cqw;
             padding: 2cqw 2.5cqw;
         }
@@ -416,7 +398,7 @@
         .fair-ribbon {
             position: absolute;
             left: 50%;
-            top: 19%;
+            top: 1%;
             z-index: 110;
             transform: translateX(-50%) rotate(-3deg);
             display: flex;
@@ -1011,24 +993,21 @@
 </head>
 <body>
     <header class="hud">
-        <div class="hud-row">
-            <button id="btn-back" class="btn-back" hidden>⬅ Map</button>
-            <h1 id="scene-title">Farmstead</h1>
-            <button class="pill pill-btn" id="btn-coins" title="Shop"><i class="ui-slot" data-ui="coin">💵</i> <span id="money-val">50</span></button>
-            <button class="pill pill-btn" id="btn-gems" title="Shop"><i class="ui-slot" data-ui="gem">💎</i> <span id="gems-val">0</span> <span class="plus">+</span></button>
-        </div>
-        <!-- One ⚡ Energy bar pays for every producer tap, as in Merge Mansion. -->
-        <div class="hud-row resources">
-            <button class="res res-energy" id="btn-energy" title="Energy">
-                <span><i class="ui-slot" data-ui="energy">⚡</i> <b id="energy-val">100</b><small> / 100</small> <span class="plus">+</span></span>
-                <small id="energy-timer">full</small>
-            </button>
-            <button class="res res-charge" id="btn-charge" title="Supercharge" hidden>⚡</button>
-            <button class="res res-level" id="btn-level" title="Level and jobs">
-                <span><i class="ui-slot" data-ui="star">⭐</i> <b id="level-val">1</b> <span class="xp-bar"><i id="xp-fill"></i></span></span>
-                <small id="xp-text">0/6</small>
-            </button>
-        </div>
+        <button id="btn-back" class="btn-back" hidden aria-label="Back to the map">⬅</button>
+        <h1 id="scene-title">Farmstead</h1>
+        <button class="res res-level" id="btn-level" title="Level and jobs">
+            <span><i class="ui-slot" data-ui="star">⭐</i> <b id="level-val">1</b></span>
+            <span class="xp-bar"><i id="xp-fill"></i></span>
+            <small id="xp-text">0/6</small>
+        </button>
+        <button class="res res-energy" id="btn-energy" title="Energy">
+            <span><i class="ui-slot" data-ui="energy">⚡</i> <b id="energy-val">100</b><small class="max"> / 100</small> <span class="plus">+</span></span>
+            <small id="energy-timer">full</small>
+        </button>
+        <button class="res res-charge" id="btn-charge" title="Supercharge" hidden>⚡</button>
+        <span class="spacer"></span>
+        <button class="pill pill-btn" id="btn-coins" title="Shop"><i class="ui-slot" data-ui="coin">💵</i> <span id="money-val">50</span></button>
+        <button class="pill pill-btn" id="btn-gems" title="Shop"><i class="ui-slot" data-ui="gem">💎</i> <span id="gems-val">0</span> <span class="plus">+</span></button>
     </header>
 
     <main id="stage">
