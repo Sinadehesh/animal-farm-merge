@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 190" width="200" height="190">
+  <ellipse cx="100" cy="180" rx="94" ry="8" fill="#000" opacity=".15"/>
+  <g stroke="#4a3426" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="22" y="78" width="156" height="94" fill="#b77a45"/>
+    <path d="M22 98 H178 M22 118 H178 M22 138 H178 M22 158 H178" stroke-width="3"/>
+    <path d="M10 84 L100 22 L190 84 Z" fill="#4f9a55"/>
+    <path d="M140 54 V24 H160 V68" fill="#a9a196"/>
+    <!-- door + window -->
+    <rect x="86" y="118" width="34" height="54" fill="#7a4f2c"/>
+    <rect x="38" y="112" width="30" height="26" fill="#ffe08a" stroke-width="4"/>
+    <path d="M53 112 V138 M38 125 H68" stroke-width="3"/>
+    <!-- sign with saw -->
+    <rect x="128" y="104" width="44" height="34" rx="5" fill="#fff8e7" stroke-width="4"/>
+    <path d="M136 126 L162 116 L164 122 L138 132 Z" fill="#b9c4cc" stroke-width="3"/>
+    <!-- log pile -->
+    <circle cx="164" cy="166" r="10" fill="#d9a066" stroke-width="4"/>
+    <circle cx="184" cy="166" r="10" fill="#d9a066" stroke-width="4"/>
+    <circle cx="174" cy="150" r="10" fill="#d9a066" stroke-width="4"/>
+  </g>
+</svg>

@@ -1,0 +1,13 @@
+{
+  "name": "Merge Farmstead",
+  "short_name": "Farmstead",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#3b2a1e",
+  "theme_color": "#4a3426",
+  "icons": [
+    { "src": "assets/items/barn/02_chick.png", "sizes": "256x256", "type": "image/png" }
+  ]
+}

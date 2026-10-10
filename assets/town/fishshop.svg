@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 190" width="200" height="190">
+  <ellipse cx="100" cy="180" rx="94" ry="8" fill="#000" opacity=".15"/>
+  <g stroke="#4a3426" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="22" y="70" width="156" height="102" fill="#5fb6c9"/>
+    <path d="M48 70 V172 M74 70 V172 M100 70 V172 M126 70 V172 M152 70 V172" stroke-width="2.5" opacity=".6"/>
+    <path d="M12 76 L36 30 H164 L188 76 Z" fill="#e8dcc0"/>
+    <!-- fish sign -->
+    <path d="M60 50 Q84 30 116 42 Q126 46 132 52 Q122 58 116 62 Q84 72 60 50 Z" fill="#f39c3b" stroke-width="4"/>
+    <path d="M132 52 L146 42 L144 62 Z" fill="#f39c3b" stroke-width="4"/>
+    <circle cx="74" cy="48" r="3" fill="#4a3426" stroke="none"/>
+    <!-- door + window -->
+    <rect x="114" y="110" width="40" height="62" fill="#3c6f8f"/>
+    <circle cx="146" cy="142" r="3" fill="#ffd34d" stroke-width="2"/>
+    <rect x="38" y="96" width="56" height="40" fill="#bfe9ff" stroke-width="4"/>
+    <path d="M38 136 H94" stroke-width="7"/>
+    <!-- net and barrel -->
+    <path d="M38 96 Q66 128 94 96" fill="none" stroke-width="2.5"/>
+    <path d="M52 96 Q60 116 66 118 M80 96 Q72 116 66 118" fill="none" stroke-width="2.5"/>
+    <path d="M20 176 Q16 156 20 140 H46 Q50 156 46 176 Z" fill="#c8955c" stroke-width="4"/>
+    <path d="M18 150 H48 M18 166 H48" stroke-width="3"/>
+  </g>
+</svg>
