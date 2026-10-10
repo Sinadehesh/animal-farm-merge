@@ -1466,16 +1466,17 @@ function claimDailyGift(twice = false) {
 // Positions are percentages of the 9:16 stage: x/y = top-left corner, w = width.
 // Height follows the sprite's own aspect ratio.
 
+// Each building fits its picture inside this box (h = height), sitting on its bottom.
 const MAP_LAYOUT = {
-    town:   { x: 50, y: 1,  w: 48 },
-    market: { x: 3,  y: 5,  w: 44 },
-    barn:   { x: 52, y: 24, w: 46 },
-    farm:   { x: 2,  y: 31, w: 45 },
-    hay:    { x: 55, y: 49, w: 40 },
-    fert:   { x: 3,  y: 53, w: 36 },
-    aqua:   { x: 33, y: 68, w: 36 },
-    flower: { x: 70, y: 70, w: 28 },
-};
+    town:   { x: 50, y: 1,  w: 48, h: 22 },
+    market: { x: 3,  y: 5,  w: 44, h: 18 },
+    barn:   { x: 52, y: 25, w: 46, h: 20 },
+    farm:   { x: 2,  y: 29, w: 45, h: 20 },
+    hay:    { x: 55, y: 49, w: 41, h: 16 },
+    fert:   { x: 3,  y: 53, w: 36, h: 15 },
+    aqua:   { x: 33, y: 68, w: 36, h: 15 },
+    flower: { x: 70, y: 70, w: 28, h: 13 },
+}
 
 const MARKET_LAYOUT = {
     shelf: [
@@ -1497,13 +1498,14 @@ let shopkeeperLine = 0;
 // --- SCENE HELPERS ---
 
 // A sprite placed on a scene. With onClick it's a button, otherwise decoration.
-function makeSpot({ x, y, w, z, sprite, alt = '', label, onClick, locked = false, id }) {
+function makeSpot({ x, y, w, h, z, sprite, alt = '', label, onClick, locked = false, id }) {
     const el = document.createElement(onClick ? 'button' : 'div');
     if (id) el.dataset.id = id;
     el.className = 'spot' + (locked ? ' locked' : '');
     el.style.left = x + '%';
     el.style.top = y + '%';
     el.style.width = w + '%';
+    if (h) { el.style.height = h + '%'; el.classList.add('boxed'); }
     el.style.zIndex = z !== undefined ? z : Math.round(y); // lower on screen = in front
 
     const img = document.createElement('img');
@@ -1612,6 +1614,12 @@ backBtn.addEventListener('click', () => goTo('map'));
 
 // --- FARM MAP ---
 
+// The stage picture for a building with done/total jobs, or null without stages.
+function stageSprite(key, done, total) {
+    const list = (ASSETS.buildingStages || {})[key];
+    return list && list.length ? list[Math.round((done / total) * (list.length - 1))] : null;
+}
+
 function renderMap() {
     const scene = document.getElementById('scene-map');
     scene.innerHTML = '';
@@ -1623,14 +1631,18 @@ function renderMap() {
     // The town looks worn until its own jobs are done; their count shows once they start.
     const townJobs = landTasks('town');
     const townDone = townJobs.filter(taskDone).length;
-    town.classList.add(townDone === townJobs.length ? 'restored' : 'worn');
-    town.style.setProperty('--worn', (1 - townDone / townJobs.length).toFixed(2));
+    const townStage = stageSprite('town', townDone, townJobs.length);
+    if (townStage) town.querySelector('img').src = townStage;
+    else {
+        town.classList.add(townDone === townJobs.length ? 'restored' : 'worn');
+        town.style.setProperty('--worn', (1 - townDone / townJobs.length).toFixed(2));
+    }
     if (townDone || openTasks().some(t => t.land === 'town')) {
         addTag(town, 'restore-tag', townDone === townJobs.length ? '✨' : `${uiIcon('hammer', '🔨')}${townDone}/${townJobs.length}`);
     }
     scene.appendChild(town);
 
-    const market = makeSpot({ ...MAP_LAYOUT.market, sprite: ASSETS.buildings.market, label: 'Market', onClick: () => goTo('market') });
+    const market = makeSpot({ ...MAP_LAYOUT.market, sprite: stageSprite('market', restoration.done.length, TASKS.length) || ASSETS.buildings.market, label: 'Market', onClick: () => goTo('market') });
     if (dealsWaiting()) addTag(market, 'badge', '🎁'); // today's free Piggy Bank
     scene.appendChild(market);
 
@@ -1640,7 +1652,8 @@ function renderMap() {
         const spot = makeSpot({
             ...MAP_LAYOUT[id],
             id,
-            sprite: (restored && (ASSETS.buildingsRestored || {})[id]) || ASSETS.buildings[id],
+            sprite: stageSprite(id, landTasks(id).filter(taskDone).length, landTasks(id).length)
+                || (restored && (ASSETS.buildingsRestored || {})[id]) || ASSETS.buildings[id],
             label: area.name,
             locked: !unlocks[id],
             onClick: () => unlocks[id] ? goTo(id) : offerDeed(id),
@@ -1655,7 +1668,8 @@ function renderMap() {
             // Restoration: the building looks worn until its jobs are done.
             const list = landTasks(id);
             const done = list.filter(taskDone).length;
-            spot.classList.add(restored ? 'restored' : 'worn');
+            // Lands with stage pictures show their state in the picture; others fade.
+            spot.classList.add(restored ? 'restored' : (ASSETS.buildingStages || {})[id] ? 'staged' : 'worn');
             spot.style.setProperty('--worn', (1 - done / list.length).toFixed(2));
             addTag(spot, 'restore-tag', restored ? '✨' : `${uiIcon('hammer', '🔨')}${done}/${list.length}`);
         }

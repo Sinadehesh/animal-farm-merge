@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**263 assets:** 190 done ✅, 17 placeholders 🟡, 56 missing ⬜.
+**308 assets:** 232 done ✅, 17 placeholders 🟡, 59 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -33,6 +33,22 @@ Same camera angle for all: front view, slightly from above, whole building with 
 | ✅ | Compost Yard | `assets/buildings/fert.png` | a compost yard with bins |
 | ✅ | Fish Pond | `assets/buildings/aqua.png` | a fish pond with lily pads |
 | ✅ | Flower Garden | `assets/buildings/flower.png` | a flower garden with an arch |
+
+### Stages from ruin to luxury
+
+Shown as a building's jobs get done (the Market follows all jobs). They replace the faded look and the
+restored version. Listed under `buildingStages` in `assets.js`, files `assets/buildings/stages/<name>_<n>.png`.
+
+| | Building | Stages |
+|---|---|---|
+| ✅ | Sunnyvale | 8 |
+| ✅ | Market | 8 |
+| ✅ | Barn | 8 |
+| ✅ | Crop Field | 8 |
+| ✅ | Hay Field | 10 |
+| ⬜ | Compost Yard | 8 (not made yet) |
+| ⬜ | Fish Pond | 8 (not made yet) |
+| ⬜ | Flower Garden | 8 (not made yet) |
 
 ### Restored versions (6, optional)
 

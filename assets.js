@@ -13,6 +13,64 @@ const ASSETS = {
     },
 
     // Places on the farm map.
+    // A building's look from ruin to luxury, as its jobs get done (the Market
+    // follows all jobs). Cut from assets/raw/stages_*.webp. Lands without
+    // stages use buildings + a faded look instead.
+    buildingStages: {
+        hay: [
+            'assets/buildings/stages/hay_1.png',
+            'assets/buildings/stages/hay_2.png',
+            'assets/buildings/stages/hay_3.png',
+            'assets/buildings/stages/hay_4.png',
+            'assets/buildings/stages/hay_5.png',
+            'assets/buildings/stages/hay_6.png',
+            'assets/buildings/stages/hay_7.png',
+            'assets/buildings/stages/hay_8.png',
+            'assets/buildings/stages/hay_9.png',
+            'assets/buildings/stages/hay_10.png',
+        ],
+        farm: [
+            'assets/buildings/stages/farm_1.png',
+            'assets/buildings/stages/farm_2.png',
+            'assets/buildings/stages/farm_3.png',
+            'assets/buildings/stages/farm_4.png',
+            'assets/buildings/stages/farm_5.png',
+            'assets/buildings/stages/farm_6.png',
+            'assets/buildings/stages/farm_7.png',
+            'assets/buildings/stages/farm_8.png',
+        ],
+        market: [
+            'assets/buildings/stages/market_1.png',
+            'assets/buildings/stages/market_2.png',
+            'assets/buildings/stages/market_3.png',
+            'assets/buildings/stages/market_4.png',
+            'assets/buildings/stages/market_5.png',
+            'assets/buildings/stages/market_6.png',
+            'assets/buildings/stages/market_7.png',
+            'assets/buildings/stages/market_8.png',
+        ],
+        barn: [
+            'assets/buildings/stages/barn_1.png',
+            'assets/buildings/stages/barn_2.png',
+            'assets/buildings/stages/barn_3.png',
+            'assets/buildings/stages/barn_4.png',
+            'assets/buildings/stages/barn_5.png',
+            'assets/buildings/stages/barn_6.png',
+            'assets/buildings/stages/barn_7.png',
+            'assets/buildings/stages/barn_8.png',
+        ],
+        town: [
+            'assets/buildings/stages/town_1.png',
+            'assets/buildings/stages/town_2.png',
+            'assets/buildings/stages/town_3.png',
+            'assets/buildings/stages/town_4.png',
+            'assets/buildings/stages/town_5.png',
+            'assets/buildings/stages/town_6.png',
+            'assets/buildings/stages/town_7.png',
+            'assets/buildings/stages/town_8.png',
+        ],
+    },
+
     buildings: {
         town: 'assets/buildings/town.png',
         market: 'assets/buildings/market.png',
