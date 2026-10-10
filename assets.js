@@ -7,9 +7,9 @@ const ASSETS = {
     // Full-screen backgrounds (9:16). Leave the spots where buildings sit empty;
     // buildings are separate sprites so they stay clickable.
     scenes: {
-        map: 'assets/scenes/map.svg',
-        town: 'assets/scenes/town.svg',
-        market: 'assets/scenes/market.svg',
+        map: 'assets/scenes/map.jpg',
+        town: 'assets/scenes/town.jpg',
+        market: 'assets/scenes/market.jpg',
     },
 
     // Places on the farm map.
@@ -104,19 +104,19 @@ const ASSETS = {
 
     // Townsfolk (keyed by NPC id) and the market shopkeeper.
     characters: {
-        mayor: 'assets/characters/mayor.svg',
+        mayor: 'assets/characters/mayor.png',
         marnie: 'assets/characters/marnie.svg',
         robin: 'assets/characters/robin.svg',
         willy: 'assets/characters/willy.svg',
         sandy: 'assets/characters/sandy.svg',
-        shopkeeper: 'assets/characters/shopkeeper.svg',
+        shopkeeper: 'assets/characters/shopkeeper.png',
     },
 
     // Head-and-shoulders portraits, shown in a round frame in the town and in
     // each townsperson's popup. 384px copies of the originals in assets/ghibli/.
     // null = frame the full-body character drawing above instead.
     portraits: {
-        mayor: 'assets/characters/portraits/mayor.jpg',
+        mayor: 'assets/characters/portraits/mayor.png',
         marnie: 'assets/characters/portraits/marnie.jpg',
         robin: null,
         willy: 'assets/characters/portraits/willy.jpg',
@@ -151,12 +151,12 @@ const ASSETS = {
 
     // Optional background image behind each merge board (null = CSS colour).
     boards: {
-        barn: null,
-        hay: null,
-        farm: null,
-        fert: null,
-        aqua: null,
-        flower: null,
+        barn: 'assets/boards/barn.jpg',
+        hay: 'assets/boards/hay.jpg',
+        farm: 'assets/boards/farm.jpg',
+        fert: 'assets/boards/fert.jpg',
+        aqua: 'assets/boards/aqua.jpg',
+        flower: 'assets/boards/flower.jpg',
     },
 
     // Producer sprites per board, indexed by level - 1: three parts (levels 1-3),

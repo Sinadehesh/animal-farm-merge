@@ -9,15 +9,15 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**308 assets:** 232 done ✅, 17 placeholders 🟡, 59 missing ⬜.
+**308 assets:** 243 done ✅, 12 placeholders 🟡, 53 missing ⬜.
 
 ## 1. Backgrounds (3)
 
 | | Asset | File | What it shows |
 |---|---|---|---|
-| 🟡 | Map | `assets/scenes/map.svg` → `assets/scenes/map.png` | the farm seen from above: a meadow with a dirt road winding to the top right, trees and fences at the edges, empty clearings where the buildings go |
-| 🟡 | Town | `assets/scenes/town.svg` → `assets/scenes/town.png` | a cobblestone town square with a fountain in the middle, sky and hills at the top, empty spots for 5 houses |
-| 🟡 | Market | `assets/scenes/market.svg` → `assets/scenes/market.png` | inside a wooden shop with two empty shelves on the back wall (the counter is a separate prop) |
+| ✅ | Map | `assets/scenes/map.jpg` → `assets/scenes/map.png` | the farm seen from above: a meadow with a dirt road winding to the top right, trees and fences at the edges, empty clearings where the buildings go |
+| ✅ | Town | `assets/scenes/town.jpg` → `assets/scenes/town.png` | a cobblestone town square with a fountain in the middle, sky and hills at the top, empty spots for 5 houses |
+| ✅ | Market | `assets/scenes/market.jpg` → `assets/scenes/market.png` | inside a wooden shop with two empty shelves on the back wall (the counter is a separate prop) |
 
 ## 2. Farm map buildings (8)
 
@@ -81,12 +81,12 @@ Full body: chibi, head about a third of the height, standing, facing you. Portra
 
 | | Character | Full body | Portrait |
 |---|---|---|---|
-| 🟡 | Mayor Pelican | `assets/characters/mayor.svg` → `assets/characters/mayor.png` | ✅ `assets/characters/portraits/mayor.jpg` |
+| ✅ | Mayor Pelican | `assets/characters/mayor.png` | ✅ `assets/characters/portraits/mayor.png` |
 | 🟡 | Marnie, the rancher | `assets/characters/marnie.svg` → `assets/characters/marnie.png` | ✅ `assets/characters/portraits/marnie.jpg` |
 | 🟡 | Robin, the carpenter | `assets/characters/robin.svg` → `assets/characters/robin.png` | ⬜ → `assets/characters/portraits/robin.png` |
 | 🟡 | Willy, the fisherman | `assets/characters/willy.svg` → `assets/characters/willy.png` | ✅ `assets/characters/portraits/willy.jpg` |
 | 🟡 | Sandy, the florist | `assets/characters/sandy.svg` → `assets/characters/sandy.png` | ✅ `assets/characters/portraits/sandy.jpg` |
-| 🟡 | the Market shopkeeper | `assets/characters/shopkeeper.svg` → `assets/characters/shopkeeper.png` | — |
+| ✅ | the Market shopkeeper | `assets/characters/shopkeeper.png` | — |
 
 The 4 portraits that exist are in the older Ghibli style; regenerate them in the candy style so they match.
 
@@ -105,12 +105,12 @@ Shown behind each 6×8 merge board. Without one the board uses a plain colour.
 
 | | Board | File | What it shows |
 |---|---|---|---|
-| ⬜ | Barn | `assets/boards/barn.png` (portrait, 1080×1440) | wooden barn planks |
-| ⬜ | Crop Field | `assets/boards/farm.png` (portrait, 1080×1440) | tilled soil rows |
-| ⬜ | Hay Field | `assets/boards/hay.png` (portrait, 1080×1440) | golden straw |
-| ⬜ | Compost Yard | `assets/boards/fert.png` (portrait, 1080×1440) | dark compost earth |
-| ⬜ | Fish Pond | `assets/boards/aqua.png` (portrait, 1080×1440) | pond water with ripples |
-| ⬜ | Flower Garden | `assets/boards/flower.png` (portrait, 1080×1440) | grass with little flowers |
+| ✅ | Barn | `assets/boards/barn.png` (portrait, 1080×1440) | wooden barn planks |
+| ✅ | Crop Field | `assets/boards/farm.png` (portrait, 1080×1440) | tilled soil rows |
+| ✅ | Hay Field | `assets/boards/hay.png` (portrait, 1080×1440) | golden straw |
+| ✅ | Compost Yard | `assets/boards/fert.png` (portrait, 1080×1440) | dark compost earth |
+| ✅ | Fish Pond | `assets/boards/aqua.png` (portrait, 1080×1440) | pond water with ripples |
+| ✅ | Flower Garden | `assets/boards/flower.png` (portrait, 1080×1440) | grass with little flowers |
 
 ## 7. Merge items (6 boards × 12 tiers = 72)
 
