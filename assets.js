@@ -12,6 +12,15 @@ const ASSETS = {
         market: 'assets/scenes/market.jpg',
     },
 
+    // Fix scenes: the place you walk into for each land (9:16, the top half left
+    // clear for the building). null = the land's board texture.
+    areas: { barn: null, farm: null, hay: null, fert: null, aqua: null, flower: null },
+
+    // The thing each job fixes in its place, as [broken, fixed] pictures
+    // (e.g. barn4: ['assets/fixes/barn4_broken.png', 'assets/fixes/barn4_fixed.png']).
+    // Missing = the emoji in FIX_ART in game.js.
+    fixes: {},
+
     // Places on the farm map.
     // A building's look from ruin to luxury, as its jobs get done (the Market
     // follows all jobs). Cut from assets/raw/stages_*.webp. Lands without

@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**308 assets:** 243 done ✅, 12 placeholders 🟡, 53 missing ⬜.
+**374 assets:** 243 done ✅, 12 placeholders 🟡, 119 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -409,6 +409,59 @@ missing shows its emoji.
 | ⬜ | 🏆 trophy | Country Fair ribbon, header and race | `assets/ui/trophy.png` |
 | ⬜ | 📺 TV with a play button | "Watch an ad" buttons | `assets/ui/ad.png` |
 | ⬜ | 🧩 part | producer parts in reward texts | not wired yet (needs a small code change) |
+
+## 12. Fix scenes (Merge Mansion style places)
+
+Tapping a land on the map opens its place: a 9:16 background with the top half left clear for the building
+(its stage pictures stand there), and one thing to fix per job. Until the background comes, the board texture
+is used. Each job needs a **broken** and a **fixed** picture (square PNG, transparent background) in
+`assets/fixes/`, listed in `fixes` in `assets.js`; missing ones show the emoji. A fixed emoji of "—" means
+the mess just disappears (no fixed picture needed).
+
+| | Place | File |
+|---|---|---|
+| ⬜ | Barn background | `assets/areas/barn.jpg` |
+| ⬜ | Crop Field background | `assets/areas/farm.jpg` |
+| ⬜ | Hay Field background | `assets/areas/hay.jpg` |
+| ⬜ | Compost Yard background | `assets/areas/fert.jpg` |
+| ⬜ | Fish Pond background | `assets/areas/aqua.jpg` |
+| ⬜ | Flower Garden background | `assets/areas/flower.jpg` |
+
+| | Job | Broken | Fixed | Files |
+|---|---|---|---|---|
+| ⬜ | Clear the doorway | 🪵 | — | `barn1_broken.png` |
+| ⬜⬜ | Collect the first eggs | 🧺 | 🥚 | `barn2_broken.png`, `barn2_fixed.png` |
+| ⬜ | Brush off the cobwebs | 🕸️ | — | `barn3_broken.png` |
+| ⬜⬜ | Fix the feed bin | 🪣 | 🌾 | `barn4_broken.png`, `barn4_fixed.png` |
+| ⬜⬜ | Make a nest for the chicks | 🪹 | 🐣 | `barn5_broken.png`, `barn5_fixed.png` |
+| ⬜ | Haul away the junk | 🗑️ | — | `barn6_broken.png` |
+| ⬜⬜ | Welcome the hens | 🐾 | 🐔 | `barn7_broken.png`, `barn7_fixed.png` |
+| ⬜⬜ | Paint the barn red | 🖌️ | ✨ | `barn8_broken.png`, `barn8_fixed.png` |
+| ⬜ | Pull the weeds | 🌿 | — | `farm2_broken.png` |
+| ⬜⬜ | Sow the first seeds | 🕳️ | 🌱 | `farm3_broken.png`, `farm3_fixed.png` |
+| ⬜⬜ | Water the sprouts | 🥀 | 🌿 | `farm4_broken.png`, `farm4_fixed.png` |
+| ⬜⬜ | Fix the scarecrow | 🪵 | 🧑‍🌾 | `farm5_broken.png`, `farm5_fixed.png` |
+| ⬜⬜ | Pick the first strawberries | 🌱 | 🍓 | `farm6_broken.png`, `farm6_fixed.png` |
+| ⬜⬜ | Mend the fence | 🪚 | 🚧 | `farm7_broken.png`, `farm7_fixed.png` |
+| ⬜ | Clear out the old straw | 🕸️ | — | `hay2_broken.png` |
+| ⬜⬜ | Tie the first bundles | 🍂 | 🌾 | `hay3_broken.png`, `hay3_fixed.png` |
+| ⬜⬜ | Stack the bales | 🌾 | 🟫 | `hay4_broken.png`, `hay4_fixed.png` |
+| ⬜⬜ | Repair the hay loft | 🏚️ | 🏠 | `hay5_broken.png`, `hay5_fixed.png` |
+| ⬜⬜ | Fill the horse stalls | 🚪 | 🐴 | `hay6_broken.png`, `hay6_fixed.png` |
+| ⬜⬜ | Dig the compost pit | 🪨 | 🕳️ | `fert2_broken.png`, `fert2_fixed.png` |
+| ⬜⬜ | Build the compost bins | 🪵 | 🗑️ | `fert3_broken.png`, `fert3_fixed.png` |
+| ⬜⬜ | Turn the compost | 🍂 | 🌱 | `fert4_broken.png`, `fert4_fixed.png` |
+| ⬜⬜ | Feed the field | 🥀 | 🌻 | `fert5_broken.png`, `fert5_fixed.png` |
+| ⬜⬜ | Clean the pond | 🟫 | 💧 | `aqua2_broken.png`, `aqua2_fixed.png` |
+| ⬜⬜ | Welcome the frogs | 🪷 | 🐸 | `aqua3_broken.png`, `aqua3_fixed.png` |
+| ⬜⬜ | Release the goldfish | 🫧 | 🐠 | `aqua4_broken.png`, `aqua4_fixed.png` |
+| ⬜⬜ | Build a little dock | 🪵 | ⛵ | `aqua5_broken.png`, `aqua5_fixed.png` |
+| ⬜⬜ | Plant a row of daisies | 🕳️ | 🌼 | `flower2_broken.png`, `flower2_fixed.png` |
+| ⬜⬜ | Grow tulips for the Mayor | 🌱 | 🌷 | `flower3_broken.png`, `flower3_fixed.png` |
+| ⬜⬜ | Build the rose arch | 🪵 | 🌹 | `flower4_broken.png`, `flower4_fixed.png` |
+| ⬜⬜ | Plant the festival garden | 🥀 | 💐 | `flower5_broken.png`, `flower5_fixed.png` |
+| ⬜ | Clear the fog from the square | 🌫️ | — | `town1_broken.png` |
+| ⬜⬜ | Throw the Sunnyvale festival | 🪧 | 🎉 | `town7_broken.png`, `town7_fixed.png` |
 
 ## Not used by the game
 

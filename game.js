@@ -1082,7 +1082,7 @@ const TASK_STATS = {
 
 const TASKS = [
     // Barn (days 1 and 2): the tutorial, then the animals come home.
-    { id: 'barn1', land: 'barn', name: 'Clear the doorway', who: 'mayor', xp: 2, needs: [{ stat: 'boxes', n: 2 }],
+    { id: 'barn1', land: 'barn', name: 'Clear the doorway', who: 'mayor', xp: 2, needs: [{ stat: 'boxes', n: 1 }],
       line: 'Great job!' },
     { id: 'barn2', land: 'barn', name: 'Collect the first eggs', who: 'marnie', xp: 2, needs: [{ item: 'barn', tier: 1, n: 2 }],
       line: 'Eggs! Yay!' },
@@ -1177,6 +1177,213 @@ const TASKS = [
     { id: 'town7', land: 'town', name: 'Throw the Sunnyvale festival', who: 'marnie', xp: 100, reward: { gems: 50 },
       needs: [{ item: 'flower', tier: 6, n: 1 }, { item: 'farm', tier: 6, n: 1 }], line: 'Thank you!' },
 ];
+
+// --- FIX SCENES ---
+// Each land is a place you walk into, Merge Mansion style: every job is
+// something broken there, fixed on the spot once its items are made, and the
+// building behind it gets better with each one. House jobs are the houses on
+// the town square; buying a land has no spot.
+// [broken, fixed] emoji until the art comes (ASSETS.fixes[id] = [broken, fixed]
+// pictures). A fixed '' means the mess is just gone. Town spots carry their place.
+const FIX_ART = {
+    barn1: ['🪵', ''], barn2: ['🧺', '🥚'], barn3: ['🕸️', ''], barn4: ['🪣', '🌾'],
+    barn5: ['🪹', '🐣'], barn6: ['🗑️', ''], barn7: ['🐾', '🐔'], barn8: ['🖌️', '✨'],
+    farm2: ['🌿', ''], farm3: ['🕳️', '🌱'], farm4: ['🥀', '🌿'], farm5: ['🪵', '🧑‍🌾'], farm6: ['🌱', '🍓'], farm7: ['🪚', '🚧'],
+    hay2: ['🕸️', ''], hay3: ['🍂', '🌾'], hay4: ['🌾', '🟫'], hay5: ['🏚️', '🏠'], hay6: ['🚪', '🐴'],
+    fert2: ['🪨', '🕳️'], fert3: ['🪵', '🗑️'], fert4: ['🍂', '🌱'], fert5: ['🥀', '🌻'],
+    aqua2: ['🟫', '💧'], aqua3: ['🪷', '🐸'], aqua4: ['🫧', '🐠'], aqua5: ['🪵', '⛵'],
+    flower2: ['🕳️', '🌼'], flower3: ['🌱', '🌷'], flower4: ['🪵', '🌹'], flower5: ['🥀', '💐'],
+    town1: ['🌫️', '', 50, 50], town7: ['🪧', '🎉', 50, 66],
+};
+// Where a land's spots go, in job order (% of the scene, centre of the spot).
+const FIX_SLOTS = [[50, 50], [18, 58], [82, 56], [34, 70], [66, 72], [16, 84], [84, 86], [50, 86]];
+
+let fixLand = 'barn'; // the land the fix scene shows
+let fixing = false;   // a fix is playing: hands off until it's done
+const jobProgress = {}; // items made so far per job, to cheer each one
+
+function fixJobs(land) {
+    return landTasks(land).filter(t => FIX_ART[t.id]);
+}
+
+// Into a land's place (the town square for the town), and with a job, fix it there.
+function goFix(land, jobId) {
+    if (land === 'town') goTo('town');
+    else { fixLand = land; goTo('fix'); }
+    if (jobId) setTimeout(() => fixJob(jobId), 400);
+}
+
+// Where an unfinished job can be worked on: the board its missing items come
+// from, or the Market for a land still to buy.
+function goWork(task) {
+    const itemNeed = task.needs.find(n => n.item && needProgress(task, n).have < n.n);
+    if (task.needs[0].own) goTo('market');
+    else if (itemNeed) goTo(unlocks[itemNeed.item] ? itemNeed.item : 'market');
+    else goTo(unlocks[task.land] ? task.land : task.land === 'town' ? 'town' : 'map');
+}
+
+// A job's picture: its art, or its emoji. fixed = after the job.
+function fixFace(task, fixed) {
+    const art = ((ASSETS.fixes || {})[task.id] || [])[fixed ? 1 : 0];
+    if (art) return `<img src="${art}" alt="" draggable="false">`;
+    return FIX_ART[task.id][fixed ? 1 : 0];
+}
+
+// What an open job asks for, as small pictures: "📦" or "🥚×2".
+function needIcons(task) {
+    return task.needs.map(n => (n.item ? itemIcon(n.item, n.tier) : n.stat ? TASK_STATS[n.stat].emoji : '🏡')
+        + (n.n > 1 ? `<small>×${n.n}</small>` : '')).join('');
+}
+
+// The broken things of a land, each a button: open jobs show what they need
+// (a ✓ once ready), later ones wait greyed out, fixed ones show their new look.
+function addFixSpots(land, scene) {
+    fixJobs(land).forEach((task, i) => {
+        const done = taskDone(task);
+        if (done && !FIX_ART[task.id][1] && !((ASSETS.fixes || {})[task.id] || [])[1]) return; // cleared away
+        const [x, y] = FIX_ART[task.id].length > 2 ? FIX_ART[task.id].slice(2) : FIX_SLOTS[i % FIX_SLOTS.length];
+        const open = taskOpen(task);
+        const el = document.createElement('button');
+        el.className = 'fix-spot ' + (done ? 'fixed' : open ? 'open' + (taskReady(task) ? ' ready' : '') : 'later');
+        el.dataset.job = task.id;
+        el.style.left = x + '%';
+        el.style.top = y + '%';
+        el.style.zIndex = 20 + Math.round(y);
+        el.innerHTML = `<span class="fix-face">${fixFace(task, done)}</span>`;
+        if (open) addTag(el, 'bubble' + (taskReady(task) ? ' ready' : ''), taskReady(task) ? 'Fix!' : needIcons(task));
+        el.addEventListener('click', () => tapFix(task));
+        scene.appendChild(el);
+    });
+    // The open job's person waits by it.
+    const task = fixJobs(land).find(taskOpen);
+    if (task && land !== 'town') { // the town's people are already on the square
+        const spot = scene.querySelector(`.fix-spot[data-job="${task.id}"]`);
+        const npc = npcs.find(n => n.id === task.who);
+        const x = parseFloat(spot.style.left), y = parseFloat(spot.style.top);
+        const person = makeSpot({ x: x > 50 ? x - 34 : x + 12, y: y - 9, w: 20, z: 19 + Math.round(y),
+            sprite: npcPicture(npc), label: npc.name, onClick: () => tapFix(task) });
+        person.classList.add('portrait-spot', 'fix-npc');
+        addTag(person, 'say', task.name);
+        scene.appendChild(person);
+    }
+}
+
+function tapFix(task) {
+    if (fixing) return;
+    if (taskDone(task)) return toast(`“${task.line}”`);
+    if (!taskOpen(task)) return toast('🔒 Later!');
+    if (taskReady(task)) return fixJob(task.id);
+    openJob(task);
+}
+
+// An open job that isn't ready: who wants it, what it needs, off to make it.
+function openJob(task) {
+    const npc = npcs.find(n => n.id === task.who);
+    showDialog({
+        art: npcPicture(npc),
+        artRound: true,
+        title: `🔨 ${task.name}`,
+        body: `<p class="hint">— ${npc.name}</p><div class="needs">${task.needs.map(n => needLabel(task, n)).join('')}</div>`,
+        actions: [{ label: '▶ Merge', primary: true, onClick: () => goWork(task) }, { label: 'Later' }],
+    });
+}
+
+// The moment a job can be done, its person pops up to call you over to fix it.
+// It doesn't block: merging goes on, and it slides away after a while.
+function callToFix(task) {
+    document.querySelectorAll('.fix-call').forEach(el => el.remove());
+    const npc = npcs.find(n => n.id === task.who);
+    const card = document.createElement('div');
+    card.className = 'fix-call';
+    card.dataset.job = task.id;
+    card.innerHTML = `<img class="face" src="${npcPicture(npc)}" alt="${npc.name}">
+                      <span><b>${task.name}</b><small>“${FIX_ART[task.id] ? 'Let\'s fix it!' : 'Ready!'}”</small></span>
+                      <button class="btn btn-primary">${uiIcon('hammer', '🔨')} ${FIX_ART[task.id] ? 'Fix it!' : 'Do it!'}</button><button class="fix-call-x">✕</button>`;
+    card.querySelector('.btn').addEventListener('click', () => { card.remove(); goFix(task.land, task.id); });
+    card.querySelector('.fix-call-x').addEventListener('click', () => card.remove());
+    stageEl.appendChild(card);
+    setTimeout(() => card.remove(), 8000);
+}
+
+// The fix itself, made a big deal: zoom in, hammer away, poof, the new look
+// pops in with sparkles (and the building steps up), then the thank-you.
+function fixJob(id) {
+    const task = TASKS.find(t => t.id === id);
+    if (!task || !taskReady(task) || fixing) return;
+    const scene = document.getElementById(task.land === 'town' ? 'scene-town' : 'scene-fix');
+    const spot = scene.hidden ? null : scene.querySelector(`[data-job="${id}"]`);
+    if (!spot) return completeTask(id);
+    fixing = true;
+    closeDialog();
+    document.querySelectorAll('.fix-call').forEach(el => el.remove());
+    tutorialEl.hidden = true;
+    document.body.classList.add('busy');
+    const box = scene.getBoundingClientRect(), r = spot.getBoundingClientRect();
+    scene.style.transformOrigin = `${((r.left + r.width / 2 - box.left) / box.width) * 100}% ${((r.top + r.height / 2 - box.top) / box.height) * 100}%`;
+    scene.classList.add('fix-zoom');
+    spot.classList.add('hammering');
+    spot.querySelectorAll('.bubble, .restore-tag').forEach(el => el.remove());
+    addTag(spot, 'fix-hammer', uiIcon('hammer', '🔨'));
+    const fx = (cls, html, delay) => setTimeout(() => addTag(spot, cls, html), delay);
+    fx('fix-dust', '💨', 500);
+    fx('fix-dust two', '💨', 850);
+    setTimeout(() => {
+        // The new look, and the building's next stage if it has one.
+        spot.classList.remove('hammering', 'open', 'ready');
+        spot.classList.add('fixed', 'just-fixed');
+        spot.querySelectorAll('.bubble, .fix-hammer').forEach(el => el.remove());
+        spot.querySelector('.fix-face').innerHTML = fixFace(task, true) || '✨';
+        ['✨', '⭐', '✨', '⭐', '✨', '⭐'].forEach((s, k) => {
+            const p = addTag(spot, 'fix-spark', s);
+            p.style.setProperty('--a', `${k * 60}deg`);
+        });
+        const jobs = landTasks(task.land), done = jobs.filter(taskDone).length;
+        const next = stageSprite(task.land, done + 1, jobs.length);
+        const place = scene.querySelector('.fix-place img');
+        if (place && next && !place.src.endsWith(next)) {
+            place.src = next;
+            place.parentElement.classList.add('level-up');
+        }
+        const banner = document.createElement('div');
+        banner.className = 'fix-banner';
+        banner.textContent = done + 1 === jobs.length ? `🎉 ${landName(task.land)} restored!` : `✨ Fixed! ${done + 1}/${jobs.length}`;
+        stageEl.appendChild(banner);
+        setTimeout(() => banner.remove(), 1800);
+    }, 1300);
+    setTimeout(() => scene.classList.remove('fix-zoom'), 2200);
+    setTimeout(() => {
+        fixing = false;
+        document.body.classList.remove('busy');
+        scene.style.transformOrigin = '';
+        completeTask(id);
+    }, 2700);
+}
+
+function renderFix() {
+    const land = fixLand;
+    const scene = document.getElementById('scene-fix');
+    scene.innerHTML = '';
+    scene.style.backgroundImage = `url("${(ASSETS.areas || {})[land] || ASSETS.boards[land]}")`;
+    const jobs = landTasks(land);
+    const done = jobs.filter(taskDone).length;
+    const stage = stageSprite(land, done, jobs.length);
+    const place = makeSpot({ x: 6, y: 3, w: 88, h: 40, z: 1, sprite: stage || ASSETS.buildings[land], alt: AREAS[land].name });
+    place.classList.add('fix-place');
+    if (!stage) {
+        place.classList.add(done === jobs.length ? 'restored' : 'worn');
+        place.style.setProperty('--worn', (1 - done / jobs.length).toFixed(2));
+    }
+    scene.appendChild(place);
+    addFixSpots(land, scene);
+
+    const bar = document.createElement('div');
+    bar.className = 'fix-bar';
+    bar.innerHTML = `<span class="fix-progress">${uiIcon('hammer', '🔨')} ${done}/${jobs.length}
+                         <span class="quest-bar"><i style="width:${(100 * done) / jobs.length}%"></i></span></span>
+                     <button class="btn btn-primary fix-merge">▶ Merge</button>`;
+    bar.querySelector('.fix-merge').addEventListener('click', () => goTo(land));
+    scene.appendChild(bar);
+}
 
 // --- STORY ---
 // Sunnyvale after the storm, told in as few words as possible: the Mayor's
@@ -1336,10 +1543,18 @@ function checkTasks() {
             restoration.baselines[task.id] = {};
             task.needs.forEach(need => { if (need.stat) restoration.baselines[task.id][need.stat] = stats[need.stat]; });
         }
-        if (taskReady(task) && !announcedTasks.has(task.id)) {
+        const ready = taskReady(task);
+        if (ready && !announcedTasks.has(task.id)) {
             announcedTasks.add(task.id);
-            toast(`🔨 Ready: ${task.name}! Tap 📋 to do it.`, 'good');
+            // Its person calls you over (a toast while still learning).
+            if (tutorial.done && !fixing) callToFix(task);
+            else toast(`🔨 Ready: ${task.name}!`, 'good');
         }
+        // Each item made for it gets a cheer.
+        const have = task.needs.reduce((sum, n) => sum + (n.item ? needProgress(task, n).have : 0), 0);
+        const of = task.needs.reduce((sum, n) => sum + (n.item ? n.n : 0), 0);
+        if (!ready && have > (jobProgress[task.id] ?? have)) toast(`🔨 ${task.name} ${have}/${of}`, 'good');
+        jobProgress[task.id] = have;
     });
 }
 
@@ -1372,6 +1587,8 @@ function completeTask(id) {
     addXp(task.xp);
     checkTasks();
     if (AREAS[currentScene]) refreshBoard(currentScene);
+    else if (currentScene === 'fix') renderFix();
+    else if (currentScene === 'town') renderTown();
 }
 
 // The 📋 job list: XP bar, then each land's open job with what it needs.
@@ -1405,12 +1622,9 @@ function openTaskLog() {
     dialogBody.querySelectorAll('.task-go').forEach(btn => btn.addEventListener('click', () => {
         const task = TASKS.find(t => t.id === btn.dataset.id);
         closeDialog();
-        if (btn.dataset.can) return completeTask(task.id);
-        // Not ready: go where it can be worked on.
-        const itemNeed = task.needs.find(n => n.item && needProgress(task, n).have < n.n);
-        if (task.needs[0].own) goTo('market');
-        else if (itemNeed) goTo(unlocks[itemNeed.item] ? itemNeed.item : 'market'); // a land still to buy
-        else goTo(unlocks[task.land] ? task.land : task.land === 'town' ? 'town' : 'map');
+        // Ready: fix it in its place. Buying a land has no place, so it's done here.
+        if (btn.dataset.can) return FIX_ART[task.id] ? goFix(task.land, task.id) : completeTask(task.id);
+        goWork(task); // not ready: go where it can be worked on
     }));
 }
 
@@ -1593,6 +1807,7 @@ function buyAction(cost, onBuy, label = `Buy for 💵 ${cost.toLocaleString()}`)
 
 function goTo(scene) {
     currentScene = scene;
+    document.querySelectorAll('.fix-banner').forEach(el => el.remove());
     closeDialog();
     document.querySelectorAll('.scene').forEach(el => { el.hidden = el.id !== `scene-${scene}`; });
     backBtn.hidden = scene === 'map';
@@ -1601,6 +1816,7 @@ function goTo(scene) {
     if (scene === 'map') { titleEl.textContent = 'Farmstead'; renderMap(); }
     else if (scene === 'town') { titleEl.textContent = TOWN_NAME; renderTown(); }
     else if (scene === 'market') { titleEl.textContent = 'Market'; renderMarket(); }
+    else if (scene === 'fix') { titleEl.textContent = AREAS[fixLand].name; renderFix(); }
     else {
         if (selected && selected.mode !== scene) selected = null;
         if (AREAS[scene]) lastBoard = scene;
@@ -1656,7 +1872,7 @@ function renderMap() {
                 || (restored && (ASSETS.buildingsRestored || {})[id]) || ASSETS.buildings[id],
             label: area.name,
             locked: !unlocks[id],
-            onClick: () => unlocks[id] ? goTo(id) : offerDeed(id),
+            onClick: () => unlocks[id] ? goFix(id) : offerDeed(id),
         });
         if (!unlocks[id]) {
             addTag(spot, 'sale-sign', quests.level < area.level ? `${uiIcon('lock', '🔒')} Level ${area.level}` : `FOR SALE<br>💵 ${area.cost}`);
@@ -1805,14 +2021,19 @@ function renderTown() {
     scene.innerHTML = '';
     npcs.forEach(npc => {
         const talk = () => openNpc(npc);
-        const house = makeSpot({ ...npc.building, sprite: ASSETS.town[npc.home], alt: `${npc.name}'s place`, onClick: talk });
+        const job = TASKS.find(t => t.house === npc.home);
+        const house = makeSpot({ ...npc.building, sprite: ASSETS.town[npc.home], alt: `${npc.name}'s place`,
+            onClick: () => (job && taskOpen(job) ? tapFix(job) : talk()) });
         // After the storm: fog over the square until it's cleared, then each house
         // looks worn until its job rebuilds it.
-        const job = TASKS.find(t => t.house === npc.home);
         if (job && !taskDone(job)) {
             house.classList.add(taskDone(TASKS.find(t => t.id === 'town1')) ? 'worn' : 'foggy');
             house.style.setProperty('--worn', '1');
-            if (taskOpen(job)) addTag(house, 'restore-tag', uiIcon('hammer', '🔨'));
+            if (taskOpen(job)) {
+                house.dataset.job = job.id;
+                addTag(house, 'restore-tag', `${uiIcon('hammer', '🔨')} ${taskReady(job) ? '✓' : needIcons(job)}`);
+                if (taskReady(job)) house.classList.add('ready');
+            }
         }
         scene.appendChild(house);
 
@@ -1825,6 +2046,7 @@ function renderTown() {
         }
         scene.appendChild(person);
     });
+    addFixSpots('town', scene); // the fog, and later the festival
 }
 
 function openNpc(npc) {
@@ -1916,7 +2138,9 @@ function renderMarket() {
 
 const TUTORIAL = [
     { scene: 'map', who: 'mayor', text: 'Tap the Barn!',
-      target: () => document.querySelector('#scene-map button.spot[data-id="barn"]'), done: () => currentScene === 'barn' || stats.merges > 0 },
+      target: () => document.querySelector('#scene-map button.spot[data-id="barn"]'), done: () => currentScene !== 'map' || stats.merges > 0 },
+    { scene: 'fix', who: 'mayor', text: 'Tap Merge!',
+      target: () => document.querySelector('#scene-fix .fix-merge'), done: () => currentScene === 'barn' || stats.merges > 0 },
     { scene: 'barn', who: 'mayor', text: 'Tap the Feed Bin!',
       target: () => cellItem('barn', grids.barn.findIndex(c => isWorkingProducer(c) && isFree(c))), done: () => statNow('taps') >= 2 },
     { scene: 'barn', who: 'mayor', text: 'Drag Feed onto Feed to merge them!', drag: true,
@@ -1928,8 +2152,9 @@ const TUTORIAL = [
     { scene: 'barn', who: 'marnie', text: 'Deliver my Egg!',
       target: () => document.querySelector('#scene-barn .order-card.ready:not(.task-card)') || document.querySelector('#scene-barn .order-card:not(.task-card):not(.other)'),
       done: () => stats.delivered >= 1 },
-    { scene: 'map', who: 'mayor', text: 'Tap 📋 Jobs!',
-      target: () => document.querySelector('#btn-quests'), done: () => stats.jobs >= 1 },
+    // The first fix, in the Barn itself.
+    { scene: 'fix', who: 'mayor', text: 'Fix it!',
+      target: () => document.querySelector('#scene-fix .fix-spot.open'), done: () => stats.jobs >= 1 },
 ];
 const tutorial = { step: 0, done: false };
 
@@ -1960,19 +2185,27 @@ function endTutorial(finished = false) {
 // Moves the tutorial on and points at the current step's target.
 function updateTutorial() {
     if (tutorial.done) return;
+    if (fixing) { tutorialEl.hidden = true; return; }
     while (tutorial.step < TUTORIAL.length && TUTORIAL[tutorial.step].done()) tutorial.step++;
     if (tutorial.step >= TUTORIAL.length) return endTutorial(true);
     const step = TUTORIAL[tutorial.step];
     // Not where the step happens: point the way there.
     let target;
     let text = step.text;
-    if (currentScene !== step.scene) {
-        if (step.scene === 'map') {
+    if (currentScene !== step.scene || (step.scene === 'fix' && fixLand !== 'barn')) {
+        if (step.scene === 'fix' && currentScene === 'barn') {
+            // Back from the board to the Barn: its job card leads there.
+            target = document.querySelector('#scene-barn .task-card') || backBtn;
+            text = 'Tap 🔨!';
+        } else if (step.scene === 'barn' && currentScene === 'fix' && fixLand === 'barn') {
+            target = document.querySelector('#scene-fix .fix-merge');
+            text = 'Tap Merge!';
+        } else if (step.scene === 'map') {
             target = backBtn;
             text = 'Back to the map!';
         } else if (currentScene === 'map') {
-            target = document.querySelector(`#scene-map button.spot[data-id="${step.scene}"]`);
-            text = `Tap the ${AREAS[step.scene].name}!`;
+            target = document.querySelector('#scene-map button.spot[data-id="barn"]');
+            text = 'Tap the Barn!';
         } else {
             target = backBtn;
             text = 'Back to the map!';
@@ -2753,18 +2986,18 @@ function refreshBoard(mode, poppedIndices = []) {
 // Deliver button as soon as the item is on the board. Cards for other boards
 // with orders jump straight there.
 function renderOrders(mode, el) {
-    // Restoration jobs that need items from this board come first.
-    openTasks().filter(t => t.needs.some(n => n.item === mode)).forEach(task => {
+    // Restoration jobs come first: this land's own, and any needing items from this board.
+    openTasks().filter(t => t.land === mode || t.needs.some(n => n.item === mode)).forEach(task => {
         const ready = taskReady(task);
-        const need = task.needs.find(n => n.item === mode);
+        const need = task.needs.find(n => n.item === mode) || task.needs[0];
         const p = needProgress(task, need);
         const card = document.createElement('button');
         card.className = 'order-card task-card' + (ready ? ' ready' : '');
         card.innerHTML = `
-            <span class="order-who"><span class="hammer">${uiIcon('hammer', '🔨')}</span><span class="want">${itemIcon(mode, need.tier)}</span></span>
+            <span class="order-who"><span class="hammer">${uiIcon('hammer', '🔨')}</span><span class="want">${need.item ? itemIcon(need.item, need.tier) : need.stat ? TASK_STATS[need.stat].emoji : '🏡'}</span></span>
             <span class="order-pay">${p.have}/${p.of} · ⭐${task.xp}</span>
             ${ready ? '<span class="order-go">Do it</span>' : `<span class="order-need">${task.name}</span>`}`;
-        card.addEventListener('click', () => (ready ? completeTask(task.id) : openTaskLog()));
+        card.addEventListener('click', () => (ready ? goFix(task.land, task.id) : openJob(task)));
         el.appendChild(card);
     });
 

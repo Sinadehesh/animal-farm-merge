@@ -981,6 +981,122 @@
         }
         .toast.good { background: rgba(46, 140, 60, 0.96); }
 
+        /* --- FIX SCENES: a land's place, its broken things, and the fix itself --- */
+        #scene-fix { background-size: cover; }
+        .scene { transition: transform 0.5s ease-in-out; }
+        .scene.fix-zoom { transform: scale(1.6); }
+        body.busy { pointer-events: none; }
+        .fix-place.level-up img { animation: level-up 0.9s ease-out; }
+        @keyframes level-up { 0% { filter: brightness(3) saturate(0); transform: scale(0.92); } 60% { transform: scale(1.06); } 100% { filter: none; transform: scale(1); } }
+        .fix-spot {
+            position: absolute;
+            translate: -50% -50%;
+            width: 17cqw;
+            height: 17cqw;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: radial-gradient(rgba(0, 0, 0, 0.18), transparent 70%);
+            font-size: 11cqw;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .fix-face { display: grid; place-items: center; width: 100%; height: 100%; }
+        .fix-face img { width: 100%; height: 100%; object-fit: contain; }
+        .fix-spot.open .fix-face, .fix-spot.later .fix-face { filter: grayscale(0.6) sepia(0.4) brightness(0.9); }
+        .fix-spot.later { opacity: 0.55; }
+        .fix-spot.open { animation: fix-call 1.6s ease-in-out infinite; }
+        .fix-spot.ready { animation: glow 0.8s ease-in-out infinite alternate; }
+        @keyframes fix-call { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); } 50% { box-shadow: 0 0 0 2.5cqw rgba(255, 255, 255, 0); } }
+        .fix-spot .bubble { font-size: 5cqw; white-space: nowrap; }
+        .fix-spot .bubble small { font-size: 0.6em; font-weight: 900; }
+        .fix-spot.hammering { animation: shake 0.25s linear infinite; }
+        @keyframes shake { 0%, 100% { rotate: 0deg; } 25% { rotate: -6deg; } 75% { rotate: 6deg; } }
+        .fix-hammer { position: absolute; right: -40%; top: -40%; font-size: 10cqw; transform-origin: 80% 80%; animation: hammer 0.32s ease-in infinite; }
+        .fix-hammer .ui-icon { width: 10cqw; height: 10cqw; }
+        @keyframes hammer { 0% { rotate: 35deg; } 70% { rotate: -45deg; } 100% { rotate: 35deg; } }
+        .fix-dust { position: absolute; left: -30%; top: 20%; font-size: 9cqw; animation: dust 0.8s ease-out forwards; }
+        .fix-dust.two { left: 60%; animation-delay: 0.05s; }
+        @keyframes dust { from { opacity: 1; transform: scale(0.5); } to { opacity: 0; transform: scale(1.8) translateY(-4cqw); } }
+        .fix-spot.just-fixed .fix-face { animation: popIn 0.5s cubic-bezier(.3, 1.6, .5, 1); filter: none; }
+        .fix-spark { position: absolute; left: 35%; top: 35%; font-size: 5cqw; animation: spark 0.9s ease-out forwards; }
+        @keyframes spark { from { opacity: 1; transform: rotate(var(--a)) translateY(0) rotate(calc(-1 * var(--a))); } to { opacity: 0; transform: rotate(var(--a)) translateY(-16cqw) rotate(calc(-1 * var(--a))); } }
+        .fix-banner {
+            position: absolute;
+            left: 50%;
+            top: 38%;
+            z-index: 300;
+            translate: -50% -50%;
+            padding: 2cqw 5cqw;
+            background: var(--paper);
+            border: 3px solid var(--ink);
+            border-radius: 999px;
+            font-size: 7cqw;
+            font-weight: 900;
+            white-space: nowrap;
+            animation: popIn 0.4s cubic-bezier(.3, 1.6, .5, 1), fadeOut 0.4s 1.4s forwards;
+            pointer-events: none;
+        }
+        .fix-call {
+            position: absolute;
+            left: 3%;
+            right: 3%;
+            bottom: 3%;
+            z-index: 400;
+            display: flex;
+            align-items: center;
+            gap: 2.5cqw;
+            padding: 2cqw;
+            background: var(--paper);
+            border: 3px solid var(--ink);
+            border-radius: 16px;
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25);
+            animation: slide-up 0.35s cubic-bezier(.3, 1.4, .5, 1), fadeOut 0.4s 7.6s forwards;
+        }
+        @keyframes slide-up { from { translate: 0 150%; } }
+        .fix-call .face { width: 13cqw; height: 13cqw; border-radius: 50%; border: 2px solid var(--ink); object-fit: cover; object-position: top; }
+        .fix-call span { flex: 1; display: grid; font-size: max(11px, 3.6cqw); }
+        .fix-call small { color: #6b5a45; font-weight: 700; }
+        .fix-call .btn { white-space: nowrap; }
+        .fix-call-x { position: absolute; right: -2cqw; top: -2cqw; width: 6cqw; height: 6cqw; border-radius: 50%; border: 2px solid var(--ink); background: #fff; font-size: 3cqw; padding: 0; }
+        .say {
+            position: absolute;
+            left: 50%;
+            bottom: 100%;
+            translate: -50% 0;
+            margin-bottom: 1cqw;
+            padding: 0.6cqw 2cqw;
+            background: #fff;
+            border: 2px solid var(--ink);
+            border-radius: 10px;
+            font-size: max(10px, 3cqw);
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .spot.ready .restore-tag { background: #e3fbdf; border-color: #2e8c3c; animation: bob 1s ease-in-out infinite; }
+        .restore-tag small { font-size: 0.75em; }
+        .fix-bar {
+            position: absolute;
+            left: 3%;
+            right: 3%;
+            bottom: 2%;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            gap: 3cqw;
+        }
+        .fix-progress {
+            flex: 1;
+            display: grid;
+            gap: 1cqw;
+            padding: 1.5cqw 3cqw;
+            background: var(--paper);
+            border: 2px solid var(--ink);
+            border-radius: 14px;
+            font-weight: 900;
+            font-size: max(11px, 3.6cqw);
+        }
+        .fix-merge { font-size: max(14px, 5cqw); padding: 2cqw 6cqw; }
         @keyframes popIn {
             0% { transform: scale(0.1); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
@@ -1016,6 +1132,7 @@
         <section class="scene" id="scene-map"></section>
         <section class="scene" id="scene-town" hidden></section>
         <section class="scene" id="scene-market" hidden></section>
+        <section class="scene" id="scene-fix" hidden></section>
         <!-- The six merge boards are added here by game.js. -->
 
         <div id="dialog" class="dialog-backdrop" hidden>
