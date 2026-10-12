@@ -428,8 +428,7 @@ const ASSETS = {
             'assets/items/hay/10_magic_hay.png',
             'assets/items/hay/11_infinite_hay.png',
         ],
-        // Cut from assets/raw/items_farm.webp, with the seed and the watermelon
-        // from assets/raw/items_farm_alt.webp.
+        // Cut from assets/raw/farm_chain_v3.webp.
         farm: [
             'assets/items/farm/00_fertilizer.png',
             'assets/items/farm/01_seed.png',
@@ -444,8 +443,7 @@ const ASSETS = {
             'assets/items/farm/10_golden_apple.png',
             'assets/items/farm/11_giant_sun.png',
         ],
-        // Cut from assets/raw/items_fert.webp: the carrot and apple core are one
-        // item, and the gem sack (Deluxe) comes before the gold-trimmed one (Magic).
+        // Cut from assets/raw/fert_chain_v3.webp.
         fert: [
             'assets/items/fert/00_fallen_leaf.png',
             'assets/items/fert/01_leaf_pile.png',
@@ -495,5 +493,36 @@ const ASSETS = {
         fair_flowers: [],
         fair_fishing: [],
         fair_pumpkin: [],
+        // Tool chains, cut from assets/raw/tools_<chain>.webp.
+        clean: [
+            'assets/items/clean/00.png',
+            'assets/items/clean/01.png',
+            'assets/items/clean/02.png',
+            'assets/items/clean/03.png',
+            'assets/items/clean/04.png',
+            'assets/items/clean/05.png',
+            'assets/items/clean/06.png',
+            'assets/items/clean/07.png',
+        ],
+        fishing: [
+            'assets/items/fishing/00.png',
+            'assets/items/fishing/01.png',
+            'assets/items/fishing/02.png',
+            'assets/items/fishing/03.png',
+            'assets/items/fishing/04.png',
+            'assets/items/fishing/05.png',
+            'assets/items/fishing/06.png',
+            'assets/items/fishing/07.png',
+        ],
+        decor: [
+            'assets/items/decor/00.png',
+            'assets/items/decor/01.png',
+            'assets/items/decor/02.png',
+            'assets/items/decor/03.png',
+            'assets/items/decor/04.png',
+            'assets/items/decor/05.png',
+            'assets/items/decor/06.png',
+            'assets/items/decor/07.png',
+        ],
     },
 };
