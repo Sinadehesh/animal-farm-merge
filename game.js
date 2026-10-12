@@ -1335,6 +1335,17 @@ const ZONE_REWARD = { gems: 5, chest: 'brown' };
 const ZONE_PERSON = [42, 56];
 // Spots for jobs without their own place in a picture yet, in order.
 const ZONE_SLOTS = [[30, 36], [70, 42], [46, 64], [22, 84], [74, 82]];
+// How wide each object stands in its area (% of the area), so things keep
+// their real size next to the people (about 11%). Others are 11.
+const OBJECT_SIZE = {
+    planks: 13, weeds: 10, branch: 14, feedbin_broken: 10, feedbin: 10, fence_broken: 15, fence: 15, wheelbarrow_broken: 12,
+    wheelbarrow: 12, pump_broken: 9, pump: 9, junk: 13, firewood: 11, lantern: 9, mailbox: 8, tulips: 12,
+    nest_empty: 8, nest_chicks: 8, wire_torn: 12, wire_fixed: 13, trough_empty: 11, trough_full: 11, straw_mess: 11,
+    perch_broken: 10, hen_perch: 10, feeder_rusty: 7, feeder: 7, basket_empty: 7, basket_eggs: 7, sacks: 9, coop: 15, nestbox: 9,
+    stall_broken: 13, stall_cow: 15, hay_heap: 13, hay_bales: 14, ladder_fallen: 14, ladder: 13, paint_old: 8, paint: 8,
+    rope_tangled: 8, rope_hook: 8, tools_rusty: 11, tool_rack: 11, lamp_broken: 7, lamp: 7, cans_spilled: 10, milk_cans: 10,
+};
+
 // Object pictures are drawn by name (ASSETS.objects); until then, these.
 const OBJECT_EMOJI = {
     planks: '🪵', weeds: '🌿', branch: '🍂', feedbin_broken: '🪣', feedbin: '🌾', fence_broken: '🚧', fence: '🪵',
@@ -1455,7 +1466,8 @@ function addFixSpots(tasks, el) {
         spot.style.left = x + '%';
         spot.style.top = y + '%';
         spot.style.zIndex = 20 + Math.round(y);
-        spot.style.setProperty('--depth', (0.8 + 0.4 * (y / 100)).toFixed(2)); // further up = further away = smaller
+        spot.style.setProperty('--depth', (0.85 + 0.3 * (y / 100)).toFixed(2)); // further up = further away = smaller
+        spot.style.setProperty('--size', OBJECT_SIZE[task.look[done ? 1 : 0]] || 11);
         spot.innerHTML = `<span class="fix-face">${face || uiIcon('sparkle', '✨')}</span>`;
         if (open) addTag(spot, 'task-pin' + (taskReady(task) ? ' ready' : ''), needPins(task));
         spot.addEventListener('click', () => tapFix(task));
@@ -1529,7 +1541,7 @@ function addZonePerson(el, tasks, zone) {
     const body = ASSETS.characters[npc.id];
     const full = body && !body.endsWith('.svg');
     const person = full
-        ? makeSpot({ x: x - 12, y: y - 18, w: 24, z: 25 + Math.round(y), sprite: body, label: npc.name, onClick: () => tapFix(task) })
+        ? makeSpot({ x: x - 7, y: y - 12, w: 14, z: 25 + Math.round(y), sprite: body, label: npc.name, onClick: () => tapFix(task) })
         : makeSpot({ x: x - 9, y: y - 9, w: 18, z: 25 + Math.round(y), sprite: npcPicture(npc), label: npc.name, onClick: () => tapFix(task) });
     person.classList.add(full ? 'full-body' : 'portrait-spot', 'fix-npc');
     addTag(person, 'say', task.name);

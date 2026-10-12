@@ -1063,7 +1063,7 @@
         @keyframes key-turn { 0% { scale: 0.2; rotate: -40deg; opacity: 0; } 60% { scale: 1.2; rotate: 10deg; opacity: 1; } 100% { scale: 1; rotate: 90deg; } }
         @keyframes key-away { to { scale: 1.8; opacity: 0; } }
         /* Things in a picture are drawn bigger; a spot with nothing yet is a sparkly outline. */
-        .fix-spot.pictured { width: calc(22cqw * var(--depth, 1)); height: calc(22cqw * var(--depth, 1)); }
+        .fix-spot.pictured { width: calc(var(--size, 11) * 1cqw * var(--depth, 1)); height: calc(var(--size, 11) * 1cqw * var(--depth, 1)); }
         .zone.zone-done .fix-spot .fix-face { filter: drop-shadow(0 0 1px rgba(70, 45, 20, 0.4)) drop-shadow(1.5cqw 1.5cqw 1.2cqw rgba(45, 30, 12, 0.3)); }
         /* Nothing there yet: a twinkling sparkle where it will go. */
         .fix-spot.to-build { width: calc(12cqw * var(--depth, 1)); height: calc(12cqw * var(--depth, 1)); }
@@ -1082,12 +1082,12 @@
         .fix-spot {
             position: absolute;
             translate: -50% -50%;
-            width: calc(17cqw * var(--depth, 1));
-            height: calc(17cqw * var(--depth, 1));
+            width: calc(10cqw * var(--depth, 1));
+            height: calc(10cqw * var(--depth, 1));
             padding: 0;
             border: 0;
             background: none;
-            font-size: calc(11cqw * var(--depth, 1));
+            font-size: calc(7cqw * var(--depth, 1));
             line-height: 1;
             cursor: pointer;
         }
