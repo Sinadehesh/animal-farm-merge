@@ -1020,21 +1020,23 @@
         /* Locked: clouds and a padlock saying what it waits for. */
         .zone-clouds {
             position: absolute;
-            inset: -3% 0;
+            inset: -6% -4%;
             z-index: 110;
             background:
-                radial-gradient(circle at 18% 28%, #fff 0 13%, transparent 13.5%),
-                radial-gradient(circle at 42% 18%, #fff 0 17%, transparent 17.5%),
-                radial-gradient(circle at 74% 26%, #fff 0 16%, transparent 16.5%),
-                radial-gradient(circle at 28% 58%, #f2f6fb 0 20%, transparent 20.5%),
-                radial-gradient(circle at 66% 60%, #fff 0 22%, transparent 22.5%),
-                radial-gradient(circle at 12% 86%, #f2f6fb 0 16%, transparent 16.5%),
-                radial-gradient(circle at 86% 84%, #fff 0 18%, transparent 18.5%),
-                radial-gradient(circle at 50% 92%, #fff 0 18%, transparent 18.5%),
-                rgba(232, 240, 250, 0.6);
-            filter: drop-shadow(0 4px 6px rgba(70, 90, 130, 0.35));
+                radial-gradient(circle at 20% 26%, rgba(255, 255, 255, 0.98) 0 9%, rgba(255, 255, 255, 0) 19%),
+                radial-gradient(circle at 46% 16%, rgba(255, 255, 255, 0.98) 0 11%, rgba(255, 255, 255, 0) 22%),
+                radial-gradient(circle at 76% 24%, rgba(255, 255, 255, 0.98) 0 10%, rgba(255, 255, 255, 0) 21%),
+                radial-gradient(circle at 30% 56%, rgba(250, 252, 255, 0.98) 0 13%, rgba(250, 252, 255, 0) 26%),
+                radial-gradient(circle at 66% 58%, rgba(255, 255, 255, 0.98) 0 14%, rgba(255, 255, 255, 0) 27%),
+                radial-gradient(circle at 12% 84%, rgba(250, 252, 255, 0.98) 0 11%, rgba(250, 252, 255, 0) 22%),
+                radial-gradient(circle at 86% 82%, rgba(255, 255, 255, 0.98) 0 12%, rgba(255, 255, 255, 0) 24%),
+                radial-gradient(circle at 50% 90%, rgba(255, 255, 255, 0.98) 0 12%, rgba(255, 255, 255, 0) 24%),
+                linear-gradient(rgba(236, 243, 252, 0.72), rgba(222, 233, 247, 0.82));
+            backdrop-filter: blur(4px);
+            animation: drift 9s ease-in-out infinite alternate;
             transition: opacity 0.9s ease-in, transform 0.9s ease-in;
         }
+        @keyframes drift { from { background-position: 0 0; } to { background-position: 3cqw -1.5cqw; } }
         .zone.opening .zone-clouds { opacity: 0; transform: scale(1.5); }
         .zone-lock {
             position: absolute;
@@ -1061,36 +1063,52 @@
         @keyframes key-turn { 0% { scale: 0.2; rotate: -40deg; opacity: 0; } 60% { scale: 1.2; rotate: 10deg; opacity: 1; } 100% { scale: 1; rotate: 90deg; } }
         @keyframes key-away { to { scale: 1.8; opacity: 0; } }
         /* Things in a picture are drawn bigger; a spot with nothing yet is a sparkly outline. */
-        .fix-spot.pictured { width: 22cqw; height: 22cqw; background: none; border-radius: 30%; }
-        .fix-spot.pictured .fix-face, .fix-spot.pictured.later .fix-face { filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.3)); }
-        .fix-spot.pictured.later { opacity: 1; }
-        .fix-spot.to-build { width: 14cqw; height: 14cqw; border: 2px dashed rgba(255, 255, 255, 0.85); background: rgba(255, 255, 255, 0.18); font-size: 6cqw; }
-        .fix-spot.to-build.later { opacity: 0.4; }
+        .fix-spot.pictured { width: calc(22cqw * var(--depth, 1)); height: calc(22cqw * var(--depth, 1)); }
+        .zone.zone-done .fix-spot .fix-face { filter: drop-shadow(0 0 1px rgba(70, 45, 20, 0.4)) drop-shadow(1.5cqw 1.5cqw 1.2cqw rgba(45, 30, 12, 0.3)); }
+        /* Nothing there yet: a twinkling sparkle where it will go. */
+        .fix-spot.to-build { width: calc(12cqw * var(--depth, 1)); height: calc(12cqw * var(--depth, 1)); }
+        .fix-spot.to-build::before { background: radial-gradient(closest-side, rgba(255, 250, 220, 0.55), transparent); bottom: 10%; height: 40%; }
+        .fix-spot.to-build .fix-face { filter: drop-shadow(0 0 1.5cqw #fff6c8); animation: twinkle 1.6s ease-in-out infinite; }
+        .fix-spot.to-build.later { opacity: 0.45; }
+        @keyframes twinkle { 0%, 100% { scale: 0.85; opacity: 0.75; } 50% { scale: 1.08; opacity: 1; } }
         .scene { transition: transform 0.5s ease-in-out; }
         .scene.fix-zoom { transform: scale(1.6); }
         body.busy { pointer-events: none; }
         .fix-place.level-up img { animation: level-up 0.9s ease-out; }
         @keyframes level-up { 0% { filter: brightness(3) saturate(0); transform: scale(0.92); } 60% { transform: scale(1.06); } 100% { filter: none; transform: scale(1); } }
+        /* Things to fix, sitting in the picture: a soft contact shadow on the ground,
+           colours matched to the painting, smaller further up for depth, and
+           still-broken things faded with their area. */
         .fix-spot {
             position: absolute;
             translate: -50% -50%;
-            width: 17cqw;
-            height: 17cqw;
+            width: calc(17cqw * var(--depth, 1));
+            height: calc(17cqw * var(--depth, 1));
             padding: 0;
             border: 0;
-            border-radius: 50%;
-            background: radial-gradient(rgba(0, 0, 0, 0.18), transparent 70%);
-            font-size: 11cqw;
+            background: none;
+            font-size: calc(11cqw * var(--depth, 1));
             line-height: 1;
             cursor: pointer;
         }
-        .fix-face { display: grid; place-items: center; width: 100%; height: 100%; }
+        .fix-spot::before {
+            content: '';
+            position: absolute;
+            left: 12%;
+            right: 12%;
+            bottom: 2%;
+            height: 22%;
+            background: radial-gradient(closest-side, rgba(45, 30, 12, 0.5), rgba(45, 30, 12, 0.18) 60%, transparent);
+            pointer-events: none;
+        }
+        .fix-face { position: relative; display: grid; place-items: center; width: 100%; height: 100%; }
         .fix-face img { width: 100%; height: 100%; object-fit: contain; }
-        .fix-spot.open .fix-face, .fix-spot.later .fix-face { filter: grayscale(0.6) sepia(0.4) brightness(0.9); }
-        .fix-spot.later { opacity: 0.55; }
-        .fix-spot.open { animation: fix-call 1.6s ease-in-out infinite; }
-        .fix-spot.ready { animation: glow 0.8s ease-in-out infinite alternate; }
-        @keyframes fix-call { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); } 50% { box-shadow: 0 0 0 2.5cqw rgba(255, 255, 255, 0); } }
+        .fix-spot .fix-face { filter: saturate(0.9) sepia(0.06) drop-shadow(0 0 1px rgba(70, 45, 20, 0.45)) drop-shadow(1.5cqw 1.5cqw 1.2cqw rgba(45, 30, 12, 0.3)); }
+        .fix-spot.open .fix-face, .fix-spot.later .fix-face { filter: saturate(0.55) sepia(0.3) brightness(0.9) drop-shadow(0 0 1px rgba(70, 45, 20, 0.45)) drop-shadow(1.5cqw 1.5cqw 1.2cqw rgba(45, 30, 12, 0.3)); }
+        .fix-spot.open .fix-face { animation: fix-call 1.8s ease-in-out infinite; }
+        .fix-spot.ready .fix-face { animation: ready-glow 0.9s ease-in-out infinite alternate; }
+        @keyframes fix-call { 0%, 100% { scale: 1; } 50% { scale: 1.05; } }
+        @keyframes ready-glow { from { filter: saturate(0.7) drop-shadow(0 0 0.5cqw #fff8c0); } to { filter: saturate(0.9) drop-shadow(0 0 2.5cqw #fff3a0) drop-shadow(0 0 1cqw #ffffff); } }
         .fix-spot .bubble { font-size: 5cqw; white-space: nowrap; }
         .fix-spot .bubble small { font-size: 0.6em; font-weight: 900; }
         .fix-spot.hammering { animation: shake 0.25s linear infinite; }

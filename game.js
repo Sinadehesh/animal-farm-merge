@@ -1455,6 +1455,7 @@ function addFixSpots(tasks, el) {
         spot.style.left = x + '%';
         spot.style.top = y + '%';
         spot.style.zIndex = 20 + Math.round(y);
+        spot.style.setProperty('--depth', (0.8 + 0.4 * (y / 100)).toFixed(2)); // further up = further away = smaller
         spot.innerHTML = `<span class="fix-face">${face || uiIcon('sparkle', '✨')}</span>`;
         if (open) addTag(spot, 'task-pin' + (taskReady(task) ? ' ready' : ''), needPins(task));
         spot.addEventListener('click', () => tapFix(task));
@@ -1473,17 +1474,13 @@ function renderZone(zone) {
     el.className = 'zone' + (open ? '' : ' locked') + (done === tasks.length ? ' zone-done' : '');
     el.dataset.zone = zone.id;
     const art = (ASSETS.areas || {})[zone.id];
-    const picture = `url('${art || ASSETS.boards[zone.land]}')`;
-    el.innerHTML = `<div class="zone-art" style="background-image:${picture}"></div>
-                    <div class="zone-worn" style="background-image:${picture}"></div>`;
-    if (!art && landZones(zone.land)[0] === zone) {
-        // No picture yet: the land's building stands at the top of its first area.
-        const list = landTasks(zone.land);
-        const place = makeSpot({ x: 14, y: 2, w: 72, h: 46, z: 1,
-            sprite: stageSprite(zone.land, list.filter(taskDone).length, list.length) || ASSETS.buildings[zone.land], alt: '' });
-        place.classList.add('fix-place');
-        el.appendChild(place);
-    }
+    // No picture yet: a window onto the painted farm map stands in, a different
+    // stretch of it for each area.
+    const picture = `url('${art || ASSETS.scenes.map}')`;
+    const crop = art ? '' : `;background-size:100% auto;background-position:center ${(ZONES.indexOf(zone) * 37) % 100}%`;
+    if (!art) el.classList.add('stand-in');
+    el.innerHTML = `<div class="zone-art" style="background-image:${picture}${crop}"></div>
+                    <div class="zone-worn" style="background-image:${picture}${crop}"></div>`;
     wearZone(el, tasks);
     if (open) addFixSpots(tasks, el);
     addTag(el, 'zone-sign', `${zone.name} <b>${done}/${tasks.length}</b>`);
@@ -1508,12 +1505,26 @@ function wearZone(el, tasks, growing = null) {
     worn.style.maskImage = worn.style.webkitMaskImage = mask;
 }
 
+// Where a person can stand in an area without picture of its own: the point
+// furthest from every thing to fix (and the pin above it).
+function clearestSpot(tasks) {
+    const spots = tasks.map((t, i) => t.at || ZONE_SLOTS[i % ZONE_SLOTS.length]);
+    let best = ZONE_PERSON, far = -1;
+    for (let x = 18; x <= 82; x += 8) {
+        for (let y = 34; y <= 82; y += 6) {
+            const d = Math.min(...spots.map(([sx, sy]) => Math.hypot(sx - x, (sy - 8) - y) * (sy - 8 < y ? 1 : 0.8)));
+            if (d > far) { far = d; best = [x, y]; }
+        }
+    }
+    return best;
+}
+
 // The person of an area's first open job stands in the area's clear spot,
 // saying what it is.
 function addZonePerson(el, tasks, zone) {
     const task = tasks.find(taskOpen);
     if (!task) return;
-    const [x, y] = zone.person || ZONE_PERSON;
+    const [x, y] = zone.person || clearestSpot(tasks);
     const npc = npcs.find(n => n.id === task.who);
     const body = ASSETS.characters[npc.id];
     const full = body && !body.endsWith('.svg');
