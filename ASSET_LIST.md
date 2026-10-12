@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**447 assets:** 339 done ✅, 8 placeholders 🟡, 100 missing ⬜.
+**447 assets:** 373 done ✅, 8 placeholders 🟡, 66 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -88,7 +88,7 @@ and **cheering** full body (after a fix).
 | ✅ | Robin, the carpenter | ✅ | ✅ | ✅ | ✅ |
 | ✅ | Willy, the fisherman | ✅ | ✅ | ✅ | ✅ |
 | ✅ | Sandy, the florist | ✅ | ✅ | ✅ | ✅ |
-| ⬜ | the Market shopkeeper | ⬜ | ⬜ | ⬜ | ⬜ |
+| ✅ | the Market shopkeeper | ✅ | ✅ | ✅ | ✅ |
 
 ## 5. Props (4)
 
@@ -507,12 +507,12 @@ its own 8-step chain (`items.<chain>`, files `assets/items/<chain>/00.png` … `
 
 | | Producer | Land | Chain |
 |---|---|---|---|
-| ⬜ | 🧰 Toolbox | Barn | ⬜ Screw, Hammer, Screwdriver, Wrench, Saw, Power Drill, Tool Kit, Golden Tool Chest |
-| ⬜ | 🛖 Garden Shed | Crop Field | ⬜ Gloves, Trowel, Shears, Rake, Garden Hose, Lawn Mower, Tractor, Golden Tractor |
-| ⬜ | 🪓 Log Pile | Hay Field | ⬜ Twig, Log, Plank, Plank Bundle, Beams, Wooden Crate, Barrel, Carved Chest |
-| ⬜ | 🧹 Broom Cabinet | Compost Yard | ✅ Sponge, Soap, Scrub Brush, Soapy Bucket, Broom, Mop, Cleaning Trolley, Golden Broom |
-| ⬜ | 🎣 Tackle Box | Fish Pond | ✅ Hook, Bobber, Rope, Net, Fishing Rod, Oars, Life Ring, Rowboat |
-| ⬜ | 🏮 Lantern Crate | Flower Garden | ✅ Candle, Paper Lantern, Bunting, Glass Lantern, Fairy Lights, Balloons, Lamp Post, Golden Firework |
+| ✅ | 🧰 Toolbox | Barn | ✅ Screw, Hammer, Screwdriver, Wrench, Saw, Power Drill, Tool Kit, Golden Tool Chest |
+| ✅ | 🛖 Garden Shed | Crop Field | ✅ Gloves, Trowel, Shears, Rake, Garden Hose, Lawn Mower, Tractor, Golden Tractor |
+| ✅ | 🪓 Log Pile | Hay Field | ✅ Twig, Log, Plank, Plank Bundle, Beams, Wooden Crate, Barrel, Carved Chest |
+| ✅ | 🧹 Broom Cabinet | Compost Yard | ✅ Sponge, Soap, Scrub Brush, Soapy Bucket, Broom, Mop, Cleaning Trolley, Golden Broom |
+| ✅ | 🎣 Tackle Box | Fish Pond | ✅ Hook, Bobber, Rope, Net, Fishing Rod, Oars, Life Ring, Rowboat |
+| ✅ | 🏮 Lantern Crate | Flower Garden | ✅ Candle, Paper Lantern, Bunting, Glass Lantern, Fairy Lights, Balloons, Lamp Post, Golden Firework |
 
 ## Not used by the game
 

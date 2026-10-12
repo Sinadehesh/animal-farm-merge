@@ -175,6 +175,7 @@ const ASSETS = {
         robin: 'assets/characters/portraits/robin.png',
         willy: 'assets/characters/portraits/willy.png',
         sandy: 'assets/characters/portraits/sandy.png',
+        shopkeeper: 'assets/characters/portraits/shopkeeper.png',
     },
 
     // The same people from the waist up, waving (calling you over, story
@@ -186,6 +187,7 @@ const ASSETS = {
         robin: 'assets/characters/wave/robin.png',
         willy: 'assets/characters/wave/willy.png',
         sandy: 'assets/characters/wave/sandy.png',
+        shopkeeper: 'assets/characters/wave/shopkeeper.png',
     },
     cheer: {
         mayor: 'assets/characters/cheer/mayor.png',
@@ -193,12 +195,17 @@ const ASSETS = {
         robin: 'assets/characters/cheer/robin.png',
         willy: 'assets/characters/cheer/willy.png',
         sandy: 'assets/characters/cheer/sandy.png',
+        shopkeeper: 'assets/characters/cheer/shopkeeper.png',
     },
 
     // Tool producers, one per land (a single picture each), by chain. Their
     // items go in items.<chain> once drawn (tools, garden, wood, clean, fishing,
     // decor). null = emoji.
-    toolProducers: { tools: null, garden: null, wood: null, clean: null, fishing: null, decor: null },
+    toolProducers: {
+        tools: 'assets/producers/tools/tools.png', garden: 'assets/producers/tools/garden.png',
+        wood: 'assets/producers/tools/wood.png', clean: 'assets/producers/tools/clean.png',
+        fishing: 'assets/producers/tools/fishing.png', decor: 'assets/producers/tools/decor.png',
+    },
 
     // Things inside the market.
     props: {
@@ -494,6 +501,36 @@ const ASSETS = {
         fair_fishing: [],
         fair_pumpkin: [],
         // Tool chains, cut from assets/raw/tools_<chain>.webp.
+        tools: [
+            'assets/items/tools/00.png',
+            'assets/items/tools/01.png',
+            'assets/items/tools/02.png',
+            'assets/items/tools/03.png',
+            'assets/items/tools/04.png',
+            'assets/items/tools/05.png',
+            'assets/items/tools/06.png',
+            'assets/items/tools/07.png',
+        ],
+        garden: [
+            'assets/items/garden/00.png',
+            'assets/items/garden/01.png',
+            'assets/items/garden/02.png',
+            'assets/items/garden/03.png',
+            'assets/items/garden/04.png',
+            'assets/items/garden/05.png',
+            'assets/items/garden/06.png',
+            'assets/items/garden/07.png',
+        ],
+        wood: [
+            'assets/items/wood/00.png',
+            'assets/items/wood/01.png',
+            'assets/items/wood/02.png',
+            'assets/items/wood/03.png',
+            'assets/items/wood/04.png',
+            'assets/items/wood/05.png',
+            'assets/items/wood/06.png',
+            'assets/items/wood/07.png',
+        ],
         clean: [
             'assets/items/clean/00.png',
             'assets/items/clean/01.png',
