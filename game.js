@@ -1491,10 +1491,15 @@ function renderZone(zone) {
     const picture = `url('${art || ASSETS.scenes.map}')`;
     const crop = art ? '' : `;background-size:100% auto;background-position:center ${(ZONES.indexOf(zone) * 37) % 100}%`;
     if (!art) el.classList.add('stand-in');
-    el.innerHTML = `<div class="zone-art" style="background-image:${picture}${crop}"></div>
-                    <div class="zone-worn" style="background-image:${picture}${crop}"></div>`;
+    // A whole screen of its own: the picture in its frame, and behind it a soft,
+    // blurred copy filling the rest of the screen.
+    el.innerHTML = `<div class="zone-backdrop" style="background-image:${picture}${crop}"></div>
+                    <div class="zone-frame" style="--aspect:${zone.aspect || 1}">
+                        <div class="zone-art" style="background-image:${picture}${crop}"></div>
+                        <div class="zone-worn" style="background-image:${picture}${crop}"></div>
+                    </div>`;
     wearZone(el, tasks);
-    if (open) addFixSpots(tasks, el);
+    if (open) addFixSpots(tasks, el.querySelector('.zone-frame'));
     addTag(el, 'zone-sign', `${zone.name} <b>${done}/${tasks.length}</b>`);
     if (!open) {
         el.insertAdjacentHTML('beforeend', `<div class="zone-clouds"></div>
@@ -1711,25 +1716,46 @@ function renderFix() {
     const land = fixLand;
     const scene = document.getElementById('scene-fix');
     const old = scene.querySelector('.world');
-    const keep = old && scene.dataset.land === land ? old.scrollTop : null;
+    const keep = old && scene.dataset.land === land ? old.scrollLeft : null;
     scene.innerHTML = '';
     scene.dataset.land = land;
     const world = document.createElement('div');
     world.className = 'world';
     landZones(land).forEach(zone => {
         const el = renderZone(zone);
-        if (zoneOpen(zone)) addZonePerson(el, zoneTasks(zone.id), zone);
+        if (zoneOpen(zone)) addZonePerson(el.querySelector('.zone-frame'), zoneTasks(zone.id), zone);
         world.appendChild(el);
     });
+    // Swipe sideways from area to area: dots for where you are, arrows naming the next one.
+    const zones = landZones(land);
+    const nav = document.createElement('div');
+    nav.className = 'zone-nav';
+    nav.innerHTML = zones.map(z => `<i title="${z.name}"></i>`).join('');
+    const arrows = ['left', 'right'].map(side => {
+        const b = document.createElement('button');
+        b.className = `zone-arrow ${side}`;
+        b.addEventListener('click', () => world.scrollBy({ left: (side === 'left' ? -1 : 1) * world.clientWidth, behavior: 'smooth' }));
+        return b;
+    });
+    const showPage = () => {
+        const i = Math.round(world.scrollLeft / Math.max(1, world.clientWidth));
+        nav.querySelectorAll('i').forEach((dot, k) => dot.classList.toggle('on', k === i));
+        arrows[0].hidden = i <= 0;
+        arrows[1].hidden = i >= zones.length - 1;
+        if (zones[i - 1]) arrows[0].innerHTML = `‹<small>${zones[i - 1].name}</small>`;
+        if (zones[i + 1]) arrows[1].innerHTML = `<small>${zones[i + 1].name}</small>›`;
+    };
+    world.addEventListener('scroll', showPage, { passive: true });
     const jobs = landTasks(land);
     const done = jobs.filter(taskDone).length;
     const progress = document.createElement('div');
     progress.className = 'place-progress';
     progress.innerHTML = `${uiIcon('hammer', '🔨')} ${done}/${jobs.length}<span class="quest-bar"><i style="width:${(100 * done) / jobs.length}%"></i></span>`;
-    scene.append(world, progress, boardFab(land), tasksFab());
-    const open = landZones(land).filter(zoneOpen);
+    scene.append(world, progress, nav, ...arrows, boardFab(land), tasksFab());
+    const open = zones.filter(zoneOpen);
     const here = open.find(z => !zoneDone(z)) || open[open.length - 1];
-    world.scrollTop = keep ?? (here ? world.querySelector(`[data-zone="${here.id}"]`).offsetTop : 0);
+    world.scrollLeft = keep ?? (here ? zones.indexOf(here) * world.clientWidth : 0);
+    showPage();
     unlockNewZones(land, world);
 }
 
@@ -1743,7 +1769,7 @@ function unlockNewZones(land, world) {
     const el = world.querySelector(`[data-zone="${zone.id}"]`);
     el.classList.add('unlocking');
     el.insertAdjacentHTML('beforeend', `<div class="zone-clouds"></div><div class="zone-key">${uiIcon('key', '🗝️')}</div>`);
-    world.scrollTop = el.offsetTop;
+    world.scrollLeft = el.offsetLeft;
     document.body.classList.add('busy');
     setTimeout(() => el.classList.add('opening'), 1000);
     setTimeout(() => {

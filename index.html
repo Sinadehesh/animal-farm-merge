@@ -984,11 +984,22 @@
         /* --- FIX SCENES: a land's place, its broken things, and the fix itself --- */
         #scene-fix { background: #5f9a45; }
         /* A land's place: its areas, square pictures in a column you scroll. */
-        .world { position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; padding-bottom: 26cqw; scrollbar-width: none; overscroll-behavior: contain; }
+        .world { position: absolute; inset: 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior: contain; }
         .world::-webkit-scrollbar { display: none; }
         @property --grow { syntax: '<percentage>'; inherits: true; initial-value: 15%; }
-        .zone { position: relative; width: 100%; aspect-ratio: 1; transition: --grow 1s ease-out; }
-        .zone + .zone { box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.3); }
+        .zone { position: relative; flex: 0 0 100%; height: 100%; overflow: hidden; scroll-snap-align: start; scroll-snap-stop: always; transition: --grow 1s ease-out; }
+        .zone-backdrop { position: absolute; inset: -6%; background-size: cover; background-position: center; filter: blur(14px) brightness(0.85) saturate(0.85); }
+        .zone-frame { position: absolute; left: 0; right: 0; top: 50%; translate: 0 -50%; aspect-ratio: var(--aspect, 1); max-height: 100%; }
+        .zone-frame .zone-art { box-shadow: 0 0 6cqw 3cqw rgba(0, 0, 0, 0.12); }
+        .zone-nav { position: absolute; left: 50%; bottom: 4%; z-index: 130; translate: -50% 0; display: flex; gap: 2cqw; padding: 1.2cqw 2.5cqw; background: rgba(40, 25, 10, 0.35); border-radius: 999px; }
+        .zone-nav i { width: 2.4cqw; height: 2.4cqw; border-radius: 50%; background: rgba(255, 255, 255, 0.55); }
+        .zone-nav i.on { background: #fff; scale: 1.25; }
+        .zone-arrow { position: absolute; top: 50%; z-index: 130; translate: 0 -50%; display: grid; place-items: center; padding: 2cqw 1.5cqw; background: rgba(255, 248, 231, 0.9); border: 2px solid var(--ink); font-size: 7cqw; font-weight: 900; line-height: 1; cursor: pointer; }
+        .zone-arrow small { font-size: max(9px, 2.6cqw); writing-mode: vertical-rl; rotate: 180deg; margin: 1cqw 0; }
+        .zone-arrow.left { left: 0; border-left: 0; border-radius: 0 14px 14px 0; }
+        .zone-arrow.right { right: 0; border-right: 0; border-radius: 14px 0 0 14px; }
+        .zone-arrow.right small { rotate: 0deg; }
+        .zone-arrow[hidden] { display: none; }
         .zone-art, .zone-worn { position: absolute; inset: 0; background-size: cover; background-position: center; }
         /* Still broken: faded and dusty, with clear holes where fixes brought the colour back. */
         .zone-worn {
@@ -1016,7 +1027,7 @@
             text-shadow: 0 1px 0 #4e3216;
         }
         .zone-sign b { margin-left: 1.5cqw; color: #ffe27a; }
-        .zone:first-child .zone-sign { top: 14cqw; } /* below the land's progress */
+        .zone .zone-sign { top: 14cqw; } /* below the land's progress */
         /* Locked: clouds and a padlock saying what it waits for. */
         .zone-clouds {
             position: absolute;
