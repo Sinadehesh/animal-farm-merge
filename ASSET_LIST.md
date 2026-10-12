@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**375 assets:** 278 done ✅, 12 placeholders 🟡, 85 missing ⬜.
+**380 assets:** 301 done ✅, 12 placeholders 🟡, 67 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -384,7 +384,7 @@ The same on every board. Each level looks fuller or bigger than the one before.
 | ✅ | Piggy Bank | 4 | `assets/items/special/piggy_1.png` … `_4.png` | a pink piggy bank, rounder and shinier each level |
 | ✅ | Double Bubble | 1 | `assets/items/special/bubble.png` | an empty, see-through soap bubble with a rainbow sheen (the item shows inside it) |
 
-## 11. Interface icons (19)
+## 11. Interface icons (24)
 
 Small square PNGs with a transparent background in `assets/ui/` (listed in `ui` in `assets.js`). Anything
 missing shows its emoji.
@@ -397,7 +397,12 @@ missing shows its emoji.
 | ✅ | ⭐ level | top bar | `assets/ui/star.png` |
 | ✅ | 🎁 daily gift, Daily Deals, rewards box | map, Market and board buttons | `assets/ui/gift.png` |
 | ✅ | 📋 tasks | bottom-right Tasks button | `assets/ui/jobs.png` |
-| ⬜ | 🧺 merge board | bottom-left Merge button | `assets/ui/merge.png` |
+| ✅ | 🧺 merge board | bottom-left Merge button | `assets/ui/merge.png` |
+| ✅ | 🗝️ golden key | an area unlocking | `assets/ui/key.png` |
+| ✅ | 🎁 reward box | area and land rewards, task cards | `assets/ui/reward.png` |
+| ✅ | ☁️ cloud | spare: locked areas | `assets/ui/cloud.png` |
+| ✅ | ✅ check badge | spare: ready items | `assets/ui/check.png` |
+| ✅ | ✨ sparkle | empty spots to build on | `assets/ui/sparkle.png` |
 | ✅ | 🎟️ Season Pass | map button | `assets/ui/pass.png` |
 | ✅ | 📅 daily goals | map button | `assets/ui/daily.png` |
 | ✅ | 🫙 Gem Jar | map button | `assets/ui/jar.png` |
@@ -406,7 +411,7 @@ missing shows its emoji.
 | ✅ | 🔒 lock | locked chests, lands and deeds | `assets/ui/lock.png` |
 | ⬜ | 🏷️ Flash Sale (price tag) | Market button | `assets/ui/sale.png` |
 | ⬜ | 🕸️ cobweb | info bar for cobwebbed items | `assets/ui/cobweb.png` |
-| ⬜ | 🔨 hammer | job tags on the map and job cards | `assets/ui/hammer.png` |
+| ✅ | 🔨 hammer | job tags on the map and job cards | `assets/ui/hammer.png` |
 | ⬜ | 🏆 trophy | Country Fair ribbon, header and race | `assets/ui/trophy.png` |
 | ⬜ | 📺 TV with a play button | "Watch an ad" buttons | `assets/ui/ad.png` |
 | ⬜ | 🧩 part | producer parts in reward texts | not wired yet (needs a small code change) |
@@ -478,22 +483,22 @@ sheet yet use emoji pairs written on the job itself.
 | ✅ | `sacks` | 🎒 | Clear out the old sacks |
 | ✅ | `coop` | 🏠 | Build a little coop (after) |
 | ✅ | `nestbox` | 🪺 | Make a nest box (after) |
-| ⬜ | `stall_broken` | 🚪 | Fix the stall door |
-| ⬜ | `stall_cow` | 🐄 | Fix the stall door (after) |
-| ⬜ | `hay_heap` | 🍂 | Stack the hay |
-| ⬜ | `hay_bales` | 🌾 | Stack the hay (after) |
-| ⬜ | `ladder_fallen` | 🪜 | Stand up the ladder |
-| ⬜ | `ladder` | 🪜 | Stand up the ladder (after) |
-| ⬜ | `paint_old` | 🪣 | Paint the barn red |
-| ⬜ | `paint` | 🎨 | Paint the barn red (after) |
-| ⬜ | `rope_tangled` | 🧶 | Coil the ropes |
-| ⬜ | `rope_hook` | 🪢 | Coil the ropes (after) |
-| ⬜ | `tools_rusty` | 🔧 | Tidy the tool rack |
-| ⬜ | `tool_rack` | 🧰 | Tidy the tool rack (after) |
-| ⬜ | `lamp_broken` | 🕯️ | Light the lantern |
-| ⬜ | `lamp` | 🏮 | Light the lantern (after) |
-| ⬜ | `cans_spilled` | 🥛 | Line up the milk cans |
-| ⬜ | `milk_cans` | 🥛 | Line up the milk cans (after) |
+| ✅ | `stall_broken` | 🚪 | Fix the stall door |
+| ✅ | `stall_cow` | 🐄 | Fix the stall door (after) |
+| ✅ | `hay_heap` | 🍂 | Stack the hay |
+| ✅ | `hay_bales` | 🌾 | Stack the hay (after) |
+| ✅ | `ladder_fallen` | 🪜 | Stand up the ladder |
+| ✅ | `ladder` | 🪜 | Stand up the ladder (after) |
+| ✅ | `paint_old` | 🪣 | Paint the barn red |
+| ✅ | `paint` | 🎨 | Paint the barn red (after) |
+| ✅ | `rope_tangled` | 🧶 | Coil the ropes |
+| ✅ | `rope_hook` | 🪢 | Coil the ropes (after) |
+| ✅ | `tools_rusty` | 🔧 | Tidy the tool rack |
+| ✅ | `tool_rack` | 🧰 | Tidy the tool rack (after) |
+| ✅ | `lamp_broken` | 🕯️ | Light the lantern |
+| ✅ | `lamp` | 🏮 | Light the lantern (after) |
+| ✅ | `cans_spilled` | 🥛 | Line up the milk cans |
+| ✅ | `milk_cans` | 🥛 | Line up the milk cans (after) |
 
 ## Not used by the game
 

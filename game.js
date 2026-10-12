@@ -1369,7 +1369,7 @@ function addFixSpots(tasks, el) {
         spot.style.left = x + '%';
         spot.style.top = y + '%';
         spot.style.zIndex = 20 + Math.round(y);
-        spot.innerHTML = `<span class="fix-face">${face || '✨'}</span>`;
+        spot.innerHTML = `<span class="fix-face">${face || uiIcon('sparkle', '✨')}</span>`;
         if (open) addTag(spot, 'task-pin' + (taskReady(task) ? ' ready' : ''), needPins(task));
         spot.addEventListener('click', () => tapFix(task));
         el.appendChild(spot);
@@ -1464,7 +1464,7 @@ function openTaskCard(task) {
         art: npcPicture(npc),
         artRound: true,
         title: task.name,
-        body: `<div class="sheet-progress"><span class="quest-bar"><i style="width:${pct}%"></i></span><b>${pct}%</b>${uiIcon('gift', '🎁')}</div>
+        body: `<div class="sheet-progress"><span class="quest-bar"><i style="width:${pct}%"></i></span><b>${pct}%</b>${uiIcon('reward', '🎁')}</div>
                <div class="sheet-cols"><div><h4>Items needed</h4><div class="tiles">${needs}</div></div>
                <div><h4>Rewards</h4><div class="tiles">${pays}</div></div></div>`,
         actions: [ready

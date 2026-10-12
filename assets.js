@@ -62,9 +62,9 @@ const ASSETS = {
         trough_full: 'assets/objects/henhouse/trough_full.png', coop: 'assets/objects/henhouse/coop.png',
         nestbox: 'assets/objects/henhouse/nestbox.png',
         // Big Red Barn
-        stall_broken: null, hay_heap: null, ladder_fallen: null, paint_old: null, rope_tangled: null,
-        tools_rusty: null, lamp_broken: null, cans_spilled: null, stall_cow: null, hay_bales: null, ladder: null,
-        paint: null, rope_hook: null, tool_rack: null, lamp: null, milk_cans: null,
+        stall_broken: 'assets/objects/bigbarn/stall_broken.png', hay_heap: 'assets/objects/bigbarn/hay_heap.png', ladder_fallen: 'assets/objects/bigbarn/ladder_fallen.png', paint_old: 'assets/objects/bigbarn/paint_old.png', rope_tangled: 'assets/objects/bigbarn/rope_tangled.png',
+        tools_rusty: 'assets/objects/bigbarn/tools_rusty.png', lamp_broken: 'assets/objects/bigbarn/lamp_broken.png', cans_spilled: 'assets/objects/bigbarn/cans_spilled.png', stall_cow: 'assets/objects/bigbarn/stall_cow.png', hay_bales: 'assets/objects/bigbarn/hay_bales.png', ladder: 'assets/objects/bigbarn/ladder.png',
+        paint: 'assets/objects/bigbarn/paint.png', rope_hook: 'assets/objects/bigbarn/rope_hook.png', tool_rack: 'assets/objects/bigbarn/tool_rack.png', lamp: 'assets/objects/bigbarn/lamp.png', milk_cans: 'assets/objects/bigbarn/milk_cans.png',
     },
 
     // Places on the farm map.
@@ -202,6 +202,13 @@ const ASSETS = {
         offer: 'assets/ui/offer.png',
         inventory: 'assets/ui/inventory.png',
         lock: 'assets/ui/lock.png',
+        key: 'assets/ui/key.png',          // an area unlocking
+        reward: 'assets/ui/reward.png',    // an area's or land's reward
+        merge: 'assets/ui/merge.png',      // the Merge button
+        cloud: 'assets/ui/cloud.png',
+        check: 'assets/ui/check.png',
+        sparkle: 'assets/ui/sparkle.png',
+        hammer: 'assets/ui/hammer.png',    // job tags and the fix
     },
 
     // Optional background image behind each merge board (null = CSS colour).
