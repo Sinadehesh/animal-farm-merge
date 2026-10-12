@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**447 assets:** 373 done ✅, 8 placeholders 🟡, 66 missing ⬜.
+**492 assets:** 373 done ✅, 8 placeholders 🟡, 111 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -499,6 +499,51 @@ sheet yet use emoji pairs written on the job itself.
 | ✅ | `lamp` | 🏮 | Light the lantern (after) |
 | ✅ | `cans_spilled` | 🥛 | Line up the milk cans |
 | ✅ | `milk_cans` | 🥛 | Line up the milk cans (after) |
+| ⬜ | `weeds_thorny` | 🌵 | Pull the thorny weeds |
+| ⬜ | `rock` | 🪨 | Roll away the rock |
+| ⬜ | `brush` | 🍂 | Clear the dead brush |
+| ⬜ | `scarecrow_fallen` | 🥀 | Fix the scarecrow |
+| ⬜ | `scarecrow` | 🧑‍🌾 | Fix the scarecrow (after) |
+| ⬜ | `gate_broken` | 🚧 | Fix the gate |
+| ⬜ | `gate` | 🚪 | Fix the gate (after) |
+| ⬜ | `seedcart_tipped` | 🛒 | Set the seed cart right |
+| ⬜ | `seedcart` | 🌱 | Set the seed cart right (after) |
+| ⬜ | `plough_rusty` | ⚙️ | Clean up the old plough |
+| ⬜ | `plough` | 🛠️ | Clean up the old plough (after) |
+| ⬜ | `birdhouse_broken` | 🪵 | Put up a birdhouse |
+| ⬜ | `birdhouse` | 🐦 | Put up a birdhouse (after) |
+| ⬜ | `signpost` | 🪧 | Put up a signpost (after) |
+| ⬜ | `bed_bare` | 🟫 | Dig the first bed |
+| ⬜ | `bed_young` | 🌱 | Dig the first bed (after) |
+| ⬜ | `berries_wilted` | 🥀 | Water the wilted plants |
+| ⬜ | `berries_ripe` | 🍓 | Water the wilted plants (after) |
+| ⬜ | `barrel_broken` | 🛢️ | Fix the water barrel |
+| ⬜ | `barrel_full` | 💧 | Fix the water barrel (after) |
+| ⬜ | `netting_tangled` | 🕸️ | Untangle the netting |
+| ⬜ | `netting` | 🥅 | Untangle the netting (after) |
+| ⬜ | `molehole` | 🕳️ | Fill in the mole hole |
+| ⬜ | `weeds_straw` | 🌿 | Spread fresh straw |
+| ⬜ | `straw_mulch` | 🌾 | Spread fresh straw (after) |
+| ⬜ | `baskets_tipped` | 🧺 | Fill the baskets |
+| ⬜ | `baskets_berries` | 🍓 | Fill the baskets (after) |
+| ⬜ | `stand_broken` | 🪵 | Open the berry stand |
+| ⬜ | `stand` | 🏪 | Open the berry stand (after) |
+| ⬜ | `branch_big` | 🪵 | Clear the fallen branch |
+| ⬜ | `apples_rotten` | 🍂 | Pick up the old apples |
+| ⬜ | `apples_basket` | 🍎 | Pick up the old apples (after) |
+| ⬜ | `wall_rubble` | 🪨 | Mend the stone wall |
+| ⬜ | `wall` | 🧱 | Mend the stone wall (after) |
+| ⬜ | `crate_broken` | 📦 | Fix the apple crates |
+| ⬜ | `crates_apples` | 🍏 | Fix the apple crates (after) |
+| ⬜ | `stump` | 🪵 | Turn the stump into a table |
+| ⬜ | `stump_table` | 🍄 | Turn the stump into a table (after) |
+| ⬜ | `beehive_broken` | 📦 | Rehome the bees |
+| ⬜ | `beehive` | 🐝 | Rehome the bees (after) |
+| ⬜ | `brambles` | 🌵 | Cut back the brambles |
+| ⬜ | `swing_broken` | 🪢 | Hang up the swing |
+| ⬜ | `swing` | 🎠 | Hang up the swing (after) |
+| ⬜ | `sapling` | 🌳 | Plant a new apple tree (after) |
+| ⬜ | `picnic` | 🧺 | Lay out a picnic (after) |
 
 ## 13. Tools (what jobs ask for)
 
