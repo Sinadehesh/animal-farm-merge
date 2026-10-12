@@ -155,18 +155,18 @@ below it by its outline alone, bigger and fancier as it goes up; tiers 9-11 get 
 
 | | Tier | Item | File | Draw as |
 |---|---|---|---|---|
-| ✅ | 0 | Wheat | `assets/items/hay/00_wheat.png` |  |
-| ✅ | 1 | Stalk | `assets/items/hay/01_stalk.png` |  |
-| ✅ | 2 | Bundle | `assets/items/hay/02_bundle.png` |  |
-| ✅ | 3 | Small Bale | `assets/items/hay/03_small_bale.png` |  |
-| ✅ | 4 | Medium Bale | `assets/items/hay/04_medium_bale.png` |  |
-| ✅ | 5 | Large Bale | `assets/items/hay/05_large_bale.png` |  |
-| ✅ | 6 | Hay Stack | `assets/items/hay/06_hay_stack.png` |  |
-| ✅ | 7 | Hay Tower | `assets/items/hay/07_hay_tower.png` | a tall stack of hay bales |
-| ✅ | 8 | Hay Silo | `assets/items/hay/08_hay_silo.png` | a tiny silo full of hay |
+| ✅ | 0 | Wheat Sprout | `assets/items/hay/00_sprout.png` |  |
+| ✅ | 1 | Wheat Stalk | `assets/items/hay/01_stalk.png` |  |
+| ✅ | 2 | Wheat Sheaf | `assets/items/hay/02_sheaf.png` |  |
+| ✅ | 3 | Hay Bale | `assets/items/hay/03_bale.png` |  |
+| ✅ | 4 | Round Bale | `assets/items/hay/04_round_bale.png` |  |
+| ✅ | 5 | Haystack | `assets/items/hay/05_haystack.png` |  |
+| ✅ | 6 | Hay Cart | `assets/items/hay/06_cart.png` |  |
+| ✅ | 7 | Hay Wagon | `assets/items/hay/07_wagon.png` |  |
+| ✅ | 8 | Windmill | `assets/items/hay/08_windmill.png` |  |
 | ✅ | 9 | Golden Hay | `assets/items/hay/09_golden_hay.png` | a golden hay bale |
 | ✅ | 10 | Magic Hay | `assets/items/hay/10_magic_hay.png` | a hay bale with sparkles |
-| ✅ | 11 | Infinite Hay | `assets/items/hay/11_infinite_hay.png` | a glowing hay bale with an infinity ribbon |
+| ✅ | 11 | Rainbow Hay | `assets/items/hay/11_rainbow_hay.png` |  |
 
 ### Compost Yard
 

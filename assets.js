@@ -422,18 +422,18 @@ const ASSETS = {
         ],
         // Cut from assets/raw/items_hay.webp.
         hay: [
-            'assets/items/hay/00_wheat.png',
+            'assets/items/hay/00_sprout.png',
             'assets/items/hay/01_stalk.png',
-            'assets/items/hay/02_bundle.png',
-            'assets/items/hay/03_small_bale.png',
-            'assets/items/hay/04_medium_bale.png',
-            'assets/items/hay/05_large_bale.png',
-            'assets/items/hay/06_hay_stack.png',
-            'assets/items/hay/07_hay_tower.png',
-            'assets/items/hay/08_hay_silo.png',
+            'assets/items/hay/02_sheaf.png',
+            'assets/items/hay/03_bale.png',
+            'assets/items/hay/04_round_bale.png',
+            'assets/items/hay/05_haystack.png',
+            'assets/items/hay/06_cart.png',
+            'assets/items/hay/07_wagon.png',
+            'assets/items/hay/08_windmill.png',
             'assets/items/hay/09_golden_hay.png',
             'assets/items/hay/10_magic_hay.png',
-            'assets/items/hay/11_infinite_hay.png',
+            'assets/items/hay/11_rainbow_hay.png',
         ],
         // Cut from assets/raw/farm_chain_v3.webp.
         farm: [

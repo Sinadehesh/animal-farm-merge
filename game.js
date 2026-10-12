@@ -463,7 +463,7 @@ const toastLayer = document.getElementById('toasts');
 // Flavor Names for the Tiers
 const NAMES = {
     'farm': ['🧪 Fertilizer', '🌱 Seed', '🌿 Sprout', '🍓 Strawberry', '🍅 Tomato', '🌽 Corn', '🥕 Carrot', '🥬 Cabbage', '🎃 Pumpkin', '🍉 Watermelon', '🍎 Golden Apple', '🌻 Giant Sun'],
-    'hay': ['🌾 Wheat', '🌱 Stalk', '🌾 Bundle', '🟨 Small Bale', '🟨 Medium Bale', '🟨 Large Bale', '🥞 Hay Stack', '🗼 Hay Tower', '🏭 Hay Silo', '⭐ Golden Hay', '✨ Magic Hay', '♾️ Infinite Hay'],
+    'hay': ['🌱 Wheat Sprout', '🌾 Wheat Stalk', '🎀 Wheat Sheaf', '🟨 Hay Bale', '🟢 Round Bale', '🔶 Haystack', '🛒 Hay Cart', '🚜 Hay Wagon', '🌬️ Windmill', '👑 Golden Hay', '🔮 Magic Hay', '🌈 Rainbow Hay'],
     'barn': ['🌿 Feed', '🥚 Egg', '🐤 Chick', '🐔 Chicken', '🐽 Piglet', '🐷 Pig', '🐮 Calf', '🐄 Cow', '🐴 Horse', '🦙 Alpaca', '🐂 Prize Bull', '🦄 Unicorn'],
     'fert': ['🍂 Fallen Leaf', '🍁 Leaf Pile', '🥕 Veggie Scraps', '🌱 Compost', '🪴 Rich Soil', '🍄 Mushroom', '✨ Basic Fert', '🌟 Quality Fert', '⚡ Speed-Gro', '💎 Deluxe Fert', '🔮 Magic Fert', '🌌 Iridium Fert'],
     'aqua': ['🌾 Fish Food', '🐌 Snail', '🐟 Minnow', '🐸 Frog', '🐠 Goldfish', '🎏 Koi', '🐢 Turtle', '🦦 Otter', '🦆 Duck', '🦢 Swan', '🦩 Flamingo', '🐉 Pond Dragon'],
