@@ -160,22 +160,39 @@ const ASSETS = {
     // Townsfolk (keyed by NPC id) and the market shopkeeper.
     characters: {
         mayor: 'assets/characters/mayor.png',
-        marnie: 'assets/characters/marnie.svg',
-        robin: 'assets/characters/robin.svg',
-        willy: 'assets/characters/willy.svg',
-        sandy: 'assets/characters/sandy.svg',
+        marnie: 'assets/characters/marnie.png',
+        robin: 'assets/characters/robin.png',
+        willy: 'assets/characters/willy.png',
+        sandy: 'assets/characters/sandy.png',
         shopkeeper: 'assets/characters/shopkeeper.png',
     },
 
-    // Head-and-shoulders portraits, shown in a round frame in the town and in
-    // each townsperson's popup. 384px copies of the originals in assets/ghibli/.
-    // null = frame the full-body character drawing above instead.
+    // Head-and-shoulders portraits, shown in a round frame (cards, the town,
+    // popups). null = frame the full-body drawing above instead.
     portraits: {
         mayor: 'assets/characters/portraits/mayor.png',
-        marnie: 'assets/characters/portraits/marnie.jpg',
-        robin: null,
-        willy: 'assets/characters/portraits/willy.jpg',
-        sandy: 'assets/characters/portraits/sandy.jpg',
+        marnie: 'assets/characters/portraits/marnie.png',
+        robin: 'assets/characters/portraits/robin.png',
+        willy: 'assets/characters/portraits/willy.png',
+        sandy: 'assets/characters/portraits/sandy.png',
+    },
+
+    // The same people from the waist up, waving (calling you over, story
+    // scenes), and full body cheering (after a fix). Cut from
+    // assets/raw/character_<id>.webp. null = the portrait instead.
+    wave: {
+        mayor: 'assets/characters/wave/mayor.png',
+        marnie: 'assets/characters/wave/marnie.png',
+        robin: 'assets/characters/wave/robin.png',
+        willy: 'assets/characters/wave/willy.png',
+        sandy: 'assets/characters/wave/sandy.png',
+    },
+    cheer: {
+        mayor: 'assets/characters/cheer/mayor.png',
+        marnie: 'assets/characters/cheer/marnie.png',
+        robin: 'assets/characters/cheer/robin.png',
+        willy: 'assets/characters/cheer/willy.png',
+        sandy: 'assets/characters/cheer/sandy.png',
     },
 
     // Things inside the market.

@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**380 assets:** 301 done ✅, 12 placeholders 🟡, 67 missing ⬜.
+**393 assets:** 315 done ✅, 8 placeholders 🟡, 70 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -75,20 +75,20 @@ List them under `buildingsRestored` in `assets.js`.
 | 🟡 | Fishshop | `assets/town/fishshop.svg` → `assets/town/fishshop.png` | Willy's fish shop by the water |
 | 🟡 | Flowershop | `assets/town/flowershop.svg` → `assets/town/flowershop.png` | Sandy's flower shop |
 
-## 4. Characters (6 full body + 5 portraits)
+## 4. Characters (6 people, 4 views each)
 
-Full body: chibi, head about a third of the height, standing, facing you. Portraits: head and shoulders, shown in a round frame.
+One 2x2 sheet per person (`assets/raw/character_<id>.webp`), cut into: a head-and-shoulders **portrait** (round
+frames), **waving** from the waist up (calling you over, story scenes), **standing** full body (in the areas)
+and **cheering** full body (after a fix).
 
-| | Character | Full body | Portrait |
-|---|---|---|---|
-| ✅ | Mayor Pelican | `assets/characters/mayor.png` | ✅ `assets/characters/portraits/mayor.png` |
-| 🟡 | Marnie, the rancher | `assets/characters/marnie.svg` → `assets/characters/marnie.png` | ✅ `assets/characters/portraits/marnie.jpg` |
-| 🟡 | Robin, the carpenter | `assets/characters/robin.svg` → `assets/characters/robin.png` | ⬜ → `assets/characters/portraits/robin.png` |
-| 🟡 | Willy, the fisherman | `assets/characters/willy.svg` → `assets/characters/willy.png` | ✅ `assets/characters/portraits/willy.jpg` |
-| 🟡 | Sandy, the florist | `assets/characters/sandy.svg` → `assets/characters/sandy.png` | ✅ `assets/characters/portraits/sandy.jpg` |
-| ✅ | the Market shopkeeper | `assets/characters/shopkeeper.png` | — |
-
-The 4 portraits that exist are in the older Ghibli style; regenerate them in the candy style so they match.
+| | Character | Portrait | Waving | Standing | Cheering |
+|---|---|---|---|---|---|
+| ✅ | Mayor Pelican | ✅ | ✅ | ✅ | ✅ |
+| ✅ | Marnie, the rancher | ✅ | ✅ | ✅ | ✅ |
+| ✅ | Robin, the carpenter | ✅ | ✅ | ✅ | ✅ |
+| ✅ | Willy, the fisherman | ✅ | ✅ | ✅ | ✅ |
+| ✅ | Sandy, the florist | ✅ | ✅ | ✅ | ✅ |
+| ⬜ | the Market shopkeeper | ⬜ | ⬜ | ⬜ | ⬜ |
 
 ## 5. Props (4)
 

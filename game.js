@@ -1429,9 +1429,12 @@ function addZonePerson(el, tasks, zone) {
     if (!task) return;
     const [x, y] = zone.person || ZONE_PERSON;
     const npc = npcs.find(n => n.id === task.who);
-    const person = makeSpot({ x: x - 9, y: y - 9, w: 18, z: 25 + Math.round(y),
-        sprite: npcPicture(npc), label: npc.name, onClick: () => tapFix(task) });
-    person.classList.add('portrait-spot', 'fix-npc');
+    const body = ASSETS.characters[npc.id];
+    const full = body && !body.endsWith('.svg');
+    const person = full
+        ? makeSpot({ x: x - 12, y: y - 18, w: 24, z: 25 + Math.round(y), sprite: body, label: npc.name, onClick: () => tapFix(task) })
+        : makeSpot({ x: x - 9, y: y - 9, w: 18, z: 25 + Math.round(y), sprite: npcPicture(npc), label: npc.name, onClick: () => tapFix(task) });
+    person.classList.add(full ? 'full-body' : 'portrait-spot', 'fix-npc');
     addTag(person, 'say', task.name);
     el.appendChild(person);
 }
@@ -1514,7 +1517,8 @@ function callToFix(task) {
     const card = document.createElement('div');
     card.className = 'fix-call';
     card.dataset.job = task.id;
-    card.innerHTML = `<img class="face" src="${npcPicture(npc)}" alt="${npc.name}">
+    const wave = (ASSETS.wave || {})[npc.id];
+    card.innerHTML = `<img class="${wave ? 'wave' : 'face'}" src="${wave || npcPicture(npc)}" alt="${npc.name}">
                       <span><b>${task.name}</b><small>“${hasSpot(task) ? 'Let\'s fix it!' : 'Ready!'}”</small></span>
                       <button class="btn btn-primary">${uiIcon('hammer', '🔨')} ${hasSpot(task) ? 'Fix it!' : 'Do it!'}</button><button class="fix-call-x">✕</button>`;
     card.querySelector('.btn').addEventListener('click', () => { card.remove(); goFix(task.land, task.id); });
@@ -1691,9 +1695,10 @@ function playScene(title, lines, extra = '', then = null) {
     const [who, text, answer] = lines[0];
     const npc = npcs.find(n => n.id === who);
     const last = lines.length === 1;
+    const wave = (ASSETS.wave || {})[who];
     showDialog({
-        art: npcPicture(npc),
-        artRound: true,
+        art: wave || npcPicture(npc),
+        artRound: !wave,
         title,
         body: `<p class="story-line">“${text}”</p><p class="hint">— ${npc.name}</p>${last ? extra : ''}`,
         actions: [{ label: answer || 'OK!', primary: true,
@@ -1878,7 +1883,8 @@ function cheer(task, npc) {
     document.querySelectorAll('.fix-cheer').forEach(el => el.remove());
     const el = document.createElement('div');
     el.className = 'fix-cheer';
-    el.innerHTML = `<img class="face" src="${npcPicture(npc)}" alt=""><span><b>“${task.line}”</b>
+    const happy = (ASSETS.cheer || {})[npc.id];
+    el.innerHTML = `<img class="${happy ? 'happy' : 'face'}" src="${happy || npcPicture(npc)}" alt=""><span><b>“${task.line}”</b>
                     <small>+${uiIcon('star', '⭐')}${task.xp}${task.reward ? ` · ${rewardText(task.reward)}` : ''}</small></span>`;
     stageEl.appendChild(el);
     setTimeout(() => el.remove(), 2600);
