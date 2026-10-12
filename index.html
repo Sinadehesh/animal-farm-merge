@@ -982,7 +982,90 @@
         .toast.good { background: rgba(46, 140, 60, 0.96); }
 
         /* --- FIX SCENES: a land's place, its broken things, and the fix itself --- */
-        #scene-fix { background-size: cover; }
+        #scene-fix { background: #5f9a45; }
+        /* A land's place: its areas, square pictures in a column you scroll. */
+        .world { position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; padding-bottom: 26cqw; scrollbar-width: none; overscroll-behavior: contain; }
+        .world::-webkit-scrollbar { display: none; }
+        @property --grow { syntax: '<percentage>'; inherits: true; initial-value: 15%; }
+        .zone { position: relative; width: 100%; aspect-ratio: 1; transition: --grow 1s ease-out; }
+        .zone + .zone { box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.3); }
+        .zone-art, .zone-worn { position: absolute; inset: 0; background-size: cover; background-position: center; }
+        /* Still broken: faded and dusty, with clear holes where fixes brought the colour back. */
+        .zone-worn {
+            filter: grayscale(0.8) sepia(0.45) brightness(0.72) contrast(0.9);
+            mask-size: 100% 100%;
+            mask-composite: intersect;
+            -webkit-mask-composite: source-in;
+            transition: opacity 1.4s ease-in;
+        }
+        .zone.zone-done .zone-worn { opacity: 0; }
+        .zone.locked .zone-art, .zone.locked .zone-worn { filter: grayscale(1) brightness(0.95) blur(2px); }
+        .zone-sign {
+            position: absolute;
+            left: 3%;
+            top: 3%;
+            z-index: 120;
+            padding: 1cqw 3cqw;
+            background: linear-gradient(#a8743f, #7d5228);
+            border: 2px solid #4e3216;
+            border-radius: 10px;
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
+            color: #fff8e7;
+            font-weight: 900;
+            font-size: max(11px, 3.4cqw);
+            text-shadow: 0 1px 0 #4e3216;
+        }
+        .zone-sign b { margin-left: 1.5cqw; color: #ffe27a; }
+        .zone:first-child .zone-sign { top: 14cqw; } /* below the land's progress */
+        /* Locked: clouds and a padlock saying what it waits for. */
+        .zone-clouds {
+            position: absolute;
+            inset: -3% 0;
+            z-index: 110;
+            background:
+                radial-gradient(circle at 18% 28%, #fff 0 13%, transparent 13.5%),
+                radial-gradient(circle at 42% 18%, #fff 0 17%, transparent 17.5%),
+                radial-gradient(circle at 74% 26%, #fff 0 16%, transparent 16.5%),
+                radial-gradient(circle at 28% 58%, #f2f6fb 0 20%, transparent 20.5%),
+                radial-gradient(circle at 66% 60%, #fff 0 22%, transparent 22.5%),
+                radial-gradient(circle at 12% 86%, #f2f6fb 0 16%, transparent 16.5%),
+                radial-gradient(circle at 86% 84%, #fff 0 18%, transparent 18.5%),
+                radial-gradient(circle at 50% 92%, #fff 0 18%, transparent 18.5%),
+                rgba(232, 240, 250, 0.6);
+            filter: drop-shadow(0 4px 6px rgba(70, 90, 130, 0.35));
+            transition: opacity 0.9s ease-in, transform 0.9s ease-in;
+        }
+        .zone.opening .zone-clouds { opacity: 0; transform: scale(1.5); }
+        .zone-lock {
+            position: absolute;
+            left: 50%;
+            top: 48%;
+            z-index: 115;
+            translate: -50% -50%;
+            display: grid;
+            place-items: center;
+            gap: 1cqw;
+            padding: 2.5cqw 4cqw;
+            background: #fff8e7;
+            border: 3px solid var(--ink);
+            border-radius: 18px;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
+            font-size: 12cqw;
+            line-height: 1;
+        }
+        .zone-lock .ui-icon { width: 14cqw; height: 14cqw; }
+        .zone-lock small { font-size: max(11px, 3.4cqw); font-weight: 900; white-space: nowrap; }
+        .zone-key { position: absolute; left: 50%; top: 45%; z-index: 116; translate: -50% -50%; font-size: 24cqw; animation: key-turn 1s ease-out forwards; }
+        .zone-key .ui-icon { width: 30cqw; height: 30cqw; }
+        .zone.opening .zone-key { animation: key-away 0.9s ease-in forwards; }
+        @keyframes key-turn { 0% { scale: 0.2; rotate: -40deg; opacity: 0; } 60% { scale: 1.2; rotate: 10deg; opacity: 1; } 100% { scale: 1; rotate: 90deg; } }
+        @keyframes key-away { to { scale: 1.8; opacity: 0; } }
+        /* Things in a picture are drawn bigger; a spot with nothing yet is a sparkly outline. */
+        .fix-spot.pictured { width: 22cqw; height: 22cqw; background: none; border-radius: 30%; }
+        .fix-spot.pictured .fix-face, .fix-spot.pictured.later .fix-face { filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.3)); }
+        .fix-spot.pictured.later { opacity: 1; }
+        .fix-spot.to-build { width: 14cqw; height: 14cqw; border: 2px dashed rgba(255, 255, 255, 0.85); background: rgba(255, 255, 255, 0.18); font-size: 6cqw; }
+        .fix-spot.to-build.later { opacity: 0.4; }
         .scene { transition: transform 0.5s ease-in-out; }
         .scene.fix-zoom { transform: scale(1.6); }
         body.busy { pointer-events: none; }

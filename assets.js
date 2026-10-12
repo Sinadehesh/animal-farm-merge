@@ -12,14 +12,60 @@ const ASSETS = {
         market: 'assets/scenes/market.jpg',
     },
 
-    // Fix scenes: the place you walk into for each land (9:16, the top half left
-    // clear for the building). null = the land's board texture.
-    areas: { barn: null, farm: null, hay: null, fert: null, aqua: null, flower: null },
+    // Areas: each land's place is a column of square pictures (1:1), one per
+    // area, drawn restored and tidy with open ground; the game fades them and
+    // puts the mess on top. null = the land's board texture.
+    areas: {
+        barnyard: 'assets/areas/barnyard.jpg',
+        henhouse: 'assets/areas/henhouse.jpg',
+        bigbarn: 'assets/areas/bigbarn.jpg',
+        fieldgate: null,
+        berryrows: null,
+        orchard: null,
+        meadow: null,
+        stables: null,
+        windmill: null,
+        leafpiles: null,
+        compostbins: null,
+        mushrooms: null,
+        muddyshore: null,
+        lilypond: null,
+        boatdock: null,
+        gardengate: null,
+        rosearch: null,
+        greenhouse: null,
+    },
 
-    // The thing each job fixes in its place, as [broken, fixed] pictures
-    // (e.g. barn4: ['assets/fixes/barn4_broken.png', 'assets/fixes/barn4_fixed.png']).
-    // Missing = the emoji in FIX_ART in game.js.
-    fixes: {},
+    // The things in each area, by name (transparent PNGs, cut from
+    // assets/raw/objects_<area>.webp). null = the emoji in OBJECT_EMOJI.
+    objects: {
+        // Barnyard
+        planks: 'assets/objects/barnyard/planks.png', weeds: 'assets/objects/barnyard/weeds.png',
+        branch: 'assets/objects/barnyard/branch.png', feedbin_broken: 'assets/objects/barnyard/feedbin_broken.png',
+        fence_broken: 'assets/objects/barnyard/fence_broken.png',
+        wheelbarrow_broken: 'assets/objects/barnyard/wheelbarrow_broken.png',
+        pump_broken: 'assets/objects/barnyard/pump_broken.png', junk: 'assets/objects/barnyard/junk.png',
+        feedbin: 'assets/objects/barnyard/feedbin.png', fence: 'assets/objects/barnyard/fence.png',
+        wheelbarrow: 'assets/objects/barnyard/wheelbarrow.png', pump: 'assets/objects/barnyard/pump.png',
+        firewood: 'assets/objects/barnyard/firewood.png', lantern: 'assets/objects/barnyard/lantern.png',
+        mailbox: 'assets/objects/barnyard/mailbox.png', tulips: 'assets/objects/barnyard/tulips.png',
+        // Hen House
+        nest_empty: 'assets/objects/henhouse/nest_empty.png', wire_torn: 'assets/objects/henhouse/wire_torn.png',
+        trough_empty: 'assets/objects/henhouse/trough_empty.png',
+        straw_mess: 'assets/objects/henhouse/straw_mess.png',
+        perch_broken: 'assets/objects/henhouse/perch_broken.png',
+        feeder_rusty: 'assets/objects/henhouse/feeder_rusty.png',
+        basket_empty: 'assets/objects/henhouse/basket_empty.png', sacks: 'assets/objects/henhouse/sacks.png',
+        nest_chicks: 'assets/objects/henhouse/nest_chicks.png', wire_fixed: 'assets/objects/henhouse/wire_fixed.png',
+        hen_perch: 'assets/objects/henhouse/hen_perch.png', feeder: 'assets/objects/henhouse/feeder.png',
+        basket_eggs: 'assets/objects/henhouse/basket_eggs.png',
+        trough_full: 'assets/objects/henhouse/trough_full.png', coop: 'assets/objects/henhouse/coop.png',
+        nestbox: 'assets/objects/henhouse/nestbox.png',
+        // Big Red Barn
+        stall_broken: null, hay_heap: null, ladder_fallen: null, paint_old: null, rope_tangled: null,
+        tools_rusty: null, lamp_broken: null, cans_spilled: null, stall_cow: null, hay_bales: null, ladder: null,
+        paint: null, rope_hook: null, tool_rack: null, lamp: null, milk_cans: null,
+    },
 
     // Places on the farm map.
     // A building's look from ruin to luxury, as its jobs get done (the Market

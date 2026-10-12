@@ -414,7 +414,7 @@ const settings = { charge: 0, unlimitedUntil: 0 };
 // Player level and XP toward the next level.
 const quests = { level: 1, xp: 0 };
 // Restoration jobs done, and for open jobs the counters they count from.
-const restoration = { done: [], baselines: {} };
+const restoration = { done: [], baselines: {}, zonesOpen: ['barnyard'] }; // zonesOpen: areas whose unlock has played
 // Daily gift track: the last day claimed and how many days in a row.
 const daily = { lastDay: null, streak: 0 };
 // Rewards and purchases waiting in each board's 🎁 until placed.
@@ -1081,87 +1081,134 @@ const TASK_STATS = {
 };
 
 const TASKS = [
-    // Barn (days 1 and 2): the tutorial, then the animals come home.
-    { id: 'barn1', land: 'barn', story: [['robin', 'Hi! I fix things!']], name: 'Clear the doorway', who: 'mayor', xp: 2, needs: [{ stat: 'boxes', n: 1 }],
-      line: 'Great job!' },
-    { id: 'barn2', land: 'barn', after: ['barn1'], name: 'Collect the first eggs', who: 'marnie', xp: 2, needs: [{ item: 'barn', tier: 1, n: 2 }],
-      line: 'Eggs! Yay!' },
-    { id: 'barn3', land: 'barn', after: ['barn1'], name: 'Brush off the cobwebs', who: 'marnie', xp: 3, needs: [{ stat: 'webs', n: 3 }],
-      line: 'So clean!' },
-    { id: 'barn4', land: 'barn', after: ['barn3'], name: 'Fix the feed bin', who: 'robin', xp: 3, needs: [{ stat: 'upgrades', n: 1 }],
-      line: 'Perfect!' },
-    { id: 'barn5', land: 'barn', after: ['barn2'], name: 'Make a nest for the chicks', who: 'marnie', xp: 4, reward: { chest: 'brown' },
-      needs: [{ item: 'barn', tier: 2, n: 2 }], line: 'So cute!' },
-    { id: 'barn6', land: 'barn', after: ['barn4', 'barn5'], name: 'Haul away the junk', who: 'mayor', xp: 3, needs: [{ stat: 'sold', n: 3 }],
-      line: 'Much tidier!' },
-    { id: 'barn7', land: 'barn', after: ['barn6'], name: 'Welcome the hens', who: 'marnie', xp: 6, needs: [{ item: 'barn', tier: 3, n: 1 }],
-      line: 'The hens are back!' },
-    { id: 'barn8', land: 'barn', after: ['barn7'], name: 'Paint the barn red', who: 'marnie', xp: 8, reward: { chest: 'blue' },
-      needs: [{ item: 'barn', tier: 3, n: 2 }], line: 'Beautiful barn!' },
+    // The Barn's three areas. `zone` is the area, `at` the spot in its picture
+    // (% across, % down), `look` what stands there before and after: object
+    // pictures by name (OBJECT_EMOJI until drawn), '' for nothing.
+    // Barnyard (day 1): the tutorial's first fix, then two threads that join.
+    { id: 'barn1', land: 'barn', zone: 'barnyard', at: [52, 45], look: ['planks', ''], story: [['robin', 'Hi! I fix things!']],
+      name: 'Clear the planks', who: 'mayor', xp: 1, needs: [{ stat: 'boxes', n: 1 }], line: 'Great job!' },
+    { id: 'barn2', land: 'barn', zone: 'barnyard', at: [14, 60], look: ['weeds', ''], after: ['barn1'],
+      name: 'Pull the weeds', who: 'marnie', xp: 1, needs: [{ item: 'barn', tier: 0, n: 2 }], line: 'Weeds gone!' },
+    { id: 'barn3', land: 'barn', zone: 'barnyard', at: [85, 38], look: ['branch', ''], after: ['barn1'],
+      name: 'Move the fallen branch', who: 'robin', xp: 1, needs: [{ stat: 'webs', n: 2 }], line: 'Heave!' },
+    { id: 'barn4', land: 'barn', zone: 'barnyard', at: [30, 50], look: ['feedbin_broken', 'feedbin'], after: ['barn2'],
+      name: 'Fix the feed bin', who: 'robin', xp: 2, needs: [{ item: 'barn', tier: 1, n: 2 }], line: 'Good as new!' },
+    { id: 'barn5', land: 'barn', zone: 'barnyard', at: [10, 34], look: ['fence_broken', 'fence'], after: ['barn3'],
+      name: 'Mend the fence', who: 'robin', xp: 2, needs: [{ stat: 'upgrades', n: 1 }], line: 'Nice fence!' },
+    { id: 'barn6', land: 'barn', zone: 'barnyard', at: [42, 67], look: ['wheelbarrow_broken', 'wheelbarrow'], after: ['barn4', 'barn5'],
+      name: 'Fix the wheelbarrow', who: 'marnie', xp: 2, needs: [{ item: 'barn', tier: 2, n: 1 }], line: 'It rolls!' },
+    { id: 'barn7', land: 'barn', zone: 'barnyard', at: [88, 60], look: ['pump_broken', 'pump'], after: ['barn6'],
+      name: 'Clean the water pump', who: 'marnie', xp: 2, needs: [{ item: 'barn', tier: 1, n: 2 }], line: 'Fresh water!' },
+    { id: 'barn8', land: 'barn', zone: 'barnyard', at: [20, 80], look: ['junk', 'firewood'], after: ['barn6'],
+      name: 'Haul away the junk', who: 'mayor', xp: 2, needs: [{ stat: 'sold', n: 3 }], line: 'Much tidier!' },
+    { id: 'barn9', land: 'barn', zone: 'barnyard', at: [67, 40], look: ['', 'lantern'], after: ['barn7'],
+      name: 'Put up a lantern', who: 'robin', xp: 3, needs: [{ item: 'barn', tier: 2, n: 2 }], line: 'So bright!' },
+    { id: 'barn10', land: 'barn', zone: 'barnyard', at: [90, 88], look: ['', 'mailbox'], after: ['barn8'],
+      name: 'Put up a mailbox', who: 'mayor', xp: 3, needs: [{ item: 'barn', tier: 3, n: 1 }], line: 'Mail!' },
+    { id: 'barn11', land: 'barn', zone: 'barnyard', at: [50, 86], look: ['', 'tulips'], after: ['barn9', 'barn10'], reward: { chest: 'brown' },
+      name: 'Plant tulips', who: 'marnie', xp: 4, needs: [{ item: 'barn', tier: 3, n: 1 }, { item: 'barn', tier: 1, n: 2 }], line: 'Pretty!' },
+    // Hen House (day 2)
+    { id: 'hen1', land: 'barn', zone: 'henhouse', at: [47, 56], look: ['straw_mess', ''],
+      name: 'Sweep up the old straw', who: 'marnie', xp: 2, needs: [{ stat: 'webs', n: 3 }], line: 'So clean!' },
+    { id: 'hen2', land: 'barn', zone: 'henhouse', at: [14, 78], look: ['sacks', ''],
+      name: 'Clear out the old sacks', who: 'mayor', xp: 2, needs: [{ stat: 'sold', n: 2 }], line: 'Bye, sacks!' },
+    { id: 'hen3', land: 'barn', zone: 'henhouse', at: [18, 46], look: ['nest_empty', 'nest_chicks'], after: ['hen1'],
+      name: 'Fix the nest', who: 'marnie', xp: 3, needs: [{ item: 'barn', tier: 2, n: 2 }], line: 'So cute!' },
+    { id: 'hen4', land: 'barn', zone: 'henhouse', at: [84, 70], look: ['wire_torn', 'wire_fixed'], after: ['hen2'],
+      name: 'Patch the chicken wire', who: 'robin', xp: 3, needs: [{ item: 'barn', tier: 3, n: 1 }], line: 'No foxes!' },
+    { id: 'hen5', land: 'barn', zone: 'henhouse', at: [70, 60], look: ['trough_empty', 'trough_full'], after: ['hen1'],
+      name: 'Fill the water trough', who: 'marnie', xp: 3, needs: [{ item: 'barn', tier: 1, n: 3 }], line: 'Splash!' },
+    { id: 'hen6', land: 'barn', zone: 'henhouse', at: [44, 88], look: ['perch_broken', 'hen_perch'], after: ['hen3'],
+      name: 'Fix the perch', who: 'robin', xp: 4, needs: [{ item: 'barn', tier: 3, n: 1 }], line: 'Perfect!' },
+    { id: 'hen7', land: 'barn', zone: 'henhouse', at: [34, 34], look: ['feeder_rusty', 'feeder'], after: ['hen4', 'hen5'],
+      name: 'Fix the feeder', who: 'marnie', xp: 4, needs: [{ item: 'barn', tier: 3, n: 1 }, { item: 'barn', tier: 2, n: 1 }], line: 'Yum!' },
+    { id: 'hen8', land: 'barn', zone: 'henhouse', at: [30, 64], look: ['basket_empty', 'basket_eggs'], after: ['hen6'], reward: { chest: 'brown' },
+      name: 'Fill the egg basket', who: 'marnie', xp: 4, needs: [{ item: 'barn', tier: 1, n: 4 }], line: 'Eggs! Yay!' },
+    { id: 'hen9', land: 'barn', zone: 'henhouse', at: [88, 36], look: ['', 'coop'], after: ['hen7'],
+      name: 'Build a little coop', who: 'robin', xp: 5, needs: [{ item: 'barn', tier: 3, n: 2 }], line: 'A new home!' },
+    { id: 'hen10', land: 'barn', zone: 'henhouse', at: [66, 86], look: ['', 'nestbox'], after: ['hen8', 'hen9'], reward: { chest: 'blue' },
+      name: 'Make a nest box', who: 'marnie', xp: 6, needs: [{ item: 'barn', tier: 4, n: 1 }, { item: 'barn', tier: 3, n: 1 }], line: 'The hens are back!' },
+    // Big Red Barn (day 2)
+    { id: 'big1', land: 'barn', zone: 'bigbarn', at: [50, 44], look: ['stall_broken', 'stall_cow'],
+      name: 'Fix the stall door', who: 'robin', xp: 5, needs: [{ item: 'barn', tier: 4, n: 1 }], line: 'Moo!' },
+    { id: 'big2', land: 'barn', zone: 'bigbarn', at: [25, 62], look: ['hay_heap', 'hay_bales'],
+      name: 'Stack the hay', who: 'marnie', xp: 5, needs: [{ item: 'barn', tier: 3, n: 2 }], line: 'Stacked!' },
+    { id: 'big3', land: 'barn', zone: 'bigbarn', at: [78, 60], look: ['ladder_fallen', 'ladder'], after: ['big1'],
+      name: 'Stand up the ladder', who: 'robin', xp: 5, needs: [{ stat: 'upgrades', n: 1 }], line: 'Up we go!' },
+    { id: 'big4', land: 'barn', zone: 'bigbarn', at: [42, 74], look: ['rope_tangled', 'rope_hook'], after: ['big2'],
+      name: 'Coil the ropes', who: 'marnie', xp: 6, needs: [{ item: 'barn', tier: 4, n: 1 }], line: 'Neat!' },
+    { id: 'big5', land: 'barn', zone: 'bigbarn', at: [72, 80], look: ['tools_rusty', 'tool_rack'], after: ['big3'],
+      name: 'Tidy the tool rack', who: 'robin', xp: 6, needs: [{ item: 'barn', tier: 5, n: 1 }], line: 'My tools!' },
+    { id: 'big6', land: 'barn', zone: 'bigbarn', at: [18, 86], look: ['lamp_broken', 'lamp'], after: ['big4'],
+      name: 'Light the lantern', who: 'mayor', xp: 7, needs: [{ item: 'barn', tier: 4, n: 2 }], line: 'Cozy!' },
+    { id: 'big7', land: 'barn', zone: 'bigbarn', at: [50, 90], look: ['cans_spilled', 'milk_cans'], after: ['big5', 'big6'],
+      name: 'Line up the milk cans', who: 'marnie', xp: 8, needs: [{ item: 'barn', tier: 5, n: 1 }, { item: 'barn', tier: 3, n: 1 }], line: 'Milk!' },
+    { id: 'big8', land: 'barn', zone: 'bigbarn', at: [84, 90], look: ['paint_old', 'paint'], after: ['big7'], reward: { chest: 'blue' },
+      name: 'Paint the barn red', who: 'marnie', xp: 10, needs: [{ item: 'barn', tier: 6, n: 1 }], line: 'Beautiful barn!' },
     // Crop Field (day 3)
     { id: 'farm1', land: 'farm', story: [['marnie', 'Let\'s grow food!']], name: 'Buy the Crop Field', who: 'mayor', xp: 3, needs: [{ own: 'farm' }],
       line: 'Your field!' },
-    { id: 'farm2', land: 'farm', after: ['farm1'], name: 'Pull the weeds', who: 'marnie', xp: 3, needs: [{ stat: 'boxes', n: 3 }],
+    { id: 'farm2', land: 'farm', zone: 'fieldgate', look: ['🌿', ''], after: ['farm1'], name: 'Pull the weeds', who: 'marnie', xp: 3, needs: [{ stat: 'boxes', n: 3 }],
       line: 'Weeds gone!' },
-    { id: 'farm3', land: 'farm', after: ['farm1'], name: 'Sow the first seeds', who: 'marnie', xp: 4, needs: [{ item: 'farm', tier: 1, n: 3 }],
+    { id: 'farm3', land: 'farm', zone: 'fieldgate', look: ['🕳️', '🌱'], after: ['farm1'], name: 'Sow the first seeds', who: 'marnie', xp: 4, needs: [{ item: 'farm', tier: 1, n: 3 }],
       line: 'Seeds in!' },
-    { id: 'farm4', land: 'farm', after: ['farm3'], name: 'Water the sprouts', who: 'marnie', xp: 5, needs: [{ item: 'farm', tier: 2, n: 2 }],
+    { id: 'farm4', land: 'farm', zone: 'berryrows', look: ['🥀', '🌿'], after: ['farm3'], name: 'Water the sprouts', who: 'marnie', xp: 5, needs: [{ item: 'farm', tier: 2, n: 2 }],
       line: 'Sprouts!' },
-    { id: 'farm5', land: 'farm', after: ['farm2'], name: 'Fix the scarecrow', who: 'robin', xp: 5, needs: [{ stat: 'upgrades', n: 1 }],
+    { id: 'farm5', land: 'farm', zone: 'berryrows', look: ['🪵', '🧑‍🌾'], after: ['farm2'], name: 'Fix the scarecrow', who: 'robin', xp: 5, needs: [{ stat: 'upgrades', n: 1 }],
       line: 'Scarecrow fixed!' },
-    { id: 'farm6', land: 'farm', after: ['farm4'], name: 'Pick the first strawberries', who: 'marnie', xp: 10, reward: { chest: 'brown' },
+    { id: 'farm6', land: 'farm', zone: 'orchard', look: ['🌱', '🍓'], after: ['farm4'], name: 'Pick the first strawberries', who: 'marnie', xp: 10, reward: { chest: 'brown' },
       needs: [{ item: 'farm', tier: 3, n: 2 }], line: 'Food!' },
-    { id: 'farm7', land: 'farm', after: ['farm5', 'farm6'], name: 'Mend the fence', who: 'robin', xp: 10,
+    { id: 'farm7', land: 'farm', zone: 'orchard', look: ['🪚', '🚧'], after: ['farm5', 'farm6'], name: 'Mend the fence', who: 'robin', xp: 10,
       needs: [{ item: 'farm', tier: 3, n: 1 }, { item: 'barn', tier: 2, n: 2 }], line: 'Nice fence!' },
     // Hay Field (day 3)
     { id: 'hay1', land: 'hay', name: 'Buy the Hay Field', who: 'mayor', xp: 4, needs: [{ own: 'hay' }],
       line: 'More land!' },
-    { id: 'hay2', land: 'hay', after: ['hay1'], name: 'Clear out the old straw', who: 'marnie', xp: 5, needs: [{ stat: 'webs', n: 4 }],
+    { id: 'hay2', land: 'hay', zone: 'meadow', look: ['🕸️', ''], after: ['hay1'], name: 'Clear out the old straw', who: 'marnie', xp: 5, needs: [{ stat: 'webs', n: 4 }],
       line: 'Fresh straw!' },
-    { id: 'hay3', land: 'hay', after: ['hay1'], name: 'Tie the first bundles', who: 'marnie', xp: 6, needs: [{ item: 'hay', tier: 2, n: 2 }],
+    { id: 'hay3', land: 'hay', zone: 'meadow', look: ['🍂', '🌾'], after: ['hay1'], name: 'Tie the first bundles', who: 'marnie', xp: 6, needs: [{ item: 'hay', tier: 2, n: 2 }],
       line: 'Neat bundles!' },
-    { id: 'hay4', land: 'hay', after: ['hay3'], name: 'Stack the bales', who: 'robin', xp: 10, needs: [{ item: 'hay', tier: 3, n: 2 }],
+    { id: 'hay4', land: 'hay', zone: 'stables', look: ['🌾', '🟫'], after: ['hay3'], name: 'Stack the bales', who: 'robin', xp: 10, needs: [{ item: 'hay', tier: 3, n: 2 }],
       line: 'Stacked!' },
-    { id: 'hay5', land: 'hay', after: ['hay2', 'hay4'], name: 'Repair the hay loft', who: 'robin', xp: 12, reward: { chest: 'blue' },
+    { id: 'hay5', land: 'hay', zone: 'stables', look: ['🏚️', '🏠'], after: ['hay2', 'hay4'], name: 'Repair the hay loft', who: 'robin', xp: 12, reward: { chest: 'blue' },
       needs: [{ item: 'hay', tier: 3, n: 1 }, { item: 'barn', tier: 3, n: 1 }], line: 'Good as new!' },
-    { id: 'hay6', land: 'hay', after: ['hay5'], name: 'Fill the horse stalls', who: 'marnie', xp: 20, needs: [{ item: 'hay', tier: 4, n: 1 }],
+    { id: 'hay6', land: 'hay', zone: 'windmill', look: ['🚪', '🐴'], after: ['hay5'], name: 'Fill the horse stalls', who: 'marnie', xp: 20, needs: [{ item: 'hay', tier: 4, n: 1 }],
       line: 'Happy horses!' },
     // Compost Yard (day 4)
     { id: 'fert1', land: 'fert', name: 'Buy the Compost Yard', who: 'mayor', xp: 6, needs: [{ own: 'fert' }],
       line: 'Your yard!' },
-    { id: 'fert2', land: 'fert', after: ['fert1'], name: 'Dig the compost pit', who: 'robin', xp: 8, needs: [{ item: 'fert', tier: 2, n: 2 }],
+    { id: 'fert2', land: 'fert', zone: 'leafpiles', look: ['🪨', '🕳️'], after: ['fert1'], name: 'Dig the compost pit', who: 'robin', xp: 8, needs: [{ item: 'fert', tier: 2, n: 2 }],
       line: 'Great pit!' },
-    { id: 'fert3', land: 'fert', after: ['fert2'], name: 'Build the compost bins', who: 'robin', xp: 12, needs: [{ item: 'fert', tier: 3, n: 2 }],
+    { id: 'fert3', land: 'fert', zone: 'compostbins', look: ['🪵', '🗑️'], after: ['fert2'], name: 'Build the compost bins', who: 'robin', xp: 12, needs: [{ item: 'fert', tier: 3, n: 2 }],
       line: 'Sturdy bins!' },
-    { id: 'fert4', land: 'fert', after: ['fert2'], name: 'Turn the compost', who: 'sandy', xp: 20, reward: { chest: 'brown' },
+    { id: 'fert4', land: 'fert', zone: 'compostbins', look: ['🍂', '🌱'], after: ['fert2'], name: 'Turn the compost', who: 'sandy', xp: 20, reward: { chest: 'brown' },
       needs: [{ item: 'fert', tier: 4, n: 1 }], line: 'Rich soil!' },
-    { id: 'fert5', land: 'fert', after: ['fert3', 'fert4'], name: 'Feed the field', who: 'marnie', xp: 25,
+    { id: 'fert5', land: 'fert', zone: 'mushrooms', look: ['🥀', '🌻'], after: ['fert3', 'fert4'], name: 'Feed the field', who: 'marnie', xp: 25,
       needs: [{ item: 'fert', tier: 4, n: 1 }, { item: 'farm', tier: 3, n: 2 }], line: 'Growing fast!' },
     // Fish Pond (day 4)
     { id: 'aqua1', land: 'aqua', story: [['willy', 'Fish! Yay!']], name: 'Buy the Fish Pond', who: 'willy', xp: 10, needs: [{ own: 'aqua' }],
       line: 'Your pond!' },
-    { id: 'aqua2', land: 'aqua', after: ['aqua1'], name: 'Clean the pond', who: 'willy', xp: 10, needs: [{ stat: 'webs', n: 4 }],
+    { id: 'aqua2', land: 'aqua', zone: 'muddyshore', look: ['🟫', '💧'], after: ['aqua1'], name: 'Clean the pond', who: 'willy', xp: 10, needs: [{ stat: 'webs', n: 4 }],
       line: 'Clean water!' },
-    { id: 'aqua3', land: 'aqua', after: ['aqua1'], name: 'Welcome the frogs', who: 'willy', xp: 15, needs: [{ item: 'aqua', tier: 3, n: 2 }],
+    { id: 'aqua3', land: 'aqua', zone: 'muddyshore', look: ['🪷', '🐸'], after: ['aqua1'], name: 'Welcome the frogs', who: 'willy', xp: 15, needs: [{ item: 'aqua', tier: 3, n: 2 }],
       line: 'Ribbit!' },
-    { id: 'aqua4', land: 'aqua', after: ['aqua3'], name: 'Release the goldfish', who: 'willy', xp: 25, reward: { chest: 'blue' },
+    { id: 'aqua4', land: 'aqua', zone: 'lilypond', look: ['🫧', '🐠'], after: ['aqua3'], name: 'Release the goldfish', who: 'willy', xp: 25, reward: { chest: 'blue' },
       needs: [{ item: 'aqua', tier: 4, n: 2 }], line: 'So shiny!' },
-    { id: 'aqua5', land: 'aqua', after: ['aqua2', 'aqua4'], name: 'Build a little dock', who: 'robin', xp: 40,
+    { id: 'aqua5', land: 'aqua', zone: 'boatdock', look: ['🪵', '⛵'], after: ['aqua2', 'aqua4'], name: 'Build a little dock', who: 'robin', xp: 40,
       needs: [{ item: 'aqua', tier: 5, n: 1 }, { item: 'hay', tier: 4, n: 1 }], line: 'Nice dock!' },
     // Flower Garden (day 5)
     { id: 'flower1', land: 'flower', story: [['sandy', 'Flowers!']], name: 'Buy the Flower Garden', who: 'sandy', xp: 15, needs: [{ own: 'flower' }],
       line: 'A garden!' },
-    { id: 'flower2', land: 'flower', after: ['flower1'], name: 'Plant a row of daisies', who: 'sandy', xp: 20, needs: [{ item: 'flower', tier: 3, n: 3 }],
+    { id: 'flower2', land: 'flower', zone: 'gardengate', look: ['🕳️', '🌼'], after: ['flower1'], name: 'Plant a row of daisies', who: 'sandy', xp: 20, needs: [{ item: 'flower', tier: 3, n: 3 }],
       line: 'Daisies!' },
-    { id: 'flower3', land: 'flower', after: ['flower1'], name: 'Grow tulips for the Mayor', who: 'mayor', xp: 30, needs: [{ item: 'flower', tier: 4, n: 2 }],
+    { id: 'flower3', land: 'flower', zone: 'gardengate', look: ['🌱', '🌷'], after: ['flower1'], name: 'Grow tulips for the Mayor', who: 'mayor', xp: 30, needs: [{ item: 'flower', tier: 4, n: 2 }],
       line: 'My favourite!' },
-    { id: 'flower4', land: 'flower', after: ['flower2', 'flower3'], name: 'Build the rose arch', who: 'robin', xp: 50, reward: { chest: 'blue' },
+    { id: 'flower4', land: 'flower', zone: 'rosearch', look: ['🪵', '🌹'], after: ['flower2', 'flower3'], name: 'Build the rose arch', who: 'robin', xp: 50, reward: { chest: 'blue' },
       needs: [{ item: 'flower', tier: 5, n: 1 }, { item: 'fert', tier: 4, n: 1 }], line: 'Fancy!' },
-    { id: 'flower5', land: 'flower', after: ['flower4'], name: 'Plant the festival garden', who: 'sandy', xp: 80, reward: { chest: 'blue' },
+    { id: 'flower5', land: 'flower', zone: 'greenhouse', look: ['🥀', '💐'], after: ['flower4'], name: 'Plant the festival garden', who: 'sandy', xp: 80, reward: { chest: 'blue' },
       needs: [{ item: 'flower', tier: 6, n: 1 }, { item: 'barn', tier: 7, n: 1 }], line: 'Party ready!' },
     // Sunnyvale itself (days 4 and 5): clear the fog, then rebuild each house
     // on the town square. Opens once the old farm is back (day 3).
-    { id: 'town1', land: 'town', after: ['farm7', 'hay6'], story: [['mayor', 'The fog is gone!']], name: 'Clear the fog from the square', who: 'mayor', xp: 15,
+    { id: 'town1', land: 'town', at: [50, 50], look: ['🌫️', ''], after: ['farm7', 'hay6', 'big8'], story: [['mayor', 'The fog is gone!']], name: 'Clear the fog from the square', who: 'mayor', xp: 15,
       needs: [{ stat: 'sold', n: 5 }], line: 'Fog gone!' },
     { id: 'town2', land: 'town', after: ['town1'], house: 'carpenter', name: 'Rebuild Robin\'s workshop', who: 'robin', xp: 20, reward: { chest: 'brown' },
       needs: [{ item: 'hay', tier: 4, n: 1 }, { item: 'barn', tier: 4, n: 1 }], line: 'My workshop!' },
@@ -1174,36 +1221,93 @@ const TASKS = [
     { id: 'town6', land: 'town', after: ['town3', 'town4', 'town5'], house: 'townhall', name: 'Restore the Town Hall', who: 'mayor', xp: 80, reward: { chest: 'blue' },
       needs: [{ item: 'barn', tier: 6, n: 1 }, { item: 'hay', tier: 5, n: 1 }, { item: 'aqua', tier: 5, n: 1 }],
       line: 'You\'re a hero!' },
-    { id: 'town7', land: 'town', after: ['town6'], name: 'Throw the Sunnyvale festival', who: 'marnie', xp: 100, reward: { gems: 50 },
+    { id: 'town7', land: 'town', at: [50, 66], look: ['🪧', '🎉'], after: ['town6'], name: 'Throw the Sunnyvale festival', who: 'marnie', xp: 100, reward: { gems: 50 },
       needs: [{ item: 'flower', tier: 6, n: 1 }, { item: 'farm', tier: 6, n: 1 }], line: 'Thank you!' },
 ];
 
-// --- FIX SCENES ---
-// Each land is a place you walk into, Merge Mansion style: every job is
-// something broken there, fixed on the spot once its items are made, and the
-// building behind it gets better with each one. House jobs are the houses on
-// the town square; buying a land has no spot.
-// [broken, fixed] emoji until the art comes (ASSETS.fixes[id] = [broken, fixed]
-// pictures). A fixed '' means the mess is just gone. Town spots carry their place.
-const FIX_ART = {
-    barn1: ['🪵', ''], barn2: ['🧺', '🥚'], barn3: ['🕸️', ''], barn4: ['🪣', '🌾'],
-    barn5: ['🪹', '🐣'], barn6: ['🗑️', ''], barn7: ['🐾', '🐔'], barn8: ['🖌️', '✨'],
-    farm2: ['🌿', ''], farm3: ['🕳️', '🌱'], farm4: ['🥀', '🌿'], farm5: ['🪵', '🧑‍🌾'], farm6: ['🌱', '🍓'], farm7: ['🪚', '🚧'],
-    hay2: ['🕸️', ''], hay3: ['🍂', '🌾'], hay4: ['🌾', '🟫'], hay5: ['🏚️', '🏠'], hay6: ['🚪', '🐴'],
-    fert2: ['🪨', '🕳️'], fert3: ['🪵', '🗑️'], fert4: ['🍂', '🌱'], fert5: ['🥀', '🌻'],
-    aqua2: ['🟫', '💧'], aqua3: ['🪷', '🐸'], aqua4: ['🫧', '🐠'], aqua5: ['🪵', '⛵'],
-    flower2: ['🕳️', '🌼'], flower3: ['🌱', '🌷'], flower4: ['🪵', '🌹'], flower5: ['🥀', '💐'],
-    town1: ['🌫️', '', 50, 50], town7: ['🪧', '🎉', 50, 66],
+// --- PLACES AND AREAS ---
+// Each land is a place you walk into, Merge Mansion style: a column of square
+// area pictures you scroll through. Every job is something broken (or missing)
+// at a spot in its area, fixed there once its items are made. An area opens at
+// its level once the area before it is finished (a land's first area once the
+// land is bought) and starts faded; each fix brings the colour back around its
+// spot. House jobs are the houses on the town square; buying a land has none.
+const ZONES = [
+    { id: 'barnyard',    land: 'barn',   name: 'Barnyard',        level: 1, person: [66, 60] },
+    { id: 'henhouse',    land: 'barn',   name: 'Hen House',       level: 2, person: [54, 32] },
+    { id: 'bigbarn',     land: 'barn',   name: 'Big Red Barn',    level: 3, person: [52, 56] },
+    { id: 'fieldgate',   land: 'farm',   name: 'Field Gate',      level: 2 },
+    { id: 'berryrows',   land: 'farm',   name: 'Strawberry Rows', level: 3 },
+    { id: 'orchard',     land: 'farm',   name: 'Orchard',         level: 4 },
+    { id: 'meadow',      land: 'hay',    name: 'Meadow',          level: 3 },
+    { id: 'stables',     land: 'hay',    name: 'Stables',         level: 4 },
+    { id: 'windmill',    land: 'hay',    name: 'Windmill',        level: 5 },
+    { id: 'leafpiles',   land: 'fert',   name: 'Leaf Piles',      level: 4 },
+    { id: 'compostbins', land: 'fert',   name: 'Compost Bins',    level: 5 },
+    { id: 'mushrooms',   land: 'fert',   name: 'Mushroom Corner', level: 6 },
+    { id: 'muddyshore',  land: 'aqua',   name: 'Muddy Shore',     level: 5 },
+    { id: 'lilypond',    land: 'aqua',   name: 'Lily Pond',       level: 6 },
+    { id: 'boatdock',    land: 'aqua',   name: 'Boat Dock',       level: 7 },
+    { id: 'gardengate',  land: 'flower', name: 'Garden Gate',     level: 6 },
+    { id: 'rosearch',    land: 'flower', name: 'Rose Arch',       level: 7 },
+    { id: 'greenhouse',  land: 'flower', name: 'Greenhouse',      level: 8 },
+];
+// Finishing an area (other than a land's last) pays this.
+const ZONE_REWARD = { gems: 5, chest: 'brown' };
+// Where an area's person stands when it has no clear spot of its own (person).
+const ZONE_PERSON = [42, 56];
+// Spots for jobs without their own place in a picture yet, in order.
+const ZONE_SLOTS = [[30, 36], [70, 42], [46, 64], [22, 84], [74, 82]];
+// Object pictures are drawn by name (ASSETS.objects); until then, these.
+const OBJECT_EMOJI = {
+    planks: '🪵', weeds: '🌿', branch: '🍂', feedbin_broken: '🪣', feedbin: '🌾', fence_broken: '🚧', fence: '🪵',
+    wheelbarrow_broken: '🛒', wheelbarrow: '🛒', pump_broken: '🕸️', pump: '🚰', junk: '🗑️', firewood: '🪵',
+    lantern: '🏮', mailbox: '📫', tulips: '🌷',
+    nest_empty: '🪹', nest_chicks: '🐣', wire_torn: '🕸️', wire_fixed: '🥅', trough_empty: '🛁', trough_full: '💧',
+    straw_mess: '🌾', perch_broken: '🪵', hen_perch: '🐔', feeder_rusty: '🥫', feeder: '🫙', basket_empty: '🧺',
+    basket_eggs: '🥚', sacks: '🎒', coop: '🏠', nestbox: '🪺',
+    stall_broken: '🚪', stall_cow: '🐄', hay_heap: '🍂', hay_bales: '🌾', ladder_fallen: '🪜', ladder: '🪜',
+    paint_old: '🪣', paint: '🎨', rope_tangled: '🧶', rope_hook: '🪢', tools_rusty: '🔧', tool_rack: '🧰',
+    lamp_broken: '🕯️', lamp: '🏮', cans_spilled: '🥛', milk_cans: '🥛',
 };
-// Where a land's spots go, in job order (% of the scene, centre of the spot).
-const FIX_SLOTS = [[50, 50], [18, 58], [82, 56], [34, 70], [66, 72], [16, 84], [84, 86], [50, 86]];
 
-let fixLand = 'barn'; // the land the fix scene shows
+let fixLand = 'barn'; // the land the place shows
 let fixing = false;   // a fix is playing: hands off until it's done
 const jobProgress = {}; // items made so far per job, to cheer each one
 
+const ZONE = Object.fromEntries(ZONES.map(z => [z.id, z]));
+
+function landZones(land) {
+    return ZONES.filter(z => z.land === land);
+}
+
+function zoneTasks(id) {
+    return TASKS.filter(t => t.zone === id);
+}
+
+function zoneDone(zone) {
+    return zoneTasks(zone.id).every(taskDone);
+}
+
+// Open: the land is yours, its level is reached and the area before it is done.
+function zoneOpen(zone) {
+    if (!unlocks[zone.land] || quests.level < zone.level) return false;
+    const list = landZones(zone.land);
+    const i = list.indexOf(zone);
+    return i === 0 || zoneDone(list[i - 1]);
+}
+
+// What a locked area waits for, for its sign.
+function zoneWaitsFor(zone) {
+    const list = landZones(zone.land);
+    const before = list[list.indexOf(zone) - 1];
+    if (before && !zoneDone(before)) return `Finish ${before.name}`;
+    return `Level ${zone.level}`;
+}
+
+// The jobs fixed at a spot in a land's place (or on the town square).
 function fixJobs(land) {
-    return landTasks(land).filter(t => FIX_ART[t.id]);
+    return landTasks(land).filter(t => t.look);
 }
 
 // Into a land's place (the town square for the town), and with a job, fix it there.
@@ -1222,11 +1326,13 @@ function goWork(task) {
     else goTo(unlocks[task.land] ? task.land : task.land === 'town' ? 'town' : 'map');
 }
 
-// A job's picture: its art, or its emoji. fixed = after the job.
+// What stands at a job's spot, before or after (fixed): its object's picture,
+// its emoji until drawn, or nothing ('').
 function fixFace(task, fixed) {
-    const art = ((ASSETS.fixes || {})[task.id] || [])[fixed ? 1 : 0];
+    const key = task.look[fixed ? 1 : 0];
+    const art = (ASSETS.objects || {})[key];
     if (art) return `<img src="${art}" alt="" draggable="false">`;
-    return FIX_ART[task.id][fixed ? 1 : 0];
+    return OBJECT_EMOJI[key] || key;
 }
 
 // What an open job asks for, as a pin over its spot like Merge Mansion's task
@@ -1242,38 +1348,92 @@ function needPins(task) {
 // Jobs fixed at a spot (a thing in a land's place, or a house in town); buying
 // a land has none.
 function hasSpot(task) {
-    return !!(FIX_ART[task.id] || task.house);
+    return !!(task.look || task.house);
 }
 
-// The broken things of a land, each a button: open jobs show what they need
-// (a ✓ once ready), later ones wait greyed out, fixed ones show their new look.
-function addFixSpots(land, scene) {
-    fixJobs(land).forEach((task, i) => {
+// The things to fix in an area (or on the town square), each a button: open
+// jobs carry a pin of what they need, later ones wait greyed out, fixed ones
+// show their new look (or are gone). Jobs without a place of their own yet
+// take the next free slot.
+function addFixSpots(tasks, el) {
+    tasks.forEach((task, i) => {
         const done = taskDone(task);
-        if (done && !FIX_ART[task.id][1] && !((ASSETS.fixes || {})[task.id] || [])[1]) return; // cleared away
-        const [x, y] = FIX_ART[task.id].length > 2 ? FIX_ART[task.id].slice(2) : FIX_SLOTS[i % FIX_SLOTS.length];
+        if (done && !task.look[1]) return; // cleared away
+        const [x, y] = task.at || ZONE_SLOTS[i % ZONE_SLOTS.length];
         const open = taskOpen(task);
-        const el = document.createElement('button');
-        el.className = 'fix-spot ' + (done ? 'fixed' : open ? 'open' + (taskReady(task) ? ' ready' : '') : 'later');
-        el.dataset.job = task.id;
-        el.style.left = x + '%';
-        el.style.top = y + '%';
-        el.style.zIndex = 20 + Math.round(y);
-        el.innerHTML = `<span class="fix-face">${fixFace(task, done)}</span>`;
-        if (open) addTag(el, 'task-pin' + (taskReady(task) ? ' ready' : ''), needPins(task));
-        el.addEventListener('click', () => tapFix(task));
-        scene.appendChild(el);
+        const spot = document.createElement('button');
+        const face = fixFace(task, done);
+        spot.className = 'fix-spot ' + (done ? 'fixed' : open ? 'open' + (taskReady(task) ? ' ready' : '') : 'later')
+            + (face.startsWith('<img') ? ' pictured' : '') + (!task.look[0] && !done ? ' to-build' : '');
+        spot.dataset.job = task.id;
+        spot.style.left = x + '%';
+        spot.style.top = y + '%';
+        spot.style.zIndex = 20 + Math.round(y);
+        spot.innerHTML = `<span class="fix-face">${face || '✨'}</span>`;
+        if (open) addTag(spot, 'task-pin' + (taskReady(task) ? ' ready' : ''), needPins(task));
+        spot.addEventListener('click', () => tapFix(task));
+        el.appendChild(spot);
     });
-    // The first open job's person stands in the clear middle of the place.
-    const task = fixJobs(land).find(taskOpen);
-    if (task && land !== 'town') { // the town's people are already on the square
-        const npc = npcs.find(n => n.id === task.who);
-        const person = makeSpot({ x: 40, y: 60, w: 20, z: 79,
-            sprite: npcPicture(npc), label: npc.name, onClick: () => tapFix(task) });
-        person.classList.add('portrait-spot', 'fix-npc');
-        addTag(person, 'say', task.name);
-        scene.appendChild(person);
+}
+
+// An area: its picture, faded where it's still broken; its things to fix; and
+// a sign with its name and progress. Locked, it hides under clouds with a
+// padlock saying what it waits for.
+function renderZone(zone) {
+    const el = document.createElement('section');
+    const tasks = zoneTasks(zone.id);
+    const done = tasks.filter(taskDone).length;
+    const open = zoneOpen(zone);
+    el.className = 'zone' + (open ? '' : ' locked') + (done === tasks.length ? ' zone-done' : '');
+    el.dataset.zone = zone.id;
+    const art = (ASSETS.areas || {})[zone.id];
+    const picture = `url('${art || ASSETS.boards[zone.land]}')`;
+    el.innerHTML = `<div class="zone-art" style="background-image:${picture}"></div>
+                    <div class="zone-worn" style="background-image:${picture}"></div>`;
+    if (!art && landZones(zone.land)[0] === zone) {
+        // No picture yet: the land's building stands at the top of its first area.
+        const list = landTasks(zone.land);
+        const place = makeSpot({ x: 14, y: 2, w: 72, h: 46, z: 1,
+            sprite: stageSprite(zone.land, list.filter(taskDone).length, list.length) || ASSETS.buildings[zone.land], alt: '' });
+        place.classList.add('fix-place');
+        el.appendChild(place);
     }
+    wearZone(el, tasks);
+    if (open) addFixSpots(tasks, el);
+    addTag(el, 'zone-sign', `${zone.name} <b>${done}/${tasks.length}</b>`);
+    if (!open) {
+        el.insertAdjacentHTML('beforeend', `<div class="zone-clouds"></div>
+            <div class="zone-lock">${uiIcon('lock', '🔒')}<small>${zoneWaitsFor(zone)}</small></div>`);
+    }
+    return el;
+}
+
+// The faded copy over an area's picture, with a clear hole around each fixed
+// spot so the colour shows through there. A finished area has none.
+function wearZone(el, tasks, growing = null) {
+    const worn = el.querySelector('.zone-worn');
+    const holes = tasks.map((t, i) => {
+        if (!taskDone(t) && t.id !== growing) return null;
+        const [x, y] = t.at || ZONE_SLOTS[i % ZONE_SLOTS.length];
+        const r = t.id === growing ? 'var(--grow)' : '15%';
+        return `radial-gradient(circle at ${x}% ${y}%, transparent ${r}, #000 calc(${r} + 12%))`;
+    }).filter(Boolean);
+    const mask = holes.length ? holes.join(', ') : 'none';
+    worn.style.maskImage = worn.style.webkitMaskImage = mask;
+}
+
+// The person of an area's first open job stands in the area's clear spot,
+// saying what it is.
+function addZonePerson(el, tasks, zone) {
+    const task = tasks.find(taskOpen);
+    if (!task) return;
+    const [x, y] = zone.person || ZONE_PERSON;
+    const npc = npcs.find(n => n.id === task.who);
+    const person = makeSpot({ x: x - 9, y: y - 9, w: 18, z: 25 + Math.round(y),
+        sprite: npcPicture(npc), label: npc.name, onClick: () => tapFix(task) });
+    person.classList.add('portrait-spot', 'fix-npc');
+    addTag(person, 'say', task.name);
+    el.appendChild(person);
 }
 
 function tapFix(task) {
@@ -1319,7 +1479,10 @@ function showTask(task) {
     if (!hasSpot(task)) return goWork(task); // buying a land: the Market
     goFix(task.land);
     const spot = document.querySelector(`#scene-${task.land === 'town' ? 'town' : 'fix'} [data-job="${task.id}"]`);
-    if (spot) spot.classList.add('spotlight');
+    if (spot) {
+        spot.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        spot.classList.add('spotlight');
+    }
     setTimeout(() => openTaskCard(task), 700);
 }
 
@@ -1374,6 +1537,7 @@ function fixJob(id) {
     document.querySelectorAll('.fix-call').forEach(el => el.remove());
     tutorialEl.hidden = true;
     document.body.classList.add('busy');
+    spot.scrollIntoView({ block: 'center' });
     const box = scene.getBoundingClientRect(), r = spot.getBoundingClientRect();
     scene.style.transformOrigin = `${((r.left + r.width / 2 - box.left) / box.width) * 100}% ${((r.top + r.height / 2 - box.top) / box.height) * 100}%`;
     scene.classList.add('fix-zoom');
@@ -1394,8 +1558,18 @@ function fixJob(id) {
             const p = addTag(spot, 'fix-spark', s);
             p.style.setProperty('--a', `${k * 60}deg`);
         });
-        const jobs = landTasks(task.land), done = jobs.filter(taskDone).length;
-        const next = stageSprite(task.land, done + 1, jobs.length);
+        // Colour comes back around the spot, and the building steps up if it has stages.
+        const zoneEl = spot.closest('.zone');
+        const jobs = task.zone ? zoneTasks(task.zone) : landTasks(task.land);
+        const done = jobs.filter(taskDone).length + 1;
+        if (zoneEl) {
+            zoneEl.style.setProperty('--grow', '0%');
+            wearZone(zoneEl, jobs, task.id);
+            requestAnimationFrame(() => requestAnimationFrame(() => zoneEl.style.setProperty('--grow', '15%')));
+            if (done === jobs.length) zoneEl.classList.add('zone-done');
+        }
+        const list = landTasks(task.land);
+        const next = stageSprite(task.land, list.filter(taskDone).length + 1, list.length);
         const place = scene.querySelector('.fix-place img');
         if (place && next && !place.src.endsWith(next)) {
             place.src = next;
@@ -1403,7 +1577,8 @@ function fixJob(id) {
         }
         const banner = document.createElement('div');
         banner.className = 'fix-banner';
-        banner.textContent = done + 1 === jobs.length ? `🎉 ${landName(task.land)} restored!` : `✨ Fixed! ${done + 1}/${jobs.length}`;
+        const where = task.zone ? ZONE[task.zone].name : landName(task.land);
+        banner.textContent = done === jobs.length ? `🎉 ${where} restored!` : `✨ Fixed! ${done}/${jobs.length}`;
         stageEl.appendChild(banner);
         setTimeout(() => banner.remove(), 1800);
     }, 1300);
@@ -1416,27 +1591,59 @@ function fixJob(id) {
     }, 2700);
 }
 
+// A land's place: its areas as a column you scroll, the land's progress at the
+// top and the corner buttons. It opens on the first area with work left, or
+// stays where you were when it redraws.
 function renderFix() {
     const land = fixLand;
     const scene = document.getElementById('scene-fix');
+    const old = scene.querySelector('.world');
+    const keep = old && scene.dataset.land === land ? old.scrollTop : null;
     scene.innerHTML = '';
-    scene.style.backgroundImage = `url("${(ASSETS.areas || {})[land] || ASSETS.boards[land]}")`;
+    scene.dataset.land = land;
+    const world = document.createElement('div');
+    world.className = 'world';
+    landZones(land).forEach(zone => {
+        const el = renderZone(zone);
+        if (zoneOpen(zone)) addZonePerson(el, zoneTasks(zone.id), zone);
+        world.appendChild(el);
+    });
     const jobs = landTasks(land);
     const done = jobs.filter(taskDone).length;
-    const stage = stageSprite(land, done, jobs.length);
-    const place = makeSpot({ x: 6, y: 3, w: 88, h: 40, z: 1, sprite: stage || ASSETS.buildings[land], alt: AREAS[land].name });
-    place.classList.add('fix-place');
-    if (!stage) {
-        place.classList.add(done === jobs.length ? 'restored' : 'worn');
-        place.style.setProperty('--worn', (1 - done / jobs.length).toFixed(2));
-    }
-    scene.appendChild(place);
-    addFixSpots(land, scene);
-
     const progress = document.createElement('div');
     progress.className = 'place-progress';
     progress.innerHTML = `${uiIcon('hammer', '🔨')} ${done}/${jobs.length}<span class="quest-bar"><i style="width:${(100 * done) / jobs.length}%"></i></span>`;
-    scene.append(progress, boardFab(land), tasksFab());
+    scene.append(world, progress, boardFab(land), tasksFab());
+    const open = landZones(land).filter(zoneOpen);
+    const here = open.find(z => !zoneDone(z)) || open[open.length - 1];
+    world.scrollTop = keep ?? (here ? world.querySelector(`[data-zone="${here.id}"]`).offsetTop : 0);
+    unlockNewZones(land, world);
+}
+
+// An area that opened since you last looked plays its unlock: a golden key
+// over the padlock, the clouds blow away, then the area's card.
+function unlockNewZones(land, world) {
+    const fresh = landZones(land).filter(z => zoneOpen(z) && !restoration.zonesOpen.includes(z.id));
+    if (!fresh.length || fixing || !tutorial.done || !dialogEl.hidden || !world) return;
+    fresh.forEach(z => restoration.zonesOpen.push(z.id));
+    const zone = fresh[0];
+    const el = world.querySelector(`[data-zone="${zone.id}"]`);
+    el.classList.add('unlocking');
+    el.insertAdjacentHTML('beforeend', `<div class="zone-clouds"></div><div class="zone-key">${uiIcon('key', '🗝️')}</div>`);
+    world.scrollTop = el.offsetTop;
+    document.body.classList.add('busy');
+    setTimeout(() => el.classList.add('opening'), 1000);
+    setTimeout(() => {
+        document.body.classList.remove('busy');
+        el.classList.remove('unlocking', 'opening');
+        el.querySelectorAll('.zone-clouds, .zone-key').forEach(c => c.remove());
+        showDialog({
+            art: (ASSETS.areas || {})[zone.id] || ASSETS.buildings[zone.land],
+            title: `✨ ${zone.name}`,
+            body: `<p>New area! <b>${zoneTasks(zone.id).length}</b> things to fix.</p>`,
+            actions: [{ label: 'Let\'s go!', primary: true }],
+        });
+    }, 2000);
 }
 
 // --- STORY ---
@@ -1450,8 +1657,9 @@ const STORY_INTRO = [['mayor', 'Save us!', 'OK!']];
 
 // Each "day" is a set of jobs, with one bubble when it starts.
 const CHAPTERS = [
-    { scene: [['mayor', 'Save us!']], jobs: ['barn1', 'barn2'] },
-    { scene: [['robin', 'Fix the barn!']], jobs: ['barn3', 'barn4', 'barn5', 'barn6', 'barn7', 'barn8'] },
+    { scene: [['mayor', 'Save us!']], jobs: ['barn1', 'barn2', 'barn3', 'barn4', 'barn5', 'barn6', 'barn7', 'barn8', 'barn9', 'barn10', 'barn11'] },
+    { scene: [['robin', 'Fix the barn!']], jobs: ['hen1', 'hen2', 'hen3', 'hen4', 'hen5', 'hen6', 'hen7', 'hen8', 'hen9', 'hen10',
+                                                  'big1', 'big2', 'big3', 'big4', 'big5', 'big6', 'big7', 'big8'] },
     { scene: [['marnie', 'Grow food!']],
       jobs: ['farm1', 'farm2', 'farm3', 'farm4', 'farm5', 'farm6', 'farm7', 'hay1', 'hay2', 'hay3', 'hay4', 'hay5', 'hay6'] },
     { scene: [['mayor', 'Fix the town!']],
@@ -1545,6 +1753,7 @@ function taskOpen(task) {
     if (taskDone(task)) return false;
     if (task.after && !task.after.every(id => restoration.done.includes(id))) return false;
     if (task.needs[0].own) return quests.level >= AREAS[task.land].level;
+    if (task.zone) return zoneOpen(ZONE[task.zone]);
     return !AREAS[task.land] || unlocks[task.land];
 }
 
@@ -1637,17 +1846,23 @@ function completeTask(id, quiet = false) {
     lastSale = null;
     const npc = npcs.find(n => n.id === task.who);
     const restored = landRestored(task.land);
+    const zone = task.zone && ZONE[task.zone];
+    const zoneFinished = zone && zoneDone(zone) && !restored; // a land's last area pays the land's reward
+    const nextZone = zone && landZones(zone.land)[landZones(zone.land).indexOf(zone) + 1];
     if (task.reward) grantReward(task.reward, '🔨');
     if (restored) grantReward(LAND_REWARD, '✨');
+    if (zoneFinished) grantReward(ZONE_REWARD, '✨');
     if (task.story) storyQueue.push(task.story);
-    if (quiet && !restored) cheer(task, npc);
+    if (quiet && !restored && !zoneFinished) cheer(task, npc);
     else showDialog({
         art: npcPicture(npc),
         artRound: true,
         title: `✅ ${task.name}`,
         body: `<p>“${task.line}”</p><p class="hint">— ${npc.name}</p>
                <p><b>+⭐${task.xp}</b>${task.reward ? ` · ${rewardText(task.reward)}` : ''}</p>
-               ${restored ? `<p class="restored-note">✨ ${landName(task.land)} restored! ${rewardText(LAND_REWARD)}</p>` : ''}`,
+               ${restored ? `<p class="restored-note">✨ ${landName(task.land)} restored! ${rewardText(LAND_REWARD)}</p>` : ''}
+               ${zoneFinished ? `<p class="restored-note">✨ ${zone.name} restored! ${rewardText(ZONE_REWARD)}</p>
+                   ${nextZone ? `<p class="hint">Next: ${nextZone.name}${quests.level < nextZone.level ? ` (level ${nextZone.level})` : ''}</p>` : ''}` : ''}`,
         actions: [{ label: 'Yay!', primary: true }],
     });
     // XP last: a level-up popup follows this one.
@@ -2123,7 +2338,7 @@ function renderTown() {
         }
         scene.appendChild(person);
     });
-    addFixSpots('town', scene); // the fog, and later the festival
+    addFixSpots(fixJobs('town'), scene); // the fog, and later the festival
     scene.append(boardFab(lastBoard), tasksFab());
 }
 
@@ -4068,6 +4283,8 @@ function loadGame() {
         quests.level = save.quests.level || 1;
         quests.xp = save.quests.xp || 0;
         if (save.restoration) Object.assign(restoration, save.restoration);
+        // Saves from before areas: every area already open counts as seen (no unlock replays).
+        if (!save.restoration || !save.restoration.zonesOpen) restoration.zonesOpen = null;
         if (save.pass) Object.assign(pass, save.pass);
         if (save.dailyGoals) Object.assign(dailyGoals, save.dailyGoals);
         if (save.fair) Object.assign(fair, save.fair);
@@ -4102,6 +4319,7 @@ function loadGame() {
             const now = currentChapter();
             Object.assign(story, { intro: true, seen: CHAPTERS.map((_, i) => i).filter(i => now === -1 || i < now), ended: now === -1 });
         }
+        if (!restoration.zonesOpen) restoration.zonesOpen = ZONES.filter(zoneOpen).map(z => z.id);
         return true;
     } catch (e) {
         return false;
@@ -4150,6 +4368,8 @@ setInterval(() => {
     checkOffers();
     showFairResults();
     syncStory();
+    // An area that opened while a card was up plays its unlock once it's closed.
+    if (currentScene === 'fix') unlockNewZones(fixLand, document.querySelector('#scene-fix .world'));
     updateTutorial();
     updateUI();
     updateCountdowns();
