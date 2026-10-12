@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**393 assets:** 315 done ✅, 8 placeholders 🟡, 70 missing ⬜.
+**447 assets:** 315 done ✅, 8 placeholders 🟡, 124 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -499,6 +499,20 @@ sheet yet use emoji pairs written on the job itself.
 | ✅ | `lamp` | 🏮 | Light the lantern (after) |
 | ✅ | `cans_spilled` | 🥛 | Line up the milk cans |
 | ✅ | `milk_cans` | 🥛 | Line up the milk cans (after) |
+
+## 13. Tools (what jobs ask for)
+
+Each land comes with a tool producer on its board (one picture, in `toolProducers` in `assets.js`) that drops
+its own 8-step chain (`items.<chain>`, files `assets/items/<chain>/00.png` … `07.png`). Missing ones show emoji.
+
+| | Producer | Land | Chain |
+|---|---|---|---|
+| ⬜ | 🧰 Toolbox | Barn | ⬜ Screw, Hammer, Screwdriver, Wrench, Saw, Power Drill, Tool Kit, Golden Tool Chest |
+| ⬜ | 🛖 Garden Shed | Crop Field | ⬜ Gloves, Trowel, Shears, Rake, Garden Hose, Lawn Mower, Tractor, Golden Tractor |
+| ⬜ | 🪓 Log Pile | Hay Field | ⬜ Twig, Log, Plank, Plank Bundle, Beams, Wooden Crate, Barrel, Carved Chest |
+| ⬜ | 🧹 Broom Cabinet | Compost Yard | ⬜ Sponge, Soap, Scrub Brush, Soapy Bucket, Broom, Mop, Cleaning Trolley, Golden Broom |
+| ⬜ | 🎣 Tackle Box | Fish Pond | ⬜ Hook, Bobber, Rope, Net, Fishing Rod, Oars, Life Ring, Rowboat |
+| ⬜ | 🏮 Lantern Crate | Flower Garden | ⬜ Candle, Paper Lantern, Bunting, Glass Lantern, Fairy Lights, Balloons, Lamp Post, Golden Firework |
 
 ## Not used by the game
 

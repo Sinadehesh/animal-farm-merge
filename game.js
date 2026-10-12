@@ -470,7 +470,40 @@ const NAMES = {
     'flower': ['💧 Water Drop', '🌱 Seedling', '🌷 Bud', '🌼 Daisy', '🌷 Tulip', '🌹 Rose', '🌺 Lily', '🌸 Orchid', '🪷 Lotus', '🍄 Rafflesia', '💎 Crystal Flower', '🌳 Tree of Life']
 };
 
+// --- TOOLS ---
+// What jobs mostly ask for, as in Merge Mansion. Each land comes with a tool
+// producer on its board that drops its own chain: tool items are { tier, chain }
+// and can be used by jobs anywhere. `what` is how the producer's info names them.
+const TOOLS = {
+    tools:   { board: 'barn',   name: 'Toolbox',       emoji: '🧰', what: 'tools',          minutes: 2,  hue: 210,
+               names: ['🔩 Screw', '🔨 Hammer', '🪛 Screwdriver', '🔧 Wrench', '🪚 Saw', '🔌 Power Drill', '🧰 Tool Kit', '🏆 Golden Tool Chest'] },
+    garden:  { board: 'farm',   name: 'Garden Shed',   emoji: '🛖', what: 'garden tools',   minutes: 3,  hue: 100,
+               names: ['🧤 Gloves', '🥄 Trowel', '✂️ Shears', '🧹 Rake', '🪢 Garden Hose', '🌀 Lawn Mower', '🚜 Tractor', '🌟 Golden Tractor'] },
+    wood:    { board: 'hay',    name: 'Log Pile',      emoji: '🪓', what: 'wood',           minutes: 5,  hue: 30,
+               names: ['🌿 Twig', '🪵 Log', '🟫 Plank', '🪢 Plank Bundle', '🧱 Beams', '📦 Wooden Crate', '🛢️ Barrel', '💰 Carved Chest'] },
+    clean:   { board: 'fert',   name: 'Broom Cabinet', emoji: '🧹', what: 'cleaning things', minutes: 8, hue: 180,
+               names: ['🧽 Sponge', '🧼 Soap', '🪥 Scrub Brush', '🪣 Soapy Bucket', '🧹 Broom', '🫧 Mop', '🛒 Cleaning Trolley', '✨ Golden Broom'] },
+    fishing: { board: 'aqua',   name: 'Tackle Box',    emoji: '🎣', what: 'fishing gear',   minutes: 10, hue: 230,
+               names: ['🪝 Hook', '🔴 Bobber', '🪢 Rope', '🥅 Net', '🎣 Fishing Rod', '🛶 Oars', '🛟 Life Ring', '⛵ Rowboat'] },
+    decor:   { board: 'flower', name: 'Lantern Crate', emoji: '🏮', what: 'decorations',    minutes: 15, hue: 330,
+               names: ['🕯️ Candle', '🏮 Paper Lantern', '🎏 Bunting', '🪔 Glass Lantern', '💡 Fairy Lights', '🎈 Balloons', '🌸 Lamp Post', '🎆 Golden Firework'] },
+};
+Object.keys(TOOLS).forEach(chain => { NAMES[chain] = TOOLS[chain].names; });
+const TOOL_CHARGES = 8;                    // taps before a tool producer recharges
+const TOOL_DROP_ODDS = [0.75, 0.22, 0.03]; // the tier a tap drops
+
+// The chain a plain item belongs to: its own (a tool), else its board's.
+function chainOf(mode, item) {
+    return item.chain || mode;
+}
+
+// The board a job's item need is made on.
+function needBoard(need) {
+    return need.item ? (TOOLS[need.item] ? TOOLS[need.item].board : need.item) : null;
+}
+
 function getHue(mode, tier) {
+    if (TOOLS[mode]) return (tier * 25 + TOOLS[mode].hue) % 360;
     if (mode === 'farm') return (tier * 15 + 120) % 360;
     else if (mode === 'hay') return (tier * 15 + 40) % 360;
     else if (mode === 'barn') return (tier * 15 + 0) % 360;
@@ -502,6 +535,7 @@ function boardTitle(mode) {
 // The highest tier you can merge to: the Growth Guide's on the lands, the whole
 // chain at the Fair.
 function tierCap(mode) {
+    if (TOOLS[mode]) return NAMES[mode].length - 1;
     return mode === 'fair' ? NAMES.fair.length - 1 : maxTier;
 }
 
@@ -635,6 +669,7 @@ function tickBoards(now = Date.now()) {
         board.forEach((cell, c) => {
             if (!cell) return;
             if (tickProducer(mode, cell, now)) changed = true;
+            if (cell.type === 'toolbox' && tickToolbox(cell, now)) changed = true;
             if (cell.type === 'chest' && cell.openAt && !cell.opened && now >= cell.openAt) {
                 cell.opened = true;
                 changed = true;
@@ -1090,21 +1125,21 @@ const TASKS = [
     { id: 'barn2', land: 'barn', zone: 'barnyard', at: [14, 60], look: ['weeds', ''], after: ['barn1'],
       name: 'Pull the weeds', who: 'marnie', xp: 1, needs: [{ item: 'barn', tier: 0, n: 2 }], line: 'Weeds gone!' },
     { id: 'barn3', land: 'barn', zone: 'barnyard', at: [85, 38], look: ['branch', ''], after: ['barn1'],
-      name: 'Move the fallen branch', who: 'robin', xp: 1, needs: [{ stat: 'webs', n: 2 }], line: 'Heave!' },
+      name: 'Move the fallen branch', who: 'robin', xp: 1, needs: [{ item: 'tools', tier: 1, n: 1 }], line: 'Heave!' },
     { id: 'barn4', land: 'barn', zone: 'barnyard', at: [30, 50], look: ['feedbin_broken', 'feedbin'], after: ['barn2'],
-      name: 'Fix the feed bin', who: 'robin', xp: 2, needs: [{ item: 'barn', tier: 1, n: 2 }], line: 'Good as new!' },
+      name: 'Fix the feed bin', who: 'robin', xp: 2, needs: [{ item: 'tools', tier: 2, n: 1 }], line: 'Good as new!' },
     { id: 'barn5', land: 'barn', zone: 'barnyard', at: [10, 34], look: ['fence_broken', 'fence'], after: ['barn3'],
-      name: 'Mend the fence', who: 'robin', xp: 2, needs: [{ stat: 'upgrades', n: 1 }], line: 'Nice fence!' },
+      name: 'Mend the fence', who: 'robin', xp: 2, needs: [{ item: 'tools', tier: 1, n: 2 }], line: 'Nice fence!' },
     { id: 'barn6', land: 'barn', zone: 'barnyard', at: [42, 67], look: ['wheelbarrow_broken', 'wheelbarrow'], after: ['barn4', 'barn5'],
-      name: 'Fix the wheelbarrow', who: 'marnie', xp: 2, needs: [{ item: 'barn', tier: 2, n: 1 }], line: 'It rolls!' },
+      name: 'Fix the wheelbarrow', who: 'marnie', xp: 2, needs: [{ item: 'tools', tier: 3, n: 1 }], line: 'It rolls!' },
     { id: 'barn7', land: 'barn', zone: 'barnyard', at: [88, 60], look: ['pump_broken', 'pump'], after: ['barn6'],
-      name: 'Clean the water pump', who: 'marnie', xp: 2, needs: [{ item: 'barn', tier: 1, n: 2 }], line: 'Fresh water!' },
+      name: 'Clean the water pump', who: 'marnie', xp: 2, needs: [{ item: 'tools', tier: 3, n: 1 }, { item: 'barn', tier: 1, n: 1 }], line: 'Fresh water!' },
     { id: 'barn8', land: 'barn', zone: 'barnyard', at: [20, 80], look: ['junk', 'firewood'], after: ['barn6'],
       name: 'Haul away the junk', who: 'mayor', xp: 2, needs: [{ stat: 'sold', n: 3 }], line: 'Much tidier!' },
     { id: 'barn9', land: 'barn', zone: 'barnyard', at: [67, 40], look: ['', 'lantern'], after: ['barn7'],
-      name: 'Put up a lantern', who: 'robin', xp: 3, needs: [{ item: 'barn', tier: 2, n: 2 }], line: 'So bright!' },
+      name: 'Put up a lantern', who: 'robin', xp: 3, needs: [{ item: 'tools', tier: 2, n: 2 }], line: 'So bright!' },
     { id: 'barn10', land: 'barn', zone: 'barnyard', at: [90, 88], look: ['', 'mailbox'], after: ['barn8'],
-      name: 'Put up a mailbox', who: 'mayor', xp: 3, needs: [{ item: 'barn', tier: 3, n: 1 }], line: 'Mail!' },
+      name: 'Put up a mailbox', who: 'mayor', xp: 3, needs: [{ item: 'tools', tier: 4, n: 1 }], line: 'Mail!' },
     { id: 'barn11', land: 'barn', zone: 'barnyard', at: [50, 86], look: ['', 'tulips'], after: ['barn9', 'barn10'], reward: { chest: 'brown' },
       name: 'Plant tulips', who: 'marnie', xp: 4, needs: [{ item: 'barn', tier: 3, n: 1 }, { item: 'barn', tier: 1, n: 2 }], line: 'Pretty!' },
     // Hen House (day 2)
@@ -1115,22 +1150,22 @@ const TASKS = [
     { id: 'hen3', land: 'barn', zone: 'henhouse', at: [18, 46], look: ['nest_empty', 'nest_chicks'], after: ['hen1'],
       name: 'Fix the nest', who: 'marnie', xp: 3, needs: [{ item: 'barn', tier: 2, n: 2 }], line: 'So cute!' },
     { id: 'hen4', land: 'barn', zone: 'henhouse', at: [84, 70], look: ['wire_torn', 'wire_fixed'], after: ['hen2'],
-      name: 'Patch the chicken wire', who: 'robin', xp: 3, needs: [{ item: 'barn', tier: 3, n: 1 }], line: 'No foxes!' },
+      name: 'Patch the chicken wire', who: 'robin', xp: 3, needs: [{ item: 'tools', tier: 3, n: 2 }], line: 'No foxes!' },
     { id: 'hen5', land: 'barn', zone: 'henhouse', at: [70, 60], look: ['trough_empty', 'trough_full'], after: ['hen1'],
       name: 'Fill the water trough', who: 'marnie', xp: 3, needs: [{ item: 'barn', tier: 1, n: 3 }], line: 'Splash!' },
     { id: 'hen6', land: 'barn', zone: 'henhouse', at: [44, 88], look: ['perch_broken', 'hen_perch'], after: ['hen3'],
-      name: 'Fix the perch', who: 'robin', xp: 4, needs: [{ item: 'barn', tier: 3, n: 1 }], line: 'Perfect!' },
+      name: 'Fix the perch', who: 'robin', xp: 4, needs: [{ item: 'tools', tier: 4, n: 1 }], line: 'Perfect!' },
     { id: 'hen7', land: 'barn', zone: 'henhouse', at: [34, 34], look: ['feeder_rusty', 'feeder'], after: ['hen4', 'hen5'],
-      name: 'Fix the feeder', who: 'marnie', xp: 4, needs: [{ item: 'barn', tier: 3, n: 1 }, { item: 'barn', tier: 2, n: 1 }], line: 'Yum!' },
+      name: 'Fix the feeder', who: 'marnie', xp: 4, needs: [{ item: 'barn', tier: 3, n: 1 }, { item: 'tools', tier: 2, n: 1 }], line: 'Yum!' },
     { id: 'hen8', land: 'barn', zone: 'henhouse', at: [30, 64], look: ['basket_empty', 'basket_eggs'], after: ['hen6'], reward: { chest: 'brown' },
       name: 'Fill the egg basket', who: 'marnie', xp: 4, needs: [{ item: 'barn', tier: 1, n: 4 }], line: 'Eggs! Yay!' },
     { id: 'hen9', land: 'barn', zone: 'henhouse', at: [88, 36], look: ['', 'coop'], after: ['hen7'],
-      name: 'Build a little coop', who: 'robin', xp: 5, needs: [{ item: 'barn', tier: 3, n: 2 }], line: 'A new home!' },
+      name: 'Build a little coop', who: 'robin', xp: 5, needs: [{ item: 'tools', tier: 4, n: 1 }, { item: 'tools', tier: 1, n: 2 }], line: 'A new home!' },
     { id: 'hen10', land: 'barn', zone: 'henhouse', at: [66, 86], look: ['', 'nestbox'], after: ['hen8', 'hen9'], reward: { chest: 'blue' },
-      name: 'Make a nest box', who: 'marnie', xp: 6, needs: [{ item: 'barn', tier: 4, n: 1 }, { item: 'barn', tier: 3, n: 1 }], line: 'The hens are back!' },
+      name: 'Make a nest box', who: 'marnie', xp: 6, needs: [{ item: 'barn', tier: 4, n: 1 }, { item: 'tools', tier: 5, n: 1 }], line: 'The hens are back!' },
     // Big Red Barn (day 2)
     { id: 'big1', land: 'barn', zone: 'bigbarn', at: [50, 44], look: ['stall_broken', 'stall_cow'],
-      name: 'Fix the stall door', who: 'robin', xp: 5, needs: [{ item: 'barn', tier: 4, n: 1 }], line: 'Moo!' },
+      name: 'Fix the stall door', who: 'robin', xp: 5, needs: [{ item: 'tools', tier: 4, n: 1 }, { item: 'barn', tier: 4, n: 1 }], line: 'Moo!' },
     { id: 'big2', land: 'barn', zone: 'bigbarn', at: [25, 62], look: ['hay_heap', 'hay_bales'],
       name: 'Stack the hay', who: 'marnie', xp: 5, needs: [{ item: 'barn', tier: 3, n: 2 }], line: 'Stacked!' },
     { id: 'big3', land: 'barn', zone: 'bigbarn', at: [78, 60], look: ['ladder_fallen', 'ladder'], after: ['big1'],
@@ -1138,28 +1173,28 @@ const TASKS = [
     { id: 'big4', land: 'barn', zone: 'bigbarn', at: [42, 74], look: ['rope_tangled', 'rope_hook'], after: ['big2'],
       name: 'Coil the ropes', who: 'marnie', xp: 6, needs: [{ item: 'barn', tier: 4, n: 1 }], line: 'Neat!' },
     { id: 'big5', land: 'barn', zone: 'bigbarn', at: [72, 80], look: ['tools_rusty', 'tool_rack'], after: ['big3'],
-      name: 'Tidy the tool rack', who: 'robin', xp: 6, needs: [{ item: 'barn', tier: 5, n: 1 }], line: 'My tools!' },
+      name: 'Tidy the tool rack', who: 'robin', xp: 6, needs: [{ item: 'tools', tier: 6, n: 1 }], line: 'My tools!' },
     { id: 'big6', land: 'barn', zone: 'bigbarn', at: [18, 86], look: ['lamp_broken', 'lamp'], after: ['big4'],
-      name: 'Light the lantern', who: 'mayor', xp: 7, needs: [{ item: 'barn', tier: 4, n: 2 }], line: 'Cozy!' },
+      name: 'Light the lantern', who: 'mayor', xp: 7, needs: [{ item: 'tools', tier: 5, n: 1 }], line: 'Cozy!' },
     { id: 'big7', land: 'barn', zone: 'bigbarn', at: [50, 90], look: ['cans_spilled', 'milk_cans'], after: ['big5', 'big6'],
       name: 'Line up the milk cans', who: 'marnie', xp: 8, needs: [{ item: 'barn', tier: 5, n: 1 }, { item: 'barn', tier: 3, n: 1 }], line: 'Milk!' },
     { id: 'big8', land: 'barn', zone: 'bigbarn', at: [84, 90], look: ['paint_old', 'paint'], after: ['big7'], reward: { chest: 'blue' },
-      name: 'Paint the barn red', who: 'marnie', xp: 10, needs: [{ item: 'barn', tier: 6, n: 1 }], line: 'Beautiful barn!' },
+      name: 'Paint the barn red', who: 'marnie', xp: 10, needs: [{ item: 'barn', tier: 6, n: 1 }, { item: 'tools', tier: 5, n: 1 }], line: 'Beautiful barn!' },
     // Crop Field (day 3)
     { id: 'farm1', land: 'farm', story: [['marnie', 'Let\'s grow food!']], name: 'Buy the Crop Field', who: 'mayor', xp: 3, needs: [{ own: 'farm' }],
       line: 'Your field!' },
-    { id: 'farm2', land: 'farm', zone: 'fieldgate', look: ['🌿', ''], after: ['farm1'], name: 'Pull the weeds', who: 'marnie', xp: 3, needs: [{ stat: 'boxes', n: 3 }],
+    { id: 'farm2', land: 'farm', zone: 'fieldgate', look: ['🌿', ''], after: ['farm1'], name: 'Pull the weeds', who: 'marnie', xp: 3, needs: [{ item: 'garden', tier: 1, n: 1 }],
       line: 'Weeds gone!' },
     { id: 'farm3', land: 'farm', zone: 'fieldgate', look: ['🕳️', '🌱'], after: ['farm1'], name: 'Sow the first seeds', who: 'marnie', xp: 4, needs: [{ item: 'farm', tier: 1, n: 3 }],
       line: 'Seeds in!' },
     { id: 'farm4', land: 'farm', zone: 'berryrows', look: ['🥀', '🌿'], after: ['farm3'], name: 'Water the sprouts', who: 'marnie', xp: 5, needs: [{ item: 'farm', tier: 2, n: 2 }],
       line: 'Sprouts!' },
-    { id: 'farm5', land: 'farm', zone: 'berryrows', look: ['🪵', '🧑‍🌾'], after: ['farm2'], name: 'Fix the scarecrow', who: 'robin', xp: 5, needs: [{ stat: 'upgrades', n: 1 }],
+    { id: 'farm5', land: 'farm', zone: 'berryrows', look: ['🪵', '🧑‍🌾'], after: ['farm2'], name: 'Fix the scarecrow', who: 'robin', xp: 5, needs: [{ item: 'garden', tier: 2, n: 1 }],
       line: 'Scarecrow fixed!' },
     { id: 'farm6', land: 'farm', zone: 'orchard', look: ['🌱', '🍓'], after: ['farm4'], name: 'Pick the first strawberries', who: 'marnie', xp: 10, reward: { chest: 'brown' },
       needs: [{ item: 'farm', tier: 3, n: 2 }], line: 'Food!' },
     { id: 'farm7', land: 'farm', zone: 'orchard', look: ['🪚', '🚧'], after: ['farm5', 'farm6'], name: 'Mend the fence', who: 'robin', xp: 10,
-      needs: [{ item: 'farm', tier: 3, n: 1 }, { item: 'barn', tier: 2, n: 2 }], line: 'Nice fence!' },
+      needs: [{ item: 'farm', tier: 3, n: 1 }, { item: 'tools', tier: 3, n: 1 }], line: 'Nice fence!' },
     // Hay Field (day 3)
     { id: 'hay1', land: 'hay', name: 'Buy the Hay Field', who: 'mayor', xp: 4, needs: [{ own: 'hay' }],
       line: 'More land!' },
@@ -1167,10 +1202,10 @@ const TASKS = [
       line: 'Fresh straw!' },
     { id: 'hay3', land: 'hay', zone: 'meadow', look: ['🍂', '🌾'], after: ['hay1'], name: 'Tie the first bundles', who: 'marnie', xp: 6, needs: [{ item: 'hay', tier: 2, n: 2 }],
       line: 'Neat bundles!' },
-    { id: 'hay4', land: 'hay', zone: 'stables', look: ['🌾', '🟫'], after: ['hay3'], name: 'Stack the bales', who: 'robin', xp: 10, needs: [{ item: 'hay', tier: 3, n: 2 }],
+    { id: 'hay4', land: 'hay', zone: 'stables', look: ['🌾', '🟫'], after: ['hay3'], name: 'Stack the bales', who: 'robin', xp: 10, needs: [{ item: 'wood', tier: 2, n: 2 }, { item: 'hay', tier: 3, n: 1 }],
       line: 'Stacked!' },
     { id: 'hay5', land: 'hay', zone: 'stables', look: ['🏚️', '🏠'], after: ['hay2', 'hay4'], name: 'Repair the hay loft', who: 'robin', xp: 12, reward: { chest: 'blue' },
-      needs: [{ item: 'hay', tier: 3, n: 1 }, { item: 'barn', tier: 3, n: 1 }], line: 'Good as new!' },
+      needs: [{ item: 'hay', tier: 3, n: 1 }, { item: 'wood', tier: 3, n: 1 }], line: 'Good as new!' },
     { id: 'hay6', land: 'hay', zone: 'windmill', look: ['🚪', '🐴'], after: ['hay5'], name: 'Fill the horse stalls', who: 'marnie', xp: 20, needs: [{ item: 'hay', tier: 4, n: 1 }],
       line: 'Happy horses!' },
     // Compost Yard (day 4)
@@ -1178,23 +1213,23 @@ const TASKS = [
       line: 'Your yard!' },
     { id: 'fert2', land: 'fert', zone: 'leafpiles', look: ['🪨', '🕳️'], after: ['fert1'], name: 'Dig the compost pit', who: 'robin', xp: 8, needs: [{ item: 'fert', tier: 2, n: 2 }],
       line: 'Great pit!' },
-    { id: 'fert3', land: 'fert', zone: 'compostbins', look: ['🪵', '🗑️'], after: ['fert2'], name: 'Build the compost bins', who: 'robin', xp: 12, needs: [{ item: 'fert', tier: 3, n: 2 }],
+    { id: 'fert3', land: 'fert', zone: 'compostbins', look: ['🪵', '🗑️'], after: ['fert2'], name: 'Build the compost bins', who: 'robin', xp: 12, needs: [{ item: 'wood', tier: 3, n: 1 }, { item: 'fert', tier: 3, n: 1 }],
       line: 'Sturdy bins!' },
     { id: 'fert4', land: 'fert', zone: 'compostbins', look: ['🍂', '🌱'], after: ['fert2'], name: 'Turn the compost', who: 'sandy', xp: 20, reward: { chest: 'brown' },
-      needs: [{ item: 'fert', tier: 4, n: 1 }], line: 'Rich soil!' },
+      needs: [{ item: 'clean', tier: 2, n: 1 }, { item: 'fert', tier: 4, n: 1 }], line: 'Rich soil!' },
     { id: 'fert5', land: 'fert', zone: 'mushrooms', look: ['🥀', '🌻'], after: ['fert3', 'fert4'], name: 'Feed the field', who: 'marnie', xp: 25,
       needs: [{ item: 'fert', tier: 4, n: 1 }, { item: 'farm', tier: 3, n: 2 }], line: 'Growing fast!' },
     // Fish Pond (day 4)
     { id: 'aqua1', land: 'aqua', story: [['willy', 'Fish! Yay!']], name: 'Buy the Fish Pond', who: 'willy', xp: 10, needs: [{ own: 'aqua' }],
       line: 'Your pond!' },
-    { id: 'aqua2', land: 'aqua', zone: 'muddyshore', look: ['🟫', '💧'], after: ['aqua1'], name: 'Clean the pond', who: 'willy', xp: 10, needs: [{ stat: 'webs', n: 4 }],
+    { id: 'aqua2', land: 'aqua', zone: 'muddyshore', look: ['🟫', '💧'], after: ['aqua1'], name: 'Clean the pond', who: 'willy', xp: 10, needs: [{ item: 'fishing', tier: 3, n: 1 }],
       line: 'Clean water!' },
     { id: 'aqua3', land: 'aqua', zone: 'muddyshore', look: ['🪷', '🐸'], after: ['aqua1'], name: 'Welcome the frogs', who: 'willy', xp: 15, needs: [{ item: 'aqua', tier: 3, n: 2 }],
       line: 'Ribbit!' },
     { id: 'aqua4', land: 'aqua', zone: 'lilypond', look: ['🫧', '🐠'], after: ['aqua3'], name: 'Release the goldfish', who: 'willy', xp: 25, reward: { chest: 'blue' },
       needs: [{ item: 'aqua', tier: 4, n: 2 }], line: 'So shiny!' },
     { id: 'aqua5', land: 'aqua', zone: 'boatdock', look: ['🪵', '⛵'], after: ['aqua2', 'aqua4'], name: 'Build a little dock', who: 'robin', xp: 40,
-      needs: [{ item: 'aqua', tier: 5, n: 1 }, { item: 'hay', tier: 4, n: 1 }], line: 'Nice dock!' },
+      needs: [{ item: 'aqua', tier: 5, n: 1 }, { item: 'wood', tier: 4, n: 1 }], line: 'Nice dock!' },
     // Flower Garden (day 5)
     { id: 'flower1', land: 'flower', story: [['sandy', 'Flowers!']], name: 'Buy the Flower Garden', who: 'sandy', xp: 15, needs: [{ own: 'flower' }],
       line: 'A garden!' },
@@ -1203,15 +1238,15 @@ const TASKS = [
     { id: 'flower3', land: 'flower', zone: 'gardengate', look: ['🌱', '🌷'], after: ['flower1'], name: 'Grow tulips for the Mayor', who: 'mayor', xp: 30, needs: [{ item: 'flower', tier: 4, n: 2 }],
       line: 'My favourite!' },
     { id: 'flower4', land: 'flower', zone: 'rosearch', look: ['🪵', '🌹'], after: ['flower2', 'flower3'], name: 'Build the rose arch', who: 'robin', xp: 50, reward: { chest: 'blue' },
-      needs: [{ item: 'flower', tier: 5, n: 1 }, { item: 'fert', tier: 4, n: 1 }], line: 'Fancy!' },
+      needs: [{ item: 'flower', tier: 5, n: 1 }, { item: 'wood', tier: 4, n: 1 }], line: 'Fancy!' },
     { id: 'flower5', land: 'flower', zone: 'greenhouse', look: ['🥀', '💐'], after: ['flower4'], name: 'Plant the festival garden', who: 'sandy', xp: 80, reward: { chest: 'blue' },
-      needs: [{ item: 'flower', tier: 6, n: 1 }, { item: 'barn', tier: 7, n: 1 }], line: 'Party ready!' },
+      needs: [{ item: 'flower', tier: 6, n: 1 }, { item: 'decor', tier: 5, n: 1 }], line: 'Party ready!' },
     // Sunnyvale itself (days 4 and 5): clear the fog, then rebuild each house
     // on the town square. Opens once the old farm is back (day 3).
     { id: 'town1', land: 'town', at: [50, 50], look: ['🌫️', ''], after: ['farm7', 'hay6', 'big8'], story: [['mayor', 'The fog is gone!']], name: 'Clear the fog from the square', who: 'mayor', xp: 15,
       needs: [{ stat: 'sold', n: 5 }], line: 'Fog gone!' },
     { id: 'town2', land: 'town', after: ['town1'], house: 'carpenter', name: 'Rebuild Robin\'s workshop', who: 'robin', xp: 20, reward: { chest: 'brown' },
-      needs: [{ item: 'hay', tier: 4, n: 1 }, { item: 'barn', tier: 4, n: 1 }], line: 'My workshop!' },
+      needs: [{ item: 'tools', tier: 5, n: 1 }, { item: 'wood', tier: 4, n: 1 }], line: 'My workshop!' },
     { id: 'town3', land: 'town', after: ['town1'], house: 'ranch', name: 'Fix up Marnie\'s ranch', who: 'marnie', xp: 25,
       needs: [{ item: 'barn', tier: 5, n: 1 }, { item: 'farm', tier: 4, n: 2 }], line: 'Home sweet home!' },
     { id: 'town4', land: 'town', after: ['town1'], house: 'fishshop', name: 'Reopen Willy\'s fish shop', who: 'willy', xp: 35, reward: { chest: 'blue' },
@@ -1222,7 +1257,7 @@ const TASKS = [
       needs: [{ item: 'barn', tier: 6, n: 1 }, { item: 'hay', tier: 5, n: 1 }, { item: 'aqua', tier: 5, n: 1 }],
       line: 'You\'re a hero!' },
     { id: 'town7', land: 'town', at: [50, 66], look: ['🪧', '🎉'], after: ['town6'], name: 'Throw the Sunnyvale festival', who: 'marnie', xp: 100, reward: { gems: 50 },
-      needs: [{ item: 'flower', tier: 6, n: 1 }, { item: 'farm', tier: 6, n: 1 }], line: 'Thank you!' },
+      needs: [{ item: 'decor', tier: 6, n: 1 }, { item: 'farm', tier: 6, n: 1 }], line: 'Thank you!' },
 ];
 
 // --- PLACES AND AREAS ---
@@ -1322,7 +1357,7 @@ function goFix(land, jobId) {
 function goWork(task) {
     const itemNeed = task.needs.find(n => n.item && needProgress(task, n).have < n.n);
     if (task.needs[0].own) goTo('market');
-    else if (itemNeed) goTo(unlocks[itemNeed.item] ? itemNeed.item : 'market');
+    else if (itemNeed) goTo(unlocks[needBoard(itemNeed)] ? needBoard(itemNeed) : 'market');
     else goTo(unlocks[task.land] ? task.land : task.land === 'town' ? 'town' : 'map');
 }
 
@@ -1771,6 +1806,17 @@ function openTasks() {
     return TASKS.filter(taskOpen);
 }
 
+// The free items that count for a job's item need, as [board, cell]: a land's
+// goods on its board; tools anywhere (they travel in the 🎒).
+function needSpots(need) {
+    const boards = TOOLS[need.item] ? Object.keys(grids).filter(m => m !== 'fair') : [need.item];
+    const spots = [];
+    boards.forEach(m => grids[m].forEach((c, i) => {
+        if (isFree(c) && !c.type && chainOf(m, c) === need.item && c.tier === need.tier) spots.push([m, i]);
+    }));
+    return spots;
+}
+
 // How far a need has got, out of how many.
 function needProgress(task, need) {
     if (need.own) return { have: unlocks[need.own] ? 1 : 0, of: 1 };
@@ -1778,8 +1824,7 @@ function needProgress(task, need) {
         const base = (restoration.baselines[task.id] || {})[need.stat] || 0;
         return { have: Math.min(need.n, Math.max(0, stats[need.stat] - base)), of: need.n };
     }
-    const have = grids[need.item].filter(c => isFree(c) && !c.type && c.tier === need.tier).length;
-    return { have: Math.min(need.n, have), of: need.n };
+    return { have: Math.min(need.n, needSpots(need).length), of: need.n };
 }
 
 function taskReady(task) {
@@ -1795,9 +1840,9 @@ function needLabel(task, need) {
     return `<span class="need${p.have >= p.of ? ' met' : ''}">${what} ${need.own ? (p.have ? '✓' : '') : `${p.have}/${p.of}`}</span>`;
 }
 
-// Tiers wanted on a board by open jobs, so they glow there like order items.
-function taskWantedTiers(mode) {
-    return openTasks().flatMap(t => t.needs.filter(n => n.item === mode).map(n => n.tier));
+// Items wanted by open jobs ("chain:tier"), so they glow on the boards like order items.
+function taskWanted() {
+    return openTasks().flatMap(t => t.needs.filter(n => n.item).map(n => `${n.item}:${n.tier}`));
 }
 
 function landRestored(land) {
@@ -1840,8 +1885,7 @@ function completeTask(id, quiet = false) {
     const task = TASKS.find(t => t.id === id);
     if (!task || !taskReady(task)) return;
     task.needs.forEach(need => {
-        if (!need.item) return;
-        for (let k = 0; k < need.n; k++) grids[need.item][findItem(need.item, need.tier)] = null;
+        if (need.item) needSpots(need).slice(0, need.n).forEach(([m, i]) => { grids[m][i] = null; });
     });
     restoration.done.push(task.id);
     document.querySelectorAll(`.fix-call[data-job="${task.id}"]`).forEach(el => el.remove());
@@ -2247,6 +2291,7 @@ function buyDeed(id) {
     res.money -= area.cost;
     unlocks[id] = true;
     if (grids[id].filter(Boolean).length <= 1) grids[id] = clutterBoard();
+    ensureToolboxes();
     updateUI();
     toast(`The ${area.name} is yours! Find it on the map.`, 'good');
     checkTasks();
@@ -2302,7 +2347,7 @@ function isFree(item) {
 }
 
 function findItem(mode, tier) {
-    return grids[mode].findIndex(item => isFree(item) && !item.type && item.tier === tier);
+    return grids[mode].findIndex(item => isFree(item) && !item.type && !item.chain && item.tier === tier);
 }
 
 function canFulfill(npc) {
@@ -3310,9 +3355,9 @@ function refreshBoard(mode, poppedIndices = []) {
 // with orders jump straight there.
 function renderOrders(mode, el) {
     // Restoration jobs come first: this land's own, and any needing items from this board.
-    openTasks().filter(t => t.land === mode || t.needs.some(n => n.item === mode)).forEach(task => {
+    openTasks().filter(t => t.land === mode || t.needs.some(n => needBoard(n) === mode)).forEach(task => {
         const ready = taskReady(task);
-        const need = task.needs.find(n => n.item === mode) || task.needs[0];
+        const need = task.needs.find(n => needBoard(n) === mode) || task.needs[0];
         const p = needProgress(task, need);
         const card = document.createElement('button');
         card.className = 'order-card task-card' + (ready ? ' ready' : '');
@@ -3380,7 +3425,8 @@ function boardItemName(mode, item) {
         case 'chest': return chestName(item);
         case 'piggy': return `${PIGGY.name}${levelOf(item) > 1 ? ` Lv${levelOf(item)}` : ''}`;
         case 'bubble': return 'Double Bubble';
-        default: return itemName(mode, item.tier);
+        case 'toolbox': return TOOLS[item.chain].name;
+        default: return itemName(chainOf(mode, item), item.tier);
     }
 }
 
@@ -3394,14 +3440,16 @@ function itemEmojiFor(mode, item) {
         case 'chest': return CHESTS[item.kind].emoji;
         case 'piggy': return PIGGY.emoji;
         case 'bubble': return '🫧';
-        default: return itemEmoji(mode, item.tier);
+        case 'toolbox': return TOOLS[item.chain].emoji;
+        default: return itemEmoji(chainOf(mode, item), item.tier);
     }
 }
 
 // A small picture of any board item, for the info bar and dialogs.
 function itemIconFor(mode, item) {
-    if (!item.type) return itemIcon(mode, item.tier);
-    const art = item.type === 'shop' ? (ASSETS.producers[artKey(mode)] || [])[levelOf(item) - 1] : specialSprite(item);
+    if (!item.type) return itemIcon(chainOf(mode, item), item.tier);
+    const art = item.type === 'shop' ? (ASSETS.producers[artKey(mode)] || [])[levelOf(item) - 1]
+        : item.type === 'toolbox' ? (ASSETS.toolProducers || {})[item.chain] : specialSprite(item);
     return art ? `<img class="inline-item" src="${art}" alt="">` : `<span class="inline-item">${itemEmojiFor(mode, item)}</span>`;
 }
 
@@ -3472,7 +3520,7 @@ function afterMerge(mode, index, made) {
     const odds = !made.type ? BUBBLE_ODDS[made.tier] : isProducer ? PRODUCER_BUBBLE_ODDS[made.level] : 0;
     if (odds && Math.random() < odds) {
         const gems = !made.type ? BUBBLE_GEMS[made.tier] : PRODUCER_BUBBLE_GEMS[made.level];
-        const inner = isProducer ? { type: 'shop', level: made.level } : { tier: made.tier };
+        const inner = isProducer ? { type: 'shop', level: made.level } : { ...made };
         const at = spawnNear(mode, index, { type: 'bubble', inner, gems, until: Date.now() + bubbleMinutes(gems) * 60000 });
         if (at !== -1) {
             landed.push(at);
@@ -3716,8 +3764,8 @@ function renderInfoBar(mode) {
     if (crates[mode].length) html += `<button class="crate-btn">${uiIcon('gift', '🎁')} ${crates[mode].length}</button>`;
 
     if (!item && lastSale && lastSale.mode === mode) {
-        html += `<span class="info-icon">${itemIcon(mode, lastSale.item.tier)}</span>
-                 <span class="info-text"><b>Sold ${itemName(mode, lastSale.item.tier)}</b> for 💵${lastSale.price}<br><small>Changed your mind?</small></span>
+        html += `<span class="info-icon">${itemIcon(chainOf(mode, lastSale.item), lastSale.item.tier)}</span>
+                 <span class="info-text"><b>Sold ${itemName(chainOf(mode, lastSale.item), lastSale.item.tier)}</b> for 💵${lastSale.price}<br><small>Changed your mind?</small></span>
                  ${button('undo-btn', 'Undo')}`;
     } else if (!item) {
         html += `<span class="info-text">Tap a ${prod.emoji} ${producerBaseName(mode)} to make items for ⚡1. Drag two alike together to merge. Tap an item to see it.</span>`;
@@ -3729,6 +3777,10 @@ function renderInfoBar(mode) {
     } else if (item.type === 'bubble') {
         html += icon + text('Double Bubble', `A free ${boardItemName(mode, item.inner)} inside! Pop it before it's gone: ${countdown(item.until)}`)
             + button('pop-btn', `Pop<br>💎${item.gems}`);
+    } else if (item.type === 'toolbox') {
+        const t = TOOLS[item.chain];
+        html += icon + text(t.name, item.drops > 0 ? `Tap to make ${t.what} for ⚡1. ${item.drops}/${TOOL_CHARGES} taps left.`
+            : `Recharging: ${countdown(item.readyAt)}.`) + chainBtn;
     } else if (item.type === 'shop') {
         const level = levelOf(item);
         const name = producerName(mode, level);
@@ -3794,7 +3846,8 @@ function renderInfoBar(mode) {
     on('.collect-btn', () => activateItem(mode, index));
     on('.unlock-btn', () => unlockChest(mode, index));
     on('.rush-btn', () => rushChest(mode, index));
-    on('.chain-btn', () => (item.type === 'shop' ? openProducerInfo(mode) : openChain(mode, item.tier)));
+    on('.chain-btn', () => (item.type === 'shop' ? openProducerInfo(mode)
+        : openChain(item.type === 'toolbox' ? item.chain : chainOf(mode, item), item.tier)));
     on('.sell-item-btn', () => sellSelected(mode));
 }
 
@@ -3873,6 +3926,13 @@ function openChain(mode, highlightTier) {
         <div class="chain-tile${t === highlightTier ? ' current' : ''}${t > tierCap(mode) ? ' locked' : ''}">
             ${itemIcon(mode, t)}<small>${t}. ${itemName(mode, t)}</small>
         </div>`).join('');
+    const tool = TOOLS[mode];
+    if (tool) return showDialog({
+        title: `${tool.emoji} ${tool.what[0].toUpperCase()}${tool.what.slice(1)}`,
+        body: `<div class="chain-grid">${tiles}</div>
+               <p class="hint">Made by tapping the ${tool.emoji} ${tool.name} on the ${AREAS[tool.board].name} board. Jobs ask for these.</p>`,
+        actions: [{ label: 'OK' }],
+    });
     showDialog({
         title: `${boardTitle(mode)} chain`,
         body: `<div class="chain-grid">${tiles}</div>
@@ -3978,6 +4038,7 @@ function onTap(mode, index) {
     const twice = !!lastTap && lastTap.mode === mode && lastTap.index === index && now - lastTap.at < DOUBLE_TAP_MS;
     lastTap = { mode, index, at: now };
     if (isFree(item)) {
+        if (item.type === 'toolbox') return tapToolbox(mode, index);
         if (isWorkingProducer(item)) return handleGeneratorClick(mode, index);
         if (item.type === 'piggy') return tapPiggy(mode, index);
         if (item.type === 'chest' && chestReady(item)) return tapChest(mode, index);
@@ -4034,7 +4095,9 @@ function handleDragEnd(e) {
             // merge by level; plain items by tier.
             const topLevel = levelMergeTop(sourceItem);
             const sameLevel = !!topLevel && sameLevelKind(sourceItem, targetItem) && levelMergeTop(targetItem) > 0;
-            const sameKind = targetItem && !sourceItem.type && !targetItem.type && targetItem.tier === sourceItem.tier;
+            const sameKind = targetItem && !sourceItem.type && !targetItem.type && targetItem.tier === sourceItem.tier
+                && chainOf(mode, targetItem) === chainOf(mode, sourceItem);
+            const chain = sourceItem.type ? mode : chainOf(mode, sourceItem);
             let made = null;
 
             if (sameLevel && levelOf(sourceItem) < topLevel) {
@@ -4050,11 +4113,13 @@ function handleDragEnd(e) {
                 } else {
                     toast(`${itemLabel(mode, made)}!`, 'good');
                 }
-            } else if (sameKind && sourceItem.tier < tierCap(mode)) {
-                // Direct Merge 2
-                made = { tier: sourceItem.tier + 1 };
-                stats.made[`${mode}:${made.tier}`] = madeCount(mode, made.tier) + 1;
+            } else if (sameKind && sourceItem.tier < tierCap(chain)) {
+                // Direct Merge 2 (a tool stays a tool of its chain)
+                made = sourceItem.chain ? { tier: sourceItem.tier + 1, chain: sourceItem.chain } : { tier: sourceItem.tier + 1 };
+                stats.made[`${chain}:${made.tier}`] = madeCount(chain, made.tier) + 1;
                 stats.merges++;
+            } else if (sameKind && TOOLS[chain]) {
+                toast(`That's already a ${boardItemName(mode, sourceItem)}, the best there is!`);
             } else if (sameKind) {
                 toast(`Tier ${tierCap(mode)} is the max for now. Buy the Growth Guide at the Market!`);
             } else if (sameLevel) {
@@ -4136,6 +4201,51 @@ function handleGeneratorClick(mode, index) {
     refreshBoard(mode, [at]);
 }
 
+// A land's tool producer: TOOL_CHARGES taps for ⚡1 each, then it recharges.
+function tickToolbox(box, now = Date.now()) {
+    if (!box.readyAt || now < box.readyAt) return false;
+    box.drops = TOOL_CHARGES;
+    delete box.readyAt;
+    return true;
+}
+
+function tapToolbox(mode, index) {
+    const box = grids[mode][index];
+    tickToolbox(box);
+    selected = { mode, index };
+    if (box.drops <= 0) {
+        toast(`⏳ The ${TOOLS[box.chain].name} is recharging: ${formatDuration(box.readyAt - Date.now())}.`);
+        return refreshBoard(mode);
+    }
+    if (boardFull(mode) || !payTapEnergy(1)) return;
+    box.drops--;
+    if (box.drops <= 0) box.readyAt = Date.now() + TOOLS[box.chain].minutes * 60000;
+    lastSale = null;
+    updateUI();
+    let roll = Math.random();
+    let tier = TOOL_DROP_ODDS.findIndex(p => (roll -= p) < 0);
+    if (tier === -1) tier = 0;
+    const at = spawnNear(mode, index, { tier, chain: box.chain });
+    stats.spawned[mode] = (stats.spawned[mode] || 0) + 1;
+    checkTasks();
+    refreshBoard(mode, [at]);
+}
+
+// Each land you own has its tool producer: on its board if there's room,
+// otherwise waiting in that board's 🎁.
+function ensureToolboxes() {
+    Object.entries(TOOLS).forEach(([chain, t]) => {
+        if (!unlocks[t.board]) return;
+        const mine = c => c && c.type === 'toolbox' && c.chain === chain;
+        if (Object.values(grids).some(g => g.some(mine)) || Object.values(crates).some(c => c.some(mine))
+            || inventory.items.some(e => mine(e.item))) return;
+        const box = { type: 'toolbox', chain, drops: TOOL_CHARGES };
+        const free = grids[t.board].indexOf(null);
+        if (free !== -1) grids[t.board][free] = box;
+        else crates[t.board].push(box);
+    });
+}
+
 // --- Drawing the board ---
 
 // An interface icon from ASSETS.ui in place of its emoji, or the emoji itself.
@@ -4186,21 +4296,29 @@ function itemFace(mode, item) {
             return { cls: ['piggy'], html: named(PIGGY.emoji, PIGGY.name), badge: levelOf(item) };
         case 'bubble': {
             const inner = item.inner;
-            const art = !inner.type && itemSprite(mode, inner.tier);
+            const art = !inner.type && itemSprite(chainOf(mode, inner), inner.tier);
             const bubble = ((ASSETS.special || {}).bubble || [])[0];
             return {
                 cls: ['bubble-item'].concat(bubble ? ['has-art'] : []),
                 html: `${bubble ? `<img class="bubble-art" src="${bubble}" alt="" draggable="false">` : ''}<span class="bubble-inner">${art ? sprite(art) : emoji(itemEmojiFor(mode, inner))}</span>`,
             };
         }
+        case 'toolbox': {
+            const art = (ASSETS.toolProducers || {})[item.chain];
+            return {
+                cls: (art ? ['has-sprite'] : ['generator', 'gen-lv4']).concat(item.drops > 0 ? ['working'] : ['empty']),
+                html: art ? sprite(art) : named(TOOLS[item.chain].emoji, TOOLS[item.chain].name),
+            };
+        }
         default: {
-            const art = itemSprite(mode, item.tier);
+            const chain = chainOf(mode, item);
+            const art = itemSprite(chain, item.tier);
             if (art) return { cls: ['has-sprite'], html: sprite(art), badge: item.tier || null };
-            const hue = getHue(mode, item.tier);
+            const hue = getHue(chain, item.tier);
             return {
                 cls: [],
                 style: `radial-gradient(circle at 30% 30%, hsl(${hue}, 80%, 70%), hsl(${hue}, 80%, 40%))`,
-                html: named(itemEmoji(mode, item.tier), itemName(mode, item.tier)),
+                html: named(itemEmoji(chain, item.tier), itemName(chain, item.tier)),
                 badge: item.tier || null,
             };
         }
@@ -4210,6 +4328,7 @@ function itemFace(mode, item) {
 // When the countdown shown on an item ends, or 0 for none.
 function itemTimer(item) {
     if (isWorkingProducer(item) && !item.web && item.drops <= 0 && item.readyAt) return item.readyAt;
+    if (item.type === 'toolbox' && item.readyAt) return item.readyAt;
     if (item.type === 'charger' && item.until) return item.until;
     if (item.type === 'chest' && item.openAt && !chestReady(item)) return item.openAt;
     if (item.type === 'bubble') return item.until;
@@ -4220,7 +4339,7 @@ function renderGrid(mode, poppedIndices = []) {
     const gridEl = document.getElementById(`grid-${mode}`);
     if (!gridEl) return;
     gridEl.innerHTML = '';
-    const wanted = new Set(npcs.filter(n => n.request && n.request.mode === mode).map(n => n.request.tier).concat(taskWantedTiers(mode)));
+    const wanted = new Set(npcs.filter(n => n.request && n.request.mode === mode).map(n => `${mode}:${n.request.tier}`).concat(taskWanted()));
 
     for (let i = 0; i < NUM_CELLS; i++) {
         const cell = document.createElement('div');
@@ -4237,7 +4356,7 @@ function renderGrid(mode, poppedIndices = []) {
             itemEl.innerHTML = face.html;
             itemEl.title = boardItemName(mode, item);
             if (face.badge) addTag(itemEl, `tier${face.badgeCls ? ` ${face.badgeCls}` : ''}`, face.badge);
-            if (!item.type && isFree(item) && wanted.has(item.tier)) {
+            if (!item.type && isFree(item) && wanted.has(`${chainOf(mode, item)}:${item.tier}`)) {
                 itemEl.classList.add('wanted');
                 addTag(itemEl, 'tick', '✓');
             }
@@ -4366,6 +4485,7 @@ if (!loadGame()) {
     initTown(true);
     grids.barn = clutterBoard();
 }
+ensureToolboxes(); // every land you own has its tool producer (older saves get theirs now)
 // Jobs already ready when the game opens are shown by the 📋 badge, not announced.
 openTasks().filter(taskReady).forEach(task => announcedTasks.add(task.id));
 checkTasks();

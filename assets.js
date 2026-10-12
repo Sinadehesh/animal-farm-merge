@@ -195,6 +195,11 @@ const ASSETS = {
         sandy: 'assets/characters/cheer/sandy.png',
     },
 
+    // Tool producers, one per land (a single picture each), by chain. Their
+    // items go in items.<chain> once drawn (tools, garden, wood, clean, fishing,
+    // decor). null = emoji.
+    toolProducers: { tools: null, garden: null, wood: null, clean: null, fishing: null, decor: null },
+
     // Things inside the market.
     props: {
         counter: 'assets/props/counter.svg',
