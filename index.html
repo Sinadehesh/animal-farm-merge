@@ -1306,6 +1306,69 @@
         .fix-cheer span { display: grid; font-size: max(12px, 3.8cqw); }
         .fix-cheer small { font-weight: 900; color: #3a7a2c; }
         .fix-cheer .ui-icon { width: 4cqw; height: 4cqw; }
+        /* --- BOARD, Merge Mansion style: the place behind, a cream framed board,
+           the characters' requests above it, the info bar below. --- */
+        .board { background-size: cover; background-position: center; }
+        .board-header { justify-content: flex-end; padding-bottom: 2.5cqw; }
+        .board .game-grid {
+            width: 94%;
+            margin: 0 auto;
+            padding: 2cqw;
+            gap: 0.6cqw;
+            background: #f8eedb;
+            border: 3px solid #e1c79a;
+            border-radius: 16px;
+            box-shadow: 0 5px 0 rgba(110, 75, 35, 0.45), 0 10px 22px rgba(0, 0, 0, 0.3);
+        }
+        .board .grid-cell { background: #efdfc0; border-radius: 14%; box-shadow: none; }
+        .board .grid-cell:nth-child(12n+1), .board .grid-cell:nth-child(12n+3), .board .grid-cell:nth-child(12n+5),
+        .board .grid-cell:nth-child(12n+8), .board .grid-cell:nth-child(12n+10), .board .grid-cell:nth-child(12n+12) { background: #f6ead2; }
+        .board-footer { display: flex; align-items: center; gap: 2.5cqw; padding: 2.5cqw 3% 2.5%; }
+        .board-footer .info-bar { flex: 1; border-color: #c9a46b; box-shadow: 0 3px 0 rgba(110, 75, 35, 0.4); }
+        .place-btn {
+            position: relative;
+            flex: 0 0 auto;
+            display: grid;
+            place-items: center;
+            width: 15cqw;
+            height: 15cqw;
+            padding: 0;
+            background: linear-gradient(#5fb8ff, #2e7fd6);
+            border: 3px solid #fff;
+            border-radius: 22%;
+            box-shadow: 0 4px 0 #1d4f8a, 0 6px 10px rgba(0, 0, 0, 0.3);
+            font-size: 8cqw;
+            cursor: pointer;
+        }
+        .place-btn .ui-icon { width: 10cqw; height: 10cqw; }
+        .place-btn .badge { right: -2cqw; top: -2cqw; }
+        .place-btn:active { translate: 0 2px; box-shadow: 0 2px 0 #1d4f8a; }
+        /* Requests: who wants what, bigger, on cream cards over the place. */
+        .board .orders { align-items: flex-end; padding: 0 3%; gap: 2.5cqw; }
+        .board .order-card { width: 24cqw; padding: 1.5cqw; background: rgba(255, 248, 231, 0.96); border: 3px solid #d9bb86; box-shadow: 0 4px 0 rgba(110, 75, 35, 0.45); }
+        .board .order-card.ready { background: #e8fbe2; border-color: #3cb94a; box-shadow: 0 4px 0 #2e8c3c; }
+        .board .order-who .face { width: 12cqw; height: 12cqw; border-width: 3px; }
+        .board .order-who .want { width: 11cqw; height: 11cqw; border-color: #d9bb86; }
+        .board .order-who .want .inline-item { height: 9cqw; line-height: 9cqw; }
+        .board .no-orders { padding: 0 3%; }
+        /* A working producer wears a ⚡: tapping it costs energy. */
+        .item.working::before {
+            content: '⚡';
+            position: absolute;
+            left: -4%;
+            top: -4%;
+            z-index: 2;
+            display: grid;
+            place-items: center;
+            width: 38%;
+            height: 38%;
+            background: radial-gradient(#ffe36b, #f5a400);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            font-size: 2.6cqw;
+            line-height: 1;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+        }
         @keyframes popIn {
             0% { transform: scale(0.1); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }

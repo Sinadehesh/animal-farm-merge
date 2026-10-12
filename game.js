@@ -3250,7 +3250,8 @@ Object.keys(AREAS).concat('fair').forEach(mode => {
     scene.id = `scene-${mode}`;
     scene.hidden = true;
     if (ASSETS.boards[mode]) scene.style.backgroundImage = `url("${ASSETS.boards[mode]}")`;
-    scene.innerHTML = `<div class="board-header"></div><div class="game-grid" id="grid-${mode}"></div>`;
+    scene.innerHTML = `<div class="board-header"></div><div class="game-grid" id="grid-${mode}"></div>
+                       <div class="board-footer"><div class="info-bar"></div></div>`;
     stageEl.insertBefore(scene, dialogEl);
 });
 
@@ -3262,10 +3263,33 @@ let lastSale = null;
 // Above each board: the orders it can fill, then the info bar.
 function renderBoardHeader(mode) {
     const header = document.querySelector(`#scene-${mode} .board-header`);
-    header.innerHTML = '<div class="orders"></div><div class="info-bar"></div>';
+    header.innerHTML = '<div class="orders"></div>';
+    boardBackdrop(mode);
+    // The hammer back to this land's place, Merge Mansion style, with its ready jobs.
+    const footer = document.querySelector(`#scene-${mode} .board-footer`);
+    footer.querySelector('.place-btn')?.remove();
+    if (AREAS[mode]) {
+        const ready = landTasks(mode).filter(taskReady).length;
+        const btn = document.createElement('button');
+        btn.className = 'place-btn';
+        btn.title = `To the ${AREAS[mode].name}`;
+        btn.innerHTML = `${uiIcon('hammer', '🔨')}${ready ? `<span class="badge">${ready}</span>` : ''}`;
+        btn.addEventListener('click', () => goFix(mode));
+        footer.appendChild(btn);
+    }
     if (mode === 'fair') renderFairHeader(header.querySelector('.orders'));
     else renderOrders(mode, header.querySelector('.orders'));
     renderInfoBar(mode);
+}
+
+// Behind a board: the land's area being worked on (the first open one with
+// jobs left), dimmed a little, or the board's own texture until it's drawn.
+function boardBackdrop(mode) {
+    const scene = document.getElementById(`scene-${mode}`);
+    const zones = landZones(mode);
+    const zone = zones.find(z => zoneOpen(z) && !zoneDone(z)) || zones.filter(zoneOpen).pop() || zones[0];
+    const art = zone && (ASSETS.areas || {})[zone.id];
+    if (art) scene.style.backgroundImage = `linear-gradient(rgba(40, 25, 10, 0.15), rgba(40, 25, 10, 0.35)), url('${art}')`;
 }
 
 // Redraws everything on a board after it changes.
@@ -4141,7 +4165,7 @@ function itemFace(mode, item) {
             const art = (ASSETS.producers[artKey(mode)] || [])[level - 1];
             const part = level < FIRST_WORKING_LEVEL;
             return {
-                cls: art ? ['has-sprite'] : ['generator', part ? 'part' : `gen-lv${level}`],
+                cls: (art ? ['has-sprite'] : ['generator', part ? 'part' : `gen-lv${level}`]).concat(part ? [] : ['working']),
                 html: art ? sprite(art) : named(itemEmojiFor(mode, item), producerName(mode, level)),
                 badge: level, badgeCls: 'gen-level',
             };
