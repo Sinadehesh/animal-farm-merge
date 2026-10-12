@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**374 assets:** 243 done ✅, 12 placeholders 🟡, 119 missing ⬜.
+**375 assets:** 243 done ✅, 12 placeholders 🟡, 120 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -384,7 +384,7 @@ The same on every board. Each level looks fuller or bigger than the one before.
 | ✅ | Piggy Bank | 4 | `assets/items/special/piggy_1.png` … `_4.png` | a pink piggy bank, rounder and shinier each level |
 | ✅ | Double Bubble | 1 | `assets/items/special/bubble.png` | an empty, see-through soap bubble with a rainbow sheen (the item shows inside it) |
 
-## 11. Interface icons (18)
+## 11. Interface icons (19)
 
 Small square PNGs with a transparent background in `assets/ui/` (listed in `ui` in `assets.js`). Anything
 missing shows its emoji.
@@ -396,7 +396,8 @@ missing shows its emoji.
 | ✅ | ⚡ energy | top bar | `assets/ui/energy.png` |
 | ✅ | ⭐ level | top bar | `assets/ui/star.png` |
 | ✅ | 🎁 daily gift, Daily Deals, rewards box | map, Market and board buttons | `assets/ui/gift.png` |
-| ✅ | 📋 jobs | map button | `assets/ui/jobs.png` |
+| ✅ | 📋 tasks | bottom-right Tasks button | `assets/ui/jobs.png` |
+| ⬜ | 🧺 merge board | bottom-left Merge button | `assets/ui/merge.png` |
 | ✅ | 🎟️ Season Pass | map button | `assets/ui/pass.png` |
 | ✅ | 📅 daily goals | map button | `assets/ui/daily.png` |
 | ✅ | 🫙 Gem Jar | map button | `assets/ui/jar.png` |

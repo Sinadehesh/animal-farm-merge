@@ -1082,99 +1082,99 @@ const TASK_STATS = {
 
 const TASKS = [
     // Barn (days 1 and 2): the tutorial, then the animals come home.
-    { id: 'barn1', land: 'barn', name: 'Clear the doorway', who: 'mayor', xp: 2, needs: [{ stat: 'boxes', n: 1 }],
+    { id: 'barn1', land: 'barn', story: [['robin', 'Hi! I fix things!']], name: 'Clear the doorway', who: 'mayor', xp: 2, needs: [{ stat: 'boxes', n: 1 }],
       line: 'Great job!' },
-    { id: 'barn2', land: 'barn', name: 'Collect the first eggs', who: 'marnie', xp: 2, needs: [{ item: 'barn', tier: 1, n: 2 }],
+    { id: 'barn2', land: 'barn', after: ['barn1'], name: 'Collect the first eggs', who: 'marnie', xp: 2, needs: [{ item: 'barn', tier: 1, n: 2 }],
       line: 'Eggs! Yay!' },
-    { id: 'barn3', land: 'barn', name: 'Brush off the cobwebs', who: 'marnie', xp: 3, needs: [{ stat: 'webs', n: 3 }],
+    { id: 'barn3', land: 'barn', after: ['barn1'], name: 'Brush off the cobwebs', who: 'marnie', xp: 3, needs: [{ stat: 'webs', n: 3 }],
       line: 'So clean!' },
-    { id: 'barn4', land: 'barn', name: 'Fix the feed bin', who: 'robin', xp: 3, needs: [{ stat: 'upgrades', n: 1 }],
+    { id: 'barn4', land: 'barn', after: ['barn3'], name: 'Fix the feed bin', who: 'robin', xp: 3, needs: [{ stat: 'upgrades', n: 1 }],
       line: 'Perfect!' },
-    { id: 'barn5', land: 'barn', name: 'Make a nest for the chicks', who: 'marnie', xp: 4, reward: { chest: 'brown' },
+    { id: 'barn5', land: 'barn', after: ['barn2'], name: 'Make a nest for the chicks', who: 'marnie', xp: 4, reward: { chest: 'brown' },
       needs: [{ item: 'barn', tier: 2, n: 2 }], line: 'So cute!' },
-    { id: 'barn6', land: 'barn', name: 'Haul away the junk', who: 'mayor', xp: 3, needs: [{ stat: 'sold', n: 3 }],
+    { id: 'barn6', land: 'barn', after: ['barn4', 'barn5'], name: 'Haul away the junk', who: 'mayor', xp: 3, needs: [{ stat: 'sold', n: 3 }],
       line: 'Much tidier!' },
-    { id: 'barn7', land: 'barn', name: 'Welcome the hens', who: 'marnie', xp: 6, needs: [{ item: 'barn', tier: 3, n: 1 }],
+    { id: 'barn7', land: 'barn', after: ['barn6'], name: 'Welcome the hens', who: 'marnie', xp: 6, needs: [{ item: 'barn', tier: 3, n: 1 }],
       line: 'The hens are back!' },
-    { id: 'barn8', land: 'barn', name: 'Paint the barn red', who: 'marnie', xp: 8, reward: { chest: 'blue' },
+    { id: 'barn8', land: 'barn', after: ['barn7'], name: 'Paint the barn red', who: 'marnie', xp: 8, reward: { chest: 'blue' },
       needs: [{ item: 'barn', tier: 3, n: 2 }], line: 'Beautiful barn!' },
     // Crop Field (day 3)
-    { id: 'farm1', land: 'farm', name: 'Buy the Crop Field', who: 'mayor', xp: 3, needs: [{ own: 'farm' }],
+    { id: 'farm1', land: 'farm', story: [['marnie', 'Let\'s grow food!']], name: 'Buy the Crop Field', who: 'mayor', xp: 3, needs: [{ own: 'farm' }],
       line: 'Your field!' },
-    { id: 'farm2', land: 'farm', name: 'Pull the weeds', who: 'marnie', xp: 3, needs: [{ stat: 'boxes', n: 3 }],
+    { id: 'farm2', land: 'farm', after: ['farm1'], name: 'Pull the weeds', who: 'marnie', xp: 3, needs: [{ stat: 'boxes', n: 3 }],
       line: 'Weeds gone!' },
-    { id: 'farm3', land: 'farm', name: 'Sow the first seeds', who: 'marnie', xp: 4, needs: [{ item: 'farm', tier: 1, n: 3 }],
+    { id: 'farm3', land: 'farm', after: ['farm1'], name: 'Sow the first seeds', who: 'marnie', xp: 4, needs: [{ item: 'farm', tier: 1, n: 3 }],
       line: 'Seeds in!' },
-    { id: 'farm4', land: 'farm', name: 'Water the sprouts', who: 'marnie', xp: 5, needs: [{ item: 'farm', tier: 2, n: 2 }],
+    { id: 'farm4', land: 'farm', after: ['farm3'], name: 'Water the sprouts', who: 'marnie', xp: 5, needs: [{ item: 'farm', tier: 2, n: 2 }],
       line: 'Sprouts!' },
-    { id: 'farm5', land: 'farm', name: 'Fix the scarecrow', who: 'robin', xp: 5, needs: [{ stat: 'upgrades', n: 1 }],
+    { id: 'farm5', land: 'farm', after: ['farm2'], name: 'Fix the scarecrow', who: 'robin', xp: 5, needs: [{ stat: 'upgrades', n: 1 }],
       line: 'Scarecrow fixed!' },
-    { id: 'farm6', land: 'farm', name: 'Pick the first strawberries', who: 'marnie', xp: 10, reward: { chest: 'brown' },
+    { id: 'farm6', land: 'farm', after: ['farm4'], name: 'Pick the first strawberries', who: 'marnie', xp: 10, reward: { chest: 'brown' },
       needs: [{ item: 'farm', tier: 3, n: 2 }], line: 'Food!' },
-    { id: 'farm7', land: 'farm', name: 'Mend the fence', who: 'robin', xp: 10,
+    { id: 'farm7', land: 'farm', after: ['farm5', 'farm6'], name: 'Mend the fence', who: 'robin', xp: 10,
       needs: [{ item: 'farm', tier: 3, n: 1 }, { item: 'barn', tier: 2, n: 2 }], line: 'Nice fence!' },
     // Hay Field (day 3)
     { id: 'hay1', land: 'hay', name: 'Buy the Hay Field', who: 'mayor', xp: 4, needs: [{ own: 'hay' }],
       line: 'More land!' },
-    { id: 'hay2', land: 'hay', name: 'Clear out the old straw', who: 'marnie', xp: 5, needs: [{ stat: 'webs', n: 4 }],
+    { id: 'hay2', land: 'hay', after: ['hay1'], name: 'Clear out the old straw', who: 'marnie', xp: 5, needs: [{ stat: 'webs', n: 4 }],
       line: 'Fresh straw!' },
-    { id: 'hay3', land: 'hay', name: 'Tie the first bundles', who: 'marnie', xp: 6, needs: [{ item: 'hay', tier: 2, n: 2 }],
+    { id: 'hay3', land: 'hay', after: ['hay1'], name: 'Tie the first bundles', who: 'marnie', xp: 6, needs: [{ item: 'hay', tier: 2, n: 2 }],
       line: 'Neat bundles!' },
-    { id: 'hay4', land: 'hay', name: 'Stack the bales', who: 'robin', xp: 10, needs: [{ item: 'hay', tier: 3, n: 2 }],
+    { id: 'hay4', land: 'hay', after: ['hay3'], name: 'Stack the bales', who: 'robin', xp: 10, needs: [{ item: 'hay', tier: 3, n: 2 }],
       line: 'Stacked!' },
-    { id: 'hay5', land: 'hay', name: 'Repair the hay loft', who: 'robin', xp: 12, reward: { chest: 'blue' },
+    { id: 'hay5', land: 'hay', after: ['hay2', 'hay4'], name: 'Repair the hay loft', who: 'robin', xp: 12, reward: { chest: 'blue' },
       needs: [{ item: 'hay', tier: 3, n: 1 }, { item: 'barn', tier: 3, n: 1 }], line: 'Good as new!' },
-    { id: 'hay6', land: 'hay', name: 'Fill the horse stalls', who: 'marnie', xp: 20, needs: [{ item: 'hay', tier: 4, n: 1 }],
+    { id: 'hay6', land: 'hay', after: ['hay5'], name: 'Fill the horse stalls', who: 'marnie', xp: 20, needs: [{ item: 'hay', tier: 4, n: 1 }],
       line: 'Happy horses!' },
     // Compost Yard (day 4)
     { id: 'fert1', land: 'fert', name: 'Buy the Compost Yard', who: 'mayor', xp: 6, needs: [{ own: 'fert' }],
       line: 'Your yard!' },
-    { id: 'fert2', land: 'fert', name: 'Dig the compost pit', who: 'robin', xp: 8, needs: [{ item: 'fert', tier: 2, n: 2 }],
+    { id: 'fert2', land: 'fert', after: ['fert1'], name: 'Dig the compost pit', who: 'robin', xp: 8, needs: [{ item: 'fert', tier: 2, n: 2 }],
       line: 'Great pit!' },
-    { id: 'fert3', land: 'fert', name: 'Build the compost bins', who: 'robin', xp: 12, needs: [{ item: 'fert', tier: 3, n: 2 }],
+    { id: 'fert3', land: 'fert', after: ['fert2'], name: 'Build the compost bins', who: 'robin', xp: 12, needs: [{ item: 'fert', tier: 3, n: 2 }],
       line: 'Sturdy bins!' },
-    { id: 'fert4', land: 'fert', name: 'Turn the compost', who: 'sandy', xp: 20, reward: { chest: 'brown' },
+    { id: 'fert4', land: 'fert', after: ['fert2'], name: 'Turn the compost', who: 'sandy', xp: 20, reward: { chest: 'brown' },
       needs: [{ item: 'fert', tier: 4, n: 1 }], line: 'Rich soil!' },
-    { id: 'fert5', land: 'fert', name: 'Feed the field', who: 'marnie', xp: 25,
+    { id: 'fert5', land: 'fert', after: ['fert3', 'fert4'], name: 'Feed the field', who: 'marnie', xp: 25,
       needs: [{ item: 'fert', tier: 4, n: 1 }, { item: 'farm', tier: 3, n: 2 }], line: 'Growing fast!' },
     // Fish Pond (day 4)
-    { id: 'aqua1', land: 'aqua', name: 'Buy the Fish Pond', who: 'willy', xp: 10, needs: [{ own: 'aqua' }],
+    { id: 'aqua1', land: 'aqua', story: [['willy', 'Fish! Yay!']], name: 'Buy the Fish Pond', who: 'willy', xp: 10, needs: [{ own: 'aqua' }],
       line: 'Your pond!' },
-    { id: 'aqua2', land: 'aqua', name: 'Clean the pond', who: 'willy', xp: 10, needs: [{ stat: 'webs', n: 4 }],
+    { id: 'aqua2', land: 'aqua', after: ['aqua1'], name: 'Clean the pond', who: 'willy', xp: 10, needs: [{ stat: 'webs', n: 4 }],
       line: 'Clean water!' },
-    { id: 'aqua3', land: 'aqua', name: 'Welcome the frogs', who: 'willy', xp: 15, needs: [{ item: 'aqua', tier: 3, n: 2 }],
+    { id: 'aqua3', land: 'aqua', after: ['aqua1'], name: 'Welcome the frogs', who: 'willy', xp: 15, needs: [{ item: 'aqua', tier: 3, n: 2 }],
       line: 'Ribbit!' },
-    { id: 'aqua4', land: 'aqua', name: 'Release the goldfish', who: 'willy', xp: 25, reward: { chest: 'blue' },
+    { id: 'aqua4', land: 'aqua', after: ['aqua3'], name: 'Release the goldfish', who: 'willy', xp: 25, reward: { chest: 'blue' },
       needs: [{ item: 'aqua', tier: 4, n: 2 }], line: 'So shiny!' },
-    { id: 'aqua5', land: 'aqua', name: 'Build a little dock', who: 'robin', xp: 40,
+    { id: 'aqua5', land: 'aqua', after: ['aqua2', 'aqua4'], name: 'Build a little dock', who: 'robin', xp: 40,
       needs: [{ item: 'aqua', tier: 5, n: 1 }, { item: 'hay', tier: 4, n: 1 }], line: 'Nice dock!' },
     // Flower Garden (day 5)
-    { id: 'flower1', land: 'flower', name: 'Buy the Flower Garden', who: 'sandy', xp: 15, needs: [{ own: 'flower' }],
+    { id: 'flower1', land: 'flower', story: [['sandy', 'Flowers!']], name: 'Buy the Flower Garden', who: 'sandy', xp: 15, needs: [{ own: 'flower' }],
       line: 'A garden!' },
-    { id: 'flower2', land: 'flower', name: 'Plant a row of daisies', who: 'sandy', xp: 20, needs: [{ item: 'flower', tier: 3, n: 3 }],
+    { id: 'flower2', land: 'flower', after: ['flower1'], name: 'Plant a row of daisies', who: 'sandy', xp: 20, needs: [{ item: 'flower', tier: 3, n: 3 }],
       line: 'Daisies!' },
-    { id: 'flower3', land: 'flower', name: 'Grow tulips for the Mayor', who: 'mayor', xp: 30, needs: [{ item: 'flower', tier: 4, n: 2 }],
+    { id: 'flower3', land: 'flower', after: ['flower1'], name: 'Grow tulips for the Mayor', who: 'mayor', xp: 30, needs: [{ item: 'flower', tier: 4, n: 2 }],
       line: 'My favourite!' },
-    { id: 'flower4', land: 'flower', name: 'Build the rose arch', who: 'robin', xp: 50, reward: { chest: 'blue' },
+    { id: 'flower4', land: 'flower', after: ['flower2', 'flower3'], name: 'Build the rose arch', who: 'robin', xp: 50, reward: { chest: 'blue' },
       needs: [{ item: 'flower', tier: 5, n: 1 }, { item: 'fert', tier: 4, n: 1 }], line: 'Fancy!' },
-    { id: 'flower5', land: 'flower', name: 'Plant the festival garden', who: 'sandy', xp: 80, reward: { chest: 'blue' },
+    { id: 'flower5', land: 'flower', after: ['flower4'], name: 'Plant the festival garden', who: 'sandy', xp: 80, reward: { chest: 'blue' },
       needs: [{ item: 'flower', tier: 6, n: 1 }, { item: 'barn', tier: 7, n: 1 }], line: 'Party ready!' },
     // Sunnyvale itself (days 4 and 5): clear the fog, then rebuild each house
     // on the town square. Opens once the old farm is back (day 3).
-    { id: 'town1', land: 'town', after: ['farm7', 'hay6'], name: 'Clear the fog from the square', who: 'mayor', xp: 15,
+    { id: 'town1', land: 'town', after: ['farm7', 'hay6'], story: [['mayor', 'The fog is gone!']], name: 'Clear the fog from the square', who: 'mayor', xp: 15,
       needs: [{ stat: 'sold', n: 5 }], line: 'Fog gone!' },
-    { id: 'town2', land: 'town', house: 'carpenter', name: 'Rebuild Robin\'s workshop', who: 'robin', xp: 20, reward: { chest: 'brown' },
+    { id: 'town2', land: 'town', after: ['town1'], house: 'carpenter', name: 'Rebuild Robin\'s workshop', who: 'robin', xp: 20, reward: { chest: 'brown' },
       needs: [{ item: 'hay', tier: 4, n: 1 }, { item: 'barn', tier: 4, n: 1 }], line: 'My workshop!' },
-    { id: 'town3', land: 'town', house: 'ranch', name: 'Fix up Marnie\'s ranch', who: 'marnie', xp: 25,
+    { id: 'town3', land: 'town', after: ['town1'], house: 'ranch', name: 'Fix up Marnie\'s ranch', who: 'marnie', xp: 25,
       needs: [{ item: 'barn', tier: 5, n: 1 }, { item: 'farm', tier: 4, n: 2 }], line: 'Home sweet home!' },
-    { id: 'town4', land: 'town', house: 'fishshop', name: 'Reopen Willy\'s fish shop', who: 'willy', xp: 35, reward: { chest: 'blue' },
+    { id: 'town4', land: 'town', after: ['town1'], house: 'fishshop', name: 'Reopen Willy\'s fish shop', who: 'willy', xp: 35, reward: { chest: 'blue' },
       needs: [{ item: 'aqua', tier: 4, n: 1 }, { item: 'fert', tier: 4, n: 1 }], line: 'Fish for all!' },
-    { id: 'town5', land: 'town', house: 'flowershop', name: 'Reopen Sandy\'s flower shop', who: 'sandy', xp: 45,
+    { id: 'town5', land: 'town', after: ['town2'], house: 'flowershop', name: 'Reopen Sandy\'s flower shop', who: 'sandy', xp: 45,
       needs: [{ item: 'flower', tier: 4, n: 2 }], line: 'Flowers!' },
-    { id: 'town6', land: 'town', house: 'townhall', name: 'Restore the Town Hall', who: 'mayor', xp: 80, reward: { chest: 'blue' },
+    { id: 'town6', land: 'town', after: ['town3', 'town4', 'town5'], house: 'townhall', name: 'Restore the Town Hall', who: 'mayor', xp: 80, reward: { chest: 'blue' },
       needs: [{ item: 'barn', tier: 6, n: 1 }, { item: 'hay', tier: 5, n: 1 }, { item: 'aqua', tier: 5, n: 1 }],
       line: 'You\'re a hero!' },
-    { id: 'town7', land: 'town', name: 'Throw the Sunnyvale festival', who: 'marnie', xp: 100, reward: { gems: 50 },
+    { id: 'town7', land: 'town', after: ['town6'], name: 'Throw the Sunnyvale festival', who: 'marnie', xp: 100, reward: { gems: 50 },
       needs: [{ item: 'flower', tier: 6, n: 1 }, { item: 'farm', tier: 6, n: 1 }], line: 'Thank you!' },
 ];
 
@@ -1229,10 +1229,20 @@ function fixFace(task, fixed) {
     return FIX_ART[task.id][fixed ? 1 : 0];
 }
 
-// What an open job asks for, as small pictures: "📦" or "🥚×2".
-function needIcons(task) {
-    return task.needs.map(n => (n.item ? itemIcon(n.item, n.tier) : n.stat ? TASK_STATS[n.stat].emoji : '🏡')
-        + (n.n > 1 ? `<small>×${n.n}</small>` : '')).join('');
+// What an open job asks for, as a pin over its spot like Merge Mansion's task
+// bubbles: each item with a ✓ once you have enough of it.
+function needPins(task) {
+    return task.needs.map(n => {
+        const p = needProgress(task, n);
+        const icon = n.item ? itemIcon(n.item, n.tier) : n.stat ? TASK_STATS[n.stat].emoji : '🏡';
+        return `<span class="pin-item${p.have >= p.of ? ' met' : ''}">${icon}${p.of > 1 ? `<small>${p.have}/${p.of}</small>` : ''}</span>`;
+    }).join('');
+}
+
+// Jobs fixed at a spot (a thing in a land's place, or a house in town); buying
+// a land has none.
+function hasSpot(task) {
+    return !!(FIX_ART[task.id] || task.house);
 }
 
 // The broken things of a land, each a button: open jobs show what they need
@@ -1250,17 +1260,15 @@ function addFixSpots(land, scene) {
         el.style.top = y + '%';
         el.style.zIndex = 20 + Math.round(y);
         el.innerHTML = `<span class="fix-face">${fixFace(task, done)}</span>`;
-        if (open) addTag(el, 'bubble' + (taskReady(task) ? ' ready' : ''), taskReady(task) ? 'Fix!' : needIcons(task));
+        if (open) addTag(el, 'task-pin' + (taskReady(task) ? ' ready' : ''), needPins(task));
         el.addEventListener('click', () => tapFix(task));
         scene.appendChild(el);
     });
-    // The open job's person waits by it.
+    // The first open job's person stands in the clear middle of the place.
     const task = fixJobs(land).find(taskOpen);
     if (task && land !== 'town') { // the town's people are already on the square
-        const spot = scene.querySelector(`.fix-spot[data-job="${task.id}"]`);
         const npc = npcs.find(n => n.id === task.who);
-        const x = parseFloat(spot.style.left), y = parseFloat(spot.style.top);
-        const person = makeSpot({ x: x > 50 ? x - 34 : x + 12, y: y - 9, w: 20, z: 19 + Math.round(y),
+        const person = makeSpot({ x: 40, y: 60, w: 20, z: 79,
             sprite: npcPicture(npc), label: npc.name, onClick: () => tapFix(task) });
         person.classList.add('portrait-spot', 'fix-npc');
         addTag(person, 'say', task.name);
@@ -1272,20 +1280,67 @@ function tapFix(task) {
     if (fixing) return;
     if (taskDone(task)) return toast(`“${task.line}”`);
     if (!taskOpen(task)) return toast('🔒 Later!');
-    if (taskReady(task)) return fixJob(task.id);
-    openJob(task);
+    openTaskCard(task);
 }
 
-// An open job that isn't ready: who wants it, what it needs, off to make it.
-function openJob(task) {
+// A job's card, sliding up from the bottom like Merge Mansion's: the land's
+// progress to its reward, what it needs (✓ once made), what it pays, and
+// Fix it! once ready or Go to where it's made.
+function openTaskCard(task) {
     const npc = npcs.find(n => n.id === task.who);
+    const jobs = landTasks(task.land);
+    const pct = Math.round((100 * jobs.filter(taskDone).length) / jobs.length);
+    const ready = taskReady(task);
+    const tile = (inner, met) => `<span class="tile${met ? ' met' : ''}">${inner}</span>`;
+    const needs = task.needs.map(n => {
+        const p = needProgress(task, n);
+        const icon = n.item ? itemIcon(n.item, n.tier) : n.stat ? TASK_STATS[n.stat].emoji : '🏡';
+        return tile(`${icon}<small>${n.own ? AREAS[n.own].name : `${p.have}/${p.of}`}</small>`, p.have >= p.of);
+    }).join('');
+    const pays = tile(`${uiIcon('star', '⭐')}<small>×${task.xp}</small>`) + (task.reward ? tile(`<small>${rewardText(task.reward)}</small>`) : '');
+    const here = task.land === 'town' ? currentScene === 'town' : currentScene === 'fix' && fixLand === task.land;
     showDialog({
+        sheet: true,
         art: npcPicture(npc),
         artRound: true,
-        title: `🔨 ${task.name}`,
-        body: `<p class="hint">— ${npc.name}</p><div class="needs">${task.needs.map(n => needLabel(task, n)).join('')}</div>`,
-        actions: [{ label: '▶ Merge', primary: true, onClick: () => goWork(task) }, { label: 'Later' }],
+        title: task.name,
+        body: `<div class="sheet-progress"><span class="quest-bar"><i style="width:${pct}%"></i></span><b>${pct}%</b>${uiIcon('gift', '🎁')}</div>
+               <div class="sheet-cols"><div><h4>Items needed</h4><div class="tiles">${needs}</div></div>
+               <div><h4>Rewards</h4><div class="tiles">${pays}</div></div></div>`,
+        actions: [ready
+            ? { label: hasSpot(task) ? 'Fix it!' : 'Do it!', primary: true, wide: true,
+                onClick: () => (!hasSpot(task) ? completeTask(task.id) : here ? fixJob(task.id) : goFix(task.land, task.id)) }
+            : { label: 'Go', primary: true, wide: true, onClick: () => goWork(task) }],
     });
+}
+
+// 📋's Show: off to the job's spot, which lights up, then up comes its card.
+function showTask(task) {
+    if (!hasSpot(task)) return goWork(task); // buying a land: the Market
+    goFix(task.land);
+    const spot = document.querySelector(`#scene-${task.land === 'town' ? 'town' : 'fix'} [data-job="${task.id}"]`);
+    if (spot) spot.classList.add('spotlight');
+    setTimeout(() => openTaskCard(task), 700);
+}
+
+// Round buttons in the corners, as in Merge Mansion: the board bottom left,
+// the job list bottom right with how many are ready.
+function boardFab(mode) {
+    const btn = document.createElement('button');
+    btn.className = 'fab board-fab fix-merge';
+    btn.innerHTML = `${uiIcon('merge', '🧺')}<small>Merge</small>`;
+    btn.addEventListener('click', () => goTo(mode));
+    return btn;
+}
+
+function tasksFab(id) {
+    const ready = openTasks().filter(taskReady).length;
+    const btn = document.createElement('button');
+    btn.className = 'fab tasks-fab';
+    if (id) btn.id = id;
+    btn.innerHTML = `${uiIcon('jobs', '📋')}<small>Tasks</small>${ready ? `<span class="badge">${ready}</span>` : ''}`;
+    btn.addEventListener('click', openTaskLog);
+    return btn;
 }
 
 // The moment a job can be done, its person pops up to call you over to fix it.
@@ -1297,8 +1352,8 @@ function callToFix(task) {
     card.className = 'fix-call';
     card.dataset.job = task.id;
     card.innerHTML = `<img class="face" src="${npcPicture(npc)}" alt="${npc.name}">
-                      <span><b>${task.name}</b><small>“${FIX_ART[task.id] ? 'Let\'s fix it!' : 'Ready!'}”</small></span>
-                      <button class="btn btn-primary">${uiIcon('hammer', '🔨')} ${FIX_ART[task.id] ? 'Fix it!' : 'Do it!'}</button><button class="fix-call-x">✕</button>`;
+                      <span><b>${task.name}</b><small>“${hasSpot(task) ? 'Let\'s fix it!' : 'Ready!'}”</small></span>
+                      <button class="btn btn-primary">${uiIcon('hammer', '🔨')} ${hasSpot(task) ? 'Fix it!' : 'Do it!'}</button><button class="fix-call-x">✕</button>`;
     card.querySelector('.btn').addEventListener('click', () => { card.remove(); goFix(task.land, task.id); });
     card.querySelector('.fix-call-x').addEventListener('click', () => card.remove());
     stageEl.appendChild(card);
@@ -1314,6 +1369,7 @@ function fixJob(id) {
     const spot = scene.hidden ? null : scene.querySelector(`[data-job="${id}"]`);
     if (!spot) return completeTask(id);
     fixing = true;
+    spot.classList.remove('spotlight');
     closeDialog();
     document.querySelectorAll('.fix-call').forEach(el => el.remove());
     tutorialEl.hidden = true;
@@ -1322,7 +1378,7 @@ function fixJob(id) {
     scene.style.transformOrigin = `${((r.left + r.width / 2 - box.left) / box.width) * 100}% ${((r.top + r.height / 2 - box.top) / box.height) * 100}%`;
     scene.classList.add('fix-zoom');
     spot.classList.add('hammering');
-    spot.querySelectorAll('.bubble, .restore-tag').forEach(el => el.remove());
+    spot.querySelectorAll('.task-pin, .restore-tag').forEach(el => el.remove());
     addTag(spot, 'fix-hammer', uiIcon('hammer', '🔨'));
     const fx = (cls, html, delay) => setTimeout(() => addTag(spot, cls, html), delay);
     fx('fix-dust', '💨', 500);
@@ -1331,8 +1387,9 @@ function fixJob(id) {
         // The new look, and the building's next stage if it has one.
         spot.classList.remove('hammering', 'open', 'ready');
         spot.classList.add('fixed', 'just-fixed');
-        spot.querySelectorAll('.bubble, .fix-hammer').forEach(el => el.remove());
+        spot.querySelectorAll('.task-pin, .fix-hammer').forEach(el => el.remove());
         spot.querySelector('.fix-face').innerHTML = fixFace(task, true) || '✨';
+        addTag(spot, 'fix-swirl', '');
         ['✨', '⭐', '✨', '⭐', '✨', '⭐'].forEach((s, k) => {
             const p = addTag(spot, 'fix-spark', s);
             p.style.setProperty('--a', `${k * 60}deg`);
@@ -1355,7 +1412,7 @@ function fixJob(id) {
         fixing = false;
         document.body.classList.remove('busy');
         scene.style.transformOrigin = '';
-        completeTask(id);
+        completeTask(id, true);
     }, 2700);
 }
 
@@ -1376,13 +1433,10 @@ function renderFix() {
     scene.appendChild(place);
     addFixSpots(land, scene);
 
-    const bar = document.createElement('div');
-    bar.className = 'fix-bar';
-    bar.innerHTML = `<span class="fix-progress">${uiIcon('hammer', '🔨')} ${done}/${jobs.length}
-                         <span class="quest-bar"><i style="width:${(100 * done) / jobs.length}%"></i></span></span>
-                     <button class="btn btn-primary fix-merge">▶ Merge</button>`;
-    bar.querySelector('.fix-merge').addEventListener('click', () => goTo(land));
-    scene.appendChild(bar);
+    const progress = document.createElement('div');
+    progress.className = 'place-progress';
+    progress.innerHTML = `${uiIcon('hammer', '🔨')} ${done}/${jobs.length}<span class="quest-bar"><i style="width:${(100 * done) / jobs.length}%"></i></span>`;
+    scene.append(progress, boardFab(land), tasksFab());
 }
 
 // --- STORY ---
@@ -1406,6 +1460,9 @@ const CHAPTERS = [
 ];
 
 const STORY_END = [['mayor', 'You saved us!', 'Yay!']];
+
+// Story beats from jobs just done, played once nothing else is showing.
+const storyQueue = [];
 
 // Which scenes have played. Saved.
 const story = { intro: false, seen: [], ended: false };
@@ -1457,6 +1514,8 @@ function syncStory() {
         giftAfterTutorial = false;
         if (dailyAvailable()) return openDailyGift();
     }
+    // Never mid-merge: beats wait for the map, a place or the town.
+    if (storyQueue.length && !fixing && !isBoard(currentScene)) return playScene('📖', storyQueue.shift());
     if (currentScene !== 'map') return;
     const i = currentChapter();
     if (i === -1) {
@@ -1478,16 +1537,15 @@ function taskDone(task) {
     return restoration.done.includes(task.id);
 }
 
-// Open: not done, any jobs it waits for (after) are done, the job before it in
-// its land is done, and for a land's first job (buying it), the level its deed
-// unlocks at is reached. The town has no deed.
+// Open: not done and every job it waits for (after) is done, Merge Mansion
+// style, so several can be open at once and threads branch and join. Buying a
+// land opens at the level its deed unlocks; its other jobs wait for that. The
+// town has no deed.
 function taskOpen(task) {
     if (taskDone(task)) return false;
     if (task.after && !task.after.every(id => restoration.done.includes(id))) return false;
-    const list = landTasks(task.land);
-    const i = list.indexOf(task);
-    if (i > 0) return taskDone(list[i - 1]);
-    return !AREAS[task.land] || quests.level >= AREAS[task.land].level;
+    if (task.needs[0].own) return quests.level >= AREAS[task.land].level;
+    return !AREAS[task.land] || unlocks[task.land];
 }
 
 // "Barn", "Crop Field"… or the town's name for its own jobs.
@@ -1558,8 +1616,13 @@ function checkTasks() {
     });
 }
 
-// Does a job: uses up its items, pays its XP and reward, and shows who's happy.
-function completeTask(id) {
+// A whole land (or the town) done pays this on top.
+const LAND_REWARD = { gems: 10, chest: 'brown' };
+
+// Does a job: uses up its items, pays its XP and reward, and shows who's happy:
+// after a fix (quiet) just a cheer over the place, otherwise a thank-you. A
+// restored land always gets the big thank-you; story beats queue up after.
+function completeTask(id, quiet = false) {
     const task = TASKS.find(t => t.id === id);
     if (!task || !taskReady(task)) return;
     task.needs.forEach(need => {
@@ -1567,6 +1630,7 @@ function completeTask(id) {
         for (let k = 0; k < need.n; k++) grids[need.item][findItem(need.item, need.tier)] = null;
     });
     restoration.done.push(task.id);
+    document.querySelectorAll(`.fix-call[data-job="${task.id}"]`).forEach(el => el.remove());
     stats.jobs++;
     fillJar(GEM_JAR.perJob);
     delete restoration.baselines[task.id];
@@ -1574,13 +1638,16 @@ function completeTask(id) {
     const npc = npcs.find(n => n.id === task.who);
     const restored = landRestored(task.land);
     if (task.reward) grantReward(task.reward, '🔨');
-    showDialog({
+    if (restored) grantReward(LAND_REWARD, '✨');
+    if (task.story) storyQueue.push(task.story);
+    if (quiet && !restored) cheer(task, npc);
+    else showDialog({
         art: npcPicture(npc),
         artRound: true,
         title: `✅ ${task.name}`,
         body: `<p>“${task.line}”</p><p class="hint">— ${npc.name}</p>
                <p><b>+⭐${task.xp}</b>${task.reward ? ` · ${rewardText(task.reward)}` : ''}</p>
-               ${restored ? `<p class="restored-note">✨ ${landName(task.land)} restored!</p>` : ''}`,
+               ${restored ? `<p class="restored-note">✨ ${landName(task.land)} restored! ${rewardText(LAND_REWARD)}</p>` : ''}`,
         actions: [{ label: 'Yay!', primary: true }],
     });
     // XP last: a level-up popup follows this one.
@@ -1589,6 +1656,17 @@ function completeTask(id) {
     if (AREAS[currentScene]) refreshBoard(currentScene);
     else if (currentScene === 'fix') renderFix();
     else if (currentScene === 'town') renderTown();
+}
+
+// After a fix: who's happy and what it paid, floating over the place for a moment.
+function cheer(task, npc) {
+    document.querySelectorAll('.fix-cheer').forEach(el => el.remove());
+    const el = document.createElement('div');
+    el.className = 'fix-cheer';
+    el.innerHTML = `<img class="face" src="${npcPicture(npc)}" alt=""><span><b>“${task.line}”</b>
+                    <small>+${uiIcon('star', '⭐')}${task.xp}${task.reward ? ` · ${rewardText(task.reward)}` : ''}</small></span>`;
+    stageEl.appendChild(el);
+    setTimeout(() => el.remove(), 2600);
 }
 
 // The 📋 job list: XP bar, then each land's open job with what it needs.
@@ -1605,10 +1683,10 @@ function openTaskLog() {
         return `${heading}<div class="task-row${ready ? ' ready' : ''}">
                     <img class="face" src="${npcPicture(npcs.find(n => n.id === task.who))}" alt="">
                     <div class="task-body">
-                        <b>${task.name}</b> <small>${landName(task.land)} ${done}/${landTasks(task.land).length}</small>
+                        <b>${task.name}${task.story ? ' 📖' : ''}</b> <small>${landName(task.land)} ${done}/${landTasks(task.land).length}</small>
                         <div class="needs">${task.needs.map(n => needLabel(task, n)).join('')}</div>
                     </div>
-                    <button class="task-go" data-id="${task.id}" data-can="${ready ? 1 : ''}">${ready ? `Do it<br>+⭐${task.xp}` : `Go<br>+⭐${task.xp}`}</button>
+                    <button class="task-go" data-id="${task.id}" data-can="${ready ? 1 : ''}">${ready ? (hasSpot(task) ? 'Fix' : 'Do it') : hasSpot(task) ? 'Show' : 'Go'}<br>+⭐${task.xp}</button>
                 </div>`;
     }).join('');
     showDialog({
@@ -1623,8 +1701,8 @@ function openTaskLog() {
         const task = TASKS.find(t => t.id === btn.dataset.id);
         closeDialog();
         // Ready: fix it in its place. Buying a land has no place, so it's done here.
-        if (btn.dataset.can) return FIX_ART[task.id] ? goFix(task.land, task.id) : completeTask(task.id);
-        goWork(task); // not ready: go where it can be worked on
+        if (btn.dataset.can) return hasSpot(task) ? goFix(task.land, task.id) : completeTask(task.id);
+        showTask(task); // not ready: its spot and card (or the Market for a land to buy)
     }));
 }
 
@@ -1746,7 +1824,8 @@ function addTag(el, className, html) {
     return tag;
 }
 
-function showDialog({ art, artRound = false, title, body, actions }) {
+function showDialog({ art, artRound = false, title, body, actions, sheet = false }) {
+    dialogEl.classList.toggle('sheet', sheet); // a card sliding up from the bottom
     const tut = document.getElementById('tutorial');
     if (tut) tut.hidden = true;
     dialogArt.hidden = !art;
@@ -1909,19 +1988,17 @@ function renderMap() {
     side.className = 'side-buttons';
     side.innerHTML = `
         <button class="side-btn" id="btn-gift">${uiIcon('gift', '🎁')}<small>Gift</small>${dailyAvailable() ? '<span class="badge">!</span>' : ''}</button>
-        <button class="side-btn" id="btn-quests">${uiIcon('jobs', '📋')}<small>Jobs</small>${openTasks().some(taskReady) ? '<span class="badge">!</span>' : ''}</button>
         <button class="side-btn" id="btn-pass">${uiIcon('pass', '🎟️')}<small>Pass</small>${passClaimable() ? `<span class="badge">${passClaimable()}</span>` : ''}</button>
         <button class="side-btn" id="btn-daily">${uiIcon('daily', '📅')}<small>Daily</small>${dailyClaimable() > 0 ? '<span class="badge">!</span>' : ''}</button>
         <button class="side-btn" id="btn-jar">${uiIcon('jar', '🫙')}<small>💎${shop.jar}</small>${jarReady() ? '<span class="badge">!</span>' : ''}</button>
         ${activeOffers().length ? `<button class="side-btn offer-btn" id="btn-offer">${uiIcon('offer', '🔥')}<small data-ready="${shop.offers[activeOffers()[0].id].until}">${formatDuration(shop.offers[activeOffers()[0].id].until - Date.now())}</small>${activeOffers().length > 1 ? `<span class="badge">${activeOffers().length}</span>` : ''}</button>` : ''}`;
     side.querySelector('#btn-gift').addEventListener('click', openDailyGift);
-    side.querySelector('#btn-quests').addEventListener('click', openTaskLog);
     side.querySelector('#btn-pass').addEventListener('click', openPass);
     side.querySelector('#btn-daily').addEventListener('click', openDailyGoals);
     side.querySelector('#btn-jar').addEventListener('click', openGemJar);
     const offerBtn = side.querySelector('#btn-offer');
     if (offerBtn) offerBtn.addEventListener('click', openOffers);
-    scene.appendChild(side);
+    scene.append(side, boardFab(lastBoard), tasksFab('btn-quests'));
 }
 
 function offerDeed(id) {
@@ -2031,7 +2108,7 @@ function renderTown() {
             house.style.setProperty('--worn', '1');
             if (taskOpen(job)) {
                 house.dataset.job = job.id;
-                addTag(house, 'restore-tag', `${uiIcon('hammer', '🔨')} ${taskReady(job) ? '✓' : needIcons(job)}`);
+                addTag(house, 'task-pin' + (taskReady(job) ? ' ready' : ''), needPins(job));
                 if (taskReady(job)) house.classList.add('ready');
             }
         }
@@ -2047,6 +2124,7 @@ function renderTown() {
         scene.appendChild(person);
     });
     addFixSpots('town', scene); // the fog, and later the festival
+    scene.append(boardFab(lastBoard), tasksFab());
 }
 
 function openNpc(npc) {
@@ -2997,7 +3075,7 @@ function renderOrders(mode, el) {
             <span class="order-who"><span class="hammer">${uiIcon('hammer', '🔨')}</span><span class="want">${need.item ? itemIcon(need.item, need.tier) : need.stat ? TASK_STATS[need.stat].emoji : '🏡'}</span></span>
             <span class="order-pay">${p.have}/${p.of} · ⭐${task.xp}</span>
             ${ready ? '<span class="order-go">Do it</span>' : `<span class="order-need">${task.name}</span>`}`;
-        card.addEventListener('click', () => (ready ? goFix(task.land, task.id) : openJob(task)));
+        card.addEventListener('click', () => (ready && hasSpot(task) ? goFix(task.land, task.id) : openTaskCard(task)));
         el.appendChild(card);
     });
 
