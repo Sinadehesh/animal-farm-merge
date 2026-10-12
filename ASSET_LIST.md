@@ -200,7 +200,7 @@ below it by its outline alone, bigger and fancier as it goes up; tiers 9-11 get 
 | ✅ | 8 | Duck | `assets/items/aqua/08_duck.png` |  |
 | ✅ | 9 | Swan | `assets/items/aqua/09_swan.png` |  |
 | ✅ | 10 | Flamingo | `assets/items/aqua/10_flamingo.png` |  |
-| ✅ | 11 | Pond Dragon | `assets/items/aqua/11_pond_dragon.png` | a small friendly green dragon with lily-pad wings |
+| ✅ | 11 | Sea Monster | `assets/items/aqua/11_sea_monster.png` |  |
 
 ### Flower Garden
 

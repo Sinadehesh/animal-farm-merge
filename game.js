@@ -466,7 +466,7 @@ const NAMES = {
     'hay': ['🌱 Wheat Sprout', '🌾 Wheat Stalk', '🎀 Wheat Sheaf', '🟨 Hay Bale', '🟢 Round Bale', '🔶 Haystack', '🛒 Hay Cart', '🚜 Hay Wagon', '🌬️ Windmill', '👑 Golden Hay', '🔮 Magic Hay', '🌈 Rainbow Hay'],
     'barn': ['🌿 Feed', '🥚 Egg', '🐤 Chick', '🐔 Chicken', '🐽 Piglet', '🐷 Pig', '🐮 Calf', '🐄 Cow', '🐴 Horse', '🦙 Alpaca', '🐂 Prize Bull', '🦄 Unicorn'],
     'fert': ['🍂 Fallen Leaf', '🍁 Leaf Pile', '🥕 Veggie Scraps', '🌱 Compost', '🪴 Rich Soil', '🍄 Mushroom', '✨ Basic Fert', '🌟 Quality Fert', '⚡ Speed-Gro', '💎 Deluxe Fert', '🔮 Magic Fert', '🌌 Iridium Fert'],
-    'aqua': ['🌾 Fish Food', '🐌 Snail', '🐟 Minnow', '🐸 Frog', '🐠 Goldfish', '🎏 Koi', '🐢 Turtle', '🦦 Otter', '🦆 Duck', '🦢 Swan', '🦩 Flamingo', '🐉 Pond Dragon'],
+    'aqua': ['🌾 Fish Food', '🐌 Snail', '🐟 Minnow', '🐸 Frog', '🐠 Goldfish', '🎏 Koi', '🐢 Turtle', '🦦 Otter', '🦆 Duck', '🦢 Swan', '🦩 Flamingo', '🐉 Sea Monster'],
     'flower': ['💧 Water Drop', '🌱 Seedling', '🌷 Bud', '🌼 Daisy', '🌷 Tulip', '🌹 Rose', '🌺 Lily', '🌸 Orchid', '🪷 Lotus', '🍄 Rafflesia', '💎 Crystal Flower', '🌳 Tree of Life']
 };
 

@@ -478,7 +478,7 @@ const ASSETS = {
             'assets/items/aqua/08_duck.png',
             'assets/items/aqua/09_swan.png',
             'assets/items/aqua/10_flamingo.png',
-            'assets/items/aqua/11_pond_dragon.png',
+            'assets/items/aqua/11_sea_monster.png',
         ],
         // Cut from assets/raw/items_flower.webp.
         flower: [
