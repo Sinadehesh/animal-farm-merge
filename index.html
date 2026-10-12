@@ -1124,7 +1124,7 @@
             position: absolute;
             left: 3%;
             right: 3%;
-            bottom: 3%;
+            top: 1.5%;
             z-index: 150;
             display: flex;
             align-items: center;
@@ -1136,7 +1136,7 @@
             box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25);
             animation: slide-up 0.35s cubic-bezier(.3, 1.4, .5, 1), fadeOut 0.4s 7.6s forwards;
         }
-        @keyframes slide-up { from { translate: 0 150%; } }
+        @keyframes slide-up { from { translate: 0 -150%; } }
         .fix-call .face { width: 13cqw; height: 13cqw; border-radius: 50%; border: 2px solid var(--ink); object-fit: cover; object-position: top; }
         .fix-call span { flex: 1; display: grid; font-size: max(11px, 3.6cqw); }
         .fix-call small { color: #6b5a45; font-weight: 700; }
