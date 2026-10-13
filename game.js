@@ -1294,9 +1294,9 @@ const TASKS = [
     // Hay Field (day 3)
     { id: 'hay1', land: 'hay', name: 'Buy the Hay Field', who: 'mayor', xp: 4, needs: [{ own: 'hay' }],
       line: 'More land!' },
-    { id: 'hay2', land: 'hay', zone: 'meadow', look: ['🕸️', ''], after: ['hay1'], name: 'Clear out the old straw', who: 'marnie', xp: 5, needs: [{ stat: 'webs', n: 4 }],
+    { id: 'hay2', land: 'hay', zone: 'meadow', at: [45, 47], look: ['🕸️', ''], after: ['hay1'], name: 'Clear out the old straw', who: 'marnie', xp: 5, needs: [{ stat: 'webs', n: 4 }],
       line: 'Fresh straw!' },
-    { id: 'hay3', land: 'hay', zone: 'meadow', look: ['🍂', '🌾'], after: ['hay1'], name: 'Tie the first bundles', who: 'marnie', xp: 6, needs: [{ item: 'hay', tier: 2, n: 2 }],
+    { id: 'hay3', land: 'hay', zone: 'meadow', at: [78, 66], look: ['🍂', '🌾'], after: ['hay1'], name: 'Tie the first bundles', who: 'marnie', xp: 6, needs: [{ item: 'hay', tier: 2, n: 2 }],
       line: 'Neat bundles!' },
     { id: 'hay4', land: 'hay', zone: 'stables', at: [30, 34], look: ['🌾', '🟫'], after: ['hay3'], name: 'Stack the bales', who: 'robin', xp: 10, needs: [{ item: 'wood', tier: 2, n: 2 }, { item: 'hay', tier: 3, n: 1 }],
       line: 'Stacked!' },

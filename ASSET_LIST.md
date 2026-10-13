@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**420 assets:** 345 done ✅, 8 placeholders 🟡, 67 missing ⬜.
+**420 assets:** 346 done ✅, 8 placeholders 🟡, 66 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -434,7 +434,7 @@ swaps to the next painting as its jobs get done. Raw sheets are kept in `assets/
 | ✅ | Field Gate | `assets/stages/fieldgate/0-2.jpg` |  |
 | ✅ | Strawberry Rows | `assets/stages/berryrows/0-2.jpg` |  |
 | ✅ | Orchard | `assets/stages/orchard/0-2.jpg` |  |
-| ⬜ | Meadow | `assets/stages/meadow/0-2.jpg` | needs a painting |
+| ✅ | Meadow | `assets/stages/meadow/0-2.jpg` | one painting for all three states for now |
 | ✅ | Stables | `assets/stages/stables/0-2.jpg` |  |
 | ✅ | Windmill | `assets/stages/windmill/0-2.jpg` |  |
 | ✅ | Leaf Piles | `assets/stages/leafpiles/0-2.jpg` |  |

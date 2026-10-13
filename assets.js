@@ -36,7 +36,7 @@ const ASSETS = {
         rosearch: [0, 1, 2].map(k => `assets/stages/rosearch/${k}.jpg`),
         greenhouse: [0, 1, 2].map(k => `assets/stages/greenhouse/${k}.jpg`),
         bigbarn: [0, 1, 2].map(k => `assets/stages/bigbarn/${k}.jpg`), // the barn's storeroom
-        meadow: null,
+        meadow: [0, 1, 2].map(() => 'assets/stages/meadow/meadow.jpg'), // one painting for now, used for all three states
         stables: [0, 1, 2].map(k => `assets/stages/stables/${k}.jpg`),
         compostbins: [0, 1, 2].map(k => `assets/stages/compostbins/${k}.jpg`),
     },
