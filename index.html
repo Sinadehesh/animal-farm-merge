@@ -1487,6 +1487,16 @@
         .order-tile .price-tag { right: -2cqw; top: auto; bottom: 6cqw; }
         .order-tile.deed { background: #fdf3dc; }
         .order-tile .badge { right: -2cqw; top: -2cqw; min-width: 6cqw; height: 6cqw; }
+        /* Out of charges: the 💎 price to keep going sits on the tile, and a card offers it. */
+        .item .refill-tag { position: absolute; right: -1cqw; top: -1.2cqw; z-index: 3; padding: 0.2cqw 1cqw; background: #7b3fe4; color: #fff; border: 2px solid #fff; border-radius: 999px; font-size: 2.6cqw; font-weight: 900; line-height: 1.2; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); animation: refill-pulse 1.1s ease-in-out infinite; pointer-events: none; }
+        .item .refill-tag .ui-icon { height: 1.1em; }
+        @keyframes refill-pulse { 0%, 100% { scale: 1; } 50% { scale: 1.15; } }
+        .recharge-call { position: absolute; left: 3%; right: 3%; top: 14cqw; z-index: 150; display: flex; align-items: center; gap: 2cqw; padding: 2cqw; background: #fff8e7; border: 3px solid #7b3fe4; border-radius: 16px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3); animation: popIn 0.35s cubic-bezier(.3, 1.6, .5, 1); }
+        .recharge-call .recharge-face { display: grid; place-items: center; flex: none; width: 12cqw; height: 12cqw; font-size: 8cqw; }
+        .recharge-call .recharge-face img { width: 100%; height: 100%; object-fit: contain; }
+        .recharge-call > span:nth-child(2) { flex: 1; display: flex; flex-direction: column; font-size: max(11px, 3.3cqw); line-height: 1.2; }
+        .recharge-call small { opacity: 0.75; }
+        .recharge-call .btn { flex: none; padding: 2cqw 2.6cqw; font-size: max(11px, 3.2cqw); background: linear-gradient(#9b6bff, #6a2fd6); border-color: #4b1fa0; }
     </style>
 </head>
 <body>

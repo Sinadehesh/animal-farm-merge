@@ -683,44 +683,98 @@ function tickBoards(now = Date.now()) {
     });
 }
 
-// Pays 💎 to finish the producer's current recharge at once.
+// --- RECHARGING WITH 💎 ---
+// Any producer that has run out, the tool producers included, can be refilled
+// at once with 💎 instead of waiting. A producer's level sets its price; a tool
+// producer costs 💎1 for every 10 minutes still to wait (at least 💎2).
+function isOutOfCharges(item) {
+    if (!item || item.web || item.drops > 0 || !item.readyAt) return false;
+    return item.type === 'toolbox' || isWorkingProducer(item);
+}
+
+function rechargePrice(mode, item) {
+    if (item.type === 'toolbox') return Math.max(2, Math.ceil((item.readyAt - Date.now()) / 600000));
+    return producerStats(mode, producerLevel(item)).skip;
+}
+
+function rechargeName(mode, item) {
+    return item.type === 'toolbox' ? TOOLS[item.chain].name : producerName(mode, producerLevel(item));
+}
+
+// Full again right now.
+function refill(mode, item) {
+    if (item.type === 'toolbox') {
+        item.drops = TOOL_CHARGES;
+        delete item.readyAt;
+    } else {
+        item.readyAt = Date.now();
+        tickProducer(mode, item);
+    }
+}
+
+// Pays 💎 to finish a producer's recharge at once.
 function skipRecharge(mode, index) {
     const item = grids[mode][index];
-    if (!isWorkingProducer(item) || !item.readyAt) return;
-    const s = producerStats(mode, producerLevel(item));
-    if (!spendGems(s.skip)) return;
-    item.readyAt = Date.now();
-    tickProducer(mode, item);
+    if (!item || !item.readyAt || !(item.type === 'toolbox' || isWorkingProducer(item))) return;
+    if (!spendGems(rechargePrice(mode, item))) return;
+    refill(mode, item);
+    document.querySelectorAll('.recharge-call').forEach(el => el.remove());
     updateUI();
-    toast(`${PRODUCERS[mode].emoji} ${producerName(mode, producerLevel(item))} recharged!`, 'good');
+    toast(`${rechargeName(mode, item)} recharged!`, 'good');
     refreshBoard(mode, [index]);
 }
 
 // Tapping a producer that has no charges left.
 function openRecharge(mode, index) {
     const item = grids[mode][index];
-    const level = producerLevel(item);
-    const s = producerStats(mode, level);
+    const tool = item.type === 'toolbox';
+    const s = tool ? null : producerStats(mode, producerLevel(item));
     showDialog({
-        title: `${producerName(mode, level)} is recharging`,
+        title: `${rechargeName(mode, item)} is recharging`,
         body: `<p class="big-count">⏳ <span data-ready="${item.readyAt}">${formatDuration(item.readyAt - Date.now())}</span></p>
-               <p class="hint">Each charge gives ${s.drops} taps and takes ${formatDuration(rechargeMs(mode))}. It stores up to ${s.charges} charges while you're away.</p>`,
+               <p class="hint">${tool ? `It gives ${TOOL_CHARGES} taps, then rests ${formatDuration(TOOLS[item.chain].minutes * 60000)}.`
+                   : `Each charge gives ${s.drops} taps and takes ${formatDuration(rechargeMs(mode))}. It stores up to ${s.charges} charges while you're away.`}
+               Don't stop now: keep it going with 💎!</p>`,
         actions: [
-            { label: `Recharge now · 💎 ${s.skip}`, primary: true, wide: true, onClick: () => skipRecharge(mode, index) },
+            { label: `Recharge now · 💎 ${rechargePrice(mode, item)}`, primary: true, wide: true, onClick: () => skipRecharge(mode, index) },
             adsLeft() > 0 ? { icon: uiIcon('ad', '📺'), label: `Watch an ad · recharge now (${adsLeft()} left today)`, wide: true, onClick: () => watchAdForRecharge(mode, index) } : null,
             { label: 'Wait' },
         ].filter(Boolean),
     });
 }
 
+// The moment a producer runs dry, a card offers to refill it, without blocking.
+function offerRefill(mode, index) {
+    document.querySelectorAll('.recharge-call').forEach(el => el.remove());
+    const item = grids[mode][index];
+    if (!isOutOfCharges(item)) return;
+    const card = document.createElement('div');
+    card.className = 'recharge-call';
+    card.innerHTML = iconize(`<span class="recharge-face">${tooltipIcon(mode, item)}</span>
+        <span><b>${rechargeName(mode, item)} is out!</b><small>Back in <span data-ready="${item.readyAt}">${formatDuration(item.readyAt - Date.now())}</span></small></span>
+        <button class="btn btn-primary">Keep going · 💎${rechargePrice(mode, item)}</button><button class="fix-call-x">✕</button>`);
+    card.querySelector('.btn').addEventListener('click', () => skipRecharge(mode, index));
+    card.querySelector('.fix-call-x').addEventListener('click', () => card.remove());
+    stageEl.appendChild(card);
+    setTimeout(() => card.remove(), 7000);
+}
+
+// A producer's picture for the refill card.
+function tooltipIcon(mode, item) {
+    if (item.type === 'toolbox') {
+        const art = (ASSETS.toolProducers || {})[item.chain];
+        return art ? `<img src="${art}" alt="">` : TOOLS[item.chain].emoji;
+    }
+    return itemFace(mode, item).html;
+}
+
 function watchAdForRecharge(mode, index) {
     const item = grids[mode][index];
-    if (adsLeft() <= 0 || !isWorkingProducer(item) || !item.readyAt) return;
+    if (adsLeft() <= 0 || !item || !item.readyAt) return;
     showRewardedAd(() => {
         shop.adsWatched++;
-        item.readyAt = Date.now();
-        tickProducer(mode, item);
-        toast(`${PRODUCERS[mode].emoji} Recharged!`, 'good');
+        refill(mode, item);
+        toast(`${rechargeName(mode, item)} recharged!`, 'good');
         refreshBoard(mode, [index]);
     });
 }
@@ -4116,7 +4170,8 @@ function renderInfoBar(mode) {
     } else if (item.type === 'toolbox') {
         const t = TOOLS[item.chain];
         html += icon + text(t.name, item.drops > 0 ? `Tap to make ${t.what} for ⚡1. ${item.drops}/${TOOL_CHARGES} taps left.`
-            : `Recharging: ${countdown(item.readyAt)}.`) + chainBtn;
+            : `Recharging: ${countdown(item.readyAt)}.`) + chainBtn
+            + (item.readyAt ? button('skip-btn', `Recharge<br>💎${rechargePrice(mode, item)}`) : '');
     } else if (item.type === 'shop') {
         const level = levelOf(item);
         const name = producerName(mode, level);
@@ -4535,6 +4590,7 @@ function handleGeneratorClick(mode, index) {
     selected = { mode, index };
     checkTasks();
     refreshBoard(mode, [at]);
+    if (producer.drops <= 0) offerRefill(mode, index);
 }
 
 // A land's tool producer: TOOL_CHARGES taps for ⚡1 each, then it recharges.
@@ -4550,8 +4606,8 @@ function tapToolbox(mode, index) {
     tickToolbox(box);
     selected = { mode, index };
     if (box.drops <= 0) {
-        toast(`⏳ The ${TOOLS[box.chain].name} is recharging: ${formatDuration(box.readyAt - Date.now())}.`);
-        return refreshBoard(mode);
+        refreshBoard(mode);
+        return openRecharge(mode, index);
     }
     if (boardFull(mode) || !payTapEnergy(1)) return;
     box.drops--;
@@ -4565,6 +4621,7 @@ function tapToolbox(mode, index) {
     stats.spawned[mode] = (stats.spawned[mode] || 0) + 1;
     checkTasks();
     refreshBoard(mode, [at]);
+    if (box.drops <= 0) offerRefill(mode, index);
 }
 
 // Each land you own has its tool producer: on its board if there's room,
@@ -4719,6 +4776,7 @@ function renderGrid(mode, poppedIndices = []) {
                 if (item.type === 'shop') itemEl.classList.add('empty');
                 addTag(itemEl, 'gen-timer', formatDuration(timer - Date.now())).dataset.ready = timer;
             }
+            if (isOutOfCharges(item)) addTag(itemEl, 'refill-tag', `💎${rechargePrice(mode, item)}`);
             if (item.type === 'chest' && !item.openAt && !chestReady(item)) addTag(itemEl, 'lock', uiIcon('lock', '🔒'));
             if (item.web) {
                 itemEl.classList.add('webbed');
