@@ -1552,7 +1552,6 @@ function renderZone(zone) {
                         <div class="zone-scroll"><div class="zone-frame"><img class="zone-art" src="${pic}" alt="" draggable="false"></div></div>`;
         if (open) addJobChips(tasks, el.querySelector('.zone-frame'));
     } else paintOldZone(el, zone, tasks, open);
-    addTag(el, 'zone-sign', `${zone.name} <b>${done}/${tasks.length}</b>`);
     if (!open) {
         el.insertAdjacentHTML('beforeend', `<div class="zone-clouds"></div>
             <div class="zone-lock">${uiIcon('lock', '🔒')}<small>${zoneWaitsFor(zone)}</small></div>`);
@@ -1632,13 +1631,20 @@ function paintedPage(scene, pic) {
     return scroll.firstElementChild;
 }
 
-// Once a painting has its height: back where you were, or with the first open
-// job in the middle of the screen.
+// Once a painting has its height: back where you were, or at its top.
 function settleScroll(scroll, keep) {
     const img = scroll.querySelector('img');
+    // A bouncing ⌄ while there's more painting below.
+    const hint = document.createElement('div');
+    hint.className = 'scroll-hint';
+    hint.textContent = '⌄';
+    hint.hidden = true;
+    scroll.parentElement.appendChild(hint);
+    const more = () => { hint.hidden = scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 24; };
+    scroll.addEventListener('scroll', more, { passive: true });
     const place = () => {
-        const chip = scroll.querySelector('.fix-spot.open');
-        scroll.scrollTop = keep ?? (chip ? chip.offsetTop + chip.offsetParent.offsetTop - scroll.clientHeight / 2 : 0);
+        scroll.scrollTop = keep ?? 0; // from the top, so the whole painting unrolls as you scroll
+        more();
     };
     if (img.complete) place();
     else img.addEventListener('load', place, { once: true });
@@ -1883,9 +1889,18 @@ function renderFix() {
     });
     // Swipe sideways from area to area: dots for where you are, arrows naming the next one.
     const zones = landZones(land);
+    // A tab for each area, named, with its progress (or its lock): tap to go there.
     const nav = document.createElement('div');
-    nav.className = 'zone-nav';
-    nav.innerHTML = zones.map(z => `<i title="${z.name}"></i>`).join('');
+    nav.className = 'zone-tabs';
+    zones.forEach((z, k) => {
+        const jobs = zoneTasks(z.id);
+        const done = jobs.filter(taskDone).length;
+        const tab = document.createElement('button');
+        tab.dataset.zone = z.id;
+        tab.innerHTML = zoneOpen(z) ? `${z.name} <b>${done === jobs.length ? '✓' : `${done}/${jobs.length}`}</b>` : `🔒 ${z.name}`;
+        tab.addEventListener('click', () => world.scrollTo({ left: k * world.clientWidth, behavior: 'smooth' }));
+        nav.appendChild(tab);
+    });
     const arrows = ['left', 'right'].map(side => {
         const b = document.createElement('button');
         b.className = `zone-arrow ${side}`;
@@ -1894,7 +1909,7 @@ function renderFix() {
     });
     const showPage = () => {
         const i = Math.round(world.scrollLeft / Math.max(1, world.clientWidth));
-        nav.querySelectorAll('i').forEach((dot, k) => dot.classList.toggle('on', k === i));
+        nav.querySelectorAll('button').forEach((tab, k) => tab.classList.toggle('on', k === i));
         arrows[0].hidden = i <= 0;
         arrows[1].hidden = i >= zones.length - 1;
         if (zones[i - 1]) arrows[0].innerHTML = `‹<small>${zones[i - 1].name}</small>`;

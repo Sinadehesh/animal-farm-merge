@@ -1511,6 +1511,15 @@
         .board-header .orders { flex: none; }
         .toast .inline-item, .btn .inline-item { display: inline-block; height: 2em; width: auto; vertical-align: middle; font-size: 1em; }
         .toast img.inline-item, .btn img.inline-item { object-fit: contain; }
+        /* The land's areas as named tabs under its progress; the open one lit. */
+        .zone-tabs { position: absolute; left: 3%; right: 3%; top: 14cqw; z-index: 130; display: flex; gap: 1.5cqw; }
+        .zone-tabs button { flex: 1 1 0; min-width: 0; padding: 1.4cqw 1cqw; background: rgba(110, 72, 38, 0.82); color: #fff; border: 2px solid rgba(255, 255, 255, 0.55); border-radius: 999px; font-weight: 900; font-size: max(10px, 2.9cqw); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); }
+        .zone-tabs button b { color: #ffe27a; margin-left: 0.6cqw; }
+        .zone-tabs button.on { background: #fff8e7; color: var(--ink); border-color: var(--ink); }
+        .zone-tabs button.on b { color: #2e8c3c; }
+        .scroll-hint { position: absolute; left: 50%; bottom: 5cqw; z-index: 120; translate: -50% 0; display: grid; place-items: center; width: 10cqw; height: 10cqw; padding-bottom: 1.5cqw; background: rgba(255, 248, 231, 0.92); border: 2px solid var(--ink); border-radius: 50%; font-size: 7cqw; font-weight: 900; line-height: 1; pointer-events: none; animation: hint-bob 1.2s ease-in-out infinite; }
+        .scroll-hint[hidden] { display: none; }
+        @keyframes hint-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1.5cqw); } }
     </style>
 </head>
 <body>
@@ -1551,7 +1560,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610131214"></script>
-    <script src="game.js?v=202610131214"></script>
+    <script src="assets.js?v=202610131232"></script>
+    <script src="game.js?v=202610131232"></script>
 </body>
 </html>
