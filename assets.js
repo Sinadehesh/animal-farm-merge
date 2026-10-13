@@ -12,6 +12,19 @@ const ASSETS = {
         market: 'assets/scenes/market.jpg',
     },
 
+    // Sound effects (short mp3s in assets/sounds/), one per moment. null = the
+    // little sound the game makes on its own (Web Audio), so any can be left out.
+    // Picked so far on Epidemic Sound, waiting for download access:
+    //   tap: "Cartoon, Pop, Small Lid"            merge: "User Interface, Alert, Pops, Digital, Cute, Pops"
+    //   pop: "Water, Bubbles, Bubble, Single Pop 02"   coin: "Games, Video, Event, Collect Coin, Bell Like"
+    //   knock: "Tools, Hand, Hammer, Hit Wood Decking Plank 02"   sparkle: "Magic, Spell, Soft Airy, Chimes, Bells"
+    //   levelup: "Magic, Spell, Musical Ascending Arp, Level Up"   fanfare: "Cartoon, Musical, Success, Fanfare"
+    //   whoosh: "Magic, Spell, Rustle Whoosh"     nope: "Games, Video, Error, Notification 19"
+    sounds: {
+        tap: null, merge: null, pop: null, coin: null, knock: null,
+        sparkle: null, levelup: null, fanfare: null, whoosh: null, nope: null,
+    },
+
     // Painted pages: one painting per screen, the same scene in three states
     // (ruined, half fixed, restored), cut from one sheet so they match exactly
     // (tall, about 1:3, except the Hen House's wide one). Things to tap are

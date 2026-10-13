@@ -1148,7 +1148,7 @@ function addXp(n) {
 
 function showLevelUp(level, reward) {
     if (level !== quests.level) return; // a later level-up has its own popup
-    celebrate();
+    celebrate('level');
     const land = Object.keys(AREAS).find(id => AREAS[id].level === level);
     showDialog({
         title: `⭐ Level ${level}!`,
@@ -2693,10 +2693,34 @@ const SOUNDS = {
     nope: c => tone(c, 220, 0, 0.16, 'sawtooth', 0.05, 150),
 };
 
+// Sound files (ASSETS.sounds), decoded once; until one loads, the made sound plays.
+const soundFiles = {};
+
+function loadSound(ctx, name) {
+    const src = (ASSETS.sounds || {})[name];
+    if (!src || soundFiles[name] !== undefined) return;
+    soundFiles[name] = null; // loading
+    fetch(src).then(r => r.arrayBuffer()).then(data => ctx.decodeAudioData(data))
+        .then(buffer => { soundFiles[name] = buffer; }).catch(() => { delete soundFiles[name]; });
+}
+
+// A merge's chime rises with the item: the file plays faster (higher) for bigger ones.
 function sfx(name, arg) {
     const ctx = audio();
     if (!ctx) return;
-    try { SOUNDS[name](ctx, arg); } catch (e) { /* sound is a nicety */ }
+    if (name === 'fanfare' && arg === 'level') name = (ASSETS.sounds || {}).levelup ? 'levelup' : 'fanfare';
+    loadSound(ctx, name);
+    try {
+        const buffer = soundFiles[name];
+        if (buffer) {
+            const src = ctx.createBufferSource();
+            src.buffer = buffer;
+            if (name === 'merge' && typeof arg === 'number') src.playbackRate.value = 2 ** (Math.min(arg, 14) / 24);
+            src.connect(ctx.destination);
+            src.start();
+        } else if (SOUNDS[name]) SOUNDS[name](ctx, arg);
+        else SOUNDS.fanfare(ctx);
+    } catch (e) { /* sound is a nicety */ }
 }
 
 function buzz(pattern) {
@@ -2720,8 +2744,8 @@ function confetti(count = 70) {
 }
 
 // The big moments: a sound, a buzz and confetti together.
-function celebrate() {
-    sfx('fanfare');
+function celebrate(what) {
+    sfx('fanfare', what);
     buzz([30, 60, 90]);
     confetti();
 }
