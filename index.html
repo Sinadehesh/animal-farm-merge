@@ -1499,6 +1499,16 @@
         .recharge-call > span:nth-child(2) { flex: 1; display: flex; flex-direction: column; font-size: max(11px, 3.3cqw); line-height: 1.2; }
         .recharge-call small { opacity: 0.75; }
         .recharge-call .btn { flex: none; padding: 2cqw 2.6cqw; font-size: max(11px, 3.2cqw); background: linear-gradient(#9b6bff, #6a2fd6); border-color: #4b1fa0; }
+        /* The selected item's info stays one slim bar: its name on one line, at most two
+           lines about it (the rest is behind ⓘ), so the orders above never get pushed away. */
+        .board-footer .info-bar { height: 14cqw; min-height: 0; overflow: hidden; }
+        .board-footer .info-text { min-width: 0; overflow: hidden; line-height: 1.2; }
+        .board-footer .info-text b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .board-footer .info-text br { display: none; }
+        .board-footer .info-text small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 2.6cqw; line-height: 1.2; }
+        .board-footer .info-bar > * { flex-shrink: 0; }
+        .board-footer .info-bar > .info-text { flex: 1 1 auto; }
+        .board-header .orders { flex: none; }
     </style>
 </head>
 <body>
@@ -1539,7 +1549,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610131158"></script>
-    <script src="game.js?v=202610131158"></script>
+    <script src="assets.js?v=202610131202"></script>
+    <script src="game.js?v=202610131202"></script>
 </body>
 </html>
