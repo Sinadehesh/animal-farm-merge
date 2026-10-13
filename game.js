@@ -2654,6 +2654,7 @@ function audio() {
         audioCtx = new AC();
     }
     if (audioCtx.state === 'suspended') audioCtx.resume();
+    Object.keys(ASSETS.sounds || {}).forEach(name => loadSound(audioCtx, name)); // ready before they're needed
     return audioCtx;
 }
 

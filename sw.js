@@ -18,7 +18,7 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
     const req = event.request;
     if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
-    const picture = /\.(png|jpe?g|webp|svg|gif)$/i.test(new URL(req.url).pathname);
+    const picture = /\.(png|jpe?g|webp|svg|gif|mp3)$/i.test(new URL(req.url).pathname); // pictures and sounds
     if (picture) {
         event.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {
             if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }

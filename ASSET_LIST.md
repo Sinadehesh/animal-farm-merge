@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**433 assets:** 349 done ✅, 8 placeholders 🟡, 76 missing ⬜.
+**433 assets:** 359 done ✅, 8 placeholders 🟡, 66 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -502,21 +502,22 @@ its own 8-step chain (`items.<chain>`, files `assets/items/<chain>/00.png` … `
 
 ## Sound effects
 
-Short mp3s in `assets/sounds/`, listed in `sounds` in `assets.js`. Until a file is there the game plays a little
-sound it makes itself, so none are required. Picked on Epidemic Sound (waiting for download access):
+Short mp3s in `assets/sounds/`, listed in `sounds` in `assets.js`: Kenney's free CC0 packs for now (kenney.nl,
+see `assets/sounds/LICENSE-kenney.txt`). Without a file the game plays a little sound it makes itself. The last
+column is the Epidemic Sound pick to swap in once that account can download sound effects.
 
-| | Sound | When | Epidemic Sound pick |
+| | Sound | When | Epidemic Sound alternative |
 |---|---|---|---|
-| ⬜ | `tap` | something drops out of a producer | Cartoon, Pop, Small Lid |
-| ⬜ | `merge` | two items merge (plays higher for bigger ones) | User Interface, Alert, Pops, Digital, Cute, Pops |
-| ⬜ | `pop` | a Double Bubble is popped | Water, Bubbles, Bubble, Single Pop 02 |
-| ⬜ | `coin` | coins, gems or energy collected, an order delivered | Games, Video, Event, Collect Coin, Bell Like |
-| ⬜ | `knock` | the hammer during a fix | Tools, Hand, Hammer, Hit Wood Decking Plank 02 |
-| ⬜ | `sparkle` | a fix is done, a producer recharged | Magic, Spell, Soft Airy, Chimes, Bells |
-| ⬜ | `levelup` | level up | Magic, Spell, Musical Ascending Arp, Level Up |
-| ⬜ | `fanfare` | an area or land restored | Cartoon, Musical, Success, Fanfare |
-| ⬜ | `whoosh` | a painting turns to its next stage | Magic, Spell, Rustle Whoosh |
-| ⬜ | `nope` | out of energy | Games, Video, Error, Notification 19 |
+| ✅ | `tap` | something drops out of a producer | Cartoon, Pop, Small Lid |
+| ✅ | `merge` | two items merge (plays higher for bigger ones) | User Interface, Alert, Pops, Digital, Cute, Pops |
+| ✅ | `pop` | a Double Bubble is popped | Water, Bubbles, Bubble, Single Pop 02 |
+| ✅ | `coin` | coins, gems or energy collected, an order delivered | Games, Video, Event, Collect Coin, Bell Like |
+| ✅ | `knock` | the hammer during a fix | Tools, Hand, Hammer, Hit Wood Decking Plank 02 |
+| ✅ | `sparkle` | a fix is done, a producer recharged | Magic, Spell, Soft Airy, Chimes, Bells |
+| ✅ | `levelup` | level up | Magic, Spell, Musical Ascending Arp, Level Up |
+| ✅ | `fanfare` | an area or land restored | Cartoon, Musical, Success, Fanfare |
+| ✅ | `whoosh` | a painting turns to its next stage | Magic, Spell, Rustle Whoosh |
+| ✅ | `nope` | out of energy | Games, Video, Error, Notification 19 |
 
 ## App icons
 

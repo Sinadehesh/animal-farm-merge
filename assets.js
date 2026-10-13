@@ -13,16 +13,21 @@ const ASSETS = {
     },
 
     // Sound effects (short mp3s in assets/sounds/), one per moment. null = the
-    // little sound the game makes on its own (Web Audio), so any can be left out.
-    // Picked so far on Epidemic Sound, waiting for download access:
-    //   tap: "Cartoon, Pop, Small Lid"            merge: "User Interface, Alert, Pops, Digital, Cute, Pops"
-    //   pop: "Water, Bubbles, Bubble, Single Pop 02"   coin: "Games, Video, Event, Collect Coin, Bell Like"
-    //   knock: "Tools, Hand, Hammer, Hit Wood Decking Plank 02"   sparkle: "Magic, Spell, Soft Airy, Chimes, Bells"
-    //   levelup: "Magic, Spell, Musical Ascending Arp, Level Up"   fanfare: "Cartoon, Musical, Success, Fanfare"
-    //   whoosh: "Magic, Spell, Rustle Whoosh"     nope: "Games, Video, Error, Notification 19"
+    // little sound the game makes on its own (Web Audio). These are Kenney's free
+    // CC0 packs (kenney.nl: Interface, Impact, RPG Audio, Music Jingles), see
+    // assets/sounds/LICENSE-kenney.txt. Epidemic Sound picks to swap in once that
+    // account can download are listed in ASSET_LIST.md.
     sounds: {
-        tap: null, merge: null, pop: null, coin: null, knock: null,
-        sparkle: null, levelup: null, fanfare: null, whoosh: null, nope: null,
+        tap: 'assets/sounds/tap.mp3',           // interface drop_002
+        merge: 'assets/sounds/merge.mp3',       // interface pluck_002, played higher for bigger items
+        pop: 'assets/sounds/pop.mp3',           // interface glass_002
+        coin: 'assets/sounds/coin.mp3',         // rpg handleCoins
+        knock: 'assets/sounds/knock.mp3',       // impact impactPlank_medium_000
+        sparkle: 'assets/sounds/sparkle.mp3',   // interface confirmation_002
+        levelup: 'assets/sounds/levelup.mp3',   // jingles PIZZI03
+        fanfare: 'assets/sounds/fanfare.mp3',   // jingles STEEL02
+        whoosh: 'assets/sounds/whoosh.mp3',     // interface maximize_006
+        nope: 'assets/sounds/nope.mp3',         // interface error_004
     },
 
     // Painted pages: one painting per screen, the same scene in three states
