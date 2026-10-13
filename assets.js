@@ -28,7 +28,32 @@ const ASSETS = {
         fanfare: 'assets/sounds/fanfare.mp3',   // jingles STEEL02
         whoosh: 'assets/sounds/whoosh.mp3',     // interface maximize_006
         nope: 'assets/sounds/nope.mp3',         // interface error_004
+        // Merges sound like what's merging (merge is the fallback), rising with the
+        // item; mid-size ones add a sparkle, the biggest a little jingle.
+        merge_barn: 'assets/sounds/merge_barn.mp3',       // animals: interface pluck_002
+        merge_farm: 'assets/sounds/merge_farm.mp3',       // crops: interface drop_003
+        merge_hay: 'assets/sounds/merge_hay.mp3',         // hay: rpg cloth1 (a rustle)
+        merge_fert: 'assets/sounds/merge_fert.mp3',       // compost: impact impactSoft_medium_001
+        merge_aqua: 'assets/sounds/merge_aqua.mp3',       // pond: interface bong_001
+        merge_flower: 'assets/sounds/merge_flower.mp3',   // flowers: interface glass_006
+        merge_tools: 'assets/sounds/merge_tools.mp3',     // impact impactMetal_light_000
+        merge_garden: 'assets/sounds/merge_garden.mp3',   // impact impactPlate_light_000
+        merge_wood: 'assets/sounds/merge_wood.mp3',       // impact impactWood_light_000
+        merge_clean: 'assets/sounds/merge_clean.mp3',     // impact impactGlass_light_000
+        merge_fishing: 'assets/sounds/merge_fishing.mp3', // impact impactTin_medium_000
+        merge_decor: 'assets/sounds/merge_decor.mp3',     // interface glass_005
+        merge_level: 'assets/sounds/merge_level.mp3',     // producers, boosters, chests: casino chips-stack-1
+        merge_mid: 'assets/sounds/merge_mid.mp3',         // interface maximize_002
+        merge_big: 'assets/sounds/merge_big.mp3',         // jingles HIT02
+        click: 'assets/sounds/click.mp3',                 // any button: interface click_002
+        buy: 'assets/sounds/buy.mp3',                     // buying: casino chips-stack-3
+        taskdone: 'assets/sounds/taskdone.mp3',           // a job done: jingles PIZZI05
+        unlock: 'assets/sounds/unlock.mp3',               // a new area opens: jingles STEEL00
     },
+
+    // Background music, looping quietly (Settings turns it off). "Hush Hamlet"
+    // by Zane Little Music, CC0: assets/sounds/LICENSE-music.txt.
+    music: 'assets/sounds/music_hush_hamlet.mp3',
 
     // Painted pages: one painting per screen, the same scene in three states
     // (ruined, half fixed, restored), cut from one sheet so they match exactly

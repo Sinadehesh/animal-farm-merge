@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**433 assets:** 359 done ✅, 8 placeholders 🟡, 66 missing ⬜.
+**453 assets:** 379 done ✅, 8 placeholders 🟡, 66 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -518,6 +518,29 @@ column is the Epidemic Sound pick to swap in once that account can download soun
 | ✅ | `fanfare` | an area or land restored | Cartoon, Musical, Success, Fanfare |
 | ✅ | `whoosh` | a painting turns to its next stage | Magic, Spell, Rustle Whoosh |
 | ✅ | `nope` | out of energy | Games, Video, Error, Notification 19 |
+| ✅ | `merge_barn` | animals merge | - |
+| ✅ | `merge_farm` | crops merge | - |
+| ✅ | `merge_hay` | hay merges | - |
+| ✅ | `merge_fert` | compost merges | - |
+| ✅ | `merge_aqua` | pond creatures merge | - |
+| ✅ | `merge_flower` | flowers merge | - |
+| ✅ | `merge_tools` | tools merge | - |
+| ✅ | `merge_garden` | garden tools merge | - |
+| ✅ | `merge_wood` | wood merges | - |
+| ✅ | `merge_clean` | cleaning things merge | - |
+| ✅ | `merge_fishing` | fishing gear merges | - |
+| ✅ | `merge_decor` | decorations merge | - |
+| ✅ | `merge_level` | producers, boosters, chests merge | - |
+| ✅ | `merge_mid` | on top of a mid-size merge (tiers 4-6) | - |
+| ✅ | `merge_big` | on top of a big merge (tier 7 and up) | - |
+| ✅ | `click` | any button | - |
+| ✅ | `buy` | buying anything | - |
+| ✅ | `taskdone` | a job done | - |
+| ✅ | `unlock` | a new area opens | - |
+
+### Music
+
+| ✅ | Background loop | `assets/sounds/music_hush_hamlet.mp3` | "Hush Hamlet" by Zane Little Music (CC0), see `assets/sounds/LICENSE-music.txt` |
 
 ## App icons
 

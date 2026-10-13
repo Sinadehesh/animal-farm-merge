@@ -417,7 +417,7 @@ const stats = {
 };
 // Player toggles (saved with the game). charge = index into CHARGE_MODES;
 // unlimitedUntil = when Unlimited Energy runs out (ms timestamp).
-const settings = { charge: 0, unlimitedUntil: 0, sound: true, vibrate: true };
+const settings = { charge: 0, unlimitedUntil: 0, sound: true, vibrate: true, music: true };
 // Player level and XP toward the next level.
 const quests = { level: 1, xp: 0 };
 // Restoration jobs done, and for open jobs the counters they count from.
@@ -899,6 +899,7 @@ function spendGems(n) {
         return false;
     }
     res.gems -= n;
+    sfx('buy');
     return true;
 }
 
@@ -1059,6 +1060,7 @@ function claimDailyBasket() {
 // grants straight away so the flow can be tested.
 function purchase(productId, grant) {
     const message = grant();
+    sfx('buy');
     updateUI();
     saveGame();
     toast(`${message} (test purchase)`, 'good');
@@ -2178,7 +2180,7 @@ function unlockNewZones(land, world) {
     el.insertAdjacentHTML('beforeend', `<div class="zone-clouds"></div><div class="zone-key">${uiIcon('key', '🗝️')}</div>`);
     world.scrollLeft = el.offsetLeft;
     document.body.classList.add('busy');
-    setTimeout(() => el.classList.add('opening'), 1000);
+    setTimeout(() => { el.classList.add('opening'); sfx('unlock'); buzz([20, 40, 20]); }, 1000);
     setTimeout(() => {
         document.body.classList.remove('busy');
         el.classList.remove('unlocking', 'opening');
@@ -2420,6 +2422,7 @@ function completeTask(id, quiet = false) {
     if (restored) grantReward(LAND_REWARD, '✨');
     if (zoneFinished) grantReward(ZONE_REWARD, '✨');
     if (restored || zoneFinished) celebrate();
+    else sfx('taskdone');
     if (task.story) storyQueue.push(task.story);
     if (quiet && !restored && !zoneFinished) cheer(task, npc);
     else showDialog({
@@ -2705,24 +2708,74 @@ function loadSound(ctx, name) {
         .then(buffer => { soundFiles[name] = buffer; }).catch(() => { delete soundFiles[name]; });
 }
 
-// A merge's chime rises with the item: the file plays faster (higher) for bigger ones.
+// How loud each sound plays (1 = as recorded); the ones heard all the time are soft.
+const SOUND_VOLUME = { click: 0.35, tap: 0.6, buy: 0.7, merge_mid: 0.5, knock: 0.8 };
+
+// Plays a loaded sound file: louder or softer, higher or lower (rate), a little later.
+function playFile(ctx, name, rate = 1, delay = 0) {
+    const buffer = soundFiles[name];
+    if (!buffer) return false;
+    const src = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    src.buffer = buffer;
+    src.playbackRate.value = rate;
+    gain.gain.value = SOUND_VOLUME[name] ?? 1;
+    src.connect(gain).connect(ctx.destination);
+    src.start(ctx.currentTime + delay);
+    return true;
+}
+
+// A merge sounds like what's merging, a little higher each tier within its
+// size; mid-size merges add a sparkle and the big ones a jingle on top.
+function mergeSound(ctx, { chain, tier }) {
+    const own = `merge_${chain}`;
+    loadSound(ctx, own);
+    const base = soundFiles[own] ? own : 'merge';
+    const band = tier >= 7 ? 7 : tier >= 4 ? 4 : 0;
+    if (!playFile(ctx, base, 2 ** ((tier - band) / 12))) SOUNDS.merge(ctx, tier);
+    if (band === 4) playFile(ctx, 'merge_mid', 1, 0.05);
+    if (band === 7) playFile(ctx, 'merge_big', 1, 0.08);
+}
+
 function sfx(name, arg) {
     const ctx = audio();
     if (!ctx) return;
     if (name === 'fanfare' && arg === 'level') name = (ASSETS.sounds || {}).levelup ? 'levelup' : 'fanfare';
     loadSound(ctx, name);
     try {
-        const buffer = soundFiles[name];
-        if (buffer) {
-            const src = ctx.createBufferSource();
-            src.buffer = buffer;
-            if (name === 'merge' && typeof arg === 'number') src.playbackRate.value = 2 ** (Math.min(arg, 14) / 24);
-            src.connect(ctx.destination);
-            src.start();
-        } else if (SOUNDS[name]) SOUNDS[name](ctx, arg);
-        else SOUNDS.fanfare(ctx);
+        if (name === 'merge' && arg && typeof arg === 'object') return mergeSound(ctx, arg);
+        if (playFile(ctx, name)) return;
+        if (SOUNDS[name]) SOUNDS[name](ctx, arg);
     } catch (e) { /* sound is a nicety */ }
 }
+
+// Background music: one quiet loop, started by the first tap (browsers allow
+// no sound before one) and paused while the game is in the background.
+let musicEl = null;
+
+function syncMusic() {
+    if (!ASSETS.music) return;
+    const on = settings.music && document.visibilityState !== 'hidden' && audioUnlocked;
+    if (on && !musicEl) {
+        musicEl = new Audio(ASSETS.music);
+        musicEl.loop = true;
+        musicEl.volume = 0.35;
+    }
+    if (!musicEl) return;
+    if (on && musicEl.paused) musicEl.play().catch(() => { /* waits for the next tap */ });
+    else if (!on && !musicEl.paused) musicEl.pause();
+}
+
+let audioUnlocked = false;
+document.addEventListener('pointerdown', () => {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    audio();
+    syncMusic();
+}, true);
+document.addEventListener('visibilitychange', syncMusic);
+// Every button answers with a soft click.
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('button')) sfx('click'); }, true);
 
 function buzz(pattern) {
     if (!settings.vibrate || !navigator.vibrate) return;
@@ -2968,11 +3021,11 @@ function renderMap() {
 // ⚙️ Sound and vibration, on or off (saved).
 function openSettings() {
     const row = (key, label) => ({ label: `${label}: ${settings[key] ? 'On' : 'Off'}`, wide: true, primary: settings[key],
-        onClick: () => { settings[key] = !settings[key]; saveGame(); if (key === 'sound') sfx('coin'); else buzz(40); openSettings(); } });
+        onClick: () => { settings[key] = !settings[key]; saveGame(); if (key === 'sound') sfx('coin'); else if (key === 'music') syncMusic(); else buzz(40); openSettings(); } });
     showDialog({
         title: '⚙️ Settings',
-        body: '<p class="hint">Little sounds as you play, and a buzz on phones.</p>',
-        actions: [row('sound', '🔊 Sound'), row('vibrate', '📳 Vibration'), { label: 'Done' }],
+        body: '<p class="hint">Music, little sounds as you play, and a buzz on phones.</p>',
+        actions: [row('music', '🎵 Music'), row('sound', '🔊 Sound'), row('vibrate', '📳 Vibration'), { label: 'Done' }],
     });
 }
 
@@ -2999,6 +3052,7 @@ function buyDeed(id) {
     const area = AREAS[id];
     if (unlocks[id] || res.money < area.cost || quests.level < area.level) return;
     res.money -= area.cost;
+    sfx('buy');
     unlocks[id] = true;
     if (grids[id].filter(Boolean).length <= 1) grids[id] = clutterBoard();
     ensureToolboxes();
@@ -3916,6 +3970,7 @@ function buyFlashOffer(i) {
         return;
     } else {
         res.money -= o.price;
+        sfx('buy');
     }
     o.left--;
     sendToBoard(o.mode || deliveryBoard(), o.item);
@@ -3957,6 +4012,7 @@ function takeDeal(id) {
     if (deal.coins) {
         if (res.money < deal.coins) return toast(`You need 💵${deal.coins - res.money} more.`);
         res.money -= deal.coins;
+        sfx('buy');
     }
     shop.dealsTaken.push(id);
     sendToBoard(deliveryBoard(), deal.item);
@@ -3979,6 +4035,7 @@ function buyUpgrade() {
     const cost = maxTier * 100;
     if (res.money < cost) return;
     res.money -= cost;
+    sfx('buy');
     maxTier++;
     updateUI();
     initTown();
@@ -4505,6 +4562,7 @@ function buyInventorySlot() {
     const price = inventorySlotPrice();
     if (!price || res.money < price) return;
     res.money -= price;
+    sfx('buy');
     inventory.slots++;
     updateUI();
     toast(`🎒 You have ${inventory.slots} slots now.`, 'good');
@@ -4925,7 +4983,7 @@ function handleDragEnd(e) {
                 grids[mode][targetIndex] = sourceItem;
             }
             if (made) {
-                sfx('merge', made.type ? made.level * 2 : made.tier);
+                sfx('merge', made.type ? { chain: 'level', tier: made.level } : { chain, tier: made.tier });
                 buzz(12);
                 grids[mode][index] = null;
                 grids[mode][targetIndex] = made;
@@ -5265,6 +5323,7 @@ function loadGame() {
         if (save.settings && save.settings.unlimitedUntil) settings.unlimitedUntil = save.settings.unlimitedUntil;
         if (save.settings && save.settings.sound === false) settings.sound = false;
         if (save.settings && save.settings.vibrate === false) settings.vibrate = false;
+        if (save.settings && save.settings.music === false) settings.music = false;
         if (save.lastBoard && AREAS[save.lastBoard]) lastBoard = save.lastBoard;
         if (save.tickedAt) lastTickAt = save.tickedAt;
         Object.assign(unlocks, save.unlocks);
