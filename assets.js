@@ -273,6 +273,8 @@ const ASSETS = {
         tools: 'assets/producers/tools/tools.png', garden: 'assets/producers/tools/garden.png',
         wood: 'assets/producers/tools/wood.png', clean: 'assets/producers/tools/clean.png',
         fishing: 'assets/producers/tools/fishing.png', decor: 'assets/producers/tools/decor.png',
+        // Each land's third producer (not drawn yet: shown as its emoji).
+        wool: null, seeds: null, bakery: null, worms: null, boat: null, honey: null,
     },
 
     // Things inside the market.
@@ -568,6 +570,8 @@ const ASSETS = {
         fair_flowers: [],
         fair_fishing: [],
         fair_pumpkin: [],
+        // Each land's third chain (not drawn yet: shown as emoji), 00-07.
+        wool: [], seeds: [], bakery: [], worms: [], boat: [], honey: [],
         // Tool chains, cut from assets/raw/tools_<chain>.webp.
         tools: [
             'assets/items/tools/00.png',
