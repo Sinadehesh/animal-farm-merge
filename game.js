@@ -2359,7 +2359,7 @@ function showDialog({ art, artRound = false, title, body, actions, sheet = false
         const btn = document.createElement('button');
         btn.className = 'btn' + (action.primary ? ' btn-primary' : '') + (action.wide ? ' btn-wide' : '');
         if (action.icon) btn.innerHTML = `${action.icon} `;
-        btn.insertAdjacentHTML('beforeend', iconize(escapeText(action.label)));
+        btn.insertAdjacentHTML('beforeend', iconize(action.label));
         btn.disabled = !!action.disabled;
         btn.addEventListener('click', () => {
             closeDialog();
@@ -2380,7 +2380,7 @@ dialogEl.addEventListener('click', e => { if (e.target === dialogEl) closeDialog
 function toast(message, kind = '') {
     const el = document.createElement('div');
     el.className = 'toast ' + kind;
-    el.innerHTML = iconize(escapeText(message));
+    el.innerHTML = iconize(message); // the game's own words, with item pictures and icons
     toastLayer.appendChild(el);
     while (toastLayer.children.length > 3) toastLayer.firstChild.remove();
     setTimeout(() => el.remove(), 2600);
@@ -3843,9 +3843,9 @@ function itemIconFor(mode, item) {
     return art ? `<img class="inline-item" src="${art}" alt="">` : `<span class="inline-item">${itemEmojiFor(mode, item)}</span>`;
 }
 
-// Picture and name as text, for toasts and buttons: "🧩 Feed Pail".
+// Picture and name, for toasts, buttons and rewards: its art (or emoji) and "Feed Pail".
 function itemLabel(mode, item) {
-    return `${itemEmojiFor(mode, item)} ${boardItemName(mode, item)}`;
+    return `${itemIconFor(mode, item)} ${boardItemName(mode, item)}`;
 }
 
 // Things that merge by level: the top level they reach, or 0 if this one can't
