@@ -1660,11 +1660,31 @@ function fixJobs(land) {
     return landTasks(land).filter(t => t.look);
 }
 
-// Into a land's place (the town square for the town), and with a job, fix it there.
+// Into a land's place (the town square for the town). With a job: to its spot,
+// lit up, and up comes its card. Jobs are only ever fixed there, by hand.
 function goFix(land, jobId) {
     if (land === 'town') goTo('town');
     else { fixLand = land; goTo('fix'); }
-    if (jobId) setTimeout(() => fixJob(jobId), 400);
+    if (jobId) pointAtJob(TASKS.find(t => t.id === jobId));
+}
+
+// Story bubbles wait while you're being taken to a job, so its card isn't lost.
+let storyHoldUntil = 0;
+
+function pointAtJob(task) {
+    const spot = document.querySelector(`#scene-${task.land === 'town' ? 'town' : 'fix'} [data-job="${task.id}"]`);
+    if (spot) {
+        spot.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
+        spot.classList.add('spotlight');
+    }
+    storyHoldUntil = Date.now() + 1500;
+    // The card comes up once nothing else is showing (a bubble already open goes first).
+    const card = (tries = 0) => {
+        if (taskDone(task) || tries > 60) return;
+        if (dialogEl.hidden && !document.body.classList.contains('busy')) openTaskCard(task); // after any unlock animation
+        else setTimeout(() => card(tries + 1), 400);
+    };
+    setTimeout(card, 700);
 }
 
 // Where an unfinished job can be worked on: the board its missing items come
@@ -1943,7 +1963,7 @@ function openTaskCard(task) {
                <div class="sheet-cols"><div><h4>Items needed</h4><div class="tiles">${needs}</div></div>
                <div><h4>Rewards</h4><div class="tiles">${pays}</div></div></div>`,
         actions: [ready
-            ? { label: hasSpot(task) ? 'Fix it!' : 'Do it!', primary: true, wide: true,
+            ? { label: !hasSpot(task) ? 'Do it!' : here ? 'Fix it!' : `Go to ${task.zone ? ZONE[task.zone].name : landName(task.land)}`, primary: true, wide: true,
                 onClick: () => (!hasSpot(task) ? completeTask(task.id) : here ? fixJob(task.id) : goFix(task.land, task.id)) }
             : { label: 'Go', primary: true, wide: true, onClick: () => goWork(task) }],
     });
@@ -1952,13 +1972,7 @@ function openTaskCard(task) {
 // 📋's Show: off to the job's spot, which lights up, then up comes its card.
 function showTask(task) {
     if (!hasSpot(task)) return goWork(task); // buying a land: the Market
-    goFix(task.land);
-    const spot = document.querySelector(`#scene-${task.land === 'town' ? 'town' : 'fix'} [data-job="${task.id}"]`);
-    if (spot) {
-        spot.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        spot.classList.add('spotlight');
-    }
-    setTimeout(() => openTaskCard(task), 700);
+    goFix(task.land, task.id);
 }
 
 // Round buttons in the corners, as in Merge Mansion: the board bottom left,
@@ -1992,8 +2006,8 @@ function callToFix(task) {
     const wave = (ASSETS.wave || {})[npc.id];
     card.innerHTML = `<img class="${wave ? 'wave' : 'face'}" src="${wave || npcPicture(npc)}" alt="${npc.name}">
                       <span><b>${task.name}</b><small>“${hasSpot(task) ? 'Let\'s fix it!' : 'Ready!'}”</small></span>
-                      <button class="btn btn-primary">${uiIcon('hammer', '🔨')} ${hasSpot(task) ? 'Fix it!' : 'Do it!'}</button><button class="fix-call-x">✕</button>`;
-    card.querySelector('.btn').addEventListener('click', () => { card.remove(); goFix(task.land, task.id); });
+                      <button class="btn btn-primary">${uiIcon('hammer', '🔨')} ${hasSpot(task) ? 'Go fix' : 'Do it!'}</button><button class="fix-call-x">✕</button>`;
+    card.querySelector('.btn').addEventListener('click', () => { card.remove(); hasSpot(task) ? goFix(task.land, task.id) : completeTask(task.id); });
     card.querySelector('.fix-call-x').addEventListener('click', () => card.remove());
     stageEl.appendChild(card);
     setTimeout(() => card.remove(), 8000);
@@ -2150,13 +2164,19 @@ function unlockNewZones(land, world) {
         document.body.classList.remove('busy');
         el.classList.remove('unlocking', 'opening');
         el.querySelectorAll('.zone-clouds, .zone-key').forEach(c => c.remove());
-        showDialog({
-            art: ((ASSETS.stages || {})[zone.id] || [])[2] || (ASSETS.areas || {})[zone.id] || ASSETS.buildings[zone.land],
-            title: `✨ ${zone.name}`,
-            body: `<p>New area! <b>${zoneTasks(zone.id).length}</b> things to fix.</p>`,
-            actions: [{ label: 'Let\'s go!', primary: true }],
-        });
+        newAreaCard(zone);
     }, 2000);
+}
+
+// The new area's card, once nothing else is showing (it never covers a job's card).
+function newAreaCard(zone, tries = 0) {
+    if (!dialogEl.hidden || fixing) return tries < 120 && setTimeout(() => newAreaCard(zone, tries + 1), 500);
+    showDialog({
+        art: ((ASSETS.stages || {})[zone.id] || [])[2] || (ASSETS.areas || {})[zone.id] || ASSETS.buildings[zone.land],
+        title: `✨ ${zone.name}`,
+        body: `<p>New area! <b>${zoneTasks(zone.id).length}</b> things to fix.</p>`,
+        actions: [{ label: 'Let\'s go!', primary: true }],
+    });
 }
 
 // --- STORY ---
@@ -2236,7 +2256,7 @@ function playChapter(i) {
 // Every second: the first daily gift after the tutorial, then (on the map, with
 // no dialog open) a new day's bubble or the ending.
 function syncStory() {
-    if (!tutorial.done || !dialogEl.hidden) return;
+    if (!tutorial.done || !dialogEl.hidden || Date.now() < storyHoldUntil) return;
     if (giftAfterTutorial) {
         giftAfterTutorial = false;
         if (dailyAvailable()) return openDailyGift();
@@ -2430,7 +2450,7 @@ function openTaskLog() {
                         <b>${task.name}${task.story ? ' 📖' : ''}</b> <small>${landName(task.land)} ${done}/${landTasks(task.land).length}</small>
                         <div class="needs">${task.needs.map(n => needLabel(task, n)).join('')}</div>
                     </div>
-                    <button class="task-go" data-id="${task.id}" data-can="${ready ? 1 : ''}">${ready ? (hasSpot(task) ? 'Fix' : 'Do it') : hasSpot(task) ? 'Show' : 'Go'}<br>+⭐${task.xp}</button>
+                    <button class="task-go" data-id="${task.id}" data-can="${ready ? 1 : ''}">${ready ? (hasSpot(task) ? 'Go fix' : 'Do it') : hasSpot(task) ? 'Show' : 'Go'}<br>+⭐${task.xp}</button>
                 </div>`;
     }).join('');
     showDialog({
