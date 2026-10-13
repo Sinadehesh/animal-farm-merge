@@ -2228,6 +2228,16 @@ const CHAPTERS = [
 
 const STORY_END = [['mayor', 'You saved us!', 'Yay!']];
 
+// A little scene when a whole land is back, played after its reward.
+const LAND_STORY = {
+    barn: [['robin', 'The barn is like new!'], ['marnie', 'The animals love it!'], ['mayor', 'One down. On to the fields!']],
+    farm: [['marnie', 'Look at those rows!'], ['mayor', 'Sunnyvale will eat well!']],
+    hay: [['marnie', 'The windmill turns!'], ['robin', 'Fresh hay for everyone!']],
+    fert: [['sandy', 'Fairy lights and mushrooms!'], ['marnie', 'Best soil in the valley.']],
+    aqua: [['willy', 'Fish are jumping again!'], ['willy', 'Row with me sometime?']],
+    flower: [['sandy', 'Every flower is blooming!'], ['mayor', 'Sunnyvale has never looked lovelier.']],
+};
+
 // Story beats from jobs just done, played once nothing else is showing.
 const storyQueue = [];
 
@@ -2419,7 +2429,10 @@ function completeTask(id, quiet = false) {
     const zoneFinished = zone && zoneDone(zone) && !restored; // a land's last area pays the land's reward
     const nextZone = zone && landZones(zone.land)[landZones(zone.land).indexOf(zone) + 1];
     if (task.reward) grantReward(task.reward, '🔨');
-    if (restored) grantReward(LAND_REWARD, '✨');
+    if (restored) {
+        grantReward(LAND_REWARD, '✨');
+        if (LAND_STORY[task.land]) storyQueue.push(LAND_STORY[task.land]);
+    }
     if (zoneFinished) grantReward(ZONE_REWARD, '✨');
     if (restored || zoneFinished) celebrate();
     else sfx('taskdone');
@@ -3077,13 +3090,20 @@ const npcs = [
       home: 'flowershop', building: { x: 63, y: 58, w: 36 }, spot: { x: 72, y: 79, w: 17 } },
 ];
 
+// Orders grow with you: from level 4 the smallest asks creep up a tier every
+// three levels, and the bigger ones (paying double a tier) come up a bit more.
+function orderTier() {
+    const low = Math.min(maxTier, 1 + Math.floor(Math.max(0, quests.level - 3) / 3));
+    return low + Math.floor(Math.random() ** 0.8 * (maxTier - low + 1));
+}
+
 function generateRequestFor(npc) {
     let availableModes = npc.pref.filter(m => unlocks[m]);
     if (availableModes.length === 0) {
         availableModes = Object.keys(unlocks).filter(k => unlocks[k]);
     }
     const mode = availableModes[Math.floor(Math.random() * availableModes.length)];
-    const targetTier = Math.floor(Math.random() * maxTier) + 1;
+    const targetTier = orderTier();
 
     npc.request = {
         mode: mode,
