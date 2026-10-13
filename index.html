@@ -114,6 +114,7 @@
             width: var(--stage-w);
             height: var(--stage-h);
             overflow: hidden;
+            overflow: clip; /* never scrolled sideways by something poking out */
             background: #7cc35b;
             container-type: inline-size; /* lets children size text with cqw */
         }
@@ -569,6 +570,7 @@
         .ui-slot { font-style: normal; }
         .ui-icon { height: 1.25em; width: auto; vertical-align: -0.28em; pointer-events: none; }
         .side-btn .ui-icon { height: 8.4cqw; vertical-align: middle; }
+        .side-btn small .ui-icon { height: 1.1em; vertical-align: -0.2em; }
         .inv-btn .ui-icon { height: 5.6cqw; }
         .spot span > .ui-icon { display: inline; width: auto; height: 1.2em; filter: none; }
         .order-who .hammer .ui-icon { height: 7cqw; }
@@ -1482,7 +1484,7 @@
         .order-tile.ready { background: #e3fbdf; border-color: #2e8c3c; animation: bob 1.2s ease-in-out infinite; }
         .order-check { position: absolute; right: -1.5cqw; top: -1.5cqw; display: grid; place-items: center; width: 6cqw; height: 6cqw; background: #2e8c3c; color: #fff; border: 2px solid #fff; border-radius: 50%; font-weight: 900; font-size: 3.6cqw; }
         .order-gift { position: absolute; left: -1.5cqw; top: -1.5cqw; font-size: 4.5cqw; }
-        .emo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+        .emo { display: inline-block; width: 0; height: 0; overflow: hidden; vertical-align: top; } /* the emoji behind an icon: there for readers, takes no room */
         .shop-strip { flex-wrap: wrap; row-gap: 2.4cqw; }
         .order-tile .price-tag { right: -2cqw; top: auto; bottom: 6cqw; }
         .order-tile.deed { background: #fdf3dc; }
@@ -1537,7 +1539,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js"></script>
-    <script src="game.js"></script>
+    <script src="assets.js?v=202610131158"></script>
+    <script src="game.js?v=202610131158"></script>
 </body>
 </html>

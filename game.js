@@ -2184,8 +2184,8 @@ function cheer(task, npc) {
     const el = document.createElement('div');
     el.className = 'fix-cheer';
     const happy = (ASSETS.cheer || {})[npc.id];
-    el.innerHTML = `<img class="${happy ? 'happy' : 'face'}" src="${happy || npcPicture(npc)}" alt=""><span><b>“${task.line}”</b>
-                    <small>+${uiIcon('star', '⭐')}${task.xp}${task.reward ? ` · ${rewardText(task.reward)}` : ''}</small></span>`;
+    el.innerHTML = iconize(`<img class="${happy ? 'happy' : 'face'}" src="${happy || npcPicture(npc)}" alt=""><span><b>“${task.line}”</b>
+                    <small>+${uiIcon('star', '⭐')}${task.xp}${task.reward ? ` · ${rewardText(task.reward)}` : ''}</small></span>`);
     stageEl.appendChild(el);
     setTimeout(() => el.remove(), 2600);
 }
@@ -2564,9 +2564,9 @@ function renderMap() {
         const ribbon = document.createElement('button');
         ribbon.className = 'fair-ribbon' + (fairOpen() ? ' open' : '');
         ribbon.id = 'btn-fair';
-        ribbon.innerHTML = fairOpen()
+        ribbon.innerHTML = iconize(fairOpen()
             ? `${fairTheme().emoji} ${fairTheme().name} <small>${uiIcon('trophy', '🏆')} ${ordinal(fairRank())} · <span data-ready="${fairEndsAt()}">${formatDuration(fairEndsAt() - Date.now())}</span></small>`
-            : `🎪 Next Fair <small>in ${formatDuration(dayStart(nextFairDay()) - Date.now())}</small>`;
+            : `🎪 Next Fair <small>in ${formatDuration(dayStart(nextFairDay()) - Date.now())}</small>`);
         ribbon.addEventListener('click', () => (fairOpen() ? goTo('fair') : openFairInfo()));
         scene.appendChild(ribbon);
     }
@@ -2574,12 +2574,12 @@ function renderMap() {
     // Daily gift and jobs, always one tap away on the map.
     const side = document.createElement('div');
     side.className = 'side-buttons';
-    side.innerHTML = `
+    side.innerHTML = iconize(`
         <button class="side-btn" id="btn-gift">${uiIcon('gift', '🎁')}<small>Gift</small>${dailyAvailable() ? '<span class="badge">!</span>' : ''}</button>
         <button class="side-btn" id="btn-pass">${uiIcon('pass', '🎟️')}<small>Pass</small>${passClaimable() ? `<span class="badge">${passClaimable()}</span>` : ''}</button>
         <button class="side-btn" id="btn-daily">${uiIcon('daily', '📅')}<small>Daily</small>${dailyClaimable() > 0 ? '<span class="badge">!</span>' : ''}</button>
         <button class="side-btn" id="btn-jar">${uiIcon('jar', '🫙')}<small>💎${shop.jar}</small>${jarReady() ? '<span class="badge">!</span>' : ''}</button>
-        ${activeOffers().length ? `<button class="side-btn offer-btn" id="btn-offer">${uiIcon('offer', '🔥')}<small data-ready="${shop.offers[activeOffers()[0].id].until}">${formatDuration(shop.offers[activeOffers()[0].id].until - Date.now())}</small>${activeOffers().length > 1 ? `<span class="badge">${activeOffers().length}</span>` : ''}</button>` : ''}`;
+        ${activeOffers().length ? `<button class="side-btn offer-btn" id="btn-offer">${uiIcon('offer', '🔥')}<small data-ready="${shop.offers[activeOffers()[0].id].until}">${formatDuration(shop.offers[activeOffers()[0].id].until - Date.now())}</small>${activeOffers().length > 1 ? `<span class="badge">${activeOffers().length}</span>` : ''}</button>` : ''}`);
     side.querySelector('#btn-gift').addEventListener('click', openDailyGift);
     side.querySelector('#btn-pass').addEventListener('click', openPass);
     side.querySelector('#btn-daily').addEventListener('click', openDailyGoals);
@@ -2857,9 +2857,9 @@ function renderMarket() {
     // Flash Sale and Daily Deals, as in Merge Mansion's shop.
     const side = document.createElement('div');
     side.className = 'side-buttons';
-    side.innerHTML = `
+    side.innerHTML = iconize(`
         <button class="side-btn" id="btn-flash">${uiIcon('sale', '🏷️')}<small>Flash Sale</small></button>
-        <button class="side-btn" id="btn-deals">${uiIcon('gift', '🎁')}<small>Daily Deals</small>${dealsWaiting() ? '<span class="badge">!</span>' : ''}</button>`;
+        <button class="side-btn" id="btn-deals">${uiIcon('gift', '🎁')}<small>Daily Deals</small>${dealsWaiting() ? '<span class="badge">!</span>' : ''}</button>`);
     side.querySelector('#btn-flash').addEventListener('click', openFlashSale);
     side.querySelector('#btn-deals').addEventListener('click', openDailyDeals);
     scene.appendChild(side);
@@ -3118,13 +3118,13 @@ function renderFairHeader(el) {
     const next = FAIR_MILESTONES[fair.milestones];
     const prev = fair.milestones ? FAIR_MILESTONES[fair.milestones - 1][0] : 0;
     const width = next ? (100 * (fair.points - prev)) / (next[0] - prev) : 100;
-    el.innerHTML = `<button class="fair-header">
+    el.innerHTML = iconize(`<button class="fair-header">
         <span class="fair-top"><b>${fairTheme().emoji} ${fairTheme().name}</b>
             <span>⏳ <span data-ready="${fairEndsAt()}">${formatDuration(fairEndsAt() - Date.now())}</span></span>
             <span class="fair-rank">${uiIcon('trophy', '🏆')} ${ordinal(fairRank())}</span></span>
         <span class="quest-bar xp"><i style="width:${Math.min(100, width)}%"></i></span>
         <span class="fair-next">${fair.points} pts${next ? ` · next at ${next[0]}: ${rewardText(next[1])}` : ' · every milestone done!'}${fairBoosted() ? ' · ⚡2× points' : ''}</span>
-    </button>`;
+    </button>`);
     el.querySelector('.fair-header').addEventListener('click', openFairInfo);
 }
 
@@ -3751,10 +3751,10 @@ function renderOrders(mode, el) {
         const p = needProgress(task, need);
         const card = document.createElement('button');
         card.className = 'order-card task-card' + (ready ? ' ready' : '');
-        card.innerHTML = `
+        card.innerHTML = iconize(`
             <span class="order-who"><span class="hammer">${uiIcon('hammer', '🔨')}</span><span class="want">${need.item ? itemIcon(need.item, need.tier) : need.stat ? TASK_STATS[need.stat].emoji : '🏡'}</span></span>
             <span class="order-pay">${p.have}/${p.of} · ⭐${task.xp}</span>
-            ${ready ? '<span class="order-go">Do it</span>' : `<span class="order-need">${task.name}</span>`}`;
+            ${ready ? '<span class="order-go">Do it</span>' : `<span class="order-need">${task.name}</span>`}`);
         card.addEventListener('click', () => (ready && hasSpot(task) ? goFix(task.land, task.id) : openTaskCard(task)));
         el.appendChild(card);
     });
@@ -3764,10 +3764,10 @@ function renderOrders(mode, el) {
         const ready = canFulfill(npc);
         const card = document.createElement('button');
         card.className = 'order-card' + (ready ? ' ready' : '');
-        card.innerHTML = `
+        card.innerHTML = iconize(`
             <span class="order-who"><img class="face" src="${npcPicture(npc)}" alt="${npc.name}"><span class="want">${itemIcon(mode, r.tier)}</span></span>
             <span class="order-pay">💵${r.rewardMoney} ⭐${r.rewardXp}${r.rewardProducer ? ' 🎁' : ''}</span>
-            ${ready ? '<span class="order-go">Deliver</span>' : `<span class="order-need">${itemName(mode, r.tier)}</span>`}`;
+            ${ready ? '<span class="order-go">Deliver</span>' : `<span class="order-need">${itemName(mode, r.tier)}</span>`}`);
         card.addEventListener('click', () => (ready ? deliver(npc) : openNpc(npc)));
         el.appendChild(card);
     });
@@ -3779,10 +3779,10 @@ function renderOrders(mode, el) {
     Object.entries(elsewhere).forEach(([other, count]) => {
         const card = document.createElement('button');
         card.className = 'order-card other';
-        card.innerHTML = `
+        card.innerHTML = iconize(`
             <span class="order-who"><img class="building" src="${ASSETS.buildings[other]}" alt=""></span>
             <span class="order-pay">${count} order${count > 1 ? 's' : ''}</span>
-            <span class="order-need">${AREAS[other].name} →</span>`;
+            <span class="order-need">${AREAS[other].name} →</span>`);
         card.addEventListener('click', () => goTo(other));
         el.appendChild(card);
     });
@@ -4224,7 +4224,7 @@ function renderInfoBar(mode) {
         html += icon + text(`${itemName(mode, item.tier)} · tier ${item.tier}`, tip) + chainBtn + button('sell-item-btn', `Sell<br>💵${sellPrice(mode, item)}`);
     }
 
-    el.innerHTML = html;
+    el.innerHTML = iconize(html);
     const index = selected && selected.index;
     const on = (sel, fn) => { const btn = el.querySelector(sel); if (btn) btn.addEventListener('click', fn); };
     on('.inv-btn', () => openInventory(mode));
