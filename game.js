@@ -1333,7 +1333,7 @@ const TASKS = [
     // Windmill: torn sails, a door off its hinges, sacks everywhere.
     { id: 'hay20', land: 'hay', zone: 'windmill', at: [35, 58], look: ['🎒', ''], story: [['marnie', 'The old windmill!']],
       name: 'Pick up the spilled sacks', who: 'marnie', xp: 10, needs: [{ item: 'hay', tier: 2, n: 3 }], line: 'All picked up!' },
-    { id: 'hay21', land: 'hay', zone: 'windmill', at: [66, 54], look: ['🌿', ''],
+    { id: 'hay21', land: 'hay', zone: 'windmill', at: [72, 44], look: ['🌿', ''],
       name: 'Pull the weeds by the walls', who: 'marnie', xp: 10, needs: [{ item: 'garden', tier: 1, n: 2 }], line: 'Weeds gone!' },
     { id: 'hay22', land: 'hay', zone: 'windmill', at: [40, 51], look: ['🚪', '🚪'], after: ['hay20'],
       name: 'Hang the door back on', who: 'robin', xp: 11, needs: [{ item: 'tools', tier: 3, n: 1 }, { item: 'wood', tier: 3, n: 1 }], line: 'Creak, click!' },
@@ -1810,6 +1810,13 @@ function addJobChips(tasks, el) {
         addTag(spot, 'task-pin' + (ready ? ' ready' : ''), `<b class="pin-name">${task.name}</b>${needPins(task)}`);
         spot.addEventListener('click', () => tapFix(task));
         el.appendChild(spot);
+    });
+    // Two bubbles close together would overlap: the lower one hangs below its ring.
+    const placed = [...el.querySelectorAll(':scope > .fix-spot.chip')].map(spot => ({ spot, x: parseFloat(spot.style.left), y: parseFloat(spot.style.top) }));
+    placed.forEach(a => {
+        if (placed.some(b => b !== a && b.y <= a.y && Math.abs(b.y - a.y) < 10 && Math.abs(b.x - a.x) < 48 && !(b.y === a.y && b.spot.compareDocumentPosition(a.spot) & Node.DOCUMENT_POSITION_PRECEDING))) {
+            a.spot.classList.add('pin-below');
+        }
     });
 }
 

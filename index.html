@@ -1520,6 +1520,9 @@
         .scroll-hint { position: absolute; left: 50%; bottom: 5cqw; z-index: 120; translate: -50% 0; display: grid; place-items: center; width: 10cqw; height: 10cqw; padding-bottom: 1.5cqw; background: rgba(255, 248, 231, 0.92); border: 2px solid var(--ink); border-radius: 50%; font-size: 7cqw; font-weight: 900; line-height: 1; pointer-events: none; animation: hint-bob 1.2s ease-in-out infinite; }
         .scroll-hint[hidden] { display: none; }
         @keyframes hint-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1.5cqw); } }
+        .fix-spot.chip.pin-below .task-pin { bottom: auto; top: 100%; margin: 2cqw 0 0; }
+        .fix-spot.chip.pin-below .task-pin::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: var(--ink); }
+        .fix-spot.chip.pin-below .task-pin.ready::after { border-bottom-color: #2e8c3c; }
     </style>
 </head>
 <body>
@@ -1560,7 +1563,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610131247"></script>
-    <script src="game.js?v=202610131247"></script>
+    <script src="assets.js?v=202610131250"></script>
+    <script src="game.js?v=202610131250"></script>
 </body>
 </html>
