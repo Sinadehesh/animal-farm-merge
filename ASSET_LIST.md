@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**513 assets:** 389 done ✅, 8 placeholders 🟡, 116 missing ⬜.
+**513 assets:** 392 done ✅, 8 placeholders 🟡, 113 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -429,16 +429,16 @@ swaps to the next painting as its jobs get done. Raw sheets are kept in `assets/
 | ✅ | Farm map | `assets/stages/map/0-2.jpg` | swaps by thirds of all jobs |
 | ✅ | Town square | `assets/stages/town/0-2.jpg` | fog, rebuilding, restored |
 | ✅ | Barnyard | `assets/stages/barnyard/0-2.jpg` |  |
-| ✅ | Hen House | `assets/stages/henhouse/0-2.jpg` | came out as three wide rows; works, but a tall version would look better |
-| ⬜ | Big Red Barn | `assets/stages/bigbarn/0-2.jpg` |  |
+| ✅ | Hen House | `assets/stages/henhouse/0-2.jpg` |  |
+| ⬜ | Big Red Barn | `assets/stages/bigbarn/0-2.jpg` | needs a painting (the inside of the barn) |
 | ✅ | Field Gate | `assets/stages/fieldgate/0-2.jpg` |  |
 | ✅ | Strawberry Rows | `assets/stages/berryrows/0-2.jpg` |  |
 | ✅ | Orchard | `assets/stages/orchard/0-2.jpg` |  |
-| ⬜ | Meadow | `assets/stages/meadow/0-2.jpg` |  |
-| ⬜ | Stables | `assets/stages/stables/0-2.jpg` |  |
+| ⬜ | Meadow | `assets/stages/meadow/0-2.jpg` | needs a painting |
+| ✅ | Stables | `assets/stages/stables/0-2.jpg` |  |
 | ✅ | Windmill | `assets/stages/windmill/0-2.jpg` |  |
 | ✅ | Leaf Piles | `assets/stages/leafpiles/0-2.jpg` |  |
-| ⬜ | Compost Bins | `assets/stages/compostbins/0-2.jpg` | first try came out flat and not as three matching panels: needs a new one |
+| ✅ | Compost Bins | `assets/stages/compostbins/0-2.jpg` |  |
 | ✅ | Mushroom Corner | `assets/stages/mushrooms/0-2.jpg` |  |
 | ✅ | Muddy Shore | `assets/stages/muddyshore/0-2.jpg` |  |
 | ✅ | Lily Pond | `assets/stages/lilypond/0-2.jpg` |  |
@@ -446,7 +446,7 @@ swaps to the next painting as its jobs get done. Raw sheets are kept in `assets/
 | ✅ | Garden Gate | `assets/stages/gardengate/0-2.jpg` |  |
 | ✅ | Rose Arch | `assets/stages/rosearch/0-2.jpg` |  |
 | ✅ | Greenhouse | `assets/stages/greenhouse/0-2.jpg` |  |
-| ⬜ | Market | one 9:16 painting with the shopkeeper | not made yet |
+| ✅ | Market | `assets/stages/market/0.jpg` | one painting with the shopkeeper; deeds are cards below it |
 
 ## 12. Areas (Merge Mansion style places)
 

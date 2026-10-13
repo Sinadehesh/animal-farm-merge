@@ -1196,7 +1196,7 @@
             position: absolute;
             left: 50%;
             bottom: 100%;
-            translate: -50% 0;
+            transform: translateX(-50%); /* not translate: the bob animates that */
             z-index: 2;
             display: flex;
             gap: 1cqw;
@@ -1439,6 +1439,8 @@
         @keyframes ring { 0%, 100% { scale: 0.88; } 50% { scale: 1.08; } }
         @keyframes ring-out { to { scale: 2.6; opacity: 0; } }
         .fix-spot.chip .task-pin { flex-wrap: wrap; justify-content: center; width: max-content; max-width: 42cqw; }
+        .fix-spot.chip .task-pin { transform: translateX(calc(-1 * var(--lean, 50%))); }
+        .fix-spot.chip .task-pin::after { left: var(--lean, 50%); }
         .pin-name { flex-basis: 100%; text-align: center; font-size: max(10px, 2.9cqw); font-weight: 900; line-height: 1.15; white-space: normal; color: var(--ink); }
         .fix-spot.chip.spotlight .fix-face { animation: ring 0.6s ease-in-out infinite; }
         /* A place's label on the map or square: icon, name, and what waits there. */
@@ -1468,6 +1470,15 @@
         .place-label.person-label .bubble { font-size: 6cqw; }
         .place-label.person-label .bubble img, .place-label .bubble .ui-icon { width: 7cqw; height: 7cqw; }
         .place-label .bubble.ready { background: #e3fbdf; border-color: #2e8c3c; }
+        #scene-market:has(.page-scroll) { background: #d19a57; }
+        #scene-market .page-scroll .page-frame { margin-bottom: 0; }
+        /* The land deeds, as cards on the shop floor under the painting. */
+        .deed-list { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5cqw; padding: 3cqw 4cqw 30cqw; }
+        .deed-list h3 { grid-column: 1 / -1; margin: 0; text-align: center; font-size: max(13px, 4.4cqw); color: #fff8e7; text-shadow: 0 2px 0 rgba(80, 45, 15, 0.6); }
+        .spot.deed-card { position: relative; display: flex; align-items: center; gap: 1.5cqw; padding: 1.5cqw; background: var(--paper); border: 2px solid var(--ink); border-radius: 14px; box-shadow: 0 3px 0 var(--ink); }
+        .deed-card .label-icon { display: grid; place-items: center; flex: none; width: 9cqw; height: 9cqw; font-size: 6cqw; background: #fff3c8; border-radius: 50%; }
+        .deed-card .spot-label { position: static; transform: none; flex: 1; text-align: left; white-space: normal; border: 0; box-shadow: none; padding: 0; background: none; font-size: max(11px, 3.2cqw); }
+        .deed-card .price-tag, .place-label .price-tag { position: static; transform: none; margin-left: auto; }
     </style>
 </head>
 <body>

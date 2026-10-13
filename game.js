@@ -1143,25 +1143,25 @@ const TASKS = [
     { id: 'barn11', land: 'barn', zone: 'barnyard', at: [55, 89], look: ['', 'tulips'], after: ['barn9', 'barn10'], reward: { chest: 'brown' },
       name: 'Plant tulips', who: 'marnie', xp: 4, needs: [{ item: 'barn', tier: 3, n: 1 }, { item: 'barn', tier: 1, n: 2 }], line: 'Pretty!' },
     // Hen House (day 2)
-    { id: 'hen1', land: 'barn', zone: 'henhouse', at: [52, 88], look: ['straw_mess', ''],
+    { id: 'hen1', land: 'barn', zone: 'henhouse', at: [50, 66], look: ['straw_mess', ''],
       name: 'Sweep up the old straw', who: 'marnie', xp: 2, needs: [{ stat: 'webs', n: 3 }], line: 'So clean!' },
-    { id: 'hen2', land: 'barn', zone: 'henhouse', at: [30, 78], look: ['sacks', ''],
+    { id: 'hen2', land: 'barn', zone: 'henhouse', at: [84, 50], look: ['sacks', ''],
       name: 'Clear out the old sacks', who: 'mayor', xp: 2, needs: [{ stat: 'sold', n: 2 }], line: 'Bye, sacks!' },
-    { id: 'hen3', land: 'barn', zone: 'henhouse', at: [52, 66], look: ['nest_empty', 'nest_chicks'], after: ['hen1'],
+    { id: 'hen3', land: 'barn', zone: 'henhouse', at: [50, 44], look: ['nest_empty', 'nest_chicks'], after: ['hen1'],
       name: 'Fix the nest', who: 'marnie', xp: 3, needs: [{ item: 'barn', tier: 2, n: 2 }], line: 'So cute!' },
-    { id: 'hen4', land: 'barn', zone: 'henhouse', at: [82, 58], look: ['wire_torn', 'wire_fixed'], after: ['hen2'],
+    { id: 'hen4', land: 'barn', zone: 'henhouse', at: [18, 40], look: ['wire_torn', 'wire_fixed'], after: ['hen2'],
       name: 'Patch the chicken wire', who: 'robin', xp: 3, needs: [{ item: 'tools', tier: 3, n: 2 }], line: 'No foxes!' },
-    { id: 'hen5', land: 'barn', zone: 'henhouse', at: [45, 82], look: ['trough_empty', 'trough_full'], after: ['hen1'],
+    { id: 'hen5', land: 'barn', zone: 'henhouse', at: [20, 60], look: ['trough_empty', 'trough_full'], after: ['hen1'],
       name: 'Fill the water trough', who: 'marnie', xp: 3, needs: [{ item: 'barn', tier: 1, n: 3 }], line: 'Splash!' },
-    { id: 'hen6', land: 'barn', zone: 'henhouse', at: [62, 45], look: ['perch_broken', 'hen_perch'], after: ['hen3'],
+    { id: 'hen6', land: 'barn', zone: 'henhouse', at: [62, 30], look: ['perch_broken', 'hen_perch'], after: ['hen3'],
       name: 'Fix the perch', who: 'robin', xp: 4, needs: [{ item: 'tools', tier: 4, n: 1 }], line: 'Perfect!' },
-    { id: 'hen7', land: 'barn', zone: 'henhouse', at: [38, 64], look: ['feeder_rusty', 'feeder'], after: ['hen4', 'hen5'],
+    { id: 'hen7', land: 'barn', zone: 'henhouse', at: [25, 70], look: ['feeder_rusty', 'feeder'], after: ['hen4', 'hen5'],
       name: 'Fix the feeder', who: 'marnie', xp: 4, needs: [{ item: 'barn', tier: 3, n: 1 }, { item: 'tools', tier: 2, n: 1 }], line: 'Yum!' },
-    { id: 'hen8', land: 'barn', zone: 'henhouse', at: [66, 76], look: ['basket_empty', 'basket_eggs'], after: ['hen6'], reward: { chest: 'brown' },
+    { id: 'hen8', land: 'barn', zone: 'henhouse', at: [86, 73], look: ['basket_empty', 'basket_eggs'], after: ['hen6'], reward: { chest: 'brown' },
       name: 'Fill the egg basket', who: 'marnie', xp: 4, needs: [{ item: 'barn', tier: 1, n: 4 }], line: 'Eggs! Yay!' },
-    { id: 'hen9', land: 'barn', zone: 'henhouse', at: [20, 72], look: ['', 'coop'], after: ['hen7'],
+    { id: 'hen9', land: 'barn', zone: 'henhouse', at: [70, 86], look: ['', 'coop'], after: ['hen7'],
       name: 'Build a little coop', who: 'robin', xp: 5, needs: [{ item: 'tools', tier: 4, n: 1 }, { item: 'tools', tier: 1, n: 2 }], line: 'A new home!' },
-    { id: 'hen10', land: 'barn', zone: 'henhouse', at: [90, 86], look: ['', 'nestbox'], after: ['hen8', 'hen9'], reward: { chest: 'blue' },
+    { id: 'hen10', land: 'barn', zone: 'henhouse', at: [32, 86], look: ['', 'nestbox'], after: ['hen8', 'hen9'], reward: { chest: 'blue' },
       name: 'Make a nest box', who: 'marnie', xp: 6, needs: [{ item: 'barn', tier: 4, n: 1 }, { item: 'tools', tier: 5, n: 1 }], line: 'The hens are back!' },
     // Big Red Barn (day 2)
     { id: 'big1', land: 'barn', zone: 'bigbarn', at: [50, 44], look: ['stall_broken', 'stall_cow'],
@@ -1244,9 +1244,9 @@ const TASKS = [
       line: 'Fresh straw!' },
     { id: 'hay3', land: 'hay', zone: 'meadow', look: ['🍂', '🌾'], after: ['hay1'], name: 'Tie the first bundles', who: 'marnie', xp: 6, needs: [{ item: 'hay', tier: 2, n: 2 }],
       line: 'Neat bundles!' },
-    { id: 'hay4', land: 'hay', zone: 'stables', look: ['🌾', '🟫'], after: ['hay3'], name: 'Stack the bales', who: 'robin', xp: 10, needs: [{ item: 'wood', tier: 2, n: 2 }, { item: 'hay', tier: 3, n: 1 }],
+    { id: 'hay4', land: 'hay', zone: 'stables', at: [30, 34], look: ['🌾', '🟫'], after: ['hay3'], name: 'Stack the bales', who: 'robin', xp: 10, needs: [{ item: 'wood', tier: 2, n: 2 }, { item: 'hay', tier: 3, n: 1 }],
       line: 'Stacked!' },
-    { id: 'hay5', land: 'hay', zone: 'stables', look: ['🏚️', '🏠'], after: ['hay2', 'hay4'], name: 'Repair the hay loft', who: 'robin', xp: 12, reward: { chest: 'blue' },
+    { id: 'hay5', land: 'hay', zone: 'stables', at: [50, 14], look: ['🏚️', '🏠'], after: ['hay2', 'hay4'], name: 'Repair the hay loft', who: 'robin', xp: 12, reward: { chest: 'blue' },
       needs: [{ item: 'hay', tier: 3, n: 1 }, { item: 'wood', tier: 3, n: 1 }], line: 'Good as new!' },
     { id: 'hay6', land: 'hay', zone: 'windmill', at: [40, 40], look: ['🚪', '🐴'], after: ['hay5'], name: 'Fill the horse stalls', who: 'marnie', xp: 20, needs: [{ item: 'hay', tier: 4, n: 1 }],
       line: 'Happy horses!' },
@@ -1255,9 +1255,9 @@ const TASKS = [
       line: 'Your yard!' },
     { id: 'fert2', land: 'fert', zone: 'leafpiles', at: [30, 52], look: ['🪨', '🕳️'], after: ['fert1'], name: 'Dig the compost pit', who: 'robin', xp: 8, needs: [{ item: 'fert', tier: 2, n: 2 }],
       line: 'Great pit!' },
-    { id: 'fert3', land: 'fert', zone: 'compostbins', look: ['🪵', '🗑️'], after: ['fert2'], name: 'Build the compost bins', who: 'robin', xp: 12, needs: [{ item: 'wood', tier: 3, n: 1 }, { item: 'fert', tier: 3, n: 1 }],
+    { id: 'fert3', land: 'fert', zone: 'compostbins', at: [60, 16], look: ['🪵', '🗑️'], after: ['fert2'], name: 'Build the compost bins', who: 'robin', xp: 12, needs: [{ item: 'wood', tier: 3, n: 1 }, { item: 'fert', tier: 3, n: 1 }],
       line: 'Sturdy bins!' },
-    { id: 'fert4', land: 'fert', zone: 'compostbins', look: ['🍂', '🌱'], after: ['fert2'], name: 'Turn the compost', who: 'sandy', xp: 20, reward: { chest: 'brown' },
+    { id: 'fert4', land: 'fert', zone: 'compostbins', at: [30, 72], look: ['🍂', '🌱'], after: ['fert2'], name: 'Turn the compost', who: 'sandy', xp: 20, reward: { chest: 'brown' },
       needs: [{ item: 'clean', tier: 2, n: 1 }, { item: 'fert', tier: 4, n: 1 }], line: 'Rich soil!' },
     { id: 'fert5', land: 'fert', zone: 'mushrooms', at: [50, 50], look: ['🥀', '🌻'], after: ['fert3', 'fert4'], name: 'Feed the field', who: 'marnie', xp: 25,
       needs: [{ item: 'fert', tier: 4, n: 1 }, { item: 'farm', tier: 3, n: 2 }], line: 'Growing fast!' },
@@ -1551,6 +1551,9 @@ function addJobChips(tasks, el) {
         spot.style.left = x + '%';
         spot.style.top = y + '%';
         spot.style.zIndex = 20 + Math.round(y);
+        // Near an edge the bubble leans inwards, its tail still on the ring.
+        const lean = x > 65 ? 85 : x < 35 ? 15 : 50;
+        spot.style.setProperty('--lean', lean + '%');
         spot.innerHTML = '<span class="fix-face"></span>';
         addTag(spot, 'task-pin' + (ready ? ' ready' : ''), `<b class="pin-name">${task.name}</b>${needPins(task)}`);
         spot.addEventListener('click', () => tapFix(task));
@@ -2738,9 +2741,46 @@ function deliver(npc) {
 
 // --- MARKET ---
 
+// The painted Market: the shopkeeper behind her counter, a label on each thing
+// to buy, and the land deeds as cards on the floor below.
+function addMarketLabels(scene) {
+    const frame = paintedPage(scene, ASSETS.stages.market[0]);
+    const label = (id, x, y, icon, name, onClick) => {
+        const el = placeLabel(frame, id, { x, y, icon }, name, onClick);
+        el.id = `btn-${id}`;
+        return el;
+    };
+    label('shopkeeper', 58, 15, `<img src="${ASSETS.portraits.shopkeeper}" alt="">`, 'Shopkeeper', () => {
+        toast(SHOPKEEPER_LINES[shopkeeperLine++ % SHOPKEEPER_LINES.length]);
+    }).classList.add('person-label');
+    label('flash', 14, 46, uiIcon('sale', '🏷️'), 'Flash Sale', openFlashSale);
+    const deals = label('deals', 84, 71, uiIcon('gift', '🎁'), 'Daily Deals', openDailyDeals);
+    if (dealsWaiting()) addTag(deals, 'badge', '!');
+    if (maxTier < NAMES['barn'].length - 1) {
+        const guide = label('guide', 50, 59, '📖', 'Growth Guide', offerUpgrade);
+        addTag(guide, 'price-tag', `💵${maxTier * 100}`);
+    }
+    const deeds = Object.keys(AREAS).filter(id => !unlocks[id]);
+    if (!deeds.length) return;
+    const list = document.createElement('div');
+    list.className = 'deed-list';
+    list.innerHTML = '<h3>📜 Land Deeds</h3>';
+    deeds.forEach(id => {
+        const card = document.createElement('button');
+        card.className = 'spot deed-card';
+        card.dataset.id = id;
+        card.innerHTML = `<span class="label-icon">${MAP_LABELS[id].icon}</span><span class="spot-label">${AREAS[id].name}</span>`;
+        addTag(card, 'price-tag', quests.level < AREAS[id].level ? `${uiIcon('lock', '🔒')}Lv${AREAS[id].level}` : `💵${AREAS[id].cost}`);
+        card.addEventListener('click', () => offerDeed(id));
+        list.appendChild(card);
+    });
+    frame.after(list);
+}
+
 function renderMarket() {
     const scene = document.getElementById('scene-market');
     scene.innerHTML = '';
+    if ((ASSETS.stages || {}).market) return addMarketLabels(scene);
 
     // One land deed per locked area sits on the shelves.
     Object.keys(AREAS).filter(id => !unlocks[id]).forEach((id, i) => {
