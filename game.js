@@ -417,7 +417,7 @@ const stats = {
 };
 // Player toggles (saved with the game). charge = index into CHARGE_MODES;
 // unlimitedUntil = when Unlimited Energy runs out (ms timestamp).
-const settings = { charge: 0, unlimitedUntil: 0, sound: true, vibrate: true, music: true };
+const settings = { charge: 0, unlimitedUntil: 0, sound: true, vibrate: true, music: true, tips: true };
 // Player level and XP toward the next level.
 const quests = { level: 1, xp: 0 };
 // Restoration jobs done, and for open jobs the counters they count from.
@@ -922,6 +922,7 @@ function energyPrice() {
 
 // Shown when you tap the energy bar or run out while playing.
 function openEnergy(ranOut = false) {
+    markGuide('energy');
     tickEnergy();
     if (ranOut) stats.outOfEnergy++;
     // The first time you run out, show the one-time offer instead.
@@ -2136,7 +2137,7 @@ function renderFix() {
         const tab = document.createElement('button');
         tab.dataset.zone = z.id;
         tab.innerHTML = zoneOpen(z) ? `${z.name} <b>${done === jobs.length ? '✓' : `${done}/${jobs.length}`}</b>` : `🔒 ${z.name}`;
-        tab.addEventListener('click', () => world.scrollTo({ left: k * world.clientWidth, behavior: 'smooth' }));
+        tab.addEventListener('click', () => { markGuide('tabs'); world.scrollTo({ left: k * world.clientWidth, behavior: 'smooth' }); });
         nav.appendChild(tab);
     });
     const arrows = ['left', 'right'].map(side => {
@@ -3037,12 +3038,13 @@ function openSettings() {
         onClick: () => { settings[key] = !settings[key]; saveGame(); if (key === 'sound') sfx('coin'); else if (key === 'music') syncMusic(); else buzz(40); openSettings(); } });
     showDialog({
         title: '⚙️ Settings',
-        body: '<p class="hint">Music, little sounds as you play, and a buzz on phones.</p>',
-        actions: [row('music', '🎵 Music'), row('sound', '🔊 Sound'), row('vibrate', '📳 Vibration'), { label: 'Done' }],
+        body: '<p class="hint">Music, little sounds as you play, a buzz on phones, and tips that show you around.</p>',
+        actions: [row('music', '🎵 Music'), row('sound', '🔊 Sound'), row('vibrate', '📳 Vibration'), row('tips', '💡 Tips'), { label: 'Done' }],
     });
 }
 
 function offerDeed(id) {
+    markGuide('deed');
     const area = AREAS[id];
     if (quests.level < area.level) {
         showDialog({
@@ -3215,6 +3217,7 @@ function renderTown() {
 }
 
 function openNpc(npc) {
+    markGuide('npc');
     const r = npc.request;
     const level = Math.floor(npc.deliveries / 5) + 1;
     const area = AREAS[r.mode];
@@ -3370,7 +3373,7 @@ tutorialEl.id = 'tutorial';
 tutorialEl.innerHTML = `<div class="tut-bubble"><img class="face" alt=""><span class="tut-text"></span><button class="tut-skip">Skip</button></div>
                         <div class="tut-hand">👆</div>`;
 tutorialEl.hidden = true;
-tutorialEl.querySelector('.tut-skip').addEventListener('click', () => endTutorial());
+tutorialEl.querySelector('.tut-skip').addEventListener('click', () => (tutorial.done ? finishGuide() : endTutorial()));
 
 function endTutorial(finished = false) {
     tutorial.done = true;
@@ -3381,7 +3384,7 @@ function endTutorial(finished = false) {
 
 // Moves the tutorial on and points at the current step's target.
 function updateTutorial() {
-    if (tutorial.done) return;
+    if (tutorial.done) return updateGuides();
     if (fixing) { tutorialEl.hidden = true; return; }
     while (tutorial.step < TUTORIAL.length && TUTORIAL[tutorial.step].done()) tutorial.step++;
     if (tutorial.step >= TUTORIAL.length) return endTutorial(true);
@@ -3415,10 +3418,16 @@ function updateTutorial() {
             text = step.fallback.text;
         }
     }
+    showPointer(target, step.who, text, 'Skip');
+}
+
+// The hand on what to tap (a pair: drag from one to the other) and who says why.
+function showPointer(target, who, text, closeLabel) {
     const targets = (Array.isArray(target) ? target : [target]).filter(Boolean);
     tutorialEl.hidden = !dialogEl.hidden || !targets.length;
     if (tutorialEl.hidden) return;
-    tutorialEl.querySelector('.face').src = npcPicture(npcs.find(n => n.id === (step.who || 'mayor')));
+    tutorialEl.querySelector('.face').src = npcPicture(npcs.find(n => n.id === (who || 'mayor')));
+    tutorialEl.querySelector('.tut-skip').textContent = closeLabel;
     tutorialEl.querySelector('.tut-text').textContent = text;
     const stage = stageEl.getBoundingClientRect();
     const centre = el => { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2 - stage.left, y: r.top + r.height / 2 - stage.top }; };
@@ -3430,8 +3439,171 @@ function updateTutorial() {
     hand.style.setProperty('--dx', `${to.x - from.x}px`);
     hand.style.setProperty('--dy', `${to.y - from.y}px`);
     hand.classList.toggle('dragging', targets.length > 1);
+    // Something to tap that's scrolled out of view comes into view.
+    const r = targets[0].getBoundingClientRect();
+    if (r.bottom < stage.top || r.top > stage.bottom) targets[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
     // Keep the bubble out of the way of what it points at.
     tutorialEl.classList.toggle('bubble-top', from.y > stage.height / 2);
+}
+
+// --- GUIDES ---
+// After the first-play tutorial, every feature gets its own short guide the
+// first time it matters: someone says what it's for and the hand leads you
+// there step by step (back to the map, into the Market, onto the thing). Each
+// plays once, ends by itself as soon as you do it, never shows over a dialog,
+// waits a while after the last one, and ✕ puts it away for good. Tips can be
+// switched off in ⚙️ Settings.
+const guides = { done: [], marks: [] };
+let guide = null;          // the guide on screen: { def, step, start }
+let guideRestUntil = 0;    // a pause between guides, so they never pile up
+
+// Things the player has done that guides wait for (opened the Flash Sale...).
+function markGuide(what) {
+    if (!guides.marks.includes(what)) guides.marks.push(what);
+}
+
+function marked(what) {
+    return guides.marks.includes(what);
+}
+
+const q = sel => document.querySelector(sel);
+const onBoard = () => (AREAS[currentScene] ? currentScene : null);
+// The first cell on the board you're on that matches, or -1.
+function boardCell(test) {
+    const mode = onBoard();
+    return mode ? grids[mode].findIndex(c => c && test(c)) : -1;
+}
+
+// Two free things that merge, for a "drag one onto the other" guide.
+function mergePair(test) {
+    const mode = onBoard();
+    if (!mode) return [];
+    const cells = grids[mode].map((c, i) => (c && test(c) ? i : -1)).filter(i => i >= 0);
+    for (const a of cells) for (const b of cells) {
+        if (a !== b && JSON.stringify({ ...grids[mode][a], web: 0 }) === JSON.stringify({ ...grids[mode][b], web: 0 })) return [a, b];
+    }
+    return [];
+}
+
+function firstLandForSale() {
+    return Object.keys(AREAS).find(id => !unlocks[id] && quests.level >= AREAS[id].level);
+}
+
+// The way to a place from wherever you are: a hand on the next button to tap.
+function wayTo(where) {
+    if (where === currentScene) return null;
+    if (AREAS[where] && currentScene === 'fix' && fixLand === where) return { target: q('#scene-fix .fix-merge'), text: 'Tap Merge!' };
+    if (where === 'fix' && AREAS[currentScene]) return { target: q(`#scene-${currentScene} .place-btn`), text: 'Tap 🔨 to visit the land!' };
+    if (where === 'map' || currentScene !== 'map') return { target: backBtn, text: 'Back to the map first!' };
+    const id = where === 'fix' ? lastBoard : where;
+    const name = id === 'market' ? 'the Market' : id === 'town' ? TOWN_NAME : `the ${AREAS[id].name}`;
+    return { target: q(`#scene-map .spot[data-id="${id}"]`), text: `Tap ${name}!` };
+}
+
+const GUIDES = [
+    // Shopping: the first land to buy, all the way to its deed.
+    { id: 'deed', when: () => firstLandForSale() && Object.values(unlocks).filter(Boolean).length === 1,
+      steps: [{ scene: 'market', who: 'mayor', lead: () => `The ${AREAS[firstLandForSale() || 'farm'].name} is for sale!`, text: () => `New land! Buy the ${AREAS[firstLandForSale() || 'farm'].name} deed here.`,
+                target: () => q(`#scene-market .order-tile.deed[data-id="${firstLandForSale()}"]`), done: () => marked('deed') || !firstLandForSale() }] },
+    // Bigger animals: merges stop at the size cap until the Growth Guide.
+    { id: 'growth', when: () => maxTier < NAMES.barn.length - 1 && quests.level >= 2
+          && Object.keys(AREAS).some(m => unlocks[m] && grids[m].filter(c => isFree(c) && !c.type && !c.chain && c.tier === maxTier).length >= 2),
+      steps: [{ scene: 'market', who: 'marnie', lead: 'Want bigger animals?', text: 'Want bigger animals? The Growth Guide lets merges go one size up!',
+                target: () => q('#scene-market #btn-guide'), done: () => marked('upgrade') }] },
+    // Levelling up: XP stars on the board.
+    { id: 'xp', when: () => boardCell(c => c.type === 'xp') >= 0,
+      steps: [{ scene: () => onBoard(), who: 'mayor', text: 'Tap the ⭐ to collect XP. Levels open new land!',
+                target: () => cellItem(onBoard(), boardCell(c => c.type === 'xp')), done: () => boardCell(c => c.type === 'xp') < 0 }] },
+    { id: 'currency', when: () => boardCell(c => c.type === 'coin' || c.type === 'gem' || c.type === 'energy') >= 0,
+      steps: [{ scene: () => onBoard(), who: 'marnie', text: 'Coins, gems and ⚡ on the board: tap to collect them!',
+                target: () => cellItem(onBoard(), boardCell(c => c.type === 'coin' || c.type === 'gem' || c.type === 'energy')),
+                done: () => boardCell(c => c.type === 'coin' || c.type === 'gem' || c.type === 'energy') < 0 || stats.collected > (guide?.start.collected ?? 0) }] },
+    { id: 'parts', when: () => mergePair(c => isFree(c) && c.type === 'shop' && levelOf(c) < FIRST_WORKING_LEVEL).length === 2,
+      steps: [{ scene: () => onBoard(), who: 'robin', text: 'Two parts make a bigger one. Drag one onto the other!', drag: true,
+                target: () => mergePair(c => isFree(c) && c.type === 'shop' && levelOf(c) < FIRST_WORKING_LEVEL).map(i => cellItem(onBoard(), i)),
+                done: () => stats.upgrades > (guide?.start.upgrades ?? 0) }] },
+    { id: 'cobweb', when: () => mergePair(c => !c.type && isFree({ ...c, web: false })).some(i => grids[onBoard()][i].web),
+      steps: [{ scene: () => onBoard(), who: 'marnie', text: 'Merge a matching item into a cobwebbed one to free it!', drag: true,
+                target: () => { const p = mergePair(c => !c.type && isFree({ ...c, web: false })); const m = onBoard(); return (m && grids[m][p[0]]?.web ? [p[1], p[0]] : p).map(i => cellItem(m, i)); },
+                done: () => stats.webs > (guide?.start.webs ?? 0) }] },
+    { id: 'bubble', when: () => boardCell(c => c.type === 'bubble') >= 0,
+      steps: [{ scene: () => onBoard(), who: 'sandy', text: 'A Double Bubble! Pop it with 💎 for a free copy, or let it float away.',
+                target: () => cellItem(onBoard(), boardCell(c => c.type === 'bubble')),
+                done: () => boardCell(c => c.type === 'bubble') < 0 || (selected && grids[selected.mode][selected.index]?.type === 'bubble') }] },
+    { id: 'chest', when: () => boardCell(c => c.type === 'chest' || c.type === 'piggy') >= 0,
+      steps: [{ scene: () => onBoard(), who: 'willy', text: 'A chest! Tap it to see what\'s inside.',
+                target: () => cellItem(onBoard(), boardCell(c => c.type === 'chest' || c.type === 'piggy')), done: () => marked('chest') }] },
+    { id: 'booster', when: () => boardCell(c => BOOSTERS[c.type]) >= 0,
+      steps: [{ scene: () => onBoard(), who: 'robin', text: 'A booster! Tap it to see what it does.',
+                target: () => cellItem(onBoard(), boardCell(c => BOOSTERS[c.type])),
+                done: () => boardCell(c => BOOSTERS[c.type]) < 0 || (selected && BOOSTERS[grids[selected.mode][selected.index]?.type]) }] },
+    // Tools for jobs: the land's tool producer.
+    { id: 'toolbox', when: () => onBoard() && boardCell(c => c.type === 'toolbox' && c.drops > 0) >= 0
+          && openTasks().some(t => t.needs.some(n => n.item && TOOLS[n.item])),
+      steps: [{ scene: () => onBoard(), who: 'robin', text: 'Jobs need tools. Tap the tool box to make them!',
+                target: () => cellItem(onBoard(), boardCell(c => c.type === 'toolbox' && c.drops > 0)), done: () => marked('toolbox') }] },
+    // A full board: the backpack.
+    { id: 'inventory', when: () => onBoard() && boardFull(onBoard()),
+      steps: [{ scene: () => onBoard(), who: 'marnie', text: 'Board full? Drag things into your 🎒 for later, or tap one and Sell it.',
+                target: () => q(`#scene-${onBoard()} .inv-btn`), done: () => inventory.items.length > 0 || !onBoard() || !boardFull(onBoard()) }] },
+    // The town's orders.
+    { id: 'town', when: () => quests.level >= 2 && currentScene !== 'town',
+      steps: [{ scene: 'town', who: 'mayor', lead: 'Townsfolk need your help!', text: 'Townsfolk post orders here. Tap someone\'s card to see what they need!',
+                target: () => q('#scene-town .order-tile'), done: () => marked('npc') }] },
+    // Areas inside a land.
+    { id: 'tabs', when: () => currentScene === 'fix' && landZones(fixLand).filter(zoneOpen).length >= 2,
+      steps: [{ scene: 'fix', who: 'robin', text: 'Each land has areas. Tap a tab to jump between them.',
+                target: () => q('#scene-fix .zone-tabs button:not(.on)'), done: () => marked('tabs') }] },
+    // Things waiting on the map.
+    { id: 'daily', when: () => dailyClaimable() > 0,
+      steps: [{ scene: 'map', who: 'mayor', lead: 'Daily goals done!', text: 'Today\'s goals are done: claim your chest!', target: () => q('#btn-daily'), done: () => marked('daily') }] },
+    { id: 'pass', when: () => passClaimable() > 0,
+      steps: [{ scene: 'map', who: 'sandy', lead: 'Pass rewards are waiting!', text: 'The Season Pass has rewards waiting for you!', target: () => q('#btn-pass'), done: () => marked('pass') }] },
+    { id: 'jar', when: () => jarReady(),
+      steps: [{ scene: 'map', who: 'willy', lead: 'Your Gem Jar is full!', text: 'Your Gem Jar is full of gems. Take a look!', target: () => q('#btn-jar'), done: () => marked('jar') }] },
+    { id: 'flash', when: () => quests.level >= 3,
+      steps: [{ scene: 'market', who: 'sandy', lead: 'New offers at the Market!', text: 'The Flash Sale has new offers every 6 hours!', target: () => q('#scene-market #btn-flash'), done: () => marked('flash') }] },
+    { id: 'fair', when: () => fairOpen(),
+      steps: [{ scene: 'map', who: 'marnie', lead: 'The Fair is on!', text: 'The Country Fair is on! Win prizes this weekend.', target: () => q('#btn-fair'), done: () => currentScene === 'fair' }] },
+    { id: 'energy', when: () => res.energy < 10 && !unlimitedActive(),
+      steps: [{ scene: () => currentScene, who: 'mayor', text: '⚡ is low. It refills by itself, or tap ⚡ up here for more.',
+                target: () => q('#btn-energy'), done: () => marked('energy') || res.energy >= 20 }] },
+];
+
+// Which guide (if any) runs now, and where its hand points.
+function updateGuides() {
+    if (settings.tips === false || fixing || document.body.classList.contains('busy')) { tutorialEl.hidden = true; return; }
+    if (guide) {
+        const step = guide.def.steps[guide.step];
+        if (step.done()) {
+            guide.step++;
+            if (guide.step >= guide.def.steps.length) return finishGuide();
+        }
+    } else if (dialogEl.hidden && Date.now() >= guideRestUntil) {
+        const def = GUIDES.find(g => !guides.done.includes(g.id) && g.when());
+        if (def) guide = { def, step: 0, start: { collected: stats.collected, upgrades: stats.upgrades, webs: stats.webs } };
+    }
+    if (!guide) { tutorialEl.hidden = true; return; }
+    const step = guide.def.steps[guide.step];
+    const scene = typeof step.scene === 'function' ? step.scene() : step.scene;
+    const way = scene ? wayTo(scene) : null;
+    const target = way ? way.target : step.target();
+    const val = v => (typeof v === 'function' ? v() : v);
+    const text = way ? [val(step.lead), way.text].filter(Boolean).join(' ') : val(step.text); // on the way: why, then where
+    // A board guide whose thing is gone (merged away, floated off) waits for another time.
+    if (!way && (!target || (Array.isArray(target) && target.filter(Boolean).length < (step.drag ? 2 : 1)))) {
+        if (guide.step === 0 && !guide.def.when()) guide = null;
+        tutorialEl.hidden = true;
+        return;
+    }
+    showPointer(target, step.who, text, '✕');
+}
+
+function finishGuide() {
+    if (guide && !guides.done.includes(guide.def.id)) guides.done.push(guide.def.id);
+    guide = null;
+    guideRestUntil = Date.now() + 20000;
+    tutorialEl.hidden = true;
 }
 
 // --- COUNTRY FAIR ---
@@ -3630,6 +3802,7 @@ function jarReady() {
 }
 
 function openGemJar() {
+    markGuide('jar');
     const ready = jarReady();
     showDialog({
         title: `🫙 ${GEM_JAR.name}`,
@@ -3756,6 +3929,7 @@ function dailyClaimable() {
 }
 
 function openDailyGoals() {
+    markGuide('daily');
     syncDailyGoals();
     const rows = dailyGoals.ids.map(id => {
         const goal = DAILY_GOALS.find(g => g.id === id);
@@ -3885,6 +4059,7 @@ function claimPassReward(track, level) {
 }
 
 function openPass() {
+    markGuide('pass');
     syncSeason();
     const theme = seasonTheme();
     const { level, into, need } = passProgress();
@@ -3963,6 +4138,7 @@ function flashSale() {
 }
 
 function openFlashSale() {
+    markGuide('flash');
     const offers = flashSale();
     const ends = (flashWindow() + 1) * FLASH_SALE_HOURS * 3600000;
     showDialog({
@@ -4041,6 +4217,7 @@ function takeDeal(id) {
 }
 
 function offerUpgrade() {
+    markGuide('upgrade');
     const next = maxTier + 1;
     showDialog({
         art: ASSETS.props.upgrade,
@@ -4470,6 +4647,7 @@ function boardFull(mode) {
 }
 
 function tapChest(mode, index) {
+    markGuide('chest');
     if (boardFull(mode)) return;
     const chest = grids[mode][index];
     dropFrom(mode, index, chestStage(chest), chestName(chest));
@@ -5080,6 +5258,7 @@ function tickToolbox(box, now = Date.now()) {
 }
 
 function tapToolbox(mode, index) {
+    markGuide('toolbox');
     const box = grids[mode][index];
     tickToolbox(box);
     selected = { mode, index };
@@ -5285,7 +5464,7 @@ function saveGame() {
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
             version: SAVE_VERSION,
-            res, energyAt, shop, crates, inventory, stats, quests, restoration, pass, dailyGoals, tutorial, story, fair, daily, settings, unlocks, maxTier, grids, lastBoard,
+            res, energyAt, shop, crates, inventory, stats, quests, restoration, pass, dailyGoals, tutorial, guides, story, fair, daily, settings, unlocks, maxTier, grids, lastBoard,
             tickedAt: lastTickAt,
             npcs: npcs.map(({ id, deliveries, request }) => ({ id, deliveries, request })),
         }));
@@ -5344,6 +5523,8 @@ function loadGame() {
         if (save.settings && save.settings.sound === false) settings.sound = false;
         if (save.settings && save.settings.vibrate === false) settings.vibrate = false;
         if (save.settings && save.settings.music === false) settings.music = false;
+        if (save.settings && save.settings.tips === false) settings.tips = false;
+        if (save.guides) Object.assign(guides, save.guides);
         if (save.lastBoard && AREAS[save.lastBoard]) lastBoard = save.lastBoard;
         if (save.tickedAt) lastTickAt = save.tickedAt;
         Object.assign(unlocks, save.unlocks);
