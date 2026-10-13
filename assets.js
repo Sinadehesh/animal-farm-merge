@@ -61,27 +61,27 @@ const ASSETS = {
     // labels over the painting; a page swaps to its next picture as you fix it.
     // null = not painted yet: the area keeps its old picture and objects.
     stages: {
-        map: [0, 1, 2].map(k => `assets/stages/map/${k}.jpg`),
-        market: ['assets/stages/market/storeroom.jpg'], // one painting (the storeroom, restored): the shop doesn't change
-        town: [0, 1, 2].map(k => `assets/stages/town/${k}.jpg`),
-        barnyard: [0, 1, 2].map(k => `assets/stages/barnyard/${k}.jpg`),
-        henhouse: [0, 1, 2].map(k => `assets/stages/henhouse/${k}.jpg`),
-        fieldgate: [0, 1, 2].map(k => `assets/stages/fieldgate/${k}.jpg`),
-        berryrows: [0, 1, 2].map(k => `assets/stages/berryrows/${k}.jpg`),
-        orchard: [0, 1, 2].map(k => `assets/stages/orchard/${k}.jpg`),
-        windmill: [0, 1, 2].map(k => `assets/stages/windmill/${k}.jpg`),
-        leafpiles: [0, 1, 2].map(k => `assets/stages/leafpiles/${k}.jpg`),
-        mushrooms: [0, 1, 2].map(k => `assets/stages/mushrooms/${k}.jpg`),
-        muddyshore: [0, 1, 2].map(k => `assets/stages/muddyshore/${k}.jpg`),
-        lilypond: [0, 1, 2].map(k => `assets/stages/lilypond/${k}.jpg`),
-        boatdock: [0, 1, 2].map(k => `assets/stages/boatdock/${k}.jpg`),
-        gardengate: [0, 1, 2].map(k => `assets/stages/gardengate/${k}.jpg`),
-        rosearch: [0, 1, 2].map(k => `assets/stages/rosearch/${k}.jpg`),
-        greenhouse: [0, 1, 2].map(k => `assets/stages/greenhouse/${k}.jpg`),
-        bigbarn: [0, 1, 2].map(k => `assets/stages/bigbarn/${k}.jpg`), // the barn's storeroom
-        meadow: [0, 1, 2].map(() => 'assets/stages/meadow/meadow.jpg'), // one painting for now, used for all three states
-        stables: [0, 1, 2].map(k => `assets/stages/stables/${k}.jpg`),
-        compostbins: [0, 1, 2].map(k => `assets/stages/compostbins/${k}.jpg`),
+        map: [0, 1, 2].map(k => `assets/stages/map/${k}@2x.jpg`),
+        market: ['assets/stages/market/storeroom@2x.jpg'], // one painting (the storeroom, restored): the shop doesn't change
+        town: [0, 1, 2].map(k => `assets/stages/town/${k}@2x.jpg`),
+        barnyard: [0, 1, 2].map(k => `assets/stages/barnyard/${k}@2x.jpg`),
+        henhouse: [0, 1, 2].map(k => `assets/stages/henhouse/${k}@2x.jpg`),
+        fieldgate: [0, 1, 2].map(k => `assets/stages/fieldgate/${k}@2x.jpg`),
+        berryrows: [0, 1, 2].map(k => `assets/stages/berryrows/${k}@2x.jpg`),
+        orchard: [0, 1, 2].map(k => `assets/stages/orchard/${k}@2x.jpg`),
+        windmill: [0, 1, 2].map(k => `assets/stages/windmill/${k}@2x.jpg`),
+        leafpiles: [0, 1, 2].map(k => `assets/stages/leafpiles/${k}@2x.jpg`),
+        mushrooms: [0, 1, 2].map(k => `assets/stages/mushrooms/${k}@2x.jpg`),
+        muddyshore: [0, 1, 2].map(k => `assets/stages/muddyshore/${k}@2x.jpg`),
+        lilypond: [0, 1, 2].map(k => `assets/stages/lilypond/${k}@2x.jpg`),
+        boatdock: [0, 1, 2].map(k => `assets/stages/boatdock/${k}@2x.jpg`),
+        gardengate: [0, 1, 2].map(k => `assets/stages/gardengate/${k}@2x.jpg`),
+        rosearch: [0, 1, 2].map(k => `assets/stages/rosearch/${k}@2x.jpg`),
+        greenhouse: [0, 1, 2].map(k => `assets/stages/greenhouse/${k}@2x.jpg`),
+        bigbarn: [0, 1, 2].map(k => `assets/stages/bigbarn/${k}@2x.jpg`), // the barn's storeroom
+        meadow: [0, 1, 2].map(() => 'assets/stages/meadow/meadow@2x.jpg'), // one painting for now, used for all three states
+        stables: [0, 1, 2].map(k => `assets/stages/stables/${k}@2x.jpg`),
+        compostbins: [0, 1, 2].map(k => `assets/stages/compostbins/${k}@2x.jpg`),
     },
 
     // Areas: each land's place is a column of square pictures (1:1), one per

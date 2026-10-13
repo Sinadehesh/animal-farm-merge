@@ -3,7 +3,7 @@
 // when offline. Pictures: the saved copy first, fetched and saved when new.
 const CACHE = 'farmstead-v1';
 const CORE = ['./', 'index.html', 'assets.js', 'game.js', 'manifest.json', 'assets/ui/app-icon-192.png',
-    'assets/stages/map/0.jpg', 'assets/stages/barnyard/0.jpg'];
+    'assets/stages/map/0@2x.jpg', 'assets/stages/barnyard/0@2x.jpg'];
 
 self.addEventListener('install', event => {
     event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(CORE)).then(() => self.skipWaiting()));
