@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**513 assets:** 392 done ✅, 8 placeholders 🟡, 113 missing ⬜.
+**420 assets:** 345 done ✅, 8 placeholders 🟡, 67 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -430,7 +430,7 @@ swaps to the next painting as its jobs get done. Raw sheets are kept in `assets/
 | ✅ | Town square | `assets/stages/town/0-2.jpg` | fog, rebuilding, restored |
 | ✅ | Barnyard | `assets/stages/barnyard/0-2.jpg` |  |
 | ✅ | Hen House | `assets/stages/henhouse/0-2.jpg` |  |
-| ⬜ | Big Red Barn | `assets/stages/bigbarn/0-2.jpg` | needs a painting (the inside of the barn) |
+| ✅ | Barn Storeroom | `assets/stages/bigbarn/0-2.jpg` | the barn's storeroom |
 | ✅ | Field Gate | `assets/stages/fieldgate/0-2.jpg` |  |
 | ✅ | Strawberry Rows | `assets/stages/berryrows/0-2.jpg` |  |
 | ✅ | Orchard | `assets/stages/orchard/0-2.jpg` |  |
@@ -458,7 +458,7 @@ are fixed. Until it comes, the land's board texture is used. Listed in `areas` i
 |---|---|---|---|
 | ✅ | Barnyard | Barn | `assets/areas/barnyard.jpg` |
 | ✅ | Hen House | Barn | `assets/areas/henhouse.jpg` |
-| ✅ | Big Red Barn | Barn | `assets/areas/bigbarn.jpg` |
+| ✅ | Barn Storeroom | Barn | `assets/areas/bigbarn.jpg` |
 | ⬜ | Field Gate | Crop Field | `assets/areas/fieldgate.jpg` |
 | ⬜ | Strawberry Rows | Crop Field | `assets/areas/berryrows.jpg` |
 | ⬜ | Orchard | Crop Field | `assets/areas/orchard.jpg` |
@@ -483,99 +483,8 @@ sheet yet use emoji pairs written on the job itself.
 
 | | Object | Emoji | Used by |
 |---|---|---|---|
-| ✅ | `planks` | 🪵 | Clear the planks |
-| ✅ | `weeds` | 🌿 | Pull the weeds |
-| ✅ | `branch` | 🍂 | Move the fallen branch |
-| ✅ | `feedbin_broken` | 🪣 | Fix the feed bin |
-| ✅ | `feedbin` | 🌾 | Fix the feed bin (after) |
-| ✅ | `fence_broken` | 🚧 | Mend the fence |
-| ✅ | `fence` | 🪵 | Mend the fence (after) |
-| ✅ | `wheelbarrow_broken` | 🛒 | Fix the wheelbarrow |
-| ✅ | `wheelbarrow` | 🛒 | Fix the wheelbarrow (after) |
-| ✅ | `pump_broken` | 🕸️ | Clean the water pump |
-| ✅ | `pump` | 🚰 | Clean the water pump (after) |
-| ✅ | `junk` | 🗑️ | Haul away the junk |
-| ✅ | `firewood` | 🪵 | Haul away the junk (after) |
-| ✅ | `lantern` | 🏮 | Put up a lantern (after) |
-| ✅ | `mailbox` | 📫 | Put up a mailbox (after) |
-| ✅ | `tulips` | 🌷 | Plant tulips (after) |
-| ✅ | `nest_empty` | 🪹 | Fix the nest |
-| ✅ | `nest_chicks` | 🐣 | Fix the nest (after) |
-| ✅ | `wire_torn` | 🕸️ | Patch the chicken wire |
-| ✅ | `wire_fixed` | 🥅 | Patch the chicken wire (after) |
-| ✅ | `trough_empty` | 🛁 | Fill the water trough |
-| ✅ | `trough_full` | 💧 | Fill the water trough (after) |
-| ✅ | `straw_mess` | 🌾 | Sweep up the old straw |
-| ✅ | `perch_broken` | 🪵 | Fix the perch |
-| ✅ | `hen_perch` | 🐔 | Fix the perch (after) |
-| ✅ | `feeder_rusty` | 🥫 | Fix the feeder |
-| ✅ | `feeder` | 🫙 | Fix the feeder (after) |
-| ✅ | `basket_empty` | 🧺 | Fill the egg basket |
-| ✅ | `basket_eggs` | 🥚 | Fill the egg basket (after) |
-| ✅ | `sacks` | 🎒 | Clear out the old sacks |
-| ✅ | `coop` | 🏠 | Build a little coop (after) |
-| ✅ | `nestbox` | 🪺 | Make a nest box (after) |
-| ✅ | `stall_broken` | 🚪 | Fix the stall door |
-| ✅ | `stall_cow` | 🐄 | Fix the stall door (after) |
-| ✅ | `hay_heap` | 🍂 | Stack the hay |
-| ✅ | `hay_bales` | 🌾 | Stack the hay (after) |
-| ✅ | `ladder_fallen` | 🪜 | Stand up the ladder |
-| ✅ | `ladder` | 🪜 | Stand up the ladder (after) |
-| ✅ | `paint_old` | 🪣 | Paint the barn red |
-| ✅ | `paint` | 🎨 | Paint the barn red (after) |
-| ✅ | `rope_tangled` | 🧶 | Coil the ropes |
-| ✅ | `rope_hook` | 🪢 | Coil the ropes (after) |
-| ✅ | `tools_rusty` | 🔧 | Tidy the tool rack |
-| ✅ | `tool_rack` | 🧰 | Tidy the tool rack (after) |
-| ✅ | `lamp_broken` | 🕯️ | Light the lantern |
-| ✅ | `lamp` | 🏮 | Light the lantern (after) |
-| ✅ | `cans_spilled` | 🥛 | Line up the milk cans |
-| ✅ | `milk_cans` | 🥛 | Line up the milk cans (after) |
-| ⬜ | `weeds_thorny` | 🌵 | Pull the thorny weeds |
-| ⬜ | `rock` | 🪨 | Roll away the rock |
-| ⬜ | `brush` | 🍂 | Clear the dead brush |
-| ⬜ | `scarecrow_fallen` | 🥀 | Fix the scarecrow |
-| ⬜ | `scarecrow` | 🧑‍🌾 | Fix the scarecrow (after) |
-| ⬜ | `gate_broken` | 🚧 | Fix the gate |
-| ⬜ | `gate` | 🚪 | Fix the gate (after) |
-| ⬜ | `seedcart_tipped` | 🛒 | Set the seed cart right |
-| ⬜ | `seedcart` | 🌱 | Set the seed cart right (after) |
-| ⬜ | `plough_rusty` | ⚙️ | Clean up the old plough |
-| ⬜ | `plough` | 🛠️ | Clean up the old plough (after) |
-| ⬜ | `birdhouse_broken` | 🪵 | Put up a birdhouse |
-| ⬜ | `birdhouse` | 🐦 | Put up a birdhouse (after) |
-| ⬜ | `signpost` | 🪧 | Put up a signpost (after) |
-| ⬜ | `bed_bare` | 🟫 | Dig the first bed |
-| ⬜ | `bed_young` | 🌱 | Dig the first bed (after) |
-| ⬜ | `berries_wilted` | 🥀 | Water the wilted plants |
-| ⬜ | `berries_ripe` | 🍓 | Water the wilted plants (after) |
-| ⬜ | `barrel_broken` | 🛢️ | Fix the water barrel |
-| ⬜ | `barrel_full` | 💧 | Fix the water barrel (after) |
-| ⬜ | `netting_tangled` | 🕸️ | Untangle the netting |
-| ⬜ | `netting` | 🥅 | Untangle the netting (after) |
-| ⬜ | `molehole` | 🕳️ | Fill in the mole hole |
-| ⬜ | `weeds_straw` | 🌿 | Spread fresh straw |
-| ⬜ | `straw_mulch` | 🌾 | Spread fresh straw (after) |
-| ⬜ | `baskets_tipped` | 🧺 | Fill the baskets |
-| ⬜ | `baskets_berries` | 🍓 | Fill the baskets (after) |
-| ⬜ | `stand_broken` | 🪵 | Open the berry stand |
-| ⬜ | `stand` | 🏪 | Open the berry stand (after) |
-| ⬜ | `branch_big` | 🪵 | Clear the fallen branch |
-| ⬜ | `apples_rotten` | 🍂 | Pick up the old apples |
-| ⬜ | `apples_basket` | 🍎 | Pick up the old apples (after) |
-| ⬜ | `wall_rubble` | 🪨 | Mend the stone wall |
-| ⬜ | `wall` | 🧱 | Mend the stone wall (after) |
-| ⬜ | `crate_broken` | 📦 | Fix the apple crates |
-| ⬜ | `crates_apples` | 🍏 | Fix the apple crates (after) |
-| ⬜ | `stump` | 🪵 | Turn the stump into a table |
-| ⬜ | `stump_table` | 🍄 | Turn the stump into a table (after) |
-| ⬜ | `beehive_broken` | 📦 | Rehome the bees |
-| ⬜ | `beehive` | 🐝 | Rehome the bees (after) |
-| ⬜ | `brambles` | 🌵 | Cut back the brambles |
-| ⬜ | `swing_broken` | 🪢 | Hang up the swing |
-| ⬜ | `swing` | 🎠 | Hang up the swing (after) |
-| ⬜ | `sapling` | 🌳 | Plant a new apple tree (after) |
-| ⬜ | `picnic` | 🧺 | Lay out a picnic (after) |
+Painted areas don't need these: their mess is in the painting. Only areas still without one are listed.
+
 
 ## 13. Tools (what jobs ask for)
 
@@ -596,3 +505,5 @@ its own 8-step chain (`items.<chain>`, files `assets/items/<chain>/00.png` … `
 Older drafts you can delete or keep as references: `assets/ghibli/`, `assets/v2/`, `assets/tier*_*.jpg`,
 `assets/items/barn/09_bear.png`, `10_elephant.png`, `11_whale.png`. `assets/raw/` holds the source sheets the
 items and icons were cut from.
+The Barnyard and Hen House object sprites (`assets/objects/`) and the old area pictures (`assets/areas/`) are
+only a fallback now that those areas are painted.

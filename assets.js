@@ -35,7 +35,7 @@ const ASSETS = {
         gardengate: [0, 1, 2].map(k => `assets/stages/gardengate/${k}.jpg`),
         rosearch: [0, 1, 2].map(k => `assets/stages/rosearch/${k}.jpg`),
         greenhouse: [0, 1, 2].map(k => `assets/stages/greenhouse/${k}.jpg`),
-        bigbarn: null,
+        bigbarn: [0, 1, 2].map(k => `assets/stages/bigbarn/${k}.jpg`), // the barn's storeroom
         meadow: null,
         stables: [0, 1, 2].map(k => `assets/stages/stables/${k}.jpg`),
         compostbins: [0, 1, 2].map(k => `assets/stages/compostbins/${k}.jpg`),
@@ -90,10 +90,6 @@ const ASSETS = {
         basket_eggs: 'assets/objects/henhouse/basket_eggs.png',
         trough_full: 'assets/objects/henhouse/trough_full.png', coop: 'assets/objects/henhouse/coop.png',
         nestbox: 'assets/objects/henhouse/nestbox.png',
-        // Big Red Barn
-        stall_broken: 'assets/objects/bigbarn/stall_broken.png', hay_heap: 'assets/objects/bigbarn/hay_heap.png', ladder_fallen: 'assets/objects/bigbarn/ladder_fallen.png', paint_old: 'assets/objects/bigbarn/paint_old.png', rope_tangled: 'assets/objects/bigbarn/rope_tangled.png',
-        tools_rusty: 'assets/objects/bigbarn/tools_rusty.png', lamp_broken: 'assets/objects/bigbarn/lamp_broken.png', cans_spilled: 'assets/objects/bigbarn/cans_spilled.png', stall_cow: 'assets/objects/bigbarn/stall_cow.png', hay_bales: 'assets/objects/bigbarn/hay_bales.png', ladder: 'assets/objects/bigbarn/ladder.png',
-        paint: 'assets/objects/bigbarn/paint.png', rope_hook: 'assets/objects/bigbarn/rope_hook.png', tool_rack: 'assets/objects/bigbarn/tool_rack.png', lamp: 'assets/objects/bigbarn/lamp.png', milk_cans: 'assets/objects/bigbarn/milk_cans.png',
     },
 
     // Places on the farm map.
