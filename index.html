@@ -1479,6 +1479,17 @@
         .deed-card .label-icon { display: grid; place-items: center; flex: none; width: 9cqw; height: 9cqw; font-size: 6cqw; background: #fff3c8; border-radius: 50%; }
         .deed-card .spot-label { position: static; transform: none; flex: 1; text-align: left; white-space: normal; border: 0; box-shadow: none; padding: 0; background: none; font-size: max(11px, 3.2cqw); }
         .deed-card .price-tag, .place-label .price-tag { position: static; transform: none; margin-left: auto; }
+        /* The townsfolk's orders, as a row of cards over the square. */
+        .order-strip { position: absolute; left: 0; right: 0; top: 2cqw; z-index: 60; display: flex; justify-content: center; gap: 1.6cqw; padding: 0 2cqw; pointer-events: none; }
+        .spot.order-tile { position: relative; pointer-events: auto; flex: 0 1 18cqw; display: flex; flex-direction: column; align-items: center; gap: 0.6cqw; padding: 1.4cqw 1cqw 1cqw; background: var(--paper); border: 2px solid var(--ink); border-radius: 12px; box-shadow: 0 3px 0 var(--ink), 0 6px 10px rgba(0, 0, 0, 0.25); }
+        .spot.order-tile:active { transform: scale(0.95); }
+        .order-want { display: grid; place-items: center; width: 12cqw; height: 12cqw; font-size: 8cqw; line-height: 1; background: rgba(0, 0, 0, 0.06); border-radius: 10px; }
+        .order-want img { width: 90%; height: 90%; object-fit: contain; }
+        .spot .order-face { position: absolute; left: -1.5cqw; top: 8.5cqw; width: 7cqw; height: 7cqw; object-fit: cover; border: 2px solid var(--ink); border-radius: 50%; background: #fff; }
+        .order-name { font-size: max(9px, 2.6cqw); font-weight: 900; white-space: nowrap; }
+        .order-tile.ready { background: #e3fbdf; border-color: #2e8c3c; animation: bob 1.2s ease-in-out infinite; }
+        .order-check { position: absolute; right: -1.5cqw; top: -1.5cqw; display: grid; place-items: center; width: 6cqw; height: 6cqw; background: #2e8c3c; color: #fff; border: 2px solid #fff; border-radius: 50%; font-weight: 900; font-size: 3.6cqw; }
+        .order-gift { position: absolute; left: -1.5cqw; top: -1.5cqw; font-size: 4.5cqw; }
     </style>
 </head>
 <body>

@@ -2628,9 +2628,6 @@ function npcPicture(npc) {
     return ASSETS.portraits[npc.id] || ASSETS.characters[npc.id];
 }
 
-// Where the townsfolk stand on the painted square.
-const PEOPLE_AT = { mayor: [27, 76], robin: [47, 79], marnie: [63, 72], sandy: [77, 76], willy: [35, 57] };
-
 // The square's painting: in fog until it's cleared, rebuilding, then restored.
 // `extra`: a job counted as done (the one being fixed right now).
 function townPicture(extra) {
@@ -2639,21 +2636,28 @@ function townPicture(extra) {
     return ASSETS.stages.town[done === jobs.length ? 2 : done > 0 ? 1 : 0];
 }
 
-// The painted square: the townsfolk are in the painting, so each gets a label
-// with their face and what they'd like; open jobs are bubbles on their houses.
+// The painted square: the townsfolk live in the painting, and what each would
+// like is a row of order cards across the top (face, name, the item; green
+// once you have it). Open jobs are bubbles on their houses.
 function addTownLabels(scene) {
     const frame = paintedPage(scene, townPicture());
-    npcs.forEach(npc => {
-        const [x, y] = PEOPLE_AT[npc.id];
-        const person = placeLabel(frame, npc.id, { x, y, icon: `<img src="${npcPicture(npc)}" alt="">` }, npc.name, () => openNpc(npc));
-        person.classList.add('person-label');
-        if (npc.request) {
-            const bubble = addTag(person, 'bubble', itemIcon(npc.request.mode, npc.request.tier));
-            if (canFulfill(npc)) bubble.classList.add('ready');
-            if (npc.request.rewardProducer) addTag(bubble, 'gift', '🎁');
-        }
-    });
     addJobChips(landTasks('town'), frame);
+    const strip = document.createElement('div');
+    strip.className = 'order-strip';
+    npcs.forEach(npc => {
+        const r = npc.request;
+        const card = document.createElement('button');
+        card.className = 'spot order-tile' + (r && canFulfill(npc) ? ' ready' : '');
+        card.dataset.id = npc.id;
+        card.innerHTML = `<span class="order-want">${r ? itemIcon(r.mode, r.tier) : '💤'}</span>
+                          <img class="order-face" src="${npcPicture(npc)}" alt="">
+                          <span class="order-name">${npc.name.split(' ')[0]}</span>`;
+        if (r && r.rewardProducer) addTag(card, 'order-gift', '🎁');
+        if (r && canFulfill(npc)) addTag(card, 'order-check', '✓');
+        card.addEventListener('click', () => openNpc(npc));
+        strip.appendChild(card);
+    });
+    scene.appendChild(strip);
 }
 
 function renderTown() {
