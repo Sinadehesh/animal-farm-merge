@@ -12,6 +12,34 @@ const ASSETS = {
         market: 'assets/scenes/market.jpg',
     },
 
+    // Painted pages: one painting per screen, the same scene in three states
+    // (ruined, half fixed, restored), cut from one sheet so they match exactly
+    // (tall, about 1:3, except the Hen House's wide one). Things to tap are
+    // labels over the painting; a page swaps to its next picture as you fix it.
+    // null = not painted yet: the area keeps its old picture and objects.
+    stages: {
+        map: [0, 1, 2].map(k => `assets/stages/map/${k}.jpg`),
+        town: [0, 1, 2].map(k => `assets/stages/town/${k}.jpg`),
+        barnyard: [0, 1, 2].map(k => `assets/stages/barnyard/${k}.jpg`),
+        henhouse: [0, 1, 2].map(k => `assets/stages/henhouse/${k}.jpg`),
+        fieldgate: [0, 1, 2].map(k => `assets/stages/fieldgate/${k}.jpg`),
+        berryrows: [0, 1, 2].map(k => `assets/stages/berryrows/${k}.jpg`),
+        orchard: [0, 1, 2].map(k => `assets/stages/orchard/${k}.jpg`),
+        windmill: [0, 1, 2].map(k => `assets/stages/windmill/${k}.jpg`),
+        leafpiles: [0, 1, 2].map(k => `assets/stages/leafpiles/${k}.jpg`),
+        mushrooms: [0, 1, 2].map(k => `assets/stages/mushrooms/${k}.jpg`),
+        muddyshore: [0, 1, 2].map(k => `assets/stages/muddyshore/${k}.jpg`),
+        lilypond: [0, 1, 2].map(k => `assets/stages/lilypond/${k}.jpg`),
+        boatdock: [0, 1, 2].map(k => `assets/stages/boatdock/${k}.jpg`),
+        gardengate: [0, 1, 2].map(k => `assets/stages/gardengate/${k}.jpg`),
+        rosearch: [0, 1, 2].map(k => `assets/stages/rosearch/${k}.jpg`),
+        greenhouse: [0, 1, 2].map(k => `assets/stages/greenhouse/${k}.jpg`),
+        bigbarn: null,
+        meadow: null,
+        stables: null,
+        compostbins: null,
+    },
+
     // Areas: each land's place is a column of square pictures (1:1), one per
     // area, drawn restored and tidy with open ground; the game fades them and
     // puts the mess on top. null = the land's board texture.
