@@ -19,7 +19,7 @@ const ASSETS = {
     // null = not painted yet: the area keeps its old picture and objects.
     stages: {
         map: [0, 1, 2].map(k => `assets/stages/map/${k}.jpg`),
-        market: ['assets/stages/market/0.jpg'], // one painting: the shop doesn't change
+        market: ['assets/stages/market/0.jpg'], // one painting (the storeroom, restored): the shop doesn't change
         town: [0, 1, 2].map(k => `assets/stages/town/${k}.jpg`),
         barnyard: [0, 1, 2].map(k => `assets/stages/barnyard/${k}.jpg`),
         henhouse: [0, 1, 2].map(k => `assets/stages/henhouse/${k}.jpg`),

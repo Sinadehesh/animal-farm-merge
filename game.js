@@ -2286,7 +2286,7 @@ function makeSpot({ x, y, w, h, z, sprite, alt = '', label, onClick, locked = fa
 function addTag(el, className, html) {
     const tag = document.createElement('span');
     tag.className = className;
-    tag.innerHTML = html;
+    tag.innerHTML = iconize(html);
     el.appendChild(tag);
     return tag;
 }
@@ -2298,14 +2298,14 @@ function showDialog({ art, artRound = false, title, body, actions, sheet = false
     dialogArt.hidden = !art;
     if (art) dialogArt.src = art;
     dialogArt.classList.toggle('round', artRound);
-    dialogTitle.textContent = title;
-    dialogBody.innerHTML = body;
+    dialogTitle.innerHTML = iconize(escapeText(title));
+    dialogBody.innerHTML = iconize(body);
     dialogActions.innerHTML = '';
     actions.forEach(action => {
         const btn = document.createElement('button');
         btn.className = 'btn' + (action.primary ? ' btn-primary' : '') + (action.wide ? ' btn-wide' : '');
         if (action.icon) btn.innerHTML = `${action.icon} `;
-        btn.append(action.label);
+        btn.insertAdjacentHTML('beforeend', iconize(escapeText(action.label)));
         btn.disabled = !!action.disabled;
         btn.addEventListener('click', () => {
             closeDialog();
@@ -2326,7 +2326,7 @@ dialogEl.addEventListener('click', e => { if (e.target === dialogEl) closeDialog
 function toast(message, kind = '') {
     const el = document.createElement('div');
     el.className = 'toast ' + kind;
-    el.textContent = message;
+    el.innerHTML = iconize(escapeText(message));
     toastLayer.appendChild(el);
     while (toastLayer.children.length > 3) toastLayer.firstChild.remove();
     setTimeout(() => el.remove(), 2600);
@@ -2748,40 +2748,33 @@ function deliver(npc) {
 
 // --- MARKET ---
 
-// The painted Market: the shopkeeper behind her counter, a label on each thing
-// to buy, and the land deeds as cards on the floor below.
+// The painted Market: the shop's painting, and what's for sale as a list of
+// tiles over the top of it: the shop's offers, then a deed for each land.
 function addMarketLabels(scene) {
-    const frame = paintedPage(scene, ASSETS.stages.market[0]);
-    const label = (id, x, y, icon, name, onClick) => {
-        const el = placeLabel(frame, id, { x, y, icon }, name, onClick);
+    paintedPage(scene, ASSETS.stages.market[0]);
+    const strip = document.createElement('div');
+    strip.className = 'order-strip shop-strip';
+    const tile = (id, icon, name, onClick) => {
+        const el = document.createElement('button');
+        el.className = 'spot order-tile';
         el.id = `btn-${id}`;
+        el.dataset.id = id;
+        el.innerHTML = `<span class="order-want">${icon}</span><span class="order-name">${name}</span>`;
+        el.addEventListener('click', onClick);
+        strip.appendChild(el);
         return el;
     };
-    label('shopkeeper', 58, 15, `<img src="${ASSETS.portraits.shopkeeper}" alt="">`, 'Shopkeeper', () => {
-        toast(SHOPKEEPER_LINES[shopkeeperLine++ % SHOPKEEPER_LINES.length]);
-    }).classList.add('person-label');
-    label('flash', 14, 46, uiIcon('sale', '🏷️'), 'Flash Sale', openFlashSale);
-    const deals = label('deals', 84, 71, uiIcon('gift', '🎁'), 'Daily Deals', openDailyDeals);
+    tile('flash', uiIcon('sale', '🏷️'), 'Flash Sale', openFlashSale);
+    const deals = tile('deals', uiIcon('gift', '🎁'), 'Daily Deals', openDailyDeals);
     if (dealsWaiting()) addTag(deals, 'badge', '!');
-    if (maxTier < NAMES['barn'].length - 1) {
-        const guide = label('guide', 50, 59, '📖', 'Growth Guide', offerUpgrade);
-        addTag(guide, 'price-tag', `💵${maxTier * 100}`);
-    }
-    const deeds = Object.keys(AREAS).filter(id => !unlocks[id]);
-    if (!deeds.length) return;
-    const list = document.createElement('div');
-    list.className = 'deed-list';
-    list.innerHTML = '<h3>📜 Land Deeds</h3>';
-    deeds.forEach(id => {
-        const card = document.createElement('button');
-        card.className = 'spot deed-card';
-        card.dataset.id = id;
-        card.innerHTML = `<span class="label-icon">${MAP_LABELS[id].icon}</span><span class="spot-label">${AREAS[id].name}</span>`;
-        addTag(card, 'price-tag', quests.level < AREAS[id].level ? `${uiIcon('lock', '🔒')}Lv${AREAS[id].level}` : `💵${AREAS[id].cost}`);
-        card.addEventListener('click', () => offerDeed(id));
-        list.appendChild(card);
+    if (maxTier < NAMES['barn'].length - 1) addTag(tile('guide', '📖', 'Growth Guide', offerUpgrade), 'price-tag', `💵${maxTier * 100}`);
+    Object.keys(AREAS).filter(id => !unlocks[id]).forEach(id => {
+        const deed = tile(`deed-${id}`, MAP_LABELS[id].icon, AREAS[id].name, () => offerDeed(id));
+        deed.dataset.id = id;
+        deed.classList.add('deed');
+        addTag(deed, 'price-tag', quests.level < AREAS[id].level ? `🔒Lv${AREAS[id].level}` : `💵${AREAS[id].cost}`);
     });
-    frame.after(list);
+    scene.appendChild(strip);
 }
 
 function renderMarket() {
@@ -4592,6 +4585,24 @@ function ensureToolboxes() {
 // --- Drawing the board ---
 
 // An interface icon from ASSETS.ui in place of its emoji, or the emoji itself.
+// The emoji the game writes in its text, drawn as the matching icon picture
+// where there is one. The emoji stays on as hidden text (for screen readers
+// and copying).
+const EMOJI_ICONS = { '🎁': 'gift', '🔒': 'lock', '🔨': 'hammer', '✨': 'sparkle', '📋': 'jobs', '💵': 'coin', '💎': 'gem',
+    '⭐': 'star', '⚡': 'energy', '✅': 'check', '🔥': 'offer', '🎒': 'inventory', '🎟': 'pass', '📅': 'daily', '🫙': 'jar', '🗝': 'key' };
+const EMOJI_RE = new RegExp(`(${Object.keys(EMOJI_ICONS).join('|')})\uFE0F?`, 'gu');
+
+function iconize(html) {
+    return String(html).split(/(<[^>]*>)/).map(part => part.startsWith('<') ? part : part.replace(EMOJI_RE, (all, e) => {
+        const src = (ASSETS.ui || {})[EMOJI_ICONS[e]];
+        return src ? `<img class="ui-icon" src="${src}" alt="" draggable="false"><i class="emo">${all}</i>` : all;
+    })).join('');
+}
+
+function escapeText(text) {
+    return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function uiIcon(name, emoji) {
     const src = (ASSETS.ui || {})[name];
     return src ? `<img class="ui-icon" src="${src}" alt="${emoji}" draggable="false">` : emoji;

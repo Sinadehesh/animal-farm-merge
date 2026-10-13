@@ -446,7 +446,7 @@ swaps to the next painting as its jobs get done. Raw sheets are kept in `assets/
 | ✅ | Garden Gate | `assets/stages/gardengate/0-2.jpg` |  |
 | ✅ | Rose Arch | `assets/stages/rosearch/0-2.jpg` |  |
 | ✅ | Greenhouse | `assets/stages/greenhouse/0-2.jpg` |  |
-| ✅ | Market | `assets/stages/market/0.jpg` | one painting with the shopkeeper; deeds are cards below it |
+| ✅ | Market | `assets/stages/market/0.jpg` | the storeroom's restored painting; what's for sale is a list of tiles over it (the shopkeeper version is kept in `assets/raw/stages/market.webp`) |
 
 ## 12. Areas (Merge Mansion style places)
 

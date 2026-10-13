@@ -1417,8 +1417,8 @@
         .page-scroll, .zone.painted .zone-scroll { position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
         .page-scroll::-webkit-scrollbar, .zone-scroll::-webkit-scrollbar { display: none; }
         .zone.painted .zone-scroll { display: flex; flex-direction: column; }
-        .page-frame, .zone.painted .zone-frame { position: relative; flex: none; margin: auto 0; top: auto; translate: none; aspect-ratio: auto; max-height: none; }
-        .page-scroll .page-frame { margin: 0 0 26cqw; } /* room to scroll the bottom clear of the corner buttons */
+        .page-frame { position: relative; }
+        .zone.painted .zone-frame { position: relative; flex: none; margin: auto 0; top: auto; translate: none; aspect-ratio: auto; max-height: none; }
         .page-art, .zone.painted .zone-art { position: relative; inset: auto; display: block; width: 100%; height: auto; box-shadow: none; user-select: none; -webkit-user-drag: none; }
         .page-next { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1.2s ease, filter 1.2s ease; filter: brightness(1.6) saturate(1.3); }
         .page-next.in { opacity: 1; filter: none; }
@@ -1471,14 +1471,6 @@
         .place-label.person-label .bubble img, .place-label .bubble .ui-icon { width: 7cqw; height: 7cqw; }
         .place-label .bubble.ready { background: #e3fbdf; border-color: #2e8c3c; }
         #scene-market:has(.page-scroll) { background: #d19a57; }
-        #scene-market .page-scroll .page-frame { margin-bottom: 0; }
-        /* The land deeds, as cards on the shop floor under the painting. */
-        .deed-list { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5cqw; padding: 3cqw 4cqw 30cqw; }
-        .deed-list h3 { grid-column: 1 / -1; margin: 0; text-align: center; font-size: max(13px, 4.4cqw); color: #fff8e7; text-shadow: 0 2px 0 rgba(80, 45, 15, 0.6); }
-        .spot.deed-card { position: relative; display: flex; align-items: center; gap: 1.5cqw; padding: 1.5cqw; background: var(--paper); border: 2px solid var(--ink); border-radius: 14px; box-shadow: 0 3px 0 var(--ink); }
-        .deed-card .label-icon { display: grid; place-items: center; flex: none; width: 9cqw; height: 9cqw; font-size: 6cqw; background: #fff3c8; border-radius: 50%; }
-        .deed-card .spot-label { position: static; transform: none; flex: 1; text-align: left; white-space: normal; border: 0; box-shadow: none; padding: 0; background: none; font-size: max(11px, 3.2cqw); }
-        .deed-card .price-tag, .place-label .price-tag { position: static; transform: none; margin-left: auto; }
         /* The townsfolk's orders, as a row of cards over the square. */
         .order-strip { position: absolute; left: 0; right: 0; top: 2cqw; z-index: 60; display: flex; justify-content: center; gap: 1.6cqw; padding: 0 2cqw; pointer-events: none; }
         .spot.order-tile { position: relative; pointer-events: auto; flex: 0 1 18cqw; display: flex; flex-direction: column; align-items: center; gap: 0.6cqw; padding: 1.4cqw 1cqw 1cqw; background: var(--paper); border: 2px solid var(--ink); border-radius: 12px; box-shadow: 0 3px 0 var(--ink), 0 6px 10px rgba(0, 0, 0, 0.25); }
@@ -1490,6 +1482,11 @@
         .order-tile.ready { background: #e3fbdf; border-color: #2e8c3c; animation: bob 1.2s ease-in-out infinite; }
         .order-check { position: absolute; right: -1.5cqw; top: -1.5cqw; display: grid; place-items: center; width: 6cqw; height: 6cqw; background: #2e8c3c; color: #fff; border: 2px solid #fff; border-radius: 50%; font-weight: 900; font-size: 3.6cqw; }
         .order-gift { position: absolute; left: -1.5cqw; top: -1.5cqw; font-size: 4.5cqw; }
+        .emo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+        .shop-strip { flex-wrap: wrap; row-gap: 2.4cqw; }
+        .order-tile .price-tag { right: -2cqw; top: auto; bottom: 6cqw; }
+        .order-tile.deed { background: #fdf3dc; }
+        .order-tile .badge { right: -2cqw; top: -2cqw; min-width: 6cqw; height: 6cqw; }
     </style>
 </head>
 <body>
