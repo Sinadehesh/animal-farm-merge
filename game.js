@@ -5317,3 +5317,8 @@ setInterval(() => {
     saveGame();
 }, 1000);
 addEventListener('pagehide', saveGame);
+
+// Installable and playable offline (on the published site; not while developing).
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* the game works without it */ });
+}

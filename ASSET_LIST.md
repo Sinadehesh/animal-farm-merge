@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**420 assets:** 346 done ✅, 8 placeholders 🟡, 66 missing ⬜.
+**423 assets:** 349 done ✅, 8 placeholders 🟡, 66 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -499,6 +499,17 @@ its own 8-step chain (`items.<chain>`, files `assets/items/<chain>/00.png` … `
 | ✅ | 🧹 Broom Cabinet | Compost Yard | ✅ Sponge, Soap, Scrub Brush, Soapy Bucket, Broom, Mop, Cleaning Trolley, Golden Broom |
 | ✅ | 🎣 Tackle Box | Fish Pond | ✅ Hook, Bobber, Rope, Net, Fishing Rod, Oars, Life Ring, Rowboat |
 | ✅ | 🏮 Lantern Crate | Flower Garden | ✅ Candle, Paper Lantern, Bunting, Glass Lantern, Fairy Lights, Balloons, Lamp Post, Golden Firework |
+
+## App icons
+
+The icon on a phone's home screen and in the browser tab, made from the Chick on a sunny field. Listed in
+`manifest.json` and `index.html`.
+
+| | Icon | File |
+|---|---|---|
+| ✅ | App icon, 192×192 | `assets/ui/app-icon-192.png` |
+| ✅ | App icon, 512×512 | `assets/ui/app-icon-512.png` |
+| ✅ | iPhone home screen, 180×180 | `assets/ui/apple-touch-icon.png` |
 
 ## Not used by the game
 
