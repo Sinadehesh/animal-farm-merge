@@ -134,17 +134,28 @@ function orderXp(tier) {
 const CHESTS = {
     coin: {
         emoji: '💰', name: 'Coin Chest',
-        levels: [{ drops: 5, contents: [['coin', 1, 40], ['coin', 2, 30], ['coin', 3, 20], ['coin', 4, 10]] }],
+        levels: [
+            { drops: 5, contents: [['coin', 1, 40], ['coin', 2, 30], ['coin', 3, 20], ['coin', 4, 10]] },
+            { drops: 9, contents: [['coin', 2, 40], ['coin', 3, 30], ['coin', 4, 20], ['coin', 5, 10]] },
+            { drops: 14, contents: [['coin', 3, 40], ['coin', 4, 30], ['coin', 5, 20], ['coin', 6, 10]] },
+        ],
     },
     energy: {
         emoji: '🔋', name: 'Energy Chest',
-        levels: [{ drops: 5, contents: [['energy', 1, 56], ['energy', 2, 31], ['energy', 3, 13]] }],
+        levels: [
+            { drops: 5, contents: [['energy', 1, 56], ['energy', 2, 31], ['energy', 3, 13]] },
+            { drops: 9, contents: [['energy', 2, 56], ['energy', 3, 31], ['energy', 4, 13]] },
+            { drops: 14, contents: [['energy', 2, 40], ['energy', 3, 40], ['energy', 4, 20]] },
+        ],
     },
     brown: {
         emoji: '🧰', name: 'Brown Chest',
         levels: [
             { drops: 10, minutes: 1, skip: 2, contents: [['part', 1, 57], ['coin', 1, 11], ['coin', 2, 7], ['coin', 3, 3], ['energy', 1, 11], ['energy', 2, 7], ['energy', 3, 3]] },
             { drops: 22, minutes: 5, skip: 10, contents: [['part', 1, 26], ['part', 2, 15], ['coin', 1, 14], ['coin', 2, 8], ['coin', 3, 7], ['energy', 1, 14], ['energy', 2, 8], ['energy', 3, 7]] },
+            // Levels 3-4 go past Merge Mansion's two, on the same curve (its Red Chest takes 3h).
+            { drops: 34, minutes: 20, skip: 28, contents: [['part', 1, 18], ['part', 2, 18], ['part', 3, 8], ['coin', 2, 12], ['coin', 3, 10], ['coin', 4, 6], ['energy', 2, 12], ['energy', 3, 10], ['energy', 4, 6]] },
+            { drops: 48, minutes: 60, skip: 70, contents: [['part', 2, 22], ['part', 3, 12], ['part', 4, 4], ['coin', 3, 14], ['coin', 4, 10], ['coin', 5, 6], ['energy', 3, 14], ['energy', 4, 10], ['gem', 1, 8]] },
         ],
     },
     blue: {
@@ -152,6 +163,8 @@ const CHESTS = {
         levels: [
             { drops: 10, minutes: 5, skip: 10, contents: [['part', 1, 46], ['part', 2, 20], ['coin', 1, 9], ['coin', 2, 5], ['coin', 3, 3], ['energy', 1, 9], ['energy', 2, 5], ['energy', 3, 3]] },
             { drops: 22, minutes: 10, skip: 19, contents: [['part', 1, 23], ['part', 2, 19], ['part', 3, 7], ['coin', 1, 13], ['coin', 2, 9], ['coin', 3, 5], ['energy', 1, 13], ['energy', 2, 9], ['energy', 3, 5]] },
+            { drops: 34, minutes: 40, skip: 45, contents: [['part', 2, 22], ['part', 3, 14], ['part', 4, 5], ['coin', 2, 12], ['coin', 3, 9], ['coin', 4, 6], ['energy', 2, 12], ['energy', 3, 9], ['energy', 4, 6], ['gem', 1, 5]] },
+            { drops: 48, minutes: 120, skip: 120, contents: [['part', 3, 20], ['part', 4, 10], ['part', 5, 3], ['coin', 3, 13], ['coin', 4, 10], ['coin', 5, 7], ['energy', 3, 13], ['energy', 4, 10], ['gem', 1, 8], ['gem', 2, 6]] },
         ],
     },
 };
@@ -6014,7 +6027,15 @@ function uiIcon(name, emoji) {
 function specialSprite(item) {
     if (item.type === 'bubble') return null; // drawn around its item, below
     const key = item.type === 'chest' ? `chest_${item.kind}` : item.type;
-    return ((ASSETS.special || {})[key] || [])[levelOf(item) - 1] || null;
+    // A level not drawn yet borrows the nearest one below (its badge says which).
+    const pick = k => {
+        const list = (ASSETS.special || {})[k] || [];
+        for (let i = levelOf(item) - 1; i >= 0; i--) if (list[i]) return list[i];
+        return null;
+    };
+    // A chest that's been unlocked or tapped shows its lid open, once drawn.
+    if (item.type === 'chest' && (item.drops !== undefined || (item.openAt && chestReady(item)))) return pick(`${key}_open`) || pick(key);
+    return pick(key);
 }
 
 // How an item looks: extra CSS classes, its inside, an inline style, and the

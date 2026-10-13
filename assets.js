@@ -458,10 +458,17 @@ const ASSETS = {
             'assets/items/special/unlimited_3.png',
         ],  // ♾️ Unlimited Energy: 5m, 10m, 20m
         bubble: ['assets/items/special/bubble.png'], // 🫧 the Double Bubble around an item
-        chest_coin: ['assets/items/special/chest_coin_1.png'],     // 💰 Coin Chest
-        chest_energy: ['assets/items/special/chest_energy_1.png'], // 🔋 Energy Chest
-        chest_brown: ['assets/items/special/chest_brown_1.png', 'assets/items/special/chest_brown_2.png'], // Brown Chest, Lv1-2
-        chest_blue: ['assets/items/special/chest_blue_1.png', 'assets/items/special/chest_blue_2.png'],    // Blue Chest, Lv1-2
+        // Chests by level (two merge into the next), closed and then open once
+        // unlocked or tapped. null = not drawn yet (the level below's picture,
+        // or the emoji). Coin and Energy Chests Lv1-3, Brown and Blue Lv1-4.
+        chest_coin: ['assets/items/special/chest_coin_1.png', null, null],      // 💰 Coin Chest
+        chest_energy: ['assets/items/special/chest_energy_1.png', null, null],  // 🔋 Energy Chest
+        chest_brown: ['assets/items/special/chest_brown_1.png', 'assets/items/special/chest_brown_2.png', null, null], // Brown Chest
+        chest_blue: ['assets/items/special/chest_blue_1.png', 'assets/items/special/chest_blue_2.png', null, null],    // Blue Chest
+        chest_coin_open: [null, null, null],
+        chest_energy_open: [null, null, null],
+        chest_brown_open: [null, null, null, null],
+        chest_blue_open: [null, null, null, null],
         piggy: [
             'assets/items/special/piggy_1.png',
             'assets/items/special/piggy_2.png',

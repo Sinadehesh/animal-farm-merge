@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**507 assets:** 379 done ✅, 8 placeholders 🟡, 120 missing ⬜.
+**529 assets:** 379 done ✅, 8 placeholders 🟡, 142 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -377,10 +377,14 @@ The same on every board. Each level looks fuller or bigger than the one before.
 | ✅ | Time Skip | 4 | `assets/items/special/skip_1.png` … `_4.png` | an hourglass, fancier each level (1h, 2h, 4h, 8h) |
 | ✅ | Time Charger | 4 | `assets/items/special/charger_1.png` … `_4.png` | a stopwatch with a green glow, fancier each level (2h-16h) |
 | ✅ | Unlimited Energy | 3 | `assets/items/special/unlimited_1.png` … `_3.png` | a purple infinity sign with a bolt (5, 10, 20 min) |
-| ✅ | Coin Chest | 1 | `assets/items/special/chest_coin_1.png` | a small gold chest spilling coins |
-| ✅ | Energy Chest | 1 | `assets/items/special/chest_energy_1.png` | a green chest with a lightning bolt |
-| ✅ | Brown Chest | 2 | `assets/items/special/chest_brown_1.png` … `_2.png` | a wooden treasure chest; level 2 bigger with iron trim |
-| ✅ | Blue Chest | 2 | `assets/items/special/chest_blue_1.png` … `_2.png` | a fancy blue chest with gold trim; level 2 bigger |
+| 1/3 | Coin Chest | 3 | `assets/items/special/chest_coin_1.png` … `_3.png` | a small gold chest spilling coins; each level bigger and fuller |
+| 1/3 | Energy Chest | 3 | `assets/items/special/chest_energy_1.png` … `_3.png` | a green chest with a lightning bolt; each level bigger, glowing more |
+| 2/4 | Brown Chest | 4 | `assets/items/special/chest_brown_1.png` … `_4.png` | a wooden treasure chest; each level bigger: iron trim, then brass, then gold |
+| 2/4 | Blue Chest | 4 | `assets/items/special/chest_blue_1.png` … `_4.png` | a fancy blue chest with gold trim; each level bigger and grander |
+| ⬜ | Coin Chest, open | 3 | `assets/items/special/chest_coin_open_1.png` … `_3.png` | the same chest as each level above, lid open, coins glinting inside |
+| ⬜ | Energy Chest, open | 3 | `assets/items/special/chest_energy_open_1.png` … `_3.png` | the same chest as each level above, lid open, energy glowing inside |
+| ⬜ | Brown Chest, open | 4 | `assets/items/special/chest_brown_open_1.png` … `_4.png` | the same chest as each level above, lid open, treasure inside |
+| ⬜ | Blue Chest, open | 4 | `assets/items/special/chest_blue_open_1.png` … `_4.png` | the same chest as each level above, lid open, treasure inside |
 | ✅ | Piggy Bank | 4 | `assets/items/special/piggy_1.png` … `_4.png` | a pink piggy bank, rounder and shinier each level |
 | ✅ | Double Bubble | 1 | `assets/items/special/bubble.png` | an empty, see-through soap bubble with a rainbow sheen (the item shows inside it) |
 
