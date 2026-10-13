@@ -206,7 +206,7 @@ const FLASH_SALE_OFFERS = [
 // once a day each.
 const DAILY_DEALS = [
     { id: 'piggy', item: { type: 'piggy', level: 1 }, gems: 0 },
-    { id: 'energyChest', item: { type: 'chest', kind: 'energy', level: 1 }, gems: 50 },
+    { id: 'energyChest', item: { type: 'chest', kind: 'energy', level: 1 }, coins: 50 }, // 🪙50 in Merge Mansion
 ];
 
 // Season Pass (Merge Mansion): a 28-day season. Any merge has a 10% chance to
@@ -275,9 +275,13 @@ const PRODUCER_REWARD_CHANCE = 0.25;
 // orders pay on purpose: selling is for clearing space, orders are for money.
 const SELL_PRICES = [1, 2, 4, 6, 12, 25, 51, 102, 205, 410, 820, 1640];
 
-// Gems to dust the cobwebs off an item instead of merging into it.
+// Gems to dust the cobwebs off an item instead of merging into it, by its level:
+// Merge Mansion's dusting prices (the median across its chains). It's meant to
+// be poor value: merging into it is the way.
+const DUST_GEMS = [15, 39, 57, 90, 187, 365, 730, 1460];
 function dustPrice(item) {
-    return item.type === 'shop' ? 5 * producerLevel(item) : 5 * (item.tier + 1);
+    const level = item.type === 'shop' ? producerLevel(item) : item.tier + 1;
+    return DUST_GEMS[Math.min(level, DUST_GEMS.length) - 1];
 }
 
 // Daily gift: one per calendar day on a 7-day track, as in Merge Gardens. Missing
@@ -301,7 +305,7 @@ function levelReward(level) {
 
 // 💎 Gems are the only thing sold for real money, as in Merge Gardens. 💵 is
 // earned by playing. Gems buy energy, skip recharges and cover any 💵 you're short.
-const COINS_PER_GEM = 10;
+const COINS_PER_GEM = 25; // Merge Mansion: 🪙2500 and 💎100 cost the same
 const LEVEL_UP_GEMS = 5; // a few free gems each time a townsperson levels up
 
 // Rewarded ads, a few a day in all: a free energy top-up, an instant producer
@@ -312,32 +316,35 @@ const ADS_PER_DAY = 8;
 // Merge Mansion's start: a full energy bar, 100 coins and 100 gems.
 const START = { money: 100, gems: 100, energy: 100 };
 
-// The shop follows Merge Gardens' store: gem packs at the same names and price
-// points, a 30-day Daily Basket and a one-time Special Offer. Merge Gardens
-// doesn't publish its gem amounts, so these are ours. In the app stores the
-// localized price comes from the store itself.
+// Gem packs at Merge Mansion's amounts and US prices (its shop, as scraped), so
+// gems are worth what they are there: neither cheap nor overpowered. In the app
+// stores the localized price comes from the store itself.
 const GEM_PACKS = [
-    { id: 'gems_pile',   name: 'Pile of Gems',   gems: 500,  price: '$4.99' },
-    { id: 'gems_cask',   name: 'Cask of Gems',   gems: 1100, price: '$9.99',  tag: '+10%' },
-    { id: 'gems_barrel', name: 'Barrel of Gems', gems: 2400, price: '$19.99', tag: '+20%' },
+    { id: 'gems_handful', name: 'Handful of Gems', gems: 100,  price: '$2.49' },
+    { id: 'gems_pouch',   name: 'Pouch of Gems',   gems: 260,  price: '$4.99' },
+    { id: 'gems_pile',    name: 'Pile of Gems',    gems: 570,  price: '$11.99' },
+    { id: 'gems_cask',    name: 'Cask of Gems',    gems: 1250, price: '$23.99', tag: 'popular' },
+    { id: 'gems_barrel',  name: 'Barrel of Gems',  gems: 3400, price: '$59.99' },
+    { id: 'gems_vault',   name: 'Vault of Gems',   gems: 7500, price: '$119.99', tag: 'best value' },
 ];
 // Gems once a day for 30 days; a day you don't open the game is lost.
-const DAILY_BASKET = { id: 'daily_basket', name: '30 Day Daily Basket', gemsPerDay: 25, days: 30, price: '$3.99' };
-// One-time offer, shown the first time you run out of energy.
-const SPECIAL_OFFER = { id: 'special_offer', name: 'Special Offer', gems: 200, money: 1000, energy: 200, price: '$1.99' };
+const DAILY_BASKET = { id: 'daily_basket', name: '30 Day Daily Basket', gemsPerDay: 10, days: 30, price: '$3.99' }; // 💎300: about 2× a $3.99 pack
+// One-time offer, shown the first time you run out of energy: Merge Mansion's
+// Special Offer (III), 💎100, 🪙100 and ⚡100.
+const SPECIAL_OFFER = { id: 'special_offer', name: 'Special Offer', gems: 100, money: 100, energy: 100, price: '$3.49' };
 
 // Gem Jar (the "piggy bank" of Candy Crush and Royal Match): gems pile up in it
 // as you play, and you break it open for real money. It opens once it holds
 // `min` and stops filling at `cap`. A full jar is a better deal than any gem
 // pack, which is the point: the gems feel already earned.
-const GEM_JAR = { id: 'gem_jar', name: 'Gem Jar', price: '$2.99', min: 150, cap: 400, perMerge: 1, perOrder: 5, perJob: 10 };
+const GEM_JAR = { id: 'gem_jar', name: 'Gem Jar', price: '$2.99', min: 100, cap: 200, perMerge: 1, perOrder: 5, perJob: 10 };
 
 // Time-limited offers: each opens when its moment comes, lasts `hours` with a
 // countdown on the map, and is shown once when it opens. `again`: days before it
 // can come back (one-time without it).
 const OFFERS = [
     { id: 'starter', name: 'Starter Pack', price: '$2.99', hours: 48,
-      reward: { gems: 300, energy: 200, chest: 'blue', part: 3 },
+      reward: { gems: 100, energy: 100, chest: 'blue', part: 3 },
       note: 'A head start for new farmers. Only once, and only for 48 hours!',
       when: () => quests.level >= 3 },
     { id: 'energy_bundle', name: 'Energy Bundle', price: '$1.99', hours: 24, again: 7,
@@ -349,7 +356,7 @@ const OFFERS = [
       note: 'Win the Fair! ⚡300 and an hour of double Fair points.',
       when: () => fairOpen() },
     { id: 'builder', name: 'Builder Pack', price: '$4.99', hours: 24,
-      reward: { gems: 400, part: 4, item: { type: 'charger', level: 2 } },
+      reward: { gems: 200, part: 4, item: { type: 'charger', level: 2 } }, // like Merge Mansion's Special Offer (II)
       note: 'A whole working producer, and a Time Charger to speed it up.',
       when: () => quests.level >= 5 },
 ];
@@ -475,17 +482,17 @@ const NAMES = {
 // producer on its board that drops its own chain: tool items are { tier, chain }
 // and can be used by jobs anywhere. `what` is how the producer's info names them.
 const TOOLS = {
-    tools:   { board: 'barn',   name: 'Toolbox',       emoji: '🧰', what: 'tools',          minutes: 2,  hue: 210,
+    tools:   { board: 'barn',   name: 'Toolbox',       emoji: '🧰', what: 'tools',          minutes: 2, skip: 2,  hue: 210,
                names: ['🔩 Screw', '🔨 Hammer', '🪛 Screwdriver', '🔧 Wrench', '🪚 Saw', '🔌 Power Drill', '🧰 Tool Kit', '🏆 Golden Tool Chest'] },
-    garden:  { board: 'farm',   name: 'Garden Shed',   emoji: '🛖', what: 'garden tools',   minutes: 3,  hue: 100,
+    garden:  { board: 'farm',   name: 'Garden Shed',   emoji: '🛖', what: 'garden tools',   minutes: 3, skip: 3,  hue: 100,
                names: ['🧤 Gloves', '🥄 Trowel', '✂️ Shears', '🧹 Rake', '🪢 Garden Hose', '🌀 Lawn Mower', '🚜 Tractor', '🌟 Golden Tractor'] },
-    wood:    { board: 'hay',    name: 'Log Pile',      emoji: '🪓', what: 'wood',           minutes: 5,  hue: 30,
+    wood:    { board: 'hay',    name: 'Log Pile',      emoji: '🪓', what: 'wood',           minutes: 5, skip: 4,  hue: 30,
                names: ['🌿 Twig', '🪵 Log', '🟫 Plank', '🪢 Plank Bundle', '🧱 Beams', '📦 Wooden Crate', '🛢️ Barrel', '💰 Carved Chest'] },
-    clean:   { board: 'fert',   name: 'Broom Cabinet', emoji: '🧹', what: 'cleaning things', minutes: 8, hue: 180,
+    clean:   { board: 'fert',   name: 'Broom Cabinet', emoji: '🧹', what: 'cleaning things', minutes: 8, skip: 5, hue: 180,
                names: ['🧽 Sponge', '🧼 Soap', '🪥 Scrub Brush', '🪣 Soapy Bucket', '🧹 Broom', '🫧 Mop', '🛒 Cleaning Trolley', '✨ Golden Broom'] },
-    fishing: { board: 'aqua',   name: 'Tackle Box',    emoji: '🎣', what: 'fishing gear',   minutes: 10, hue: 230,
+    fishing: { board: 'aqua',   name: 'Tackle Box',    emoji: '🎣', what: 'fishing gear',   minutes: 10, skip: 6, hue: 230,
                names: ['🪝 Hook', '🔴 Bobber', '🪢 Rope', '🥅 Net', '🎣 Fishing Rod', '🛶 Oars', '🛟 Life Ring', '⛵ Rowboat'] },
-    decor:   { board: 'flower', name: 'Lantern Crate', emoji: '🏮', what: 'decorations',    minutes: 15, hue: 330,
+    decor:   { board: 'flower', name: 'Lantern Crate', emoji: '🏮', what: 'decorations',    minutes: 15, skip: 7, hue: 330,
                names: ['🕯️ Candle', '🏮 Paper Lantern', '🎏 Bunting', '🪔 Glass Lantern', '💡 Fairy Lights', '🎈 Balloons', '🌸 Lamp Post', '🎆 Golden Firework'] },
 };
 Object.keys(TOOLS).forEach(chain => { NAMES[chain] = TOOLS[chain].names; });
@@ -685,15 +692,16 @@ function tickBoards(now = Date.now()) {
 
 // --- RECHARGING WITH 💎 ---
 // Any producer that has run out, the tool producers included, can be refilled
-// at once with 💎 instead of waiting. A producer's level sets its price; a tool
-// producer costs 💎1 for every 10 minutes still to wait (at least 💎2).
+// at once with 💎 instead of waiting, at a fixed price as in Merge Mansion. A
+// producer's level sets its price; a tool producer's matches the producers that
+// recharge about as fast.
 function isOutOfCharges(item) {
     if (!item || item.web || item.drops > 0 || !item.readyAt) return false;
     return item.type === 'toolbox' || isWorkingProducer(item);
 }
 
 function rechargePrice(mode, item) {
-    if (item.type === 'toolbox') return Math.max(2, Math.ceil((item.readyAt - Date.now()) / 600000));
+    if (item.type === 'toolbox') return TOOLS[item.chain].skip;
     return producerStats(mode, producerLevel(item)).skip;
 }
 
@@ -3795,7 +3803,7 @@ function openDailyDeals() {
                <p class="hint">New deals in ${formatDuration(msUntilTomorrow())}.</p>`,
         actions: [
             ...DAILY_DEALS.map(d => ({
-                label: `${itemLabel(deliveryBoard(), d.item)} · ${taken.includes(d.id) ? 'taken' : d.gems ? `💎${d.gems}` : 'FREE'}`,
+                label: `${itemLabel(deliveryBoard(), d.item)} · ${taken.includes(d.id) ? 'taken' : d.gems ? `💎${d.gems}` : d.coins ? `💵${d.coins}` : 'FREE'}`,
                 wide: true, primary: !taken.includes(d.id), disabled: taken.includes(d.id),
                 onClick: () => takeDeal(d.id),
             })),
@@ -3808,6 +3816,10 @@ function takeDeal(id) {
     const deal = DAILY_DEALS.find(d => d.id === id);
     if (!deal || dealsTaken().includes(id)) return;
     if (deal.gems && !spendGems(deal.gems)) return;
+    if (deal.coins) {
+        if (res.money < deal.coins) return toast(`You need 💵${deal.coins - res.money} more.`);
+        res.money -= deal.coins;
+    }
     shop.dealsTaken.push(id);
     sendToBoard(deliveryBoard(), deal.item);
     updateUI();
