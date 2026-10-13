@@ -1523,6 +1523,13 @@
         .fix-spot.chip.pin-below .task-pin { bottom: auto; top: 100%; margin: 2cqw 0 0; }
         .fix-spot.chip.pin-below .task-pin::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: var(--ink); }
         .fix-spot.chip.pin-below .task-pin.ready::after { border-bottom-color: #2e8c3c; }
+        /* Confetti for the big moments, and the shine across a painting as it turns. */
+        .confetti { position: absolute; inset: 0; z-index: 400; overflow: hidden; pointer-events: none; }
+        .confetti i { position: absolute; top: -4%; left: var(--x); width: 1.8cqw; height: 3cqw; background: var(--c); border-radius: 2px; animation: confetti-fall var(--d) cubic-bezier(.25, .5, .5, 1) var(--delay) forwards; }
+        @keyframes confetti-fall { to { top: 106%; transform: translateX(var(--drift)) rotate(var(--spin)); } }
+        .page-shine { position: absolute; inset: 0; z-index: 5; pointer-events: none; background: linear-gradient(115deg, transparent 30%, rgba(255, 246, 200, 0.75) 48%, rgba(255, 255, 255, 0.9) 50%, rgba(255, 246, 200, 0.75) 52%, transparent 70%) no-repeat; background-size: 250% 100%; animation: shine-sweep 1.4s ease-in-out forwards; }
+        @keyframes shine-sweep { from { background-position: 120% 0; } to { background-position: -20% 0; } }
+        .side-btn .gear { font-size: 7cqw; line-height: 1; }
     </style>
 </head>
 <body>
@@ -1563,7 +1570,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610131323"></script>
-    <script src="game.js?v=202610131323"></script>
+    <script src="assets.js?v=202610131328"></script>
+    <script src="game.js?v=202610131328"></script>
 </body>
 </html>

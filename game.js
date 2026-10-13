@@ -417,7 +417,7 @@ const stats = {
 };
 // Player toggles (saved with the game). charge = index into CHARGE_MODES;
 // unlimitedUntil = when Unlimited Energy runs out (ms timestamp).
-const settings = { charge: 0, unlimitedUntil: 0 };
+const settings = { charge: 0, unlimitedUntil: 0, sound: true, vibrate: true };
 // Player level and XP toward the next level.
 const quests = { level: 1, xp: 0 };
 // Restoration jobs done, and for open jobs the counters they count from.
@@ -726,6 +726,7 @@ function skipRecharge(mode, index) {
     if (!item || !item.readyAt || !(item.type === 'toolbox' || isWorkingProducer(item))) return;
     if (!spendGems(rechargePrice(mode, item))) return;
     refill(mode, item);
+    sfx('sparkle');
     document.querySelectorAll('.recharge-call').forEach(el => el.remove());
     updateUI();
     toast(`${rechargeName(mode, item)} recharged!`, 'good');
@@ -847,6 +848,7 @@ function startUnlimited(mode, index) {
 function payTapEnergy(cost) {
     if (unlimitedActive()) return true;
     if (res.energy < 1) {
+        sfx('nope');
         openEnergy(true);
         return false;
     }
@@ -1146,6 +1148,7 @@ function addXp(n) {
 
 function showLevelUp(level, reward) {
     if (level !== quests.level) return; // a later level-up has its own popup
+    celebrate();
     const land = Object.keys(AREAS).find(id => AREAS[id].level === level);
     showDialog({
         title: `⭐ Level ${level}!`,
@@ -1884,6 +1887,11 @@ function settleScroll(scroll, keep) {
 // The next painting fades in over the old one with a flash of gold.
 function turnPage(img, src) {
     if (!img || img.getAttribute('src') === src) return;
+    sfx('whoosh');
+    const shine = document.createElement('div');
+    shine.className = 'page-shine';
+    img.parentElement.appendChild(shine);
+    setTimeout(() => shine.remove(), 1600);
     const next = img.cloneNode();
     next.classList.add('page-next');
     next.src = src;
@@ -2042,6 +2050,7 @@ function fixJob(id) {
     spot.classList.add('hammering');
     spot.querySelectorAll('.task-pin, .restore-tag').forEach(el => el.remove());
     addTag(spot, 'fix-hammer', uiIcon('hammer', '🔨'));
+    [0, 320, 640, 960].forEach(t => setTimeout(() => { sfx('knock'); buzz(15); }, t)); // knock, knock...
     const fx = (cls, html, delay) => setTimeout(() => addTag(spot, cls, html), delay);
     fx('fix-dust', '💨', 500);
     fx('fix-dust two', '💨', 850);
@@ -2049,6 +2058,8 @@ function fixJob(id) {
         // The new look, and the building's next stage if it has one.
         spot.classList.remove('hammering', 'open', 'ready');
         spot.classList.add('fixed', 'just-fixed');
+        sfx('sparkle');
+        buzz(30);
         spot.querySelectorAll('.task-pin, .fix-hammer').forEach(el => el.remove());
         if (!spot.classList.contains('chip')) spot.querySelector('.fix-face').innerHTML = fixFace(task, true) || '✨';
         addTag(spot, 'fix-swirl', '');
@@ -2408,6 +2419,7 @@ function completeTask(id, quiet = false) {
     if (task.reward) grantReward(task.reward, '🔨');
     if (restored) grantReward(LAND_REWARD, '✨');
     if (zoneFinished) grantReward(ZONE_REWARD, '✨');
+    if (restored || zoneFinished) celebrate();
     if (task.story) storyQueue.push(task.story);
     if (quiet && !restored && !zoneFinished) cheer(task, npc);
     else showDialog({
@@ -2628,6 +2640,92 @@ function closeDialog() {
 
 dialogEl.addEventListener('click', e => { if (e.target === dialogEl) closeDialog(); });
 
+// --- SOUND, TOUCH AND CONFETTI ---
+// Little sounds made on the spot with Web Audio (no files to load) and a short
+// buzz on phones, each switchable in ⚙️ Settings. Browsers only let a page make
+// sound after a tap, so the first tap starts it.
+let audioCtx = null;
+
+function audio() {
+    if (!settings.sound) return null;
+    if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        audioCtx = new AC();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+}
+
+// One note: its pitch, when it starts and how long it rings (seconds), its
+// sound, how loud, and the pitch it slides to.
+function tone(ctx, freq, at, len, type = 'sine', vol = 0.15, to = null) {
+    const t = ctx.currentTime + at;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+    if (to) osc.frequency.exponentialRampToValueAtTime(to, t + len);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + len + 0.03);
+}
+
+const SOUNDS = {
+    tap: c => tone(c, 480, 0, 0.09, 'triangle', 0.1, 760),                     // something drops out of a producer
+    merge: (c, step = 0) => {                                                   // a merge: higher for bigger items
+        const f = 440 * 2 ** (Math.min(step, 14) / 12);
+        tone(c, f, 0, 0.12, 'triangle', 0.14);
+        tone(c, f * 1.5, 0.07, 0.2, 'sine', 0.12);
+    },
+    coin: c => { tone(c, 988, 0, 0.07, 'square', 0.05); tone(c, 1319, 0.06, 0.22, 'square', 0.05); },
+    pop: c => tone(c, 320, 0, 0.12, 'sine', 0.18, 960),
+    knock: c => tone(c, 150, 0, 0.07, 'square', 0.1, 70),                      // the hammer
+    sparkle: c => [1047, 1319, 1568, 2093].forEach((f, i) => tone(c, f, i * 0.06, 0.28, 'sine', 0.08)),
+    fanfare: c => [[523, 0], [659, 0.12], [784, 0.24], [1047, 0.38]].forEach(([f, at]) => {
+        tone(c, f, at, 0.4, 'triangle', 0.14);
+        tone(c, f / 2, at, 0.4, 'sine', 0.07);
+    }),
+    whoosh: c => tone(c, 220, 0, 0.45, 'sine', 0.05, 1300),                    // a painting turning to the next
+    nope: c => tone(c, 220, 0, 0.16, 'sawtooth', 0.05, 150),
+};
+
+function sfx(name, arg) {
+    const ctx = audio();
+    if (!ctx) return;
+    try { SOUNDS[name](ctx, arg); } catch (e) { /* sound is a nicety */ }
+}
+
+function buzz(pattern) {
+    if (!settings.vibrate || !navigator.vibrate) return;
+    try { navigator.vibrate(pattern); } catch (e) { /* not every phone allows it */ }
+}
+
+// A burst of confetti over the whole screen, for the big moments.
+function confetti(count = 70) {
+    const layer = document.createElement('div');
+    layer.className = 'confetti';
+    const colors = ['#ffd34d', '#ff6b6b', '#5cc15a', '#4dabf7', '#f783ac', '#ffa94d', '#9775fa'];
+    for (let i = 0; i < count; i++) {
+        const bit = document.createElement('i');
+        bit.style.cssText = `--x:${Math.random() * 100}%;--c:${colors[i % colors.length]};--d:${1.6 + Math.random() * 1.4}s;`
+            + `--delay:${Math.random() * 0.5}s;--spin:${(Math.random() < 0.5 ? -1 : 1) * (360 + Math.random() * 720)}deg;--drift:${(Math.random() - 0.5) * 30}cqw`;
+        layer.appendChild(bit);
+    }
+    stageEl.appendChild(layer);
+    setTimeout(() => layer.remove(), 3800);
+}
+
+// The big moments: a sound, a buzz and confetti together.
+function celebrate() {
+    sfx('fanfare');
+    buzz([30, 60, 90]);
+    confetti();
+}
+
 function toast(message, kind = '') {
     const el = document.createElement('div');
     el.className = 'toast ' + kind;
@@ -2830,14 +2928,27 @@ function renderMap() {
         <button class="side-btn" id="btn-pass">${uiIcon('pass', '🎟️')}<small>Pass</small>${passClaimable() ? `<span class="badge">${passClaimable()}</span>` : ''}</button>
         <button class="side-btn" id="btn-daily">${uiIcon('daily', '📅')}<small>Daily</small>${dailyClaimable() > 0 ? '<span class="badge">!</span>' : ''}</button>
         <button class="side-btn" id="btn-jar">${uiIcon('jar', '🫙')}<small>💎${shop.jar}</small>${jarReady() ? '<span class="badge">!</span>' : ''}</button>
+        <button class="side-btn" id="btn-settings"><span class="gear">⚙️</span><small>Settings</small></button>
         ${activeOffers().length ? `<button class="side-btn offer-btn" id="btn-offer">${uiIcon('offer', '🔥')}<small data-ready="${shop.offers[activeOffers()[0].id].until}">${formatDuration(shop.offers[activeOffers()[0].id].until - Date.now())}</small>${activeOffers().length > 1 ? `<span class="badge">${activeOffers().length}</span>` : ''}</button>` : ''}`);
     side.querySelector('#btn-gift').addEventListener('click', openDailyGift);
     side.querySelector('#btn-pass').addEventListener('click', openPass);
     side.querySelector('#btn-daily').addEventListener('click', openDailyGoals);
     side.querySelector('#btn-jar').addEventListener('click', openGemJar);
+    side.querySelector('#btn-settings').addEventListener('click', openSettings);
     const offerBtn = side.querySelector('#btn-offer');
     if (offerBtn) offerBtn.addEventListener('click', openOffers);
     scene.append(side, boardFab(lastBoard), tasksFab('btn-quests'));
+}
+
+// ⚙️ Sound and vibration, on or off (saved).
+function openSettings() {
+    const row = (key, label) => ({ label: `${label}: ${settings[key] ? 'On' : 'Off'}`, wide: true, primary: settings[key],
+        onClick: () => { settings[key] = !settings[key]; saveGame(); if (key === 'sound') sfx('coin'); else buzz(40); openSettings(); } });
+    showDialog({
+        title: '⚙️ Settings',
+        body: '<p class="hint">Little sounds as you play, and a buzz on phones.</p>',
+        actions: [row('sound', '🔊 Sound'), row('vibrate', '📳 Vibration'), { label: 'Done' }],
+    });
 }
 
 function offerDeed(id) {
@@ -3039,6 +3150,8 @@ function deliver(npc) {
     const levelUp = npc.deliveries % 5 === 0;
     if (levelUp) res.gems += LEVEL_UP_GEMS;
     updateUI();
+    sfx('coin');
+    buzz(20);
     toast(`${npc.name} loved the ${itemName(r.mode, r.tier)}! +💵${r.rewardMoney} +⭐${r.rewardXp}`, 'good');
     if (levelUp) toast(`${npc.name} reached Lv.${npc.deliveries / 5 + 1}! +💎 ${LEVEL_UP_GEMS}`, 'good');
     if (r.rewardProducer) {
@@ -4187,6 +4300,8 @@ function popBubble(mode, index) {
     grids[mode][index] = bubble.inner;
     tickProducer(mode, bubble.inner);
     updateUI();
+    sfx('pop');
+    buzz(20);
     toast(`🫧 Popped! The ${boardItemName(mode, bubble.inner)} is yours.`, 'good');
     refreshBoard(mode, [index]);
 }
@@ -4291,6 +4406,7 @@ function collectCurrency(mode, index) {
     else if (item.type === 'season') addPassPoints(value);
     else { res.energy += value; tickEnergy(); }
     stats.collected++;
+    sfx('coin');
     toast(`+${CURRENCY[item.type].emoji}${value}`, 'good');
     updateUI();
     checkTasks();
@@ -4784,6 +4900,8 @@ function handleDragEnd(e) {
                 grids[mode][targetIndex] = sourceItem;
             }
             if (made) {
+                sfx('merge', made.type ? made.level * 2 : made.tier);
+                buzz(12);
                 grids[mode][index] = null;
                 grids[mode][targetIndex] = made;
                 fillJar(GEM_JAR.perMerge);
@@ -4842,6 +4960,8 @@ function handleGeneratorClick(mode, index) {
     }
     const at = spawnNear(mode, index, drop);
     stats.spawned[mode] = (stats.spawned[mode] || 0) + 1;
+    sfx('tap');
+    buzz(8);
     selected = { mode, index };
     checkTasks();
     refreshBoard(mode, [at]);
@@ -4874,6 +4994,8 @@ function tapToolbox(mode, index) {
     if (tier === -1) tier = 0;
     const at = spawnNear(mode, index, { tier, chain: box.chain });
     stats.spawned[mode] = (stats.spawned[mode] || 0) + 1;
+    sfx('tap');
+    buzz(8);
     checkTasks();
     refreshBoard(mode, [at]);
     if (box.drops <= 0) offerRefill(mode, index);
@@ -5116,6 +5238,8 @@ function loadGame() {
         Object.assign(daily, save.daily);
         if (save.settings && typeof save.settings.charge === 'number') settings.charge = save.settings.charge;
         if (save.settings && save.settings.unlimitedUntil) settings.unlimitedUntil = save.settings.unlimitedUntil;
+        if (save.settings && save.settings.sound === false) settings.sound = false;
+        if (save.settings && save.settings.vibrate === false) settings.vibrate = false;
         if (save.lastBoard && AREAS[save.lastBoard]) lastBoard = save.lastBoard;
         if (save.tickedAt) lastTickAt = save.tickedAt;
         Object.assign(unlocks, save.unlocks);
