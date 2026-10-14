@@ -1,1 +1,12 @@
 venv/
+# The Android app: installed packages, the copied game and build output.
+app/node_modules/
+app/www/
+app/android/app/build/
+app/android/build/
+app/android/.gradle/
+app/android/local.properties
+# Signing keys and their passwords never go in the repo.
+*.jks
+*.keystore
+keystore.properties

@@ -1,0 +1,8 @@
+{
+  "appId": "com.sinadehesh.mergefarmstead",
+  "appName": "Merge Farmstead",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#3b2a1e"
+  }
+}

@@ -4,6 +4,9 @@
 // Image paths all come from assets.js so AI-generated art can replace the
 // placeholders without touching this file.
 
+// Running as the Android app (Capacitor) rather than the website.
+const nativeApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+
 const GAME_WIDTH = 6;
 const GAME_HEIGHT = 8;
 const NUM_CELLS = GAME_WIDTH * GAME_HEIGHT;
@@ -449,6 +452,7 @@ const shop = {
     adsDay: null, adsWatched: 0, energyDay: null, energyBought: 0,
     flash: null, dealsDay: null, dealsTaken: [],
     jar: 0, offers: {},
+    granted: [], // Google Play purchases already paid out (their transaction ids)
 };
 // Today's daily goals and the counters they count from.
 const dailyGoals = { day: null, ids: [], base: {}, claimed: 0 };
@@ -941,6 +945,7 @@ function today() {
 }
 
 function adsLeft() {
+    if (nativeApp) return 0; // no ad network in the app yet: its "Watch an ad" buttons stay hidden
     if (shop.adsDay !== today()) { shop.adsDay = today(); shop.adsWatched = 0; }
     return ADS_PER_DAY - shop.adsWatched;
 }
@@ -1013,7 +1018,7 @@ function openShop(note = '') {
     GEM_PACKS.forEach(pack => actions.push({
         label: `${pack.name}: 💎 ${pack.gems.toLocaleString()}${pack.tag ? ` (${pack.tag})` : ''} · ${pack.price}`,
         primary: true, wide: true,
-        onClick: () => purchase(pack.id, () => { res.gems += pack.gems; return `+💎 ${pack.gems.toLocaleString()}`; }),
+        onClick: () => purchase(pack.id),
     }));
     actions.push(basketDays > 0
         ? { label: `🧺 Daily Basket active · ${basketDeliveriesLeft()} more days`, wide: true, disabled: true }
@@ -1027,7 +1032,7 @@ function openShop(note = '') {
         title: 'Shop',
         body: `${note ? `<p><b>${note}</b></p>` : ''}
                <p>💎 Gems buy ⚡ energy, recharge producers instantly and cover any 💵 you're short.</p>
-               <p class="hint">Test mode: no real payment is taken yet.</p>`,
+               ${billing ? '' : '<p class="hint">Test mode: no real payment is taken here.</p>'}`,
         actions,
     });
 }
@@ -1046,14 +1051,7 @@ function openSpecialOffer(title = SPECIAL_OFFER.name) {
 
 function buySpecialOffer() {
     if (shop.offerBought) return;
-    purchase(SPECIAL_OFFER.id, () => {
-        shop.offerBought = true;
-        res.gems += SPECIAL_OFFER.gems;
-        res.money += SPECIAL_OFFER.money;
-        res.energy += SPECIAL_OFFER.energy;
-        tickEnergy();
-        return `+💎 ${SPECIAL_OFFER.gems} +💵 ${SPECIAL_OFFER.money.toLocaleString()} +⚡ ${SPECIAL_OFFER.energy}`;
-    });
+    purchase(SPECIAL_OFFER.id);
 }
 
 // Days of the basket left, counting today.
@@ -1069,12 +1067,7 @@ function basketDeliveriesLeft() {
 
 function buyDailyBasket() {
     if (basketDaysLeft() > 0) return;
-    purchase(DAILY_BASKET.id, () => {
-        shop.basketStart = today();
-        shop.basketClaimed = null;
-        claimDailyBasket();
-        return `${DAILY_BASKET.name} started`;
-    });
+    purchase(DAILY_BASKET.id);
 }
 
 // Runs on start-up and every tick; gives today's gems once.
@@ -1086,18 +1079,111 @@ function claimDailyBasket() {
     toast(`🧺 Daily Basket: +💎 ${DAILY_BASKET.gemsPerDay} (${basketDeliveriesLeft()} more days)`, 'good');
 }
 
-// Real payments need the app-store billing plugin once the game is packaged
-// with Capacitor (Google Play Billing / Apple In-App Purchase): call the store
-// with productId and run grant() only after the store confirms. Until then this
-// grants straight away so the flow can be tested.
-function purchase(productId, grant) {
-    const message = grant();
+// --- PAYMENTS ---
+// Everything sold for real money, by its product id in Google Play Console
+// (create each one there as a one-time "managed product" with the same id).
+// In the Android app, Google Play Billing takes the payment and the reward is
+// given only once Google approves it. On the website (no store) purchases are
+// test purchases and pay at once, so the game can be tried.
+function products() {
+    return [...GEM_PACKS, SPECIAL_OFFER, DAILY_BASKET, GEM_JAR, ...OFFERS, GOLDEN_PASS, GOLDEN_PASS_DELUXE];
+}
+
+// What a product gives. Looked up by id, so a payment Google approves later
+// (the app was closed halfway) still pays out.
+function grantPurchase(id) {
+    const pack = GEM_PACKS.find(p => p.id === id);
+    if (pack) {
+        res.gems += pack.gems;
+        return `+💎 ${pack.gems.toLocaleString()}`;
+    }
+    const offer = OFFERS.find(o => o.id === id);
+    if (offer) {
+        offerState(id).bought = true;
+        grantReward(offer.reward, `🔥 ${offer.name}:`);
+        return offer.name;
+    }
+    if (id === SPECIAL_OFFER.id) {
+        shop.offerBought = true;
+        res.gems += SPECIAL_OFFER.gems;
+        res.money += SPECIAL_OFFER.money;
+        res.energy += SPECIAL_OFFER.energy;
+        tickEnergy();
+        return `+💎 ${SPECIAL_OFFER.gems} +💵 ${SPECIAL_OFFER.money.toLocaleString()} +⚡ ${SPECIAL_OFFER.energy}`;
+    }
+    if (id === DAILY_BASKET.id) {
+        shop.basketStart = today();
+        shop.basketClaimed = null;
+        claimDailyBasket();
+        return `${DAILY_BASKET.name} started`;
+    }
+    if (id === GEM_JAR.id) {
+        const gems = shop.jar;
+        res.gems += gems;
+        shop.jar = 0;
+        return `🫙 +💎${gems}`;
+    }
+    if (id === GOLDEN_PASS.id || id === GOLDEN_PASS_DELUXE.id) {
+        pass.golden = true;
+        if (id === GOLDEN_PASS_DELUXE.id) addPassPoints(GOLDEN_PASS_DELUXE.points);
+        claimPassGems();
+        return `🎟️ ${id === GOLDEN_PASS_DELUXE.id ? GOLDEN_PASS_DELUXE.name : GOLDEN_PASS.name} for ${seasonTheme().name}`;
+    }
+    return null;
+}
+
+function paidOut(id, test = false) {
+    const message = grantPurchase(id);
+    if (!message) return;
     sfx('buy');
     updateUI();
     saveGame();
-    toast(`${message} (test purchase)`, 'good');
+    toast(test ? `${message} (test purchase)` : `${message} · thank you!`, 'good');
     goTo(currentScene);
 }
+
+// Google Play Billing, through the purchase plugin in the Android app (null on the website).
+let billing = null;
+
+function purchase(productId) {
+    if (billing) return billing.order(productId);
+    paidOut(productId, true);
+}
+
+document.addEventListener('deviceready', () => {
+    const CP = window.CdvPurchase;
+    if (!CP) return;
+    const { store, ProductType, Platform } = CP;
+    store.register(products().map(p => ({ id: p.id, type: ProductType.CONSUMABLE, platform: Platform.GOOGLE_PLAY })));
+    // Each approved payment pays once (its id is remembered), then is
+    // finished, which tells Google it was delivered and lets it be bought again.
+    store.when()
+        .approved(transaction => {
+            const done = shop.granted || (shop.granted = []);
+            if (!done.includes(transaction.transactionId)) {
+                done.push(transaction.transactionId);
+                if (done.length > 200) done.splice(0, done.length - 200);
+                transaction.products.forEach(p => paidOut(p.id));
+            }
+            transaction.finish();
+        })
+        .productUpdated(product => {
+            // Show Google's price, in the player's own currency.
+            const ours = products().find(p => p.id === product.id);
+            const price = product.pricing && product.pricing.price;
+            if (ours && price) ours.price = price;
+        });
+    store.error(err => { if (err && err.code !== CP.ErrorCode.PAYMENT_CANCELLED) toast(`The store says: ${err.message}`); });
+    store.initialize([Platform.GOOGLE_PLAY]).then(() => {
+        billing = {
+            order(id) {
+                const offer = store.get(id, Platform.GOOGLE_PLAY)?.getOffer();
+                if (!offer) return toast('That isn\'t available right now. Please try again later.');
+                store.order(offer);
+            },
+        };
+    });
+}, false);
 
 // Real ads need an ad SDK (for example AdMob) once the game is packaged; call
 // onReward() only when the ad network reports the video was watched.
@@ -5028,12 +5114,7 @@ function openGemJar() {
 
 function breakJar() {
     if (!jarReady()) return;
-    purchase(GEM_JAR.id, () => {
-        const gems = shop.jar;
-        res.gems += gems;
-        shop.jar = 0;
-        return `🫙 +💎${gems}`;
-    });
+    purchase(GEM_JAR.id);
 }
 
 // --- LIMITED-TIME OFFERS ---
@@ -5097,11 +5178,7 @@ function openOffers() {
 function buyOffer(id) {
     const offer = OFFERS.find(o => o.id === id);
     if (!offerActive(offer)) return;
-    purchase(offer.id, () => {
-        shop.offers[id].bought = true;
-        grantReward(offer.reward, `🔥 ${offer.name}:`);
-        return offer.name;
-    });
+    purchase(offer.id);
 }
 
 // --- DAILY GOALS ---
@@ -5237,12 +5314,7 @@ function claimPassGems() {
 
 function buyGoldenPass(deluxe = false) {
     if (pass.golden) return;
-    purchase(deluxe ? GOLDEN_PASS_DELUXE.id : GOLDEN_PASS.id, () => {
-        pass.golden = true;
-        if (deluxe) addPassPoints(GOLDEN_PASS_DELUXE.points);
-        claimPassGems();
-        return `🎟️ ${deluxe ? GOLDEN_PASS_DELUXE.name : GOLDEN_PASS.name} for ${seasonTheme().name}`;
-    });
+    purchase(deluxe ? GOLDEN_PASS_DELUXE.id : GOLDEN_PASS.id);
 }
 
 // 💎 to finish the current pass level right now (0 at the top).
@@ -6996,6 +7068,16 @@ setInterval(() => {
 addEventListener('pagehide', saveGame);
 
 // Installable and playable offline (on the published site; not while developing).
-if ('serviceWorker' in navigator && location.protocol === 'https:') {
+// In the Android app the game is already on the phone: no service worker,
+// and the phone's back button closes a dialog, then steps back, and on the map leaves.
+if (nativeApp && window.Capacitor.Plugins.App) {
+    window.Capacitor.Plugins.App.addListener('backButton', () => {
+        if (openingOn) return;
+        if (!dialogEl.hidden) return closeDialog();
+        if (currentScene !== 'map') return goTo(AREAS[currentScene] && fixLand === currentScene ? 'fix' : 'map');
+        window.Capacitor.Plugins.App.minimizeApp();
+    });
+}
+if ('serviceWorker' in navigator && location.protocol === 'https:' && !nativeApp) {
     navigator.serviceWorker.register('sw.js').catch(() => { /* the game works without it */ });
 }

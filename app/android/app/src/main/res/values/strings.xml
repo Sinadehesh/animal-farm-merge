@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Merge Farmstead</string>
+    <string name="title_activity_main">Merge Farmstead</string>
+    <string name="package_name">com.sinadehesh.mergefarmstead</string>
+    <string name="custom_url_scheme">com.sinadehesh.mergefarmstead</string>
+</resources>
