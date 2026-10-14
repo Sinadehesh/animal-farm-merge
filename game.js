@@ -875,6 +875,10 @@ function payTapEnergy(cost) {
     if (unlimitedActive()) return true;
     if (res.energy < 1) {
         sfx('nope');
+        const pill = document.getElementById('btn-energy');
+        pill.classList.remove('shake-no');
+        void pill.offsetWidth;
+        pill.classList.add('shake-no');
         openEnergy(true);
         return false;
     }
@@ -3278,6 +3282,7 @@ function completeTask(id, quiet = false) {
     if (zoneFinished) grantReward(ZONE_REWARD, '✨');
     if (restored || zoneFinished) celebrate();
     else sfx('taskdone');
+    thump(restored || zoneFinished);
     if (task.story) storyQueue.push(task.story);
     if (quiet && !restored && !zoneFinished) cheer(task, npc);
     else showDialog({
@@ -3297,6 +3302,18 @@ function completeTask(id, quiet = false) {
     if (AREAS[currentScene]) refreshBoard(currentScene);
     else if (currentScene === 'fix') renderFix();
     else if (currentScene === 'town') renderTown();
+}
+
+// A job done: the place gives a little thump, as if the last nail went in
+// (a bigger one when a whole area or land is finished).
+function thump(big = false) {
+    const el = currentScene === 'fix' ? document.querySelector('#scene-fix .world') : document.querySelector('.scene:not([hidden]) .page-frame');
+    if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const d = big ? 9 : 5;
+    el.animate([
+        { transform: 'translate(0, 0)' }, { transform: `translate(${-d}px, ${d * 0.4}px)` }, { transform: `translate(${d * 0.8}px, ${-d * 0.3}px)` },
+        { transform: `translate(${-d * 0.5}px, ${d * 0.2}px)` }, { transform: `translate(${d * 0.25}px, 0)` }, { transform: 'translate(0, 0)' },
+    ], { duration: big ? 520 : 380, easing: 'ease-out' });
 }
 
 // After a fix: who's happy and what it paid, floating over the place for a moment.
@@ -5406,6 +5423,7 @@ function updateUI() {
     rollNumber(moneyEl, res.money);
     rollNumber(gemsEl, res.gems);
     energyEl.textContent = shortNumber(res.energy);
+    document.getElementById('btn-energy').classList.toggle('out', res.energy < 1 && !unlimitedActive()); // the bolt pulses: out of energy
     energyTimerEl.textContent = unlimitedActive()
         ? `♾️ ${formatDuration(settings.unlimitedUntil - Date.now())}`
         : energyAt ? `+1 in ${formatDuration(energyAt - Date.now())}` : 'full';
@@ -6754,6 +6772,7 @@ function renderGrid(mode, poppedIndices = []) {
             if (!item.type && isFree(item) && wanted.has(`${chainOf(mode, item)}:${item.tier}`)) {
                 itemEl.classList.add('wanted');
                 addTag(itemEl, 'tick', '✓');
+                addTag(itemEl, 'twinkle-star', '✦'); // a glint and a twinkle: someone wants this
             }
             const timer = itemTimer(item);
             if (timer) {
