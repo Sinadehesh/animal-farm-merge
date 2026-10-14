@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**530 assets:** 492 done ✅, 8 placeholders 🟡, 30 missing ⬜.
+**530 assets:** 499 done ✅, 6 placeholders 🟡, 25 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -95,9 +95,9 @@ and **cheering** full body (after a fix).
 | | Prop | File | What it shows |
 |---|---|---|---|
 | 🟡 | Counter | `assets/props/counter.svg` → `assets/props/counter.png` | a long wooden shop counter (front view, wide) |
-| 🟡 | Deed | `assets/props/deed.svg` → `assets/props/deed.png` | a rolled land deed with a wax seal |
-| 🟡 | Upgrade | `assets/props/upgrade.svg` → `assets/props/upgrade.png` | the Growth Guide: a fat farming book with a sprout on the cover |
-| ⬜ | Crate | `assets/props/crate.png` | a small wooden crate (the closed boxes on a new board) |
+| ✅ | Deed | `assets/props/deed.png` | a rolled land deed with a wax seal |
+| ✅ | Upgrade | `assets/props/upgrade.png` | the Growth Guide: a fat farming book with a sprout on the cover |
+| ✅ | Crate | `assets/props/crate.png` | a small wooden crate (the closed boxes on a new board) |
 
 ## 6. Board backgrounds (6, optional)
 
@@ -413,11 +413,11 @@ missing shows its emoji.
 | ✅ | 🔥 offers | map button | `assets/ui/offer.png` |
 | ✅ | 🎒 inventory | board info bar | `assets/ui/inventory.png` |
 | ✅ | 🔒 lock | locked chests, lands and deeds | `assets/ui/lock.png` |
-| ⬜ | 🏷️ Flash Sale (price tag) | Market button | `assets/ui/sale.png` |
-| ⬜ | 🕸️ cobweb | info bar for cobwebbed items | `assets/ui/cobweb.png` |
+| ✅ | 🏷️ Flash Sale (price tag) | Market button | `assets/ui/sale.png` |
+| ✅ | 🕸️ cobweb | info bar for cobwebbed items | `assets/ui/cobweb.png` |
 | ✅ | 🔨 hammer | job tags on the map and job cards | `assets/ui/hammer.png` |
-| ⬜ | 🏆 trophy | Country Fair ribbon, header and race | `assets/ui/trophy.png` |
-| ⬜ | 📺 TV with a play button | "Watch an ad" buttons | `assets/ui/ad.png` |
+| ✅ | 🏆 trophy | Country Fair ribbon, header and race | `assets/ui/trophy.png` |
+| ✅ | 📺 TV with a play button | "Watch an ad" buttons | `assets/ui/ad.png` |
 | ✅ | 👆 pointing glove (white cartoon glove, index finger out) | the tutorial and guides: points at what to tap | `assets/ui/hand2.png` |
 | ⬜ | 🧩 part | producer parts in reward texts | not wired yet (needs a small code change) |
 
@@ -439,7 +439,7 @@ swaps to the next painting as its jobs get done. Raw sheets are kept in `assets/
 | ✅ | Field Gate | `assets/stages/fieldgate/0-2.jpg` |  |
 | ✅ | Strawberry Rows | `assets/stages/berryrows/0-2.jpg` |  |
 | ✅ | Orchard | `assets/stages/orchard/0-2.jpg` |  |
-| ✅ | Meadow | `assets/stages/meadow/0-2.jpg` | one painting for all three states for now |
+| ✅ | Meadow | `assets/stages/meadow/0-2.jpg` | square paintings |
 | ✅ | Stables | `assets/stages/stables/0-2.jpg` |  |
 | ✅ | Windmill | `assets/stages/windmill/0-2.jpg` |  |
 | ✅ | Leaf Piles | `assets/stages/leafpiles/0-2.jpg` |  |

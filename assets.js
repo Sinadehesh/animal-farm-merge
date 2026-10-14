@@ -79,7 +79,7 @@ const ASSETS = {
         rosearch: [0, 1, 2].map(k => `assets/stages/rosearch/${k}@2x.jpg`),
         greenhouse: [0, 1, 2].map(k => `assets/stages/greenhouse/${k}@2x.jpg`),
         bigbarn: [0, 1, 2].map(k => `assets/stages/bigbarn/${k}@2x.jpg`), // the barn's storeroom
-        meadow: [0, 1, 2].map(() => 'assets/stages/meadow/meadow@2x.jpg'), // one painting for now, used for all three states
+        meadow: [0, 1, 2].map(k => `assets/stages/meadow/${k}.jpg`), // square paintings (assets/raw/stages/meadow.webp)
         stables: [0, 1, 2].map(k => `assets/stages/stables/${k}@2x.jpg`),
         compostbins: [0, 1, 2].map(k => `assets/stages/compostbins/${k}@2x.jpg`),
     },
@@ -281,9 +281,9 @@ const ASSETS = {
     // Things inside the market.
     props: {
         counter: 'assets/props/counter.svg',
-        deed: 'assets/props/deed.svg',
-        upgrade: 'assets/props/upgrade.svg',
-        crate: null, // the 📦 crates on a fresh board (null = emoji tile)
+        deed: 'assets/props/deed.png',
+        upgrade: 'assets/props/upgrade.png',
+        crate: 'assets/props/crate.png', // the crates on a fresh board (cut from assets/raw/icons_7_misc.webp)
     },
 
     // Interface icons in place of emoji: the top bar, the map buttons, the 🎒
@@ -309,6 +309,10 @@ const ASSETS = {
         check: 'assets/ui/check.png',
         sparkle: 'assets/ui/sparkle.png',
         hammer: 'assets/ui/hammer.png',    // job tags and the fix
+        sale: 'assets/ui/sale.png',        // the Flash Sale
+        cobweb: 'assets/ui/cobweb.png',    // cobwebbed items' info
+        trophy: 'assets/ui/trophy.png',    // the Country Fair's place and race
+        ad: 'assets/ui/ad.png',            // "Watch an ad" buttons
         hand: 'assets/ui/hand2.png',       // the tutorial's pointing glove, back of the hand (fingertip at its top left)
     },
 
