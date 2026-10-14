@@ -1281,6 +1281,7 @@ function addXp(n) {
 
 function showLevelUp(level, reward) {
     if (level !== quests.level) return; // a later level-up has its own popup
+    if (!dialogEl.hidden) return setTimeout(() => showLevelUp(level, reward), 500); // after the card that's up (a job, an area)
     celebrate('level');
     const land = Object.keys(AREAS).find(id => AREAS[id].level === level);
     showDialog({
@@ -2765,10 +2766,10 @@ function openTaskCard(task) {
     const pct = Math.round((100 * jobs.filter(taskDone).length) / jobs.length);
     const ready = taskReady(task);
     const tile = (inner, met) => `<span class="tile${met ? ' met' : ''}">${inner}</span>`;
-    const needs = task.needs.map(n => {
+    const needs = task.needs.map((n, i) => {
         const p = needProgress(task, n);
         const icon = n.item ? itemIcon(n.item, n.tier) : n.stat ? TASK_STATS[n.stat].emoji : '🏡';
-        return tile(`${icon}<small>${n.own ? AREAS[n.own].name : `${p.have}/${p.of}`}</small>`, p.have >= p.of);
+        return tile(`${icon}<small>${n.own ? AREAS[n.own].name : `${p.have}/${p.of}`}</small><i class="tile-info" data-need="${i}">i</i>`, p.have >= p.of);
     }).join('');
     const pays = tile(`${uiIcon('star', '⭐')}<small>×${task.xp}</small>`) + (task.reward ? tile(`<small>${rewardText(task.reward)}</small>`) : '');
     const here = task.land === 'town' ? currentScene === 'town' : currentScene === 'fix' && fixLand === task.land;
@@ -2778,13 +2779,53 @@ function openTaskCard(task) {
         artRound: true,
         title: task.name,
         body: `<div class="sheet-progress"><span class="quest-bar"><i style="width:${pct}%"></i></span><b>${pct}%</b>${uiIcon('reward', '🎁')}</div>
-               <div class="sheet-cols"><div><h4>Items needed</h4><div class="tiles">${needs}</div></div>
+               <div class="sheet-cols"><div><h4>Items needed</h4><div class="tiles needs">${needs}</div><p class="tile-hint">Tap one to see where it comes from</p></div>
                <div><h4>Rewards</h4><div class="tiles">${pays}</div></div></div>`,
         actions: [ready
             ? { label: !hasSpot(task) ? 'Do it!' : here ? 'Fix it!' : `Go to ${task.zone ? ZONE[task.zone].name : landName(task.land)}`, primary: true, wide: true,
                 onClick: () => (!hasSpot(task) ? completeTask(task.id) : here ? fixJob(task.id) : goFix(task.land, task.id)) }
             : { label: 'Go', primary: true, wide: true, onClick: () => goWork(task) },
             ready ? null : toolOffer(task)].filter(Boolean),
+    });
+    dialogBody.querySelectorAll('.needs .tile').forEach((el, i) => el.addEventListener('click', () => openItemSource(task, task.needs[i])));
+}
+
+// Where a job's item comes from: what makes it, on which board, and the
+// merges that lead up to it, with a way to go straight there.
+function openItemSource(task, need) {
+    const back = { label: 'Back', onClick: () => openTaskCard(task) };
+    if (need.stat || need.own) {
+        const how = {
+            boxes: 'Boxes open when you merge two things right next to one, on any board.',
+            webs: 'Drag a free item onto a cobwebbed one just like it: it merges and comes free.',
+            upgrades: 'Drag a producer part onto another of the same size. Parts come from orders, chests and rewards.',
+            sold: 'Tap an item on a board and choose Sell.',
+        };
+        const land = need.own;
+        showDialog({
+            title: land ? `${AREAS[land].name} deed` : TASK_STATS[need.stat].label,
+            body: `<p>${land ? `Buy the ${AREAS[land].name} deed in the Market${quests.level < AREAS[land].level ? ` (from level ${AREAS[land].level})` : ''}.` : how[need.stat]}</p>`,
+            actions: [land ? { label: 'Go to the Market', primary: true, wide: true, onClick: () => goTo('market') }
+                : { label: `Go to the ${AREAS[deliveryBoard()].name} board`, primary: true, wide: true, onClick: () => goTo(deliveryBoard()) }, back],
+        });
+        return;
+    }
+    const chain = need.item;
+    const board = needBoard(need);
+    const tool = TOOLS[chain];
+    const maker = tool ? tool.name : producerBaseName(chain);
+    const makerArt = tool ? (ASSETS.toolProducers || {})[chain] : (ASSETS.producers[chain] || [])[FIRST_WORKING_LEVEL - 1];
+    const makerIcon = makerArt ? `<img class="inline-item" src="${makerArt}" alt="">` : (tool ? tool.emoji : PRODUCERS[chain].emoji);
+    const step = t => `<span class="src-step${t === need.tier ? ' goal' : ''}">${itemIcon(chain, t)}<small>${itemName(chain, t)}</small></span>`;
+    const path = Array.from({ length: need.tier + 1 }, (_, t) => step(t)).join('<b class="src-arrow">×2 →</b>');
+    const owned = unlocks[board];
+    showDialog({
+        art: itemSprite(chain, need.tier) || undefined,
+        title: itemName(chain, need.tier),
+        body: `<div class="src-maker">${makerIcon}<p>Made by the <b>${maker}</b> on your <b>${AREAS[board].name}</b> board.${need.tier ? ' Tap it, then merge two of the same to go up a step:' : ' Tap it to make one.'}</p></div>
+               ${need.tier ? `<div class="src-path">${path}</div>` : ''}
+               <p class="hint">${tool ? 'Brown and Blue chests sometimes drop these too.' : 'Orders and chests sometimes give them too.'}${owned ? '' : ` You'll get this board with the ${AREAS[board].name} land (level ${AREAS[board].level}).`}</p>`,
+        actions: [owned ? { label: `Go to the ${AREAS[board].name} board`, primary: true, wide: true, onClick: () => goTo(board) } : null, back].filter(Boolean),
     });
 }
 
@@ -2795,7 +2836,8 @@ const TOOL_GEMS = [3, 6, 12, 20, 35, 60, 100, 160];
 function toolOffer(task) {
     const need = task.needs.find(n => n.item && TOOLS[n.item] && needProgress(task, n).have < needProgress(task, n).of);
     if (!need || !unlocks[TOOLS[need.item].board]) return null;
-    const box = Object.values(grids).flat().concat(...Object.values(crates)).find(c => c && c.type === 'toolbox' && c.chain === need.item);
+    const box = Object.values(grids).flat().concat(...Object.values(crates), inventory.items.map(e => e.item))
+        .find(c => c && c.type === 'toolbox' && c.chain === need.item);
     const resting = !box || (box.drops !== undefined && box.drops <= 0);
     if (!resting && need.tier < 2) return null; // small ones are a few taps away
     const price = TOOL_GEMS[Math.min(need.tier, TOOL_GEMS.length - 1)];
@@ -3127,8 +3169,8 @@ function playOpening() {
         <div class="op-flash"></div>
         <div class="op-title"><h1>Merge<br><span>Farmstead</span></h1><p>Tap to start</p></div>
         <p class="op-caption"></p>
-        <div class="op-friends">${['hattie', 'ruby', 'mayor', 'finn', 'poppy'].map((id, i) =>
-            `<img src="${(ASSETS.wave || {})[id] || npcPicture(npcs.find(n => n.id === id))}" alt="" style="--i:${i}">`).join('')}</div>
+        <div class="op-friends">${['shopkeeper', 'hattie', 'ruby', 'mayor', 'finn', 'poppy'].map((id, i) =>
+            `<img src="${ASSETS.characters[id] || (ASSETS.wave || {})[id]}" alt="" style="--i:${i}">`).join('')}</div>
         <div class="op-card"></div>
         <div class="op-wall"><i></i><i></i></div>
         <button class="op-skip">Skip ▸</button>
@@ -3208,7 +3250,7 @@ function playOpening() {
         el.className = 'welcome';
         caption.classList.remove('show');
         const mayor = npcs.find(n => n.id === 'mayor');
-        await ask(`<img class="op-who" src="${(ASSETS.wave || {}).mayor || npcPicture(mayor)}" alt="">
+        await ask(`<img class="op-who" src="${ASSETS.characters.mayor || npcPicture(mayor)}" alt="">
             <b class="op-name">${mayor.name}</b>
             <p>Oh! You must be the new farmer! Welcome to ${TOWN_NAME}.</p>
             <p>The storm left our farm in ruins. Will you help us bring it back to life?</p>`, 'I\'ll help!');
@@ -4220,6 +4262,7 @@ function renderTown() {
 function openNpc(npc) {
     markGuide('npc');
     const r = npc.request;
+    if (!r) return;
     const level = Math.floor(npc.deliveries / 5) + 1;
     const area = AREAS[r.mode];
     const ready = canFulfill(npc);
@@ -4819,9 +4862,9 @@ const GUIDES = [
       steps: [{ scene: () => onBoard(), who: 'ruby', text: () => { const box = grids[onBoard()]?.[boardCell(c => c.type === 'toolbox' && c.drops > 0)]; return box ? `Jobs need ${TOOLS[box.chain].what}. Tap the ${TOOLS[box.chain].name} to make them!` : 'Tap it to make things for jobs!'; },
                 target: () => cellItem(onBoard(), boardCell(c => c.type === 'toolbox' && c.drops > 0)), done: () => marked('toolbox') }] },
     // A full board: the backpack.
-    { id: 'inventory', when: () => onBoard() && boardFull(onBoard()),
+    { id: 'inventory', when: () => onBoard() && !grids[onBoard()].includes(null), // (boardFull() would also toast)
       steps: [{ scene: () => onBoard(), who: 'hattie', text: 'Board full? Drag things into your 🎒 for later, or tap one and Sell it.',
-                target: () => q(`#scene-${onBoard()} .inv-btn`), done: () => inventory.items.length > 0 || !onBoard() || !boardFull(onBoard()) }] },
+                target: () => q(`#scene-${onBoard()} .inv-btn`), done: () => inventory.items.length > 0 || !onBoard() || grids[onBoard()].includes(null) }] },
     // The town's orders.
     { id: 'town', when: () => quests.level >= 2 && currentScene !== 'town',
       steps: [{ scene: 'town', who: 'mayor', lead: 'Townsfolk need your help!', text: 'Townsfolk post orders here. Tap someone\'s card to see what they need!',
@@ -6348,6 +6391,19 @@ function handleDragStart(e, mode, index) {
     draggedItemInfo = { mode, index, startX: e.clientX, startY: e.clientY };
     document.addEventListener('pointermove', handleDragMove);
     document.addEventListener('pointerup', handleDragEnd);
+    document.addEventListener('pointercancel', cancelDrag);
+}
+
+// The system took the touch away (a gesture, a call): no tap, no drop.
+function cancelDrag() {
+    document.removeEventListener('pointermove', handleDragMove);
+    document.removeEventListener('pointerup', handleDragEnd);
+    document.removeEventListener('pointercancel', cancelDrag);
+    if (dragElement) { dragElement.remove(); dragElement = null; }
+    if (!draggedItemInfo) return;
+    const { mode } = draggedItemInfo;
+    draggedItemInfo = null;
+    refreshBoard(mode);
 }
 
 // The drag preview appears only once the pointer has moved, so a tap stays a tap.
@@ -6402,6 +6458,7 @@ function onTap(mode, index) {
 function handleDragEnd(e) {
     document.removeEventListener('pointermove', handleDragMove);
     document.removeEventListener('pointerup', handleDragEnd);
+    document.removeEventListener('pointercancel', cancelDrag);
 
     const wasDragged = !!dragElement;
     if (dragElement) {
@@ -6439,6 +6496,7 @@ function handleDragEnd(e) {
         const targetIndex = parseInt(targetCell.dataset.index);
         if (targetIndex !== index) {
             const sourceItem = grids[mode][index];
+            if (!sourceItem) { refreshBoard(mode); return; } // it ran out (a charger, the Fair) mid-drag
             const targetItem = grids[mode][targetIndex];
             // Producers and their parts, boosters, currency, chests and piggy banks
             // merge by level; plain items by tier.
@@ -6960,8 +7018,8 @@ function loadGame() {
         Object.assign(shop, save.shop);
         Object.assign(crates, save.crates);
         Object.assign(stats, save.stats);
-        quests.level = save.quests.level || 1;
-        quests.xp = save.quests.xp || 0;
+        quests.level = (save.quests || {}).level || 1; // version 1 saves had no quests
+        quests.xp = (save.quests || {}).xp || 0;
         if (save.restoration) Object.assign(restoration, save.restoration);
         // Saves from before areas: every area already open counts as seen (no unlock replays).
         if (!save.restoration || !save.restoration.zonesOpen) restoration.zonesOpen = null;
@@ -6992,12 +7050,14 @@ function loadGame() {
         Object.keys(grids).forEach(mode => {
             if (save.grids[mode] && save.grids[mode].length === NUM_CELLS) grids[mode] = save.grids[mode];
         });
-        save.npcs.forEach(saved => {
+        (save.npcs || []).forEach(saved => {
             const npc = npcs.find(n => n.id === saved.id);
             if (npc) Object.assign(npc, saved);
             // Orders paid ❤️ hearts before version 3; now they pay XP.
             if (npc && npc.request && npc.request.rewardXp === undefined) npc.request.rewardXp = orderXp(npc.request.tier);
         });
+        // Anyone left without an order (renamed since the save, say) gets a new one.
+        npcs.forEach(n => { if (!n.request) generateRequestFor(n); });
         if (save.story) Object.assign(story, save.story);
         else {
             // Saves from before the story skip the intro and see their current day once.

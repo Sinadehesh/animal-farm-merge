@@ -954,8 +954,8 @@
         }
         .op-caption.show { opacity: 1; transform: none; }
         .op-friends { position: absolute; left: 0; right: 0; bottom: 34%; display: flex; justify-content: center; align-items: flex-end; pointer-events: none; }
-        .op-friends img { width: 22cqw; margin: 0 -2.5cqw; opacity: 0; transform: translateY(12cqw) scale(0.6); filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.5)); transition: opacity 0.6s ease, transform 0.7s cubic-bezier(0.2, 1.5, 0.4, 1); transition-delay: calc(var(--i) * 0.22s); }
-        .op-friends img:nth-child(3) { width: 27cqw; z-index: 1; }
+        .op-friends img { width: 37cqw; margin: 0 -11.5cqw; opacity: 0; transform: translateY(12cqw) scale(0.6); filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.5)); transition: opacity 0.6s ease, transform 0.7s cubic-bezier(0.2, 1.5, 0.4, 1); transition-delay: calc(var(--i) * 0.22s); }
+        .op-friends img:nth-child(4) { width: 42cqw; z-index: 1; } /* the Mayor, in the middle */
         #opening.friends .op-friends img { opacity: 1; transform: none; }
         .op-card {
             position: absolute;
@@ -980,7 +980,7 @@
         .op-card.show { opacity: 1; transform: translateY(-50%); pointer-events: auto; transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.2, 1.4, 0.4, 1); }
         .op-card p { margin: 0 0 3cqw; }
         .op-card h2 { margin: 0 0 4cqw; font-size: 7cqw; }
-        .op-who { width: 34cqw; margin: -22cqw auto 0; display: block; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.35)); }
+        .op-who { width: 44cqw; margin: -30cqw auto -4cqw; display: block; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.35)); }
         .op-name { display: block; margin: 1cqw 0 3cqw; color: #a0522d; font-size: 3.6cqw; text-transform: uppercase; letter-spacing: 0.06em; }
         .op-how { display: flex; align-items: center; gap: 3cqw; margin-bottom: 4cqw; text-align: left; }
         .op-how > span { flex: 0 0 30cqw; display: flex; align-items: center; justify-content: center; padding: 1.5cqw; border-radius: 14px; background: #f1e3c4; }
@@ -1542,6 +1542,19 @@
         .sheet-cols h4 { margin: 0 0 1.5cqw; font-size: max(11px, 3.4cqw); color: #6b5a45; }
         .tiles { display: flex; flex-wrap: wrap; justify-content: center; gap: 2cqw; }
         .tile { position: relative; display: grid; place-items: center; min-width: 15cqw; height: 15cqw; padding: 0 1cqw; background: #f3e6cf; border: 2px solid #d8c3a0; border-radius: 12px; font-size: 8cqw; line-height: 1; }
+        /* A job's items: tap one to see where it comes from. */
+        .tiles.needs .tile { cursor: pointer; }
+        .tiles.needs .tile:active { transform: scale(0.95); }
+        .tile-info { position: absolute; right: -1.2cqw; top: -1.2cqw; width: 4.4cqw; height: 4.4cqw; border-radius: 50%; background: #3f7dd0; color: #fff; border: 2px solid #fff; font: italic 900 2.8cqw/4cqw Georgia, serif; text-align: center; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+        .tile-hint { margin: 1.2cqw 0 0; font-size: 2.8cqw; color: #8a6a50; text-align: center; }
+        .src-maker { display: flex; align-items: center; gap: 3cqw; text-align: left; }
+        .src-maker > img, .src-maker > .inline-item { width: 15cqw; height: 15cqw; flex: 0 0 auto; }
+        .src-maker p { margin: 0; }
+        .src-path { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 1cqw; margin: 3cqw 0 1cqw; }
+        .src-step { display: flex; flex-direction: column; align-items: center; gap: 0.4cqw; padding: 1.2cqw; border-radius: 12px; background: #f3e6cf; font-size: 7cqw; line-height: 1; }
+        .src-step small { font-size: 2.6cqw; color: #6b4f3a; max-width: 16cqw; text-align: center; line-height: 1.15; }
+        .src-step.goal { background: #dff3d6; box-shadow: 0 0 0 2px #3f7d32; }
+        .src-arrow { font-size: 3.4cqw; color: #8a6a50; }
         .tile img, .tile .ui-icon { width: 11cqw; height: 11cqw; object-fit: contain; }
         .tile small { position: absolute; bottom: -1.5cqw; left: 50%; translate: -50% 0; padding: 0 1cqw; background: #fff; border: 1px solid #d8c3a0; border-radius: 6px; font-size: max(9px, 2.8cqw); font-weight: 900; white-space: nowrap; }
         .tile small:only-child { position: static; translate: none; border: 0; background: none; font-size: max(10px, 3cqw); white-space: normal; }
@@ -1855,7 +1868,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610141227"></script>
-    <script src="game.js?v=202610141227"></script>
+    <script src="assets.js?v=202610141433"></script>
+    <script src="game.js?v=202610141433"></script>
 </body>
 </html>
