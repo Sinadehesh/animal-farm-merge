@@ -4519,7 +4519,11 @@ function showPointer(target, who, text, closeLabel, opts = {}) {
 // plays once, ends by itself as soon as you do it, never shows over a dialog,
 // waits a while after the last one, and ✕ puts it away for good. Tips can be
 // switched off in ⚙️ Settings.
-const guides = { done: [], marks: [] };
+const guides = { done: [], marks: [], snoozed: {} };
+// A guide stays up this long; if it isn't followed by then it steps aside for a
+// few minutes, and after a second time it's put away for good.
+const GUIDE_SHOW_MS = 12000;
+const GUIDE_SNOOZE_MS = 4 * 60000;
 let guide = null;          // the guide on screen: { def, step, start }
 let guideRestUntil = 0;    // a pause between guides, so they never pile up
 
@@ -4564,6 +4568,57 @@ function webPair() {
         if (b >= 0) return [a, b];
     }
     return [];
+}
+
+// --- IDLE HINT ---
+// A few seconds without a tap on a board: two things that merge there beat
+// softly, like a heartbeat, until you touch the screen. The same rules as a
+// real merge, so it never suggests what can't be done: the one you'd drag is
+// always free, and two cobwebbed items are never a pair.
+const IDLE_HINT_MS = 6000;
+let lastActivity = Date.now();
+let idlePair = [];
+
+document.addEventListener('pointerdown', () => {
+    lastActivity = Date.now();
+    clearIdleHint();
+}, true);
+
+// Would dragging `s` onto `t` merge them?
+function wouldMerge(mode, s, t) {
+    if (!isFree(s) || !t || t.type === 'box' || t.type === 'bubble' || (!isFree(t) && !t.web)) return false;
+    const top = levelMergeTop(s);
+    if (top) return sameLevelKind(s, t) && levelMergeTop(t) > 0 && levelOf(s) < top;
+    const chain = chainOf(mode, s);
+    return !s.type && !t.type && t.tier === s.tier && chainOf(mode, t) === chain && s.tier < tierCap(chain);
+}
+
+// [drag this, onto this]: two free things first, else a free one onto its cobwebbed twin.
+function mergeHint(mode) {
+    const g = grids[mode];
+    for (const webbed of [false, true]) {
+        for (let a = 0; a < g.length; a++) {
+            if (!isFree(g[a])) continue;
+            const b = g.findIndex((c, i) => i !== a && !!c && !!c.web === webbed && wouldMerge(mode, g[a], c));
+            if (b >= 0) return [a, b];
+        }
+    }
+    return [];
+}
+
+function clearIdleHint() {
+    document.querySelectorAll('.item.hint-beat').forEach(el => el.classList.remove('hint-beat'));
+    idlePair = [];
+}
+
+// Every second: show (or keep showing) the hint once you've been idle a while.
+function idleHint() {
+    const mode = currentScene;
+    const quiet = (AREAS[mode] || mode === 'fair') && tutorial.done && dialogEl.hidden && tutorialEl.hidden && !draggedItemInfo
+        && settings.tips !== false && Date.now() - lastActivity >= IDLE_HINT_MS;
+    if (!quiet) { if (idlePair.length) clearIdleHint(); return; }
+    if (!idlePair.length || !wouldMerge(mode, grids[mode][idlePair[0]], grids[mode][idlePair[1]])) idlePair = mergeHint(mode);
+    idlePair.forEach(i => { const el = cellItem(mode, i); if (el) el.classList.add('hint-beat'); }); // again after a redraw
 }
 
 function firstLandForSale() {
@@ -4612,8 +4667,10 @@ const GUIDES = [
                 target: () => cellItem(onBoard(), boardCell(c => c.type === 'bubble')),
                 done: () => boardCell(c => c.type === 'bubble') < 0 || (selected && grids[selected.mode][selected.index]?.type === 'bubble') }] },
     { id: 'chest', when: () => boardCell(c => c.type === 'chest' || c.type === 'piggy') >= 0,
-      steps: [{ scene: () => onBoard(), who: 'willy', text: 'A chest! Tap it to see what\'s inside.',
-                target: () => cellItem(onBoard(), boardCell(c => c.type === 'chest' || c.type === 'piggy')), done: () => marked('chest') }] },
+      steps: [{ scene: () => onBoard(), who: 'willy',
+                text: () => (boardCell(c => c.type === 'chest') >= 0 ? 'A chest! Tap it to see what\'s inside.' : 'A Piggy Bank! Tap it to shake out coins.'),
+                target: () => cellItem(onBoard(), boardCell(c => c.type === 'chest') >= 0 ? boardCell(c => c.type === 'chest') : boardCell(c => c.type === 'piggy')),
+                done: () => marked('chest') || (selected && ['chest', 'piggy'].includes(grids[selected.mode][selected.index]?.type)) }] },
     { id: 'booster', when: () => boardCell(c => BOOSTERS[c.type]) >= 0,
       steps: [{ scene: () => onBoard(), who: 'robin', text: 'A booster! Tap it to see what it does.',
                 target: () => cellItem(onBoard(), boardCell(c => BOOSTERS[c.type])),
@@ -4658,11 +4715,14 @@ function updateGuides() {
         const step = guide.def.steps[guide.step];
         if (step.done()) {
             guide.step++;
+            guide.shown = 0; // each step gets its own time
             if (guide.step >= guide.def.steps.length) return finishGuide();
+        } else if (guide.shown >= GUIDE_SHOW_MS) {
+            return snoozeGuide();
         }
     } else if (dialogEl.hidden && Date.now() >= guideRestUntil) {
         const def = GUIDES.find(g => !guides.done.includes(g.id) && g.when());
-        if (def) guide = { def, step: 0, start: { collected: stats.collected, upgrades: stats.upgrades, webs: stats.webs } };
+        if (def) guide = { def, step: 0, shown: 0, start: { collected: stats.collected, upgrades: stats.upgrades, webs: stats.webs } };
     }
     if (!guide) { tutorialEl.hidden = true; return; }
     const step = guide.def.steps[guide.step];
@@ -4678,6 +4738,20 @@ function updateGuides() {
         return;
     }
     showPointer(target, step.who, text, '✕');
+    // Time counts only while it's on screen (not behind a dialog).
+    const now = Date.now();
+    if (!tutorialEl.hidden && guide.seenAt) guide.shown += Math.min(now - guide.seenAt, 1500);
+    guide.seenAt = tutorialEl.hidden ? 0 : now;
+}
+
+// Not followed in time: out of the way for a while, and for good the second time.
+function snoozeGuide() {
+    const id = guide.def.id;
+    guides.snoozed[id] = (guides.snoozed[id] || 0) + 1;
+    if (guides.snoozed[id] >= 2) return finishGuide();
+    guide = null;
+    guideRestUntil = Date.now() + GUIDE_SNOOZE_MS;
+    tutorialEl.hidden = true;
 }
 
 function finishGuide() {
@@ -5749,6 +5823,7 @@ function tapChest(mode, index) {
 }
 
 function tapPiggy(mode, index) {
+    markGuide('chest');
     if (boardFull(mode) || !payTapEnergy(1)) return;
     const piggy = grids[mode][index];
     dropFrom(mode, index, PIGGY.levels[levelOf(piggy) - 1], PIGGY.name);
@@ -6703,6 +6778,7 @@ setInterval(() => {
     // An area that opened while a card was up plays its unlock once it's closed.
     if (currentScene === 'fix') unlockNewZones(fixLand, document.querySelector('#scene-fix .world'));
     updateTutorial();
+    idleHint();
     updateUI();
     updateCountdowns();
     saveGame();

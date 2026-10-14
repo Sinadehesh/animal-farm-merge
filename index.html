@@ -834,6 +834,10 @@
         #scene-market .side-buttons { gap: 8cqw; left: 6%; }
         .offer-reward { font-size: 4.6cqw; font-weight: 900; color: #c2410c; }
         .gift-track.daily-chests { grid-template-columns: repeat(3, 1fr); margin-top: 2cqw; }
+        /* Idle hint: two things that merge beat softly, like a heartbeat. */
+        .item.hint-beat { animation: hint-beat 1.3s ease-in-out infinite; }
+        @keyframes hint-beat { 0%, 40%, 100% { transform: scale(1); } 12% { transform: scale(1.1); } 26% { transform: scale(1.04); } }
+
         /* --- OPENING: a new game's short film (see playOpening in game.js) --- */
         #opening { position: fixed; inset: 0; z-index: 1000; display: flex; justify-content: center; background: #2a1d14; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
         #opening.closing, #opening.parting { background: transparent; }
@@ -1796,7 +1800,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610141114"></script>
-    <script src="game.js?v=202610141114"></script>
+    <script src="assets.js?v=202610141126"></script>
+    <script src="game.js?v=202610141126"></script>
 </body>
 </html>
