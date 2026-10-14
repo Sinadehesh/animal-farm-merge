@@ -4105,6 +4105,8 @@ function deliver(npc) {
         toast(`You don't have a ${itemName(r.mode, r.tier)} on your ${AREAS[r.mode].name} board.`);
         return;
     }
+    const card = document.querySelector(`.scene:not([hidden]) .order-card[data-npc="${npc.id}"]`);
+    const from = card ? card.getBoundingClientRect() : null;
     grids[r.mode][itemIndex] = null;
     lastSale = null;
     res.money += r.rewardMoney;
@@ -4117,8 +4119,7 @@ function deliver(npc) {
     updateUI();
     sfx('coin');
     buzz(20);
-    toast(`${npc.name} loved the ${itemName(r.mode, r.tier)}! +💵${r.rewardMoney} +⭐${r.rewardXp}`, 'good');
-    if (levelUp) toast(`${npc.name} reached Lv.${npc.deliveries / 5 + 1}! +💎 ${LEVEL_UP_GEMS}`, 'good');
+    thankYou(npc, r, from, levelUp);
     if (r.rewardProducer) {
         crates[r.mode].push({ type: 'shop', level: 1 });
         toast(`🎁 A ${producerName(r.mode, 1)}! Tap 🎁 on your ${AREAS[r.mode].name} board to add it.`, 'good');
@@ -4127,6 +4128,56 @@ function deliver(npc) {
     generateRequestFor(npc);
     checkTasks();
     goTo(currentScene); // the town, or the board you delivered from
+}
+
+// A delivery: the customer pops up over their order to say thanks, and the
+// coins and stars fly from it to their counters at the top.
+const THANKS = ['Thank you!', 'Just what I needed!', 'Perfect, thanks!', 'Oh, lovely!', 'You\'re a star!', 'Wonderful, thank you!'];
+
+function thankYou(npc, r, from, levelUp) {
+    const stage = stageEl.getBoundingClientRect();
+    const at = from || { left: stage.left + stage.width * 0.3, right: stage.left + stage.width * 0.7, top: stage.top + stage.height * 0.3, bottom: stage.top + stage.height * 0.3 };
+    const el = document.createElement('div');
+    el.className = 'thanks';
+    el.innerHTML = iconize(`<img class="face" src="${npcPicture(npc)}" alt="">
+        <span><b>${npc.name}</b><i>${THANKS[Math.floor(Math.random() * THANKS.length)]}</i>
+        <small>+💵${r.rewardMoney} &nbsp;+⭐${r.rewardXp}${levelUp ? ` &nbsp;· Lv.${npc.deliveries / 5 + 1}! +💎${LEVEL_UP_GEMS}` : ''}</small></span>`);
+    stageEl.appendChild(el);
+    const x = Math.min(Math.max((at.left + at.right) / 2 - stage.left, stage.width * 0.3), stage.width * 0.7);
+    el.style.left = `${x}px`;
+    el.style.top = `${at.bottom - stage.top + 6}px`;
+    setTimeout(() => el.remove(), 2400);
+    const centre = { x: (at.left + at.right) / 2, y: (at.top + at.bottom) / 2 };
+    flyReward('💵', centre, document.getElementById('btn-coins'), 4, 250);
+    flyReward('⭐', centre, document.getElementById('btn-level'), 2, 400);
+    if (levelUp) flyReward('💎', centre, document.getElementById('btn-gems'), 2, 550);
+}
+
+// Little icons flying in an arc from a point on screen to a counter, which bumps as they land.
+function flyReward(icon, from, toEl, count = 3, delay = 0) {
+    if (!toEl || !from) return;
+    const to = toEl.getBoundingClientRect();
+    const ex = to.left + to.width * 0.25, ey = to.top + to.height / 2;
+    for (let i = 0; i < count; i++) {
+        const el = document.createElement('div');
+        el.className = 'fly-reward';
+        el.innerHTML = iconize(icon);
+        document.body.appendChild(el);
+        const sx = from.x + (Math.random() - 0.5) * 40, sy = from.y + (Math.random() - 0.5) * 24;
+        const mx = (sx + ex) / 2 + (Math.random() - 0.5) * 90, my = Math.min(sy, ey) - 40 - Math.random() * 40;
+        const move = el.animate([
+            { transform: `translate(${sx}px, ${sy}px) scale(0.4)`, opacity: 0 },
+            { transform: `translate(${sx}px, ${sy - 26}px) scale(1.15)`, opacity: 1, offset: 0.22 },
+            { transform: `translate(${mx}px, ${my}px) scale(1)`, opacity: 1, offset: 0.6 },
+            { transform: `translate(${ex}px, ${ey}px) scale(0.7)`, opacity: 1 },
+        ], { duration: 950, delay: delay + i * 110, easing: 'ease-in-out', fill: 'both' });
+        move.onfinish = () => {
+            el.remove();
+            toEl.classList.remove('bump');
+            void toEl.offsetWidth;
+            toEl.classList.add('bump');
+        };
+    }
 }
 
 // --- MARKET ---
@@ -4294,7 +4345,7 @@ tutorialEl.innerHTML = `<svg class="tut-dim"><defs><mask id="tut-holes"><rect wi
         <rect width="100%" height="100%" mask="url(#tut-holes)"/></svg><div class="tut-rings"></div>
     <div class="tut-bubble"><img class="face" alt=""><div class="tut-say"><b class="tut-who"></b><span class="tut-text"></span></div>
         <button class="tut-next">Got it!</button><button class="tut-skip">Skip</button></div>
-    <div class="tut-hand"><span>👆</span><b class="tut-count"></b></div>`;
+    <div class="tut-hand"><i class="tut-ripple"></i>${ASSETS.ui.hand ? `<img src="${ASSETS.ui.hand}" alt="">` : '<span>👆</span>'}<b class="tut-count"></b></div>`;
 tutorialEl.hidden = true;
 tutorialEl.querySelector('.tut-skip').addEventListener('click', () => (tutorial.done ? finishGuide() : endTutorial()));
 tutorialEl.querySelector('.tut-next').addEventListener('click', () => {
@@ -4500,6 +4551,21 @@ function mergePair(test) {
     return [];
 }
 
+// A free item and a cobwebbed one just like it, on the board you're on: [free, cobwebbed].
+// (Two cobwebbed items can't merge, so they never count.)
+function webPair() {
+    const mode = onBoard();
+    if (!mode) return [];
+    const g = grids[mode];
+    const same = (a, b) => JSON.stringify({ ...a, web: 0 }) === JSON.stringify({ ...b, web: 0 });
+    for (let a = 0; a < g.length; a++) {
+        if (!g[a] || g[a].type || !isFree(g[a])) continue;
+        const b = g.findIndex((c, i) => i !== a && c && c.web && !c.type && same(c, g[a]));
+        if (b >= 0) return [a, b];
+    }
+    return [];
+}
+
 function firstLandForSale() {
     return Object.keys(AREAS).find(id => !unlocks[id] && quests.level >= AREAS[id].level);
 }
@@ -4537,9 +4603,9 @@ const GUIDES = [
       steps: [{ scene: () => onBoard(), who: 'robin', text: 'Two parts make a bigger one. Drag one onto the other!', drag: true,
                 target: () => mergePair(c => isFree(c) && c.type === 'shop' && levelOf(c) < FIRST_WORKING_LEVEL).map(i => cellItem(onBoard(), i)),
                 done: () => stats.upgrades > (guide?.start.upgrades ?? 0) }] },
-    { id: 'cobweb', when: () => mergePair(c => !c.type && isFree({ ...c, web: false })).some(i => grids[onBoard()][i].web),
+    { id: 'cobweb', when: () => webPair().length === 2,
       steps: [{ scene: () => onBoard(), who: 'marnie', text: 'Merge a matching item into a cobwebbed one to free it!', drag: true,
-                target: () => { const p = mergePair(c => !c.type && isFree({ ...c, web: false })); const m = onBoard(); return (m && grids[m][p[0]]?.web ? [p[1], p[0]] : p).map(i => cellItem(m, i)); },
+                target: () => webPair().map(i => cellItem(onBoard(), i)),
                 done: () => stats.webs > (guide?.start.webs ?? 0) }] },
     { id: 'bubble', when: () => boardCell(c => c.type === 'bubble') >= 0,
       steps: [{ scene: () => onBoard(), who: 'sandy', text: 'A Double Bubble! Pop it with 💎 for a free copy, or let it float away.',

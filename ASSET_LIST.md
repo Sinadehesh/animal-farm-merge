@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**529 assets:** 491 done ✅, 8 placeholders 🟡, 30 missing ⬜.
+**530 assets:** 491 done ✅, 8 placeholders 🟡, 31 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -388,7 +388,7 @@ The same on every board. Each level looks fuller or bigger than the one before.
 | ✅ | Piggy Bank | 4 | `assets/items/special/piggy_1.png` … `_4.png` | a pink piggy bank, rounder and shinier each level |
 | ✅ | Double Bubble | 1 | `assets/items/special/bubble.png` | an empty, see-through soap bubble with a rainbow sheen (the item shows inside it) |
 
-## 11. Interface icons (24)
+## 11. Interface icons (25)
 
 Small square PNGs with a transparent background in `assets/ui/` (listed in `ui` in `assets.js`). Anything
 missing shows its emoji.
@@ -418,6 +418,7 @@ missing shows its emoji.
 | ✅ | 🔨 hammer | job tags on the map and job cards | `assets/ui/hammer.png` |
 | ⬜ | 🏆 trophy | Country Fair ribbon, header and race | `assets/ui/trophy.png` |
 | ⬜ | 📺 TV with a play button | "Watch an ad" buttons | `assets/ui/ad.png` |
+| ⬜ | 👆 pointing glove (white cartoon glove, index finger out) | the tutorial and guides: points at what to tap | `assets/ui/hand.png` |
 | ⬜ | 🧩 part | producer parts in reward texts | not wired yet (needs a small code change) |
 
 ## 12a. Painted pages (the new look)
