@@ -397,14 +397,14 @@ const DAILY_CHEST = [{ money: 100, energy: 20 }, { energy: 50, gems: 5 }, { ches
 const FAIR_LEVEL = 2;
 const FAIR_DAYS = 3; // Friday, Saturday, Sunday
 const FAIR_THEMES = [
-    { id: 'pie', name: 'Pie Contest', emoji: '🥧', hue: 30, producer: ['🥣', 'Mixing Bowl'],
-      names: ['🌾 Flour', '🫓 Dough', '🥧 Pie Crust', '🍏 Apple Pie', '🫐 Berry Pie', '🍰 Layer Cake', '🎂 Wedding Cake', '🏆 Golden Pie'] },
-    { id: 'flowers', name: 'Flower Show', emoji: '🌸', hue: 320, producer: ['🪴', 'Seed Tray'],
-      names: ['🌰 Seed Packet', '🌱 Sprout', '🌷 Bud', '💐 Posy', '💐 Bouquet', '🧺 Flower Basket', '🌸 Flower Arch', '🏵️ Prize Rosette'] },
-    { id: 'fishing', name: 'Fishing Derby', emoji: '🎣', hue: 200, producer: ['🧰', 'Tackle Box'],
-      names: ['🪱 Bait', '🪝 Hook', '🎣 Lure', '🐟 Little Fish', '🐠 Trout', '🐡 Salmon', '🐋 Big Catch', '🏆 Trophy Fish'] },
+    { id: 'pie', name: 'Pie Contest', emoji: '🥧', hue: 30, producer: ['🧱', 'Pie Oven'],
+      names: ['🍎 Red Apple', '🍏 Apple Slices', '🥧 Pie Tin', '🥧 Apple Pie', '🍒 Cherry Tart', '🍰 Pie Tower', '🎀 Ribbon Pie', '🏆 Golden Pie'] },
+    { id: 'flowers', name: 'Flower Show', emoji: '🌸', hue: 320, producer: ['🪴', 'Potting Bench'],
+      names: ['🧅 Flower Bulb', '🌱 Green Shoot', '🪻 Hyacinth', '💐 Posy', '💐 Bouquet', '🧺 Flower Basket', '🌸 Flower Arch', '🏵️ Prize Rosette'] },
+    { id: 'fishing', name: 'Fishing Derby', emoji: '🎣', hue: 200, producer: ['🪣', 'Bait Bucket'],
+      names: ['🪱 Bait', '🦐 Shrimp', '🎣 Lure', '🐟 Little Fish', '🐠 Trout', '🐡 Salmon', '🐋 Big Catch', '🏆 Trophy Fish'] },
     { id: 'pumpkin', name: 'Pumpkin Fair', emoji: '🎃', hue: 25, producer: ['🌱', 'Pumpkin Patch'],
-      names: ['🌰 Pumpkin Seed', '🌱 Vine', '🟠 Little Pumpkin', '🎃 Pumpkin', '🎃 Big Pumpkin', '🎃 Giant Pumpkin', '🏵️ Prize Pumpkin', '👑 Golden Pumpkin'] },
+      names: ['🌰 Pumpkin Seed', '🌱 Pumpkin Vine', '🟠 Mini Gourd', '🎃 Jack-o-Lantern', '🎃 Big Pumpkin', '🎃 Giant Pumpkin', '🛻 Pumpkin Wagon', '👑 Golden Pumpkin'] },
 ];
 // [points, reward] for each milestone.
 const FAIR_MILESTONES = [
@@ -511,7 +511,7 @@ const TOOLS = {
     wool:    { board: 'barn',   name: 'Wool Basket',   emoji: '🧶', what: 'wool things',    minutes: 4, skip: 3,  hue: 280,
                names: ['☁️ Wool Tuft', '🧶 Ball of Yarn', '🪡 Yarn Skeins', '🧦 Woolly Socks', '🧣 Knitted Scarf', '🧥 Cozy Sweater', '🛏️ Patchwork Quilt', '🏆 Golden Fleece'] },
     seeds:   { board: 'farm',   name: 'Seed Tin',      emoji: '🌰', what: 'seeds and veg',  minutes: 5, skip: 4,  hue: 60,
-               names: ['🌰 Seed', '🫘 Seed Packet', '🌱 Seedling Tray', '🥕 Veg Bundle', '🧺 Veg Basket', '📦 Veg Crate', '🛒 Market Cart', '🏆 Prize Pumpkin'] },
+               names: ['🫘 Bean', '✉️ Seed Packet', '🌱 Seedling Tray', '🥕 Veg Bundle', '🧺 Veg Basket', '📦 Veg Crate', '🛒 Market Cart', '🏆 Prize Pumpkin'] },
     bakery:  { board: 'hay',    name: 'Flour Mill',    emoji: '🥖', what: 'baking',         minutes: 8, skip: 5,  hue: 40,
                names: ['🌾 Pinch of Flour', '🥣 Bowl of Flour', '🫓 Dough', '🍞 Loaf', '🥐 Croissants', '🥧 Pie', '🎂 Cake', '🏆 Grand Wedding Cake'] },
     worms:   { board: 'fert',   name: 'Worm Bin',      emoji: '🪱', what: 'worms and soil', minutes: 10, skip: 6, hue: 20,

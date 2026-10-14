@@ -311,55 +311,55 @@ animals, each tier should be bigger and fancier than the last, and the top one a
 
 | | Tier | Item | File |
 |---|---|---|---|
-| ⬜ | 0 | Flour | `assets/items/fair_pie/00_flour.png` |
-| ⬜ | 1 | Dough | `assets/items/fair_pie/01_dough.png` |
-| ⬜ | 2 | Pie Crust | `assets/items/fair_pie/02_pie_crust.png` |
+| ⬜ | 0 | Red Apple | `assets/items/fair_pie/00_red_apple.png` |
+| ⬜ | 1 | Apple Slices | `assets/items/fair_pie/01_apple_slices.png` |
+| ⬜ | 2 | Pie Tin | `assets/items/fair_pie/02_pie_tin.png` |
 | ⬜ | 3 | Apple Pie | `assets/items/fair_pie/03_apple_pie.png` |
-| ⬜ | 4 | Berry Pie | `assets/items/fair_pie/04_berry_pie.png` |
-| ⬜ | 5 | Layer Cake | `assets/items/fair_pie/05_layer_cake.png` |
-| ⬜ | 6 | Wedding Cake | `assets/items/fair_pie/06_wedding_cake.png` |
+| ⬜ | 4 | Cherry Tart | `assets/items/fair_pie/04_cherry_tart.png` |
+| ⬜ | 5 | Pie Tower | `assets/items/fair_pie/05_pie_tower.png` |
+| ⬜ | 6 | Ribbon Pie | `assets/items/fair_pie/06_ribbon_pie.png` |
 | ⬜ | 7 | Golden Pie | `assets/items/fair_pie/07_golden_pie.png` |
-| ⬜ | producer | Mixing Bowl | `assets/producers/fair_pie.png` (index 3 in `producers.fair_pie`) |
+| ⬜ | producer | Pie Oven | `assets/producers/fair_pie.png` (index 3 in `producers.fair_pie`) |
 
 ### 🌸 Flower Show
 
 | | Tier | Item | File |
 |---|---|---|---|
-| ⬜ | 0 | Seed Packet | `assets/items/fair_flowers/00_seed_packet.png` |
-| ⬜ | 1 | Sprout | `assets/items/fair_flowers/01_sprout.png` |
-| ⬜ | 2 | Bud | `assets/items/fair_flowers/02_bud.png` |
+| ⬜ | 0 | Flower Bulb | `assets/items/fair_flowers/00_flower_bulb.png` |
+| ⬜ | 1 | Green Shoot | `assets/items/fair_flowers/01_green_shoot.png` |
+| ⬜ | 2 | Hyacinth | `assets/items/fair_flowers/02_hyacinth.png` |
 | ⬜ | 3 | Posy | `assets/items/fair_flowers/03_posy.png` |
 | ⬜ | 4 | Bouquet | `assets/items/fair_flowers/04_bouquet.png` |
 | ⬜ | 5 | Flower Basket | `assets/items/fair_flowers/05_flower_basket.png` |
 | ⬜ | 6 | Flower Arch | `assets/items/fair_flowers/06_flower_arch.png` |
 | ⬜ | 7 | Prize Rosette | `assets/items/fair_flowers/07_prize_rosette.png` |
-| ⬜ | producer | Seed Tray | `assets/producers/fair_flowers.png` (index 3 in `producers.fair_flowers`) |
+| ⬜ | producer | Potting Bench | `assets/producers/fair_flowers.png` (index 3 in `producers.fair_flowers`) |
 
 ### 🎣 Fishing Derby
 
 | | Tier | Item | File |
 |---|---|---|---|
 | ⬜ | 0 | Bait | `assets/items/fair_fishing/00_bait.png` |
-| ⬜ | 1 | Hook | `assets/items/fair_fishing/01_hook.png` |
+| ⬜ | 1 | Shrimp | `assets/items/fair_fishing/01_shrimp.png` |
 | ⬜ | 2 | Lure | `assets/items/fair_fishing/02_lure.png` |
 | ⬜ | 3 | Little Fish | `assets/items/fair_fishing/03_little_fish.png` |
 | ⬜ | 4 | Trout | `assets/items/fair_fishing/04_trout.png` |
 | ⬜ | 5 | Salmon | `assets/items/fair_fishing/05_salmon.png` |
 | ⬜ | 6 | Big Catch | `assets/items/fair_fishing/06_big_catch.png` |
 | ⬜ | 7 | Trophy Fish | `assets/items/fair_fishing/07_trophy_fish.png` |
-| ⬜ | producer | Tackle Box | `assets/producers/fair_fishing.png` (index 3 in `producers.fair_fishing`) |
+| ⬜ | producer | Bait Bucket | `assets/producers/fair_fishing.png` (index 3 in `producers.fair_fishing`) |
 
 ### 🎃 Pumpkin Fair
 
 | | Tier | Item | File |
 |---|---|---|---|
 | ⬜ | 0 | Pumpkin Seed | `assets/items/fair_pumpkin/00_pumpkin_seed.png` |
-| ⬜ | 1 | Vine | `assets/items/fair_pumpkin/01_vine.png` |
-| ⬜ | 2 | Little Pumpkin | `assets/items/fair_pumpkin/02_little_pumpkin.png` |
-| ⬜ | 3 | Pumpkin | `assets/items/fair_pumpkin/03_pumpkin.png` |
+| ⬜ | 1 | Pumpkin Vine | `assets/items/fair_pumpkin/01_pumpkin_vine.png` |
+| ⬜ | 2 | Mini Gourd | `assets/items/fair_pumpkin/02_mini_gourd.png` |
+| ⬜ | 3 | Jack-o-Lantern | `assets/items/fair_pumpkin/03_jack_o_lantern.png` |
 | ⬜ | 4 | Big Pumpkin | `assets/items/fair_pumpkin/04_big_pumpkin.png` |
 | ⬜ | 5 | Giant Pumpkin | `assets/items/fair_pumpkin/05_giant_pumpkin.png` |
-| ⬜ | 6 | Prize Pumpkin | `assets/items/fair_pumpkin/06_prize_pumpkin.png` |
+| ⬜ | 6 | Pumpkin Wagon | `assets/items/fair_pumpkin/06_pumpkin_wagon.png` |
 | ⬜ | 7 | Golden Pumpkin | `assets/items/fair_pumpkin/07_golden_pumpkin.png` |
 | ⬜ | producer | Pumpkin Patch | `assets/producers/fair_pumpkin.png` (index 3 in `producers.fair_pumpkin`) |
 
@@ -504,7 +504,7 @@ its own 8-step chain (`items.<chain>`, files `assets/items/<chain>/00.png` … `
 | ✅ | 🎣 Tackle Box | Fish Pond | ✅ Hook, Bobber, Rope, Net, Fishing Rod, Oars, Life Ring, Rowboat |
 | ✅ | 🏮 Lantern Crate | Flower Garden | ✅ Candle, Paper Lantern, Bunting, Glass Lantern, Fairy Lights, Balloons, Lamp Post, Golden Firework |
 | ✅ | 🧶 Wool Basket | Barn | ✅ Wool Tuft, Ball of Yarn, Yarn Skeins, Woolly Socks, Knitted Scarf, Cozy Sweater, Patchwork Quilt, Golden Fleece |
-| ✅ | 🌰 Seed Tin | Crop Field | ✅ Seed, Seed Packet, Seedling Tray, Veg Bundle, Veg Basket, Veg Crate, Market Cart, Prize Pumpkin |
+| ✅ | 🌰 Seed Tin | Crop Field | ✅ Bean, Seed Packet, Seedling Tray, Veg Bundle, Veg Basket, Veg Crate, Market Cart, Prize Pumpkin |
 | ✅ | 🥖 Flour Mill | Hay Field | ✅ Pinch of Flour, Bowl of Flour, Dough, Loaf, Croissants, Pie, Cake, Grand Wedding Cake |
 | ✅ | 🪱 Worm Bin | Compost Yard | ✅ Worm, Worm Family, Worm Castings, Potting Mix, Herb Pot, Tomato Plant, Little Tree, Golden Bonsai |
 | ✅ | 🛶 Boatyard | Fish Pond | ✅ Driftwood, Planed Board, Boat Frame, Hull, Mast and Sail, Dinghy, Sailboat, Golden Yacht |
