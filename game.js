@@ -2903,8 +2903,6 @@ function newAreaCard(zone, tries = 0) {
 const TOWN_NAME = 'Sunnyvale';
 
 // Speech bubbles: [who, line, answer button]. Kept tiny: players want to merge.
-const STORY_INTRO = [['mayor', 'Save us!', 'OK!']];
-
 // Every job in these areas, in order.
 function jobsIn(...zones) {
     return TASKS.filter(t => zones.includes(t.zone)).map(t => t.id);
@@ -2971,10 +2969,154 @@ function playScene(title, lines, extra = '', then = null) {
     });
 }
 
-function playIntro() {
-    story.intro = true;
+// --- OPENING ---
+// A new game opens on a short film over the map's own paintings: Sunnyvale in
+// the sun, the storm, the friends who stayed, the Mayor's welcome and how the
+// game works. Then clouds close in and part on the map itself, where the
+// tutorial takes over. A tap hurries a line along; Skip goes straight to the map.
+let openingOn = false;
+const NO_INTRO = new URLSearchParams(location.search).has('nointro'); // for testing
+
+const OPENING_LINES = [
+    { mood: 'sun', text: 'Sunnyvale was the happiest little farm town in the valley.' },
+    { mood: 'storm', text: 'Then one night, a terrible storm swept through.' },
+    { mood: 'rain', text: 'Barns fell. Fields flooded. Most folks packed up and left…' },
+    { mood: 'friends', text: '…but a few friends stayed, hoping someone would come and help.' },
+];
+
+function playOpening() {
     if (!story.seen.includes(0)) story.seen.push(0);
-    playScene('📖 Day 1', STORY_INTRO);
+    if (NO_INTRO) { story.intro = true; return; }
+    openingOn = true;
+    hidePointer();
+    const map = (ASSETS.stages || {}).map || [];
+    const cloud = ASSETS.ui.cloud;
+    const el = document.createElement('div');
+    el.id = 'opening';
+    el.className = 'title';
+    el.innerHTML = `<div class="op-frame">
+        <div class="op-paint op-sun" style="background-image:url('${map[2]}')"></div>
+        <div class="op-paint op-ruin" style="background-image:url('${map[0]}')"></div>
+        <div class="op-dark"></div>
+        <div class="op-clouds">${[0, 1, 2, 3, 4, 5].map(i => `<img src="${cloud}" alt="" style="--i:${i}">`).join('')}</div>
+        <div class="op-rain"></div>
+        <div class="op-flash"></div>
+        <div class="op-title"><h1>Merge<br><span>Farmstead</span></h1><p>Tap to start</p></div>
+        <p class="op-caption"></p>
+        <div class="op-friends">${['marnie', 'robin', 'mayor', 'willy', 'sandy'].map((id, i) =>
+            `<img src="${(ASSETS.wave || {})[id] || npcPicture(npcs.find(n => n.id === id))}" alt="" style="--i:${i}">`).join('')}</div>
+        <div class="op-card"></div>
+        <div class="op-wall"><i></i><i></i></div>
+        <button class="op-skip">Skip ▸</button>
+    </div>`;
+    document.body.appendChild(el);
+    const caption = el.querySelector('.op-caption');
+    const card = el.querySelector('.op-card');
+    let skipped = false;
+
+    // Waits this long, or until a tap (Infinity: only a tap).
+    const beat = ms => new Promise(resolve => {
+        const done = () => { clearTimeout(timer); el.removeEventListener('pointerdown', done); resolve(); };
+        const timer = ms === Infinity ? 0 : setTimeout(done, ms);
+        el.addEventListener('pointerdown', done);
+    });
+    const say = text => {
+        caption.classList.remove('show');
+        void caption.offsetWidth;
+        caption.textContent = text;
+        caption.classList.add('show');
+    };
+    const flash = () => {
+        el.classList.remove('flash');
+        void el.offsetWidth;
+        el.classList.add('flash');
+        sfx('thunder');
+    };
+    // A card with a button; resolves when it's tapped.
+    const ask = (html, label) => new Promise(resolve => {
+        card.innerHTML = `${html}<button class="op-go">${label}</button>`;
+        card.classList.remove('show');
+        void card.offsetWidth;
+        card.classList.add('show');
+        card.querySelector('.op-go').addEventListener('click', () => { sfx('pop'); resolve(); }, { once: true });
+    });
+
+    const finish = () => {
+        if (!openingOn) return;
+        openingOn = false;
+        story.intro = true;
+        stopRain();
+        sfx('whoosh');
+        // The clouds close in, the film goes, and they part on the map.
+        el.classList.add('closing');
+        setTimeout(() => {
+            el.classList.add('parting');
+            updateTutorial();
+        }, 1100);
+        setTimeout(() => el.remove(), 2600);
+    };
+    el.querySelector('.op-skip').addEventListener('click', e => { e.stopPropagation(); skipped = true; finish(); });
+    el.querySelector('.op-skip').addEventListener('pointerdown', e => e.stopPropagation());
+
+    (async () => {
+        await beat(Infinity);
+        if (skipped) return;
+        el.className = 'sun';
+        say(OPENING_LINES[0].text);
+        await beat(4200);
+        if (skipped) return;
+        el.className = 'storm';
+        flash();
+        startRain();
+        say(OPENING_LINES[1].text);
+        await beat(4000);
+        if (skipped) return;
+        el.className = 'storm rain';
+        setTimeout(() => !skipped && flash(), 1200);
+        say(OPENING_LINES[2].text);
+        await beat(4200);
+        if (skipped) return;
+        el.className = 'storm rain friends';
+        say(OPENING_LINES[3].text);
+        await beat(4500);
+        if (skipped) return;
+        stopRain();
+        el.className = 'welcome';
+        caption.classList.remove('show');
+        const mayor = npcs.find(n => n.id === 'mayor');
+        await ask(`<img class="op-who" src="${(ASSETS.wave || {}).mayor || npcPicture(mayor)}" alt="">
+            <b class="op-name">${mayor.name}</b>
+            <p>Oh! You must be the new farmer! Welcome to ${TOWN_NAME}.</p>
+            <p>The storm left our farm in ruins. Will you help us bring it back to life?</p>`, 'I\'ll help!');
+        if (skipped) return;
+        const pic = (src, alt) => `<img src="${src}" alt="${alt}">`;
+        const items = ASSETS.items.barn || [];
+        await ask(`<h2>How to play</h2>
+            <div class="op-how"><span>${pic(ASSETS.producers.barn[3], '🧺')}</span>
+                <p><b>Tap</b> a producer to make things.</p></div>
+            <div class="op-how"><span>${pic(items[0], '🌿')}<i>+</i>${pic(items[0], '🌿')}<i>=</i>${pic(items[1], '🥚')}</span>
+                <p><b>Drag</b> two of the same together: they <b>merge</b> into something better.</p></div>
+            <div class="op-how"><span>${pic(ASSETS.ui.hammer, '🔨')}</span>
+                <p>Use what you make to finish <b>jobs</b> and fix up the farm!</p></div>`, 'Let\'s go!');
+        finish();
+    })();
+}
+
+// Rain for the opening's storm: soft noise that fades in, and out when stopped.
+let rainGain = null;
+
+function startRain() {
+    const ctx = audio();
+    if (!ctx) return;
+    try { rainGain = noise(ctx, 0, 30, 0.05, 1400, 1.5); } catch (e) { /* sound is a nicety */ }
+}
+
+function stopRain() {
+    if (!rainGain) return;
+    const t = rainGain.context.currentTime;
+    rainGain.gain.cancelScheduledValues(t);
+    rainGain.gain.setTargetAtTime(0.0001, t, 0.4);
+    rainGain = null;
 }
 
 // A day's bubble, with the items its first job asks for.
@@ -3391,6 +3533,27 @@ function tone(ctx, freq, at, len, type = 'sine', vol = 0.15, to = null) {
     osc.stop(t + len + 0.03);
 }
 
+// A burst of noise through a low-pass filter (thunder, rain). Returns its volume.
+function noise(ctx, at, len, vol, freq, attack = 0.02) {
+    const t = ctx.currentTime + at;
+    const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * len), ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource();
+    const filter = ctx.createBiquadFilter();
+    const gain = ctx.createGain();
+    src.buffer = buffer;
+    filter.type = 'lowpass';
+    filter.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(vol, t + attack);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    src.connect(filter).connect(gain).connect(ctx.destination);
+    src.start(t);
+    src.stop(t + len);
+    return gain;
+}
+
 const SOUNDS = {
     tap: c => tone(c, 480, 0, 0.09, 'triangle', 0.1, 760),                     // something drops out of a producer
     merge: (c, step = 0) => {                                                   // a merge: higher for bigger items
@@ -3408,6 +3571,7 @@ const SOUNDS = {
     }),
     whoosh: c => tone(c, 220, 0, 0.45, 'sine', 0.05, 1300),                    // a painting turning to the next
     nope: c => tone(c, 220, 0, 0.16, 'sawtooth', 0.05, 150),
+    thunder: c => { noise(c, 0, 0.5, 0.35, 1200, 0.01); noise(c, 0.08, 3, 0.7, 160, 0.08); },
 };
 
 // Sound files (ASSETS.sounds), decoded once; until one loads, the made sound plays.
@@ -3821,7 +3985,7 @@ function initTown(newGame = false) {
     // wants an Egg, which the tutorial walks you through.
     if (newGame) {
         const marnie = npcs.find(npc => npc.id === 'marnie');
-        Object.assign(marnie.request, { mode: 'barn', tier: 1, rewardMoney: 25, rewardXp: orderXp(1), rewardProducer: true });
+        Object.assign(marnie.request, { mode: 'barn', tier: 2, rewardMoney: 35, rewardXp: orderXp(2), rewardProducer: true });
     }
 }
 
@@ -4031,74 +4195,148 @@ function renderMarket() {
 }
 
 // --- FIRST-PLAY TUTORIAL ---
-// A few pointers for a new farmer, one at a time. Each step points a hand at
-// what to tap, says why in Marnie's words, and ends by itself once it's done.
+// The first few minutes, one step at a time, impossible to miss: the screen
+// dims around the one thing to tap, a hand flies there from the middle and
+// shows how (tap it, tap it ×2, drag this onto that), and someone says why in
+// a full sentence. Now and then the game pauses to explain something new
+// (the jobs, the board, cobwebs and boxes) until you tap "Got it". Taps
+// anywhere else do nothing while a step is up, so no one gets lost.
 // `scene`: where the step happens; elsewhere the hand points the way there.
 
+// The first Barn board has an Egg under cobwebs here, between two boxes: the
+// tutorial's "merge onto it" step frees it and pops the boxes.
+const TUTORIAL_WEB = 13;
+
 const TUTORIAL = [
-    { scene: 'map', who: 'mayor', text: 'Tap the Barn!',
+    { id: 'barn', scene: 'map', who: 'mayor', text: 'The storm hit our Barn the hardest. Let\'s start there: tap the Barn!',
       target: () => document.querySelector('#scene-map button.spot[data-id="barn"]'), done: () => currentScene !== 'map' || stats.merges > 0 },
-    { scene: 'fix', who: 'mayor', text: 'Tap Merge!',
+    { id: 'job', scene: 'fix', who: 'mayor', explain: true,
+      text: 'This is the Barnyard. Every job here needs something from you. This first one: open 1 box on the merge board.',
+      target: () => jobSpot(), done: () => currentScene === 'barn' || stats.merges > 0 },
+    { id: 'merge', scene: 'fix', who: 'mayor', text: 'Things are made on the merge board. Tap Merge to go there!',
       target: () => document.querySelector('#scene-fix .fix-merge'), done: () => currentScene === 'barn' || stats.merges > 0 },
-    { scene: 'barn', who: 'mayor', text: 'Tap the Feed Bin!',
-      target: () => cellItem('barn', grids.barn.findIndex(c => isWorkingProducer(c) && isFree(c))), done: () => statNow('taps') >= 2 },
-    { scene: 'barn', who: 'mayor', text: 'Drag Feed onto Feed to merge them!', drag: true,
+    { id: 'board', scene: 'barn', who: 'mayor', explain: true,
+      text: 'This is the merge board! The Feed Bin makes Feed. Each tap uses ⚡1 energy.',
+      target: () => cellItem('barn', feedBin()), done: () => statNow('taps') >= 2 || stats.merges > 0 },
+    { id: 'tap', scene: 'barn', who: 'mayor', taps: () => 2 - statNow('taps'),
+      text: n => (n > 1 ? `Tap the Feed Bin ${n} times!` : 'Once more! Tap the Feed Bin!'),
+      target: () => cellItem('barn', feedBin()), done: () => statNow('taps') >= 2 || stats.merges > 0 },
+    { id: 'pair', scene: 'barn', who: 'mayor', drag: true, text: 'Two of the same make something better! Drag one Feed onto the other.',
       target: () => feedPair().map(i => cellItem('barn', i)), done: () => stats.merges >= 1,
       // Not two Feed to merge (a lucky part dropped instead): make another first.
-      fallback: { text: 'Tap the Feed Bin again!', target: () => cellItem('barn', grids.barn.findIndex(c => isWorkingProducer(c) && isFree(c))) } },
-    { scene: 'barn', who: 'mayor', text: 'Merge next to a 📦 crate!',
-      target: () => cellItem('barn', grids.barn.findIndex(c => c && c.type === 'box')), done: () => stats.boxes >= 1 },
-    { scene: 'barn', who: 'marnie', text: 'Deliver my Egg!',
-      target: () => document.querySelector('#scene-barn .order-card.ready:not(.task-card)') || document.querySelector('#scene-barn .order-card:not(.task-card):not(.other)'),
-      done: () => stats.delivered >= 1 },
-    // The first fix, in the Barn itself.
-    { scene: 'fix', who: 'mayor', text: 'Fix it!',
-      target: () => document.querySelector('#scene-fix .fix-spot.open'), done: () => stats.jobs >= 1 },
+      fallback: { text: 'Tap the Feed Bin again!', target: () => cellItem('barn', feedBin()) } },
+    { id: 'egg', scene: 'barn', who: 'marnie', explain: true,
+      text: 'You made an Egg! Merging two alike always makes the next thing: Feed → Egg → Chick → Chicken…',
+      target: () => cellItem('barn', freeEgg()), done: () => webFreed() },
+    { id: 'web', scene: 'barn', who: 'marnie', explain: true,
+      text: 'See the Egg under cobwebs? It\'s stuck, and so are the boxes. Merge a matching item onto a cobwebbed one to free it, and the boxes next to it pop open!',
+      target: () => webbedEgg() >= 0 && [cellItem('barn', webbedEgg()), ...getNeighbors(webbedEgg()).filter(i => grids.barn[i] && grids.barn[i].type === 'box').map(i => cellItem('barn', i))],
+      done: () => webFreed() },
+    { id: 'free', scene: 'barn', who: 'marnie', drag: true, text: 'Drag your Egg onto the cobwebbed Egg!',
+      target: () => (freeEgg() >= 0 && webbedEgg() >= 0 ? [cellItem('barn', freeEgg()), cellItem('barn', webbedEgg())] : []),
+      done: () => webFreed(),
+      // No Egg of your own (it went into an order): two Feed make one.
+      fallback: () => (feedPair().length ? { text: 'Make an Egg first: drag one Feed onto the other!', drag: true, target: () => feedPair().map(i => cellItem('barn', i)) }
+          : { text: 'Tap the Feed Bin to make Feed!', target: () => cellItem('barn', feedBin()) }) },
+    { id: 'deliver', scene: 'barn', who: 'marnie', text: 'A Chick, just what I wanted! Tap Deliver to give it to me.',
+      target: () => document.querySelector('#scene-barn .order-card.ready[data-npc="marnie"]') || document.querySelector('#scene-barn .order-card.ready:not(.task-card)'),
+      done: () => stats.delivered >= 1,
+      fallback: () => ({ text: 'Orders want items from the board. Tap Deliver when one is ready!',
+          target: () => document.querySelector('#scene-barn .order-card:not(.task-card):not(.other)') }) },
+    // The first fix, in the Barnyard itself.
+    { id: 'fix', scene: 'fix', who: 'mayor', text: 'You opened a box, so the planks can go! Tap the job to fix it.',
+      target: () => jobSpot(), done: () => stats.jobs >= 1 },
+    // Off you go: the next job, and how to see what any job needs.
+    { id: 'onward', scene: 'fix', who: 'mayor', explain: true,
+      text: 'That\'s how it\'s done! These are your next jobs. Tap one any time to see what it needs, then make it on the merge board.',
+      target: () => [...document.querySelectorAll('#scene-fix .task-pin')], done: () => stats.jobs >= 2 },
 ];
-const tutorial = { step: 0, done: false };
+const tutorial = { step: 0, done: false, explained: [] };
+
+// The Barnyard's open job: its spot and its card.
+function jobSpot() {
+    return [document.querySelector('#scene-fix .fix-spot.open'), document.querySelector('#scene-fix .task-pin')];
+}
 
 function cellItem(mode, index) {
     return index >= 0 ? document.querySelector(`#grid-${mode} .grid-cell[data-index="${index}"] .item`) : null;
 }
 
-// Two free Feed on the Barn board, for the "merge" step.
+function feedBin() {
+    return grids.barn.findIndex(c => isWorkingProducer(c) && isFree(c));
+}
+
+// Two free Feed on the Barn board, for the "merge" step: dragged towards the
+// top of the board, away from the boxes (they're for a later step).
 function feedPair() {
     const feed = grids.barn.map((c, i) => (isFree(c) && !c.type && c.tier === 0 ? i : -1)).filter(i => i >= 0);
-    return feed.length >= 2 ? feed.slice(0, 2) : [];
+    return feed.length >= 2 ? [feed[1], feed[0]] : [];
+}
+
+function freeEgg() {
+    return grids.barn.findIndex(c => isFree(c) && !c.type && !c.chain && c.tier === 1);
+}
+
+function webbedEgg() {
+    const c = grids.barn[TUTORIAL_WEB];
+    return c && c.web && !c.type && !c.chain ? TUTORIAL_WEB : -1;
+}
+
+// The tutorial's cobwebbed Egg is free (or gone some other way).
+function webFreed() {
+    const c = grids.barn[TUTORIAL_WEB];
+    return !(c && c.web) && stats.boxes >= 1;
 }
 
 const tutorialEl = document.createElement('div');
 tutorialEl.id = 'tutorial';
-tutorialEl.innerHTML = `<div class="tut-bubble"><img class="face" alt=""><span class="tut-text"></span><button class="tut-skip">Skip</button></div>
-                        <div class="tut-hand">👆</div>`;
+tutorialEl.innerHTML = `<svg class="tut-dim"><defs><mask id="tut-holes"><rect width="100%" height="100%" fill="#fff"/><g></g></mask></defs>
+        <rect width="100%" height="100%" mask="url(#tut-holes)"/></svg><div class="tut-rings"></div>
+    <div class="tut-bubble"><img class="face" alt=""><div class="tut-say"><b class="tut-who"></b><span class="tut-text"></span></div>
+        <button class="tut-next">Got it!</button><button class="tut-skip">Skip</button></div>
+    <div class="tut-hand"><span>👆</span><b class="tut-count"></b></div>`;
 tutorialEl.hidden = true;
 tutorialEl.querySelector('.tut-skip').addEventListener('click', () => (tutorial.done ? finishGuide() : endTutorial()));
+tutorialEl.querySelector('.tut-next').addEventListener('click', () => {
+    const step = TUTORIAL[tutorial.step];
+    if (step && !tutorial.done) tutorial.explained.push(step.id);
+    sfx('pop');
+    updateTutorial();
+});
 
 function endTutorial(finished = false) {
     tutorial.done = true;
     tutorialEl.hidden = true;
     giftAfterTutorial = true;
+    // The tool producers wait until now, so the first board is simple.
+    ensureToolboxes();
+    Object.keys(grids).forEach(mode => refreshBoard(mode));
     if (finished) toast('All set! 🎉', 'good');
 }
 
 // Moves the tutorial on and points at the current step's target.
 function updateTutorial() {
     if (tutorial.done) return updateGuides();
-    if (fixing) { tutorialEl.hidden = true; return; }
-    while (tutorial.step < TUTORIAL.length && TUTORIAL[tutorial.step].done()) tutorial.step++;
+    if (fixing || openingOn) { hidePointer(); return; }
+    // A step is over once it's done, or (an explanation) once read.
+    const over = step => step.done() || (step.explain && tutorial.explained.includes(step.id));
+    while (tutorial.step < TUTORIAL.length && over(TUTORIAL[tutorial.step])) tutorial.step++;
     if (tutorial.step >= TUTORIAL.length) return endTutorial(true);
     const step = TUTORIAL[tutorial.step];
     // Not where the step happens: point the way there.
     let target;
     let text = step.text;
+    let drag = step.drag;
+    let explain = step.explain;
     if (currentScene !== step.scene || (step.scene === 'fix' && fixLand !== 'barn')) {
+        explain = drag = false;
         if (step.scene === 'fix' && currentScene === 'barn') {
-            // Back from the board to the Barn: its job card leads there.
+            // Back from the board to the Barnyard: its job card leads there.
             target = document.querySelector('#scene-barn .task-card') || backBtn;
-            text = 'Tap 🔨!';
+            text = 'Now tap the job to go back to the Barnyard!';
         } else if (step.scene === 'barn' && currentScene === 'fix' && fixLand === 'barn') {
             target = document.querySelector('#scene-fix .fix-merge');
-            text = 'Tap Merge!';
+            text = 'Tap Merge to go to the merge board!';
         } else if (step.scene === 'map') {
             target = backBtn;
             text = 'Back to the map!';
@@ -4111,38 +4349,116 @@ function updateTutorial() {
         }
     } else {
         target = step.target();
-        const none = !target || (Array.isArray(target) && target.length < (step.drag ? 2 : 1));
+        const none = !target || (Array.isArray(target) && target.filter(Boolean).length < (drag ? 2 : 1));
+        // Nothing left to explain about (it's gone some other way): move on.
+        if (none && explain && !step.fallback) {
+            tutorial.explained.push(step.id);
+            return updateTutorial();
+        }
         if (none && step.fallback) {
-            target = step.fallback.target();
-            text = step.fallback.text;
+            const fb = typeof step.fallback === 'function' ? step.fallback() : step.fallback;
+            target = fb.target();
+            text = fb.text;
+            drag = !!fb.drag;
+            explain = false;
         }
     }
-    showPointer(target, step.who, text, 'Skip');
+    const taps = !explain && !drag && step.taps && currentScene === step.scene ? step.taps() : 0;
+    if (typeof text === 'function') text = text(taps);
+    showPointer(target, step.who, text, 'Skip', { drag: !!drag, explain, taps, block: true });
 }
 
+// What the tutorial lets you tap right now (anything, when it's not up).
+let pointerAllows = null;
+
+function hidePointer() {
+    tutorialEl.hidden = true;
+    pointerAllows = null;
+}
+
+// While a tutorial step is up, taps only reach what it points at (and its own
+// buttons); an explanation waits for "Got it".
+['pointerdown', 'click'].forEach(type => document.addEventListener(type, e => {
+    if (!pointerAllows || tutorialEl.hidden || tutorial.done) return;
+    if (e.target.closest && e.target.closest('#tutorial button')) return;
+    if (pointerAllows.some(el => el && el.contains(e.target))) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (type === 'pointerdown') nudgePointer();
+}, true));
+
+// A tap somewhere else: the hand and the bubble wiggle to say "here!".
+function nudgePointer() {
+    tutorialEl.classList.remove('nudge');
+    void tutorialEl.offsetWidth;
+    tutorialEl.classList.add('nudge');
+}
+
+let pointerKey = '';
+
 // The hand on what to tap (a pair: drag from one to the other) and who says why.
-function showPointer(target, who, text, closeLabel) {
+// opts: drag (a pair to drag), explain (a pause with "Got it"), taps (how many
+// taps to show on the hand), block (taps elsewhere do nothing; dims the rest).
+function showPointer(target, who, text, closeLabel, opts = {}) {
     const targets = (Array.isArray(target) ? target : [target]).filter(Boolean);
-    tutorialEl.hidden = !dialogEl.hidden || !targets.length;
-    if (tutorialEl.hidden) return;
-    tutorialEl.querySelector('.face').src = npcPicture(npcs.find(n => n.id === (who || 'mayor')));
+    const drag = opts.drag ?? targets.length > 1; // guides: a pair means drag one onto the other
+    tutorialEl.hidden = !dialogEl.hidden || !targets.length || openingOn;
+    if (tutorialEl.hidden) { pointerAllows = null; return; }
+    const npc = npcs.find(n => n.id === (who || 'mayor'));
+    tutorialEl.querySelector('.face').src = npcPicture(npc);
+    tutorialEl.querySelector('.tut-who').textContent = npc.name;
     tutorialEl.querySelector('.tut-skip').textContent = closeLabel;
     tutorialEl.querySelector('.tut-text').textContent = text;
+    tutorialEl.classList.toggle('explain', !!opts.explain);
+    tutorialEl.classList.toggle('blocking', !!opts.block);
+    pointerAllows = opts.block ? (opts.explain ? [] : drag ? targets.slice(0, 1) : targets) : null;
+
     const stage = stageEl.getBoundingClientRect();
-    const centre = el => { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2 - stage.left, y: r.top + r.height / 2 - stage.top }; };
-    const from = centre(targets[0]);
-    const to = targets[1] ? centre(targets[1]) : from;
+    const rect = el => el.getBoundingClientRect();
+    const centre = el => { const r = rect(el); return { x: r.left + r.width / 2 - stage.left, y: r.top + r.height / 2 - stage.top }; };
+    // Something to tap that's scrolled out of view comes into view.
+    const r0 = rect(targets[0]);
+    if (r0.bottom < stage.top || r0.top > stage.bottom || r0.left < stage.left || r0.right > stage.right) {
+        targets[0].scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+    }
+
+    // The spotlight: the screen dims, with a glowing window over each thing
+    // the step is about.
+    const pad = stage.width * 0.015;
+    const holes = targets.map(rect).map(r => ({ x: r.left - stage.left - pad, y: r.top - stage.top - pad, w: r.width + 2 * pad, h: r.height + 2 * pad }));
+    const radius = stage.width * 0.03;
+    tutorialEl.querySelector('#tut-holes g').innerHTML = holes.map(h =>
+        `<rect x="${h.x}" y="${h.y}" width="${h.w}" height="${h.h}" rx="${radius}" fill="#000"/>`).join('');
+    tutorialEl.querySelector('.tut-rings').innerHTML = holes.map(h =>
+        `<i style="left:${h.x}px;top:${h.y}px;width:${h.w}px;height:${h.h}px"></i>`).join('');
+    const box = { top: Math.min(...holes.map(h => h.y)), bottom: Math.max(...holes.map(h => h.y + h.h)) };
+
+    // The hand: on the thing to tap, or dragging from the first to the second.
+    // An explanation has no hand. Each new step, it flies in from the middle.
     const hand = tutorialEl.querySelector('.tut-hand');
-    hand.style.left = `${from.x}px`;
-    hand.style.top = `${from.y}px`;
+    const from = centre(targets[0]);
+    const to = drag && targets[1] ? centre(targets[1]) : from;
+    hand.hidden = !!opts.explain;
+    hand.classList.toggle('dragging', drag && targets.length > 1);
     hand.style.setProperty('--dx', `${to.x - from.x}px`);
     hand.style.setProperty('--dy', `${to.y - from.y}px`);
-    hand.classList.toggle('dragging', targets.length > 1);
-    // Something to tap that's scrolled out of view comes into view.
-    const r = targets[0].getBoundingClientRect();
-    if (r.bottom < stage.top || r.top > stage.bottom) targets[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+    const count = tutorialEl.querySelector('.tut-count');
+    count.textContent = opts.taps > 1 ? `×${opts.taps}` : '';
+    count.hidden = !(opts.taps > 1);
+    const key = `${text}|${targets.length}|${opts.explain ? 1 : 0}`;
+    if (key !== pointerKey && !opts.explain) {
+        hand.classList.add('flying');
+        hand.style.left = `${stage.width / 2}px`;
+        hand.style.top = `${stage.height / 2}px`;
+        void hand.offsetWidth;
+        clearTimeout(hand.landing);
+        hand.landing = setTimeout(() => hand.classList.remove('flying'), 800);
+    }
+    pointerKey = key;
+    hand.style.left = `${from.x}px`;
+    hand.style.top = `${from.y}px`;
     // Keep the bubble out of the way of what it points at.
-    tutorialEl.classList.toggle('bubble-top', from.y > stage.height / 2);
+    tutorialEl.classList.toggle('bubble-top', (box.top + box.bottom) / 2 > stage.height / 2);
 }
 
 // --- GUIDES ---
@@ -5016,6 +5332,19 @@ function clutterBoard() {
     return board;
 }
 
+// The first Barn board, set for the tutorial: the cobwebbed Egg it frees, with
+// two boxes beside it, and nothing else that looks like an Egg nearby.
+function tutorialBoard(board) {
+    board[4] = { tier: 0, web: true };
+    board[9] = { tier: 2, web: true };
+    board[11] = { tier: 0, web: true };
+    board[12] = { tier: 0, web: true };
+    board[TUTORIAL_WEB] = { tier: 1, web: true };
+    board[TUTORIAL_WEB + 1] = { type: 'box', hidden: { tier: 0, web: true } };
+    board[TUTORIAL_WEB + GAME_WIDTH] = { type: 'box', hidden: { tier: 2, web: true } };
+    return board;
+}
+
 // Merging next to a crate opens it and reveals the cobwebbed item inside.
 function openBoxesAround(mode, index) {
     const opened = [];
@@ -5110,6 +5439,7 @@ function renderOrders(mode, el) {
         const ready = canFulfill(npc);
         const card = document.createElement('button');
         card.className = 'order-card' + (ready ? ' ready' : '');
+        card.dataset.npc = npc.id;
         card.innerHTML = iconize(`
             <span class="order-who"><img class="face" src="${npcPicture(npc)}" alt="${npc.name}"><span class="want">${itemIcon(mode, r.tier)}</span></span>
             <span class="order-pay">💵${r.rewardMoney} ⭐${r.rewardXp}${r.rewardProducer ? ' 🎁' : ''}</span>
@@ -6266,9 +6596,11 @@ document.querySelectorAll('[data-ui]').forEach(el => { el.innerHTML = uiIcon(el.
 });
 if (!loadGame()) {
     initTown(true);
-    grids.barn = clutterBoard();
+    grids.barn = tutorialBoard(clutterBoard());
 }
-ensureToolboxes(); // every land you own has its tool producer (older saves get theirs now)
+// Every land you own has its tool producer (older saves get theirs now); a
+// new game's wait until the tutorial is over.
+if (tutorial.done) ensureToolboxes();
 // Jobs already ready when the game opens are shown by the 📋 badge, not announced.
 openTasks().filter(taskReady).forEach(task => announcedTasks.add(task.id));
 checkTasks();
@@ -6285,7 +6617,8 @@ updateUI();
 goTo('map');
 // A new game opens with the story's intro (its daily gift comes after the
 // tutorial). Otherwise the first visit each day opens the daily gift, as in Merge Gardens.
-if (!story.intro) setTimeout(playIntro, 400);
+if (!story.intro) setTimeout(playOpening, 150);
+else if (!tutorial.done) giftAfterTutorial = true; // back mid-tutorial: the gift still waits for its end
 else if (dailyAvailable()) setTimeout(openDailyGift, 600);
 
 setInterval(() => {
