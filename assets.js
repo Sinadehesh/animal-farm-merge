@@ -309,7 +309,7 @@ const ASSETS = {
         check: 'assets/ui/check.png',
         sparkle: 'assets/ui/sparkle.png',
         hammer: 'assets/ui/hammer.png',    // job tags and the fix
-        hand: 'assets/ui/hand.png',        // the tutorial's pointing glove (fingertip at its top left)
+        hand: 'assets/ui/hand2.png',       // the tutorial's pointing glove, back of the hand (fingertip at its top left)
     },
 
     // Optional background image behind each merge board (null = CSS colour).
