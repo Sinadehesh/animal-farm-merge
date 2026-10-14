@@ -273,8 +273,9 @@ const ASSETS = {
         tools: 'assets/producers/tools/tools.png', garden: 'assets/producers/tools/garden.png',
         wood: 'assets/producers/tools/wood.png', clean: 'assets/producers/tools/clean.png',
         fishing: 'assets/producers/tools/fishing.png', decor: 'assets/producers/tools/decor.png',
-        // Each land's third producer (not drawn yet: shown as its emoji).
-        wool: null, seeds: null, bakery: null, worms: null, boat: null, honey: null,
+        // Each land's third producer (Flour Mill not drawn yet: shown as its emoji).
+        wool: 'assets/producers/tools/wool.png', seeds: 'assets/producers/tools/seeds.png', bakery: null,
+        worms: 'assets/producers/tools/worms.png', boat: 'assets/producers/tools/boat.png', honey: 'assets/producers/tools/honey.png',
     },
 
     // Things inside the market.
@@ -461,14 +462,14 @@ const ASSETS = {
         // Chests by level (two merge into the next), closed and then open once
         // unlocked or tapped. null = not drawn yet (the level below's picture,
         // or the emoji). Coin and Energy Chests Lv1-3, Brown and Blue Lv1-4.
-        chest_coin: ['assets/items/special/chest_coin_1.png', null, null],      // 💰 Coin Chest
-        chest_energy: ['assets/items/special/chest_energy_1.png', null, null],  // 🔋 Energy Chest
-        chest_brown: ['assets/items/special/chest_brown_1.png', 'assets/items/special/chest_brown_2.png', null, null], // Brown Chest
-        chest_blue: ['assets/items/special/chest_blue_1.png', 'assets/items/special/chest_blue_2.png', null, null],    // Blue Chest
-        chest_coin_open: [null, null, null],
-        chest_energy_open: [null, null, null],
-        chest_brown_open: [null, null, null, null],
-        chest_blue_open: [null, null, null, null],
+        chest_coin: ['assets/items/chests/coin_1.png', 'assets/items/chests/coin_2.png', 'assets/items/chests/coin_3.png'],      // 💰 Coin Chest
+        chest_energy: ['assets/items/chests/energy_1.png', 'assets/items/chests/energy_2.png', 'assets/items/chests/energy_3.png'],  // 🔋 Energy Chest
+        chest_brown: ['assets/items/chests/brown_1.png', 'assets/items/chests/brown_2.png', 'assets/items/chests/brown_3.png', 'assets/items/chests/brown_4.png'], // Brown Chest
+        chest_blue: ['assets/items/chests/blue_1.png', 'assets/items/chests/blue_2.png', 'assets/items/chests/blue_3.png', 'assets/items/chests/blue_4.png'],    // Blue Chest
+        chest_coin_open: ['assets/items/chests/coin_open_1.png', 'assets/items/chests/coin_open_2.png', 'assets/items/chests/coin_open_3.png'],
+        chest_energy_open: ['assets/items/chests/energy_open_1.png', 'assets/items/chests/energy_open_2.png', 'assets/items/chests/energy_open_3.png'],
+        chest_brown_open: ['assets/items/chests/brown_open_1.png', 'assets/items/chests/brown_open_2.png', 'assets/items/chests/brown_open_3.png', 'assets/items/chests/brown_open_4.png'],
+        chest_blue_open: ['assets/items/chests/blue_open_1.png', 'assets/items/chests/blue_open_2.png', 'assets/items/chests/blue_open_3.png', 'assets/items/chests/blue_open_4.png'],
         piggy: [
             'assets/items/special/piggy_1.png',
             'assets/items/special/piggy_2.png',
@@ -577,8 +578,58 @@ const ASSETS = {
         fair_flowers: [],
         fair_fishing: [],
         fair_pumpkin: [],
-        // Each land's third chain (not drawn yet: shown as emoji), 00-07.
-        wool: [], seeds: [], bakery: [], worms: [], boat: [], honey: [],
+        // Each land's third chain, 00-07, cut from assets/raw/tools_<chain>.webp (bakery not drawn yet: emoji).
+        bakery: [],
+        wool: [
+            'assets/items/wool/00.png',
+            'assets/items/wool/01.png',
+            'assets/items/wool/02.png',
+            'assets/items/wool/03.png',
+            'assets/items/wool/04.png',
+            'assets/items/wool/05.png',
+            'assets/items/wool/06.png',
+            'assets/items/wool/07.png',
+        ],
+        seeds: [
+            'assets/items/seeds/00.png',
+            'assets/items/seeds/01.png',
+            'assets/items/seeds/02.png',
+            'assets/items/seeds/03.png',
+            'assets/items/seeds/04.png',
+            'assets/items/seeds/05.png',
+            'assets/items/seeds/06.png',
+            'assets/items/seeds/07.png',
+        ],
+        worms: [
+            'assets/items/worms/00.png',
+            'assets/items/worms/01.png',
+            'assets/items/worms/02.png',
+            'assets/items/worms/03.png',
+            'assets/items/worms/04.png',
+            'assets/items/worms/05.png',
+            'assets/items/worms/06.png',
+            'assets/items/worms/07.png',
+        ],
+        boat: [
+            'assets/items/boat/00.png',
+            'assets/items/boat/01.png',
+            'assets/items/boat/02.png',
+            'assets/items/boat/03.png',
+            'assets/items/boat/04.png',
+            'assets/items/boat/05.png',
+            'assets/items/boat/06.png',
+            'assets/items/boat/07.png',
+        ],
+        honey: [
+            'assets/items/honey/00.png',
+            'assets/items/honey/01.png',
+            'assets/items/honey/02.png',
+            'assets/items/honey/03.png',
+            'assets/items/honey/04.png',
+            'assets/items/honey/05.png',
+            'assets/items/honey/06.png',
+            'assets/items/honey/07.png',
+        ],
         // Tool chains, cut from assets/raw/tools_<chain>.webp.
         tools: [
             'assets/items/tools/00.png',

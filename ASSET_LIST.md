@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**529 assets:** 379 done ✅, 8 placeholders 🟡, 142 missing ⬜.
+**529 assets:** 446 done ✅, 8 placeholders 🟡, 75 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -377,14 +377,14 @@ The same on every board. Each level looks fuller or bigger than the one before.
 | ✅ | Time Skip | 4 | `assets/items/special/skip_1.png` … `_4.png` | an hourglass, fancier each level (1h, 2h, 4h, 8h) |
 | ✅ | Time Charger | 4 | `assets/items/special/charger_1.png` … `_4.png` | a stopwatch with a green glow, fancier each level (2h-16h) |
 | ✅ | Unlimited Energy | 3 | `assets/items/special/unlimited_1.png` … `_3.png` | a purple infinity sign with a bolt (5, 10, 20 min) |
-| 1/3 | Coin Chest | 3 | `assets/items/special/chest_coin_1.png` … `_3.png` | a small gold chest spilling coins; each level bigger and fuller |
-| 1/3 | Energy Chest | 3 | `assets/items/special/chest_energy_1.png` … `_3.png` | a green chest with a lightning bolt; each level bigger, glowing more |
-| 2/4 | Brown Chest | 4 | `assets/items/special/chest_brown_1.png` … `_4.png` | a wooden treasure chest; each level bigger: iron trim, then brass, then gold |
-| 2/4 | Blue Chest | 4 | `assets/items/special/chest_blue_1.png` … `_4.png` | a fancy blue chest with gold trim; each level bigger and grander |
-| ⬜ | Coin Chest, open | 3 | `assets/items/special/chest_coin_open_1.png` … `_3.png` | the same chest as each level above, lid open, coins glinting inside |
-| ⬜ | Energy Chest, open | 3 | `assets/items/special/chest_energy_open_1.png` … `_3.png` | the same chest as each level above, lid open, energy glowing inside |
-| ⬜ | Brown Chest, open | 4 | `assets/items/special/chest_brown_open_1.png` … `_4.png` | the same chest as each level above, lid open, treasure inside |
-| ⬜ | Blue Chest, open | 4 | `assets/items/special/chest_blue_open_1.png` … `_4.png` | the same chest as each level above, lid open, treasure inside |
+| ✅ | Coin Chest | 3 | `assets/items/chests/coin_1.png` … `_3.png` | toy chest with a coin badge: sunflower yellow, then amber with bronze bands, then polished gold with a ruby |
+| ✅ | Energy Chest | 3 | `assets/items/chests/energy_1.png` … `_3.png` | toy chest with a bolt badge: lime with cream trim, then teal with silver, then emerald with gold |
+| ✅ | Brown Chest | 4 | `assets/items/chests/brown_1.png` … `_4.png` | wooden chest: honey wood with rope, chestnut with iron, mahogany with brass, dark wood with gold and a gem |
+| ✅ | Blue Chest | 4 | `assets/items/chests/blue_1.png` … `_4.png` | magic chest: sky blue with silver, royal blue with gold, navy with filigree, indigo with a crown |
+| ✅ | Coin Chest, open | 3 | `assets/items/chests/coin_open_1.png` … `_3.png` | the same chest as each level above, lid open, coins glinting inside |
+| ✅ | Energy Chest, open | 3 | `assets/items/chests/energy_open_1.png` … `_3.png` | the same chest as each level above, lid open, energy glowing inside |
+| ✅ | Brown Chest, open | 4 | `assets/items/chests/brown_open_1.png` … `_4.png` | the same chest as each level above, lid open, treasure inside |
+| ✅ | Blue Chest, open | 4 | `assets/items/chests/blue_open_1.png` … `_4.png` | the same chest as each level above, lid open, treasure inside |
 | ✅ | Piggy Bank | 4 | `assets/items/special/piggy_1.png` … `_4.png` | a pink piggy bank, rounder and shinier each level |
 | ✅ | Double Bubble | 1 | `assets/items/special/bubble.png` | an empty, see-through soap bubble with a rainbow sheen (the item shows inside it) |
 
@@ -503,12 +503,12 @@ its own 8-step chain (`items.<chain>`, files `assets/items/<chain>/00.png` … `
 | ✅ | 🧹 Broom Cabinet | Compost Yard | ✅ Sponge, Soap, Scrub Brush, Soapy Bucket, Broom, Mop, Cleaning Trolley, Golden Broom |
 | ✅ | 🎣 Tackle Box | Fish Pond | ✅ Hook, Bobber, Rope, Net, Fishing Rod, Oars, Life Ring, Rowboat |
 | ✅ | 🏮 Lantern Crate | Flower Garden | ✅ Candle, Paper Lantern, Bunting, Glass Lantern, Fairy Lights, Balloons, Lamp Post, Golden Firework |
-| ⬜ | 🧶 Wool Basket | Barn | ⬜ Wool Tuft, Ball of Yarn, Yarn Skeins, Woolly Socks, Knitted Scarf, Cozy Sweater, Patchwork Quilt, Golden Fleece |
-| ⬜ | 🌰 Seed Tin | Crop Field | ⬜ Seed, Seed Packet, Seedling Tray, Veg Bundle, Veg Basket, Veg Crate, Market Cart, Prize Pumpkin |
+| ✅ | 🧶 Wool Basket | Barn | ✅ Wool Tuft, Ball of Yarn, Yarn Skeins, Woolly Socks, Knitted Scarf, Cozy Sweater, Patchwork Quilt, Golden Fleece |
+| ✅ | 🌰 Seed Tin | Crop Field | ✅ Seed, Seed Packet, Seedling Tray, Veg Bundle, Veg Basket, Veg Crate, Market Cart, Prize Pumpkin |
 | ⬜ | 🥖 Flour Mill | Hay Field | ⬜ Pinch of Flour, Bowl of Flour, Dough, Loaf, Croissants, Pie, Cake, Grand Wedding Cake |
-| ⬜ | 🪱 Worm Bin | Compost Yard | ⬜ Worm, Worm Family, Worm Castings, Potting Mix, Herb Pot, Tomato Plant, Little Tree, Golden Bonsai |
-| ⬜ | 🛶 Boatyard | Fish Pond | ⬜ Driftwood, Planed Board, Boat Frame, Hull, Mast and Sail, Dinghy, Sailboat, Golden Yacht |
-| ⬜ | 🐝 Beehive | Flower Garden | ⬜ Honey Drop, Honey Jar, Beeswax Candle, Honey Soap, Honey Gift Box, Honey Cakes, Honey Barrel, Golden Hive |
+| ✅ | 🪱 Worm Bin | Compost Yard | ✅ Worm, Worm Family, Worm Castings, Potting Mix, Herb Pot, Tomato Plant, Little Tree, Golden Bonsai |
+| ✅ | 🛶 Boatyard | Fish Pond | ✅ Driftwood, Planed Board, Boat Frame, Hull, Mast and Sail, Dinghy, Sailboat, Golden Yacht |
+| ✅ | 🐝 Beehive | Flower Garden | ✅ Honey Drop, Honey Jar, Beeswax Candle, Honey Soap, Honey Gift Box, Honey Cakes, Honey Barrel, Golden Hive |
 
 ## Sound effects
 

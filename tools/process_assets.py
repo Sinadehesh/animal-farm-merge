@@ -12,8 +12,8 @@ line up in a grid (2 items, then 4, then 3...), use `auto`: every item is found
 wherever it is and numbered row by row, left to right.
 
 How it works:
-  1. The white background is found by flood-filling near-white pixels from the
-     edges of the sheet, so white parts *inside* an outlined item (a white
+  1. The background (white, or a light grey or tinted backdrop) is found by
+     flood-filling pixels close to it from the edges of the sheet, so white parts *inside* an outlined item (a white
      chicken, the shine on an egg) are kept.
   2. Pale anti-aliased edge pixels are made semi-transparent and their white
      tint is removed, so there is no light fringe on dark boards.
@@ -32,6 +32,7 @@ import numpy as np
 from PIL import Image
 
 BG_TOLERANCE = 40     # how far from pure white still counts as background
+GREY_TOLERANCE = 22   # on a grey or tinted backdrop (pale items are closer to it, so tighter)
 EDGE_DARKNESS = 90    # edge pixels at least this much darker than white stay fully opaque
 MIN_SHAPE_PIXELS = 30 # smaller specks are treated as noise and dropped
 ALPHA_FLOOR = 12      # on transparent sheets, pixels fainter than this count as background
@@ -86,15 +87,32 @@ def label_shapes(mask):
     return labels, count
 
 
+def background_colour(rgb):
+    """The sheet's background at every pixel: a smooth plane fitted to the
+    border pixels, so plain white, light grey and gently shaded backdrops all work."""
+    h, w = rgb.shape[:2]
+    ys = np.r_[np.zeros(w), np.full(w, h - 1), np.arange(h), np.arange(h)].astype(int)
+    xs = np.r_[np.arange(w), np.arange(w), np.zeros(h), np.full(h, w - 1)].astype(int)
+    border = rgb[ys, xs]
+    # Ignore border pixels far from the typical one (an item touching the edge).
+    keep = np.abs(border - np.median(border, axis=0)).max(axis=1) < 30
+    A = np.c_[np.ones(keep.sum()), xs[keep] / w, ys[keep] / h]
+    coef, *_ = np.linalg.lstsq(A, border[keep], rcond=None)
+    gy, gx = np.mgrid[0:h, 0:w]
+    return np.clip(coef[0] + (gx / w)[..., None] * coef[1] + (gy / h)[..., None] * coef[2], 0, 255)
+
+
 def remove_background(rgb):
-    """Return an RGBA array with the white background removed and edges cleaned."""
+    """Return an RGBA array with the light background removed and edges cleaned."""
     rgb = rgb.astype(np.float32)
-    near_white = (rgb > 255 - BG_TOLERANCE).all(axis=2)
-    background = flood_from_edges(near_white)
+    bg = background_colour(rgb)
+    distance = np.abs(rgb - bg).max(axis=2)
+    white = bg.min() > 255 - BG_TOLERANCE / 2
+    near_bg = distance < (BG_TOLERANCE if white else GREY_TOLERANCE)
+    background = flood_from_edges(near_bg)
     alpha = np.where(background, 0.0, 1.0)
 
     # Edge band: opaque pixels touching the background (2px deep).
-    band = np.zeros_like(background)
     grown = background.copy()
     for _ in range(2):
         shifted = grown.copy()
@@ -105,13 +123,12 @@ def remove_background(rgb):
         grown = shifted
     band = grown & ~background
 
-    # In the band, pale pixels are a mix of the item and the white background:
-    # make them partly transparent and take the white out of their colour.
-    darkness = 255 - rgb.min(axis=2)
-    edge_alpha = np.clip(darkness / EDGE_DARKNESS, 0, 1)
+    # In the band, pixels close to the background are a mix of the item and the
+    # backdrop: make them partly transparent and take the backdrop out of their colour.
+    edge_alpha = np.clip(distance / EDGE_DARKNESS, 0, 1)
     alpha = np.where(band, edge_alpha, alpha)
     safe = np.maximum(alpha, 1e-3)[..., None]
-    cleaned = np.clip((rgb - (1 - alpha[..., None]) * 255) / safe, 0, 255)
+    cleaned = np.clip((rgb - (1 - alpha[..., None]) * bg) / safe, 0, 255)
     rgb = np.where(band[..., None], cleaned, rgb)
 
     return np.dstack([rgb, alpha * 255]).astype(np.uint8)
@@ -140,8 +157,22 @@ def grid_groups(labels, count, w, h, cols, rows):
             continue
         col = min(int(xs.mean() // cell_w), cols - 1)
         row = min(int(ys.mean() // cell_h), rows - 1)
-        owner.setdefault(row * cols + col, []).append(shape_id)
-    return [owner.get(idx) for idx in range(cols * rows)]
+        owner.setdefault(row * cols + col, []).append((shape_id, len(ys), (ys.min(), ys.max(), xs.min(), xs.max())))
+    return [stray_specks_dropped(owner[idx], cell_w) if idx in owner else None for idx in range(cols * rows)]
+
+
+def stray_specks_dropped(shapes, cell_w):
+    """A cell's shapes without tiny specks floating well away from its item
+    (a lone sparkle would otherwise stretch the crop and shrink the item)."""
+    y0, y1, x0, x1 = max(shapes, key=lambda s: s[1])[2]
+    biggest = max(s[1] for s in shapes)
+    far = cell_w * 0.06
+
+    def keep(s):
+        sy0, sy1, sx0, sx1 = s[2]
+        gap = max(y0 - sy1, sy0 - y1, x0 - sx1, sx0 - x1, 0)
+        return s[1] >= biggest * 0.02 or gap <= far
+    return [s[0] for s in shapes if keep(s)]
 
 
 def auto_groups(labels, count):
