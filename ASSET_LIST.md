@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**529 assets:** 446 done ✅, 8 placeholders 🟡, 75 missing ⬜.
+**529 assets:** 455 done ✅, 8 placeholders 🟡, 66 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -505,7 +505,7 @@ its own 8-step chain (`items.<chain>`, files `assets/items/<chain>/00.png` … `
 | ✅ | 🏮 Lantern Crate | Flower Garden | ✅ Candle, Paper Lantern, Bunting, Glass Lantern, Fairy Lights, Balloons, Lamp Post, Golden Firework |
 | ✅ | 🧶 Wool Basket | Barn | ✅ Wool Tuft, Ball of Yarn, Yarn Skeins, Woolly Socks, Knitted Scarf, Cozy Sweater, Patchwork Quilt, Golden Fleece |
 | ✅ | 🌰 Seed Tin | Crop Field | ✅ Seed, Seed Packet, Seedling Tray, Veg Bundle, Veg Basket, Veg Crate, Market Cart, Prize Pumpkin |
-| ⬜ | 🥖 Flour Mill | Hay Field | ⬜ Pinch of Flour, Bowl of Flour, Dough, Loaf, Croissants, Pie, Cake, Grand Wedding Cake |
+| ✅ | 🥖 Flour Mill | Hay Field | ✅ Pinch of Flour, Bowl of Flour, Dough, Loaf, Croissants, Pie, Cake, Grand Wedding Cake |
 | ✅ | 🪱 Worm Bin | Compost Yard | ✅ Worm, Worm Family, Worm Castings, Potting Mix, Herb Pot, Tomato Plant, Little Tree, Golden Bonsai |
 | ✅ | 🛶 Boatyard | Fish Pond | ✅ Driftwood, Planed Board, Boat Frame, Hull, Mast and Sail, Dinghy, Sailboat, Golden Yacht |
 | ✅ | 🐝 Beehive | Flower Garden | ✅ Honey Drop, Honey Jar, Beeswax Candle, Honey Soap, Honey Gift Box, Honey Cakes, Honey Barrel, Golden Hive |

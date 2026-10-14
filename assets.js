@@ -273,8 +273,8 @@ const ASSETS = {
         tools: 'assets/producers/tools/tools.png', garden: 'assets/producers/tools/garden.png',
         wood: 'assets/producers/tools/wood.png', clean: 'assets/producers/tools/clean.png',
         fishing: 'assets/producers/tools/fishing.png', decor: 'assets/producers/tools/decor.png',
-        // Each land's third producer (Flour Mill not drawn yet: shown as its emoji).
-        wool: 'assets/producers/tools/wool.png', seeds: 'assets/producers/tools/seeds.png', bakery: null,
+        // Each land's third producer.
+        wool: 'assets/producers/tools/wool.png', seeds: 'assets/producers/tools/seeds.png', bakery: 'assets/producers/tools/bakery.png',
         worms: 'assets/producers/tools/worms.png', boat: 'assets/producers/tools/boat.png', honey: 'assets/producers/tools/honey.png',
     },
 
@@ -578,8 +578,17 @@ const ASSETS = {
         fair_flowers: [],
         fair_fishing: [],
         fair_pumpkin: [],
-        // Each land's third chain, 00-07, cut from assets/raw/tools_<chain>.webp (bakery not drawn yet: emoji).
-        bakery: [],
+        // Each land's third chain, 00-07, cut from assets/raw/tools_<chain>.webp.
+        bakery: [
+            'assets/items/bakery/00.png',
+            'assets/items/bakery/01.png',
+            'assets/items/bakery/02.png',
+            'assets/items/bakery/03.png',
+            'assets/items/bakery/04.png',
+            'assets/items/bakery/05.png',
+            'assets/items/bakery/06.png',
+            'assets/items/bakery/07.png',
+        ],
         wool: [
             'assets/items/wool/00.png',
             'assets/items/wool/01.png',
