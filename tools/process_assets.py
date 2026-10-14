@@ -32,6 +32,8 @@ import numpy as np
 from PIL import Image
 
 BG_TOLERANCE = 40     # how far from pure white still counts as background
+HOLE_TOLERANCE = 9    # enclosed patches this close to the backdrop colour are holes, not item
+HOLE_SHARE = 0.0003   # ...if at least this share of the sheet (smaller ones may be a highlight)
 GREY_TOLERANCE = 22   # on a grey or tinted backdrop (pale items are closer to it, so tighter)
 EDGE_DARKNESS = 90    # edge pixels at least this much darker than white stay fully opaque
 MIN_SHAPE_PIXELS = 30 # smaller specks are treated as noise and dropped
@@ -110,6 +112,14 @@ def remove_background(rgb):
     white = bg.min() > 255 - BG_TOLERANCE / 2
     near_bg = distance < (BG_TOLERANCE if white else GREY_TOLERANCE)
     background = flood_from_edges(near_bg)
+    # Backdrop seen through a closed loop (a vine's curl, an arch, a handle) isn't
+    # reached from the edges: clear such holes too when they're big and very close
+    # to the backdrop colour (a pale item part is never quite that close).
+    holes, count = label_shapes(~background & (distance < HOLE_TOLERANCE))
+    if count:
+        sizes = np.bincount(holes.ravel())
+        big = np.nonzero(sizes >= HOLE_SHARE * holes.size)[0]
+        background |= np.isin(holes, big[big > 0])
     alpha = np.where(background, 0.0, 1.0)
 
     # Edge band: opaque pixels touching the background (2px deep).
