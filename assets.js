@@ -79,7 +79,7 @@ const ASSETS = {
         rosearch: [0, 1, 2].map(k => `assets/stages/rosearch/${k}@2x.jpg`),
         greenhouse: [0, 1, 2].map(k => `assets/stages/greenhouse/${k}@2x.jpg`),
         bigbarn: [0, 1, 2].map(k => `assets/stages/bigbarn/${k}@2x.jpg`), // the barn's storeroom
-        meadow: [0, 1, 2].map(k => `assets/stages/meadow/${k}t@2x.jpg`), // tall middle strips of the square paintings in assets/raw/stages/meadow.webp
+        meadow: [0, 1, 2].map(k => `assets/stages/meadow/${k}p@2x.jpg`), // cut from assets/raw/stages/meadow.webp (ruined, restored, half fixed: left to right)
         stables: [0, 1, 2].map(k => `assets/stages/stables/${k}@2x.jpg`),
         compostbins: [0, 1, 2].map(k => `assets/stages/compostbins/${k}@2x.jpg`),
     },

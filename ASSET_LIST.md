@@ -439,7 +439,7 @@ swaps to the next painting as its jobs get done. Raw sheets are kept in `assets/
 | ✅ | Field Gate | `assets/stages/fieldgate/0-2.jpg` |  |
 | ✅ | Strawberry Rows | `assets/stages/berryrows/0-2.jpg` |  |
 | ✅ | Orchard | `assets/stages/orchard/0-2.jpg` |  |
-| ✅ | Meadow | `assets/stages/meadow/0-2.jpg` | tall strips cut from square paintings |
+| ✅ | Meadow | `assets/stages/meadow/0-2.jpg` | its sheet runs ruined, restored, half fixed |
 | ✅ | Stables | `assets/stages/stables/0-2.jpg` |  |
 | ✅ | Windmill | `assets/stages/windmill/0-2.jpg` |  |
 | ✅ | Leaf Piles | `assets/stages/leafpiles/0-2.jpg` |  |
