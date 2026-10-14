@@ -1102,7 +1102,31 @@
         .quest small { color: #8a6a50; }
         .quest-bar { grid-column: 1 / -1; height: 2cqw; background: #e2d8c8; border-radius: 999px; overflow: hidden; }
         .quest-bar i { display: block; height: 100%; background: #5cc15a; }
-        .item.pop { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .item.pop { animation: squash-pop 0.42s ease-out; }
+        @keyframes squash-pop { 0% { transform: scale(0.3); } 45% { transform: scale(1.18, 0.86); } 70% { transform: scale(0.94, 1.08); } 100% { transform: scale(1); } }
+        /* Little board effects (see fxMerge and friends in game.js). */
+        #fx { position: absolute; inset: 0; z-index: 140; pointer-events: none; overflow: hidden; }
+        .fx { position: absolute; left: 0; top: 0; pointer-events: none; }
+        .fx-ring { width: var(--s); height: var(--s); border-radius: 50%; border: 0.8cqw solid #fff7c2; box-shadow: 0 0 2cqw #ffe27a, inset 0 0 2cqw #ffe27a; }
+        .fx-ring.big { border-color: #ffd23f; box-shadow: 0 0 4cqw #ffcb2b, inset 0 0 3cqw #ffe27a; }
+        .fx-spark { font-size: 5cqw; line-height: 1; color: #ffe45c; text-shadow: 0 0 1cqw #fff, 0 0 2cqw #ffb81f; }
+        .fx-spark.gold { font-size: 5.2cqw; color: #ffd23f; text-shadow: 0 0 2cqw #ff9f1c; }
+        .fx-plank { width: calc(var(--s) * 0.34); height: calc(var(--s) * 0.11); border-radius: 0.6cqw; background: linear-gradient(#c98a4b, #9a5d2c); box-shadow: inset 0 -0.4cqw 0 rgba(0, 0, 0, 0.2); }
+        .fx-puff { width: var(--s); height: var(--s); border-radius: 50%; background: radial-gradient(circle, rgba(240, 225, 200, 0.9) 0 30%, rgba(240, 225, 200, 0) 70%); }
+        .fx-web { width: var(--s); height: var(--s); display: flex; align-items: center; justify-content: center; font-size: calc(var(--s) * 0.7); }
+        .fx-web img { width: 90%; height: 90%; object-fit: contain; }
+        /* Life on the paintings. */
+        .amb { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+        .amb-shadow { position: absolute; width: 70%; height: 9%; top: calc(8% + var(--i) * 31%); left: -75%; border-radius: 50%; background: rgba(20, 30, 40, 0.16); filter: blur(3cqw); animation: amb-drift calc(70s + var(--i) * 18s) linear infinite; animation-delay: calc(var(--i) * -27s); }
+        @keyframes amb-drift { to { translate: 260cqw -6cqw; } }
+        .amb-flock { position: absolute; top: 12%; left: -20%; width: 18%; height: 6%; animation: amb-fly 28s linear infinite; animation-delay: 4s; }
+        @keyframes amb-fly { 0% { translate: 0 0; } 60% { translate: 160cqw -8cqw; } 100% { translate: 160cqw -8cqw; } }
+        .amb-bird { position: absolute; width: 4.5cqw; left: calc(var(--i) * 30%); top: calc(var(--i) * 28% - (var(--i) * var(--i)) * 8%); }
+        .amb-bird svg { display: block; width: 100%; animation: amb-flap 0.5s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -0.17s); }
+        @keyframes amb-flap { to { transform: scaleY(-0.6); } }
+        .amb-mote { position: absolute; width: 1.2cqw; height: 1.2cqw; border-radius: 50%; background: #fffbe0; box-shadow: 0 0 1.5cqw 0.5cqw rgba(255, 245, 190, 0.8); left: calc(8% + var(--i) * 13%); bottom: -3%; opacity: 0; animation: amb-rise calc(9s + var(--i) * 1.7s) ease-in-out infinite; animation-delay: calc(var(--i) * -2.3s); }
+        @keyframes amb-rise { 0% { opacity: 0; translate: 0 0; } 15% { opacity: 0.8; } 50% { translate: 4cqw -45cqw; } 85% { opacity: 0.6; } 100% { opacity: 0; translate: -3cqw -90cqw; } }
+        @media (prefers-reduced-motion: reduce) { .amb, #fx { display: none; } }
 
         /* --- DIALOG & TOASTS --- */
         .dialog-backdrop {
@@ -1800,7 +1824,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610141126"></script>
-    <script src="game.js?v=202610141126"></script>
+    <script src="assets.js?v=202610141140"></script>
+    <script src="game.js?v=202610141140"></script>
 </body>
 </html>

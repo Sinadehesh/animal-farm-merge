@@ -2474,7 +2474,7 @@ function renderZone(zone) {
         const pic = stages[stageIndex(done, tasks.length)];
         el.classList.add('painted');
         el.innerHTML = `<div class="zone-backdrop" style="background-image:url('${pic}')"></div>
-                        <div class="zone-scroll"><div class="zone-frame"><img class="zone-art" src="${pic}" alt="" draggable="false"></div></div>`;
+                        <div class="zone-scroll"><div class="zone-frame"><img class="zone-art" src="${pic}" alt="" draggable="false">${ambience('zone')}</div></div>`;
         if (open) addJobChips(tasks, el.querySelector('.zone-frame'));
     } else paintOldZone(el, zone, tasks, open);
     if (!open) {
@@ -2557,7 +2557,7 @@ function paintedPage(scene, pic) {
     const scroll = document.createElement('div');
     scroll.className = 'page-scroll';
     scroll.addEventListener('scroll', () => { scene.dataset.top = scroll.scrollTop; }, { passive: true });
-    scroll.innerHTML = `<div class="page-frame"><img class="page-art" src="${pic}" alt="" draggable="false"></div>`;
+    scroll.innerHTML = `<div class="page-frame"><img class="page-art" src="${pic}" alt="" draggable="false">${ambience(scene.id)}</div>`;
     scene.appendChild(scroll);
     settleScroll(scroll, keep);
     return scroll.firstElementChild;
@@ -5403,8 +5403,8 @@ function shortNumber(n) {
 }
 
 function updateUI() {
-    moneyEl.textContent = shortNumber(res.money);
-    gemsEl.textContent = shortNumber(res.gems);
+    rollNumber(moneyEl, res.money);
+    rollNumber(gemsEl, res.gems);
     energyEl.textContent = shortNumber(res.energy);
     energyTimerEl.textContent = unlimitedActive()
         ? `♾️ ${formatDuration(settings.unlimitedUntil - Date.now())}`
@@ -5807,6 +5807,7 @@ function dropFrom(mode, index, stage, name) {
     }
     updateUI();
     refreshBoard(mode, [at]);
+    fxSpawn(mode, index, at);
 }
 
 function boardFull(mode) {
@@ -6299,6 +6300,7 @@ function handleDragEnd(e) {
     }
 
     let popped = [];
+    let fxLater = null;
     if (targetCell) {
         const targetIndex = parseInt(targetCell.dataset.index);
         if (targetIndex !== index) {
@@ -6360,7 +6362,13 @@ function handleDragEnd(e) {
                     stats.webs++;
                     toast('🕸️ Freed!', 'good');
                 }
-                popped = [targetIndex, ...openBoxesAround(mode, targetIndex), ...afterMerge(mode, targetIndex, made)];
+                const opened = openBoxesAround(mode, targetIndex);
+                popped = [targetIndex, ...opened, ...afterMerge(mode, targetIndex, made)];
+                fxLater = () => {
+                    fxMerge(mode, targetIndex, made.type ? made.level : made.tier);
+                    if (targetItem.web) fxWeb(mode, targetIndex);
+                    opened.forEach(i => fxCrate(mode, i));
+                };
             }
             selected = { mode, index: made || swapped ? targetIndex : index };
         }
@@ -6368,6 +6376,143 @@ function handleDragEnd(e) {
 
     checkTasks();
     refreshBoard(mode, popped);
+    if (fxLater) fxLater();
+}
+
+// --- LITTLE ANIMATIONS ---
+// Board moments get a touch of life: a merge bursts with a ring and sparks
+// (more for bigger things), crates break into planks and dust, cobwebs blow
+// away, and what a producer makes hops out of it to its square. They play in
+// a layer over the board, so a redraw never cuts them short.
+function fxLayer() {
+    let el = document.getElementById('fx');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'fx';
+        stageEl.insertBefore(el, tutorialEl);
+    }
+    return el;
+}
+
+// The middle of a board square, in the stage's coordinates, and its size.
+function cellCentre(mode, index) {
+    const cell = document.querySelector(`#grid-${mode} .grid-cell[data-index="${index}"]`);
+    if (!cell) return null;
+    const r = cell.getBoundingClientRect(), st = stageEl.getBoundingClientRect();
+    return { x: r.left + r.width / 2 - st.left, y: r.top + r.height / 2 - st.top, size: r.width };
+}
+
+function fxBit(cls, at, html = '') {
+    const el = document.createElement('div');
+    el.className = `fx ${cls}`;
+    el.style.left = `${at.x}px`;
+    el.style.top = `${at.y}px`;
+    el.innerHTML = html;
+    fxLayer().appendChild(el);
+    return el;
+}
+
+function fxMerge(mode, index, size = 1) {
+    const at = cellCentre(mode, index);
+    if (!at) return;
+    const big = size >= 4;
+    const ring = fxBit('fx-ring' + (big ? ' big' : ''), at);
+    ring.style.setProperty('--s', `${at.size}px`);
+    ring.animate([{ transform: 'translate(-50%, -50%) scale(0.3)', opacity: 0.9 }, { transform: `translate(-50%, -50%) scale(${big ? 2.2 : 1.6})`, opacity: 0 }],
+        { duration: big ? 650 : 480, easing: 'ease-out' }).onfinish = () => ring.remove();
+    const n = big ? 10 : 6;
+    for (let i = 0; i < n; i++) {
+        const angle = (i / n) * Math.PI * 2 + Math.random() * 0.5;
+        const dist = at.size * (big ? 0.9 : 0.65) * (0.8 + Math.random() * 0.4);
+        const spark = fxBit('fx-spark' + (big ? ' gold' : ''), at, '✦');
+        spark.animate([
+            { transform: 'translate(-50%, -50%) scale(0.4) rotate(0deg)', opacity: 1 },
+            { transform: `translate(calc(-50% + ${Math.cos(angle) * dist}px), calc(-50% + ${Math.sin(angle) * dist}px)) scale(1) rotate(120deg)`, opacity: 1, offset: 0.6 },
+            { transform: `translate(calc(-50% + ${Math.cos(angle) * dist * 1.15}px), calc(-50% + ${Math.sin(angle) * dist * 1.15}px)) scale(0.2) rotate(180deg)`, opacity: 0 },
+        ], { duration: 520 + Math.random() * 180, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' }).onfinish = () => spark.remove();
+    }
+}
+
+// A crate breaks open: planks fly and fall, and a puff of dust.
+function fxCrate(mode, index) {
+    const at = cellCentre(mode, index);
+    if (!at) return;
+    for (let i = 0; i < 5; i++) {
+        const plank = fxBit('fx-plank', at);
+        plank.style.setProperty('--s', `${at.size}px`);
+        const dx = (Math.random() - 0.5) * at.size * 1.6, up = at.size * (0.35 + Math.random() * 0.35);
+        const spin = (Math.random() - 0.5) * 540;
+        plank.animate([
+            { transform: 'translate(-50%, -50%) rotate(0deg)', opacity: 1 },
+            { transform: `translate(calc(-50% + ${dx * 0.6}px), calc(-50% - ${up}px)) rotate(${spin * 0.5}deg)`, opacity: 1, offset: 0.4 },
+            { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${at.size * 0.6}px)) rotate(${spin}deg)`, opacity: 0 },
+        ], { duration: 650 + Math.random() * 150, easing: 'cubic-bezier(0.3, 0.6, 0.6, 1)' }).onfinish = () => plank.remove();
+    }
+    const puff = fxBit('fx-puff', at);
+    puff.style.setProperty('--s', `${at.size}px`);
+    puff.animate([{ transform: 'translate(-50%, -50%) scale(0.5)', opacity: 0.7 }, { transform: 'translate(-50%, -50%) scale(1.5)', opacity: 0 }],
+        { duration: 600, easing: 'ease-out' }).onfinish = () => puff.remove();
+}
+
+// A cobweb blows away: it swells, turns and fades.
+function fxWeb(mode, index) {
+    const at = cellCentre(mode, index);
+    if (!at) return;
+    const web = fxBit('fx-web', at, uiIcon('cobweb', '🕸️'));
+    web.style.setProperty('--s', `${at.size}px`);
+    web.animate([{ transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 0.9 },
+        { transform: 'translate(-30%, -80%) scale(1.6) rotate(25deg)', opacity: 0 }], { duration: 700, easing: 'ease-out' }).onfinish = () => web.remove();
+}
+
+// What a producer (or chest) makes hops out of it to its square; the producer gives a squash.
+function fxSpawn(mode, from, to) {
+    const a = cellCentre(mode, from), b = cellCentre(mode, to);
+    const item = cellItem(mode, to), maker = cellItem(mode, from);
+    if (maker) maker.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.12, 0.86)', offset: 0.35 }, { transform: 'scale(0.95, 1.06)', offset: 0.7 }, { transform: 'scale(1)' }],
+        { duration: 260, easing: 'ease-out' });
+    if (!a || !b || !item || from === to) return;
+    // A copy makes the hop, so the real one sits in its square from the start
+    // (invisible until the copy lands) and can be tapped or dragged at once.
+    const r = item.getBoundingClientRect(), st = stageEl.getBoundingClientRect();
+    const ghost = item.cloneNode(true);
+    ghost.classList.remove('pop', 'hint-beat');
+    ghost.classList.add('fx', 'fx-ghost');
+    Object.assign(ghost.style, { left: `${r.left - st.left}px`, top: `${r.top - st.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+    fxLayer().appendChild(ghost);
+    item.style.opacity = '0';
+    const dx = a.x - b.x, dy = a.y - b.y;
+    ghost.animate([
+        { transform: `translate(${dx}px, ${dy}px) scale(0.35)`, opacity: 0.6 },
+        { transform: `translate(${dx * 0.45}px, ${dy * 0.45 - b.size * 0.55}px) scale(0.85)`, opacity: 1, offset: 0.5 },
+        { transform: 'translate(0, 0) scale(1.08, 0.92)', offset: 0.85 },
+        { transform: 'translate(0, 0) scale(1)' },
+    ], { duration: 380, easing: 'ease-out' }).onfinish = () => { ghost.remove(); item.style.opacity = ''; };
+}
+
+// The coin and gem counters count up (or down) to their new value.
+function rollNumber(el, value) {
+    const from = +(el.dataset.value ?? value);
+    el.dataset.value = value;
+    if (from === value || Math.abs(value - from) > 100000) { el.textContent = shortNumber(value); return; }
+    const start = performance.now(), len = 600;
+    cancelAnimationFrame(el.rolling);
+    const step = now => {
+        const t = Math.min((now - start) / len, 1);
+        el.textContent = shortNumber(Math.round(from + (value - from) * (1 - (1 - t) ** 3)));
+        if (t < 1) el.rolling = requestAnimationFrame(step);
+    };
+    el.rolling = requestAnimationFrame(step);
+}
+
+// Life on the paintings: cloud shadows and birds over the farm map and the
+// town, and drifting motes of light over each area.
+function ambience(where) {
+    const birds = n => Array.from({ length: n }, (_, i) =>
+        `<i class="amb-bird" style="--i:${i}"><svg viewBox="0 0 24 10"><path d="M1 6 Q6 0 12 6 Q18 0 23 6" fill="none" stroke="#3b2a1f" stroke-width="2" stroke-linecap="round"/></svg></i>`).join('');
+    if (where === 'scene-map') return `<div class="amb"><i class="amb-shadow" style="--i:0"></i><i class="amb-shadow" style="--i:1"></i><i class="amb-shadow" style="--i:2"></i><div class="amb-flock">${birds(3)}</div></div>`;
+    if (where === 'scene-town') return `<div class="amb"><div class="amb-flock">${birds(2)}</div></div>`;
+    if (where === 'zone') return `<div class="amb">${Array.from({ length: 7 }, (_, i) => `<i class="amb-mote" style="--i:${i}"></i>`).join('')}</div>`;
+    return '';
 }
 
 function getNeighbors(index) {
@@ -6416,6 +6561,7 @@ function handleGeneratorClick(mode, index) {
     selected = { mode, index };
     checkTasks();
     refreshBoard(mode, [at]);
+    fxSpawn(mode, index, at);
     if (producer.drops <= 0) offerRefill(mode, index);
 }
 
@@ -6450,6 +6596,7 @@ function tapToolbox(mode, index) {
     buzz(8);
     checkTasks();
     refreshBoard(mode, [at]);
+    fxSpawn(mode, index, at);
     if (box.drops <= 0) offerRefill(mode, index);
 }
 
