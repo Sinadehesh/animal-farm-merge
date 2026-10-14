@@ -1,6 +1,8 @@
 // Copies the game into www/ for the app: the page, its code and only the
-// pictures and sounds it uses (not the raw art sheets), so the app stays small.
+// pictures and sounds it uses (not the raw art sheets), with the pictures
+// turned into WebP, so the app stays small. The website keeps the originals.
 import fs from 'fs';
+import sharp from 'sharp';
 import path from 'path';
 import vm from 'vm';
 
@@ -28,10 +30,18 @@ const paths = new Set();
 for (const file of ['index.html', 'game.js', 'manifest.json']) {
     for (const m of fs.readFileSync(path.join(root, file), 'utf8').matchAll(/assets\/[\w\/@.-]+\.(?:png|jpe?g|webp|svg|mp3)/g)) paths.add(m[0]);
 }
-let bytes = 0;
+// Pictures become WebP but keep their file names: some paths are built while the
+// game runs, and the app's browser recognises an image by its contents.
+let before = 0, after = 0;
 for (const p of paths) {
-    if (!fs.existsSync(path.join(root, p))) { console.warn('missing', p); continue; }
-    copy(p);
-    bytes += fs.statSync(path.join(root, p)).size;
+    const from = path.join(root, p);
+    if (!fs.existsSync(from)) { console.warn('missing', p); continue; }
+    before += fs.statSync(from).size;
+    const picture = /\.(png|jpe?g)$/i.test(p) && !p.includes('app-icon') && !p.includes('apple-touch');
+    if (!picture) { copy(p); after += fs.statSync(from).size; continue; }
+    const to = path.join(out, p);
+    fs.mkdirSync(path.dirname(to), { recursive: true });
+    await sharp(from).webp({ quality: 85, alphaQuality: 90, effort: 5 }).toFile(to);
+    after += fs.statSync(to).size;
 }
-console.log(`www: ${paths.size} pictures and sounds, ${(bytes / 1e6).toFixed(1)} MB`);
+console.log(`www: ${paths.size} pictures and sounds, ${(before / 1e6).toFixed(1)} MB -> ${(after / 1e6).toFixed(1)} MB`);

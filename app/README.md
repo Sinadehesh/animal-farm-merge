@@ -7,7 +7,9 @@ Google Play Billing (the `cordova-plugin-purchase` plugin). The website and the 
 - **App:** purchases go through Google Play and pay only once Google approves them; "Watch an ad" buttons are
   hidden until an ad network is added. The phone's back button closes dialogs and steps back.
 
-`build-web.mjs` copies the game into `www/` with only the pictures and sounds it uses (not `assets/raw/`).
+`build-web.mjs` copies the game into `www/` with only the pictures and sounds it uses (not `assets/raw/`), turning
+the pictures into WebP under their own file names (the app's browser reads an image by its contents): 56 MB of
+pictures and sounds become about 16 MB, and the app about 22 MB.
 
 **The app id `com.sinadehesh.mergefarmstead` is permanent once uploaded to Play Console.** If the game gets
 another name, change `appId` in `capacitor.config.json`, `namespace`/`applicationId` in `android/app/build.gradle`
@@ -69,6 +71,7 @@ chmod 600 ~/animal-farm-merge/app/android/keystore.properties
 ```bash
 cd ~/animal-farm-merge && git pull && cd app
 npm run apk    # test build: android/app/build/outputs/apk/debug/app-debug.apk
+               # (if it comes out much bigger than ~22 MB, run `cd android && ./gradlew clean` and build again)
 npm run aab    # store build, signed with your upload key: android/app/build/outputs/bundle/release/app-release.aab
 ```
 
