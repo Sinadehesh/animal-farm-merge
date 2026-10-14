@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**530 assets:** 491 done ✅, 8 placeholders 🟡, 31 missing ⬜.
+**530 assets:** 492 done ✅, 8 placeholders 🟡, 30 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -418,7 +418,7 @@ missing shows its emoji.
 | ✅ | 🔨 hammer | job tags on the map and job cards | `assets/ui/hammer.png` |
 | ⬜ | 🏆 trophy | Country Fair ribbon, header and race | `assets/ui/trophy.png` |
 | ⬜ | 📺 TV with a play button | "Watch an ad" buttons | `assets/ui/ad.png` |
-| ⬜ | 👆 pointing glove (white cartoon glove, index finger out) | the tutorial and guides: points at what to tap | `assets/ui/hand.png` |
+| ✅ | 👆 pointing glove (white cartoon glove, index finger out) | the tutorial and guides: points at what to tap | `assets/ui/hand.png` |
 | ⬜ | 🧩 part | producer parts in reward texts | not wired yet (needs a small code change) |
 
 ## 12a. Painted pages (the new look)

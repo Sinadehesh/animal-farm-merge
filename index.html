@@ -1054,11 +1054,11 @@
         /* Tapped somewhere else: the hand and bubble wiggle. */
         #tutorial.nudge .tut-bubble, #tutorial.nudge .tut-hand > span, #tutorial.nudge .tut-hand > img { animation: nudge 0.4s ease-in-out; }
         /* The glove picture, once drawn: its fingertip (top left) on the spot. */
-        .tut-hand:has(img) { transform: translate(-18%, -6%); }
-        .tut-hand > img { display: block; width: 15cqw; }
+        .tut-hand:has(img) { transform: translate(-17%, -9%); }
+        .tut-hand > img { display: block; width: 16cqw; }
         /* A ring spreading from the fingertip with each tap. */
         .tut-ripple { position: absolute; left: 30%; top: 8%; width: 9cqw; height: 9cqw; margin: -4.5cqw 0 0 -4.5cqw; border: 0.8cqw solid #fff; border-radius: 50%; opacity: 0; pointer-events: none; animation: ripple 1s ease-out infinite; animation-delay: 0.45s; }
-        .tut-hand:has(img) .tut-ripple { left: 18%; top: 6%; }
+        .tut-hand:has(img) .tut-ripple { left: 17%; top: 9%; }
         .tut-hand.dragging .tut-ripple, .tut-hand.flying .tut-ripple { display: none; }
         @keyframes ripple { 0% { opacity: 0.9; transform: scale(0.3); } 100% { opacity: 0; transform: scale(1.6); } }
         @keyframes nudge { 20%, 60% { translate: -1.2cqw 0; } 40%, 80% { translate: 1.2cqw 0; } }
@@ -1796,7 +1796,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610141037"></script>
-    <script src="game.js?v=202610141037"></script>
+    <script src="assets.js?v=202610141040"></script>
+    <script src="game.js?v=202610141040"></script>
 </body>
 </html>
