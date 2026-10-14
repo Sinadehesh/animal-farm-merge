@@ -382,7 +382,7 @@ The same on every board. Each level looks fuller or bigger than the one before.
 | ✅ | Brown Chest | 4 | `assets/items/chests/brown_1.png` … `_4.png` | wooden chest: honey wood with rope, chestnut with iron, mahogany with brass, dark wood with gold and a gem |
 | ✅ | Blue Chest | 4 | `assets/items/chests/blue_1.png` … `_4.png` | magic chest: sky blue with silver, royal blue with gold, navy with filigree, indigo with a crown |
 | ✅ | Coin Chest, open | 3 | `assets/items/chests/coin_open_1.png` … `_3.png` | the same chest as each level above, lid open, coins glinting inside |
-| ✅ | Energy Chest, open | 3 | `assets/items/chests/energy_open_1.png` … `_3.png` | the same chest as each level above, lid open, energy glowing inside |
+| ✅ | Energy Chest, open | 3 | `assets/items/chests/energy_open2_1.png` … `_3.png` | the same chest as each level above, lid open, energy glowing inside |
 | ✅ | Brown Chest, open | 4 | `assets/items/chests/brown_open_1.png` … `_4.png` | the same chest as each level above, lid open, treasure inside |
 | ✅ | Blue Chest, open | 4 | `assets/items/chests/blue_open_1.png` … `_4.png` | the same chest as each level above, lid open, treasure inside |
 | ✅ | Piggy Bank | 4 | `assets/items/special/piggy_1.png` … `_4.png` | a pink piggy bank, rounder and shinier each level |

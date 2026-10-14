@@ -467,7 +467,7 @@ const ASSETS = {
         chest_brown: ['assets/items/chests/brown_1.png', 'assets/items/chests/brown_2.png', 'assets/items/chests/brown_3.png', 'assets/items/chests/brown_4.png'], // Brown Chest
         chest_blue: ['assets/items/chests/blue_1.png', 'assets/items/chests/blue_2.png', 'assets/items/chests/blue_3.png', 'assets/items/chests/blue_4.png'],    // Blue Chest
         chest_coin_open: ['assets/items/chests/coin_open_1.png', 'assets/items/chests/coin_open_2.png', 'assets/items/chests/coin_open_3.png'],
-        chest_energy_open: ['assets/items/chests/energy_open_1.png', 'assets/items/chests/energy_open_2.png', 'assets/items/chests/energy_open_3.png'],
+        chest_energy_open: ['assets/items/chests/energy_open2_1.png', 'assets/items/chests/energy_open2_2.png', 'assets/items/chests/energy_open2_3.png'],
         chest_brown_open: ['assets/items/chests/brown_open_1.png', 'assets/items/chests/brown_open_2.png', 'assets/items/chests/brown_open_3.png', 'assets/items/chests/brown_open_4.png'],
         chest_blue_open: ['assets/items/chests/blue_open_1.png', 'assets/items/chests/blue_open_2.png', 'assets/items/chests/blue_open_3.png', 'assets/items/chests/blue_open_4.png'],
         piggy: [
