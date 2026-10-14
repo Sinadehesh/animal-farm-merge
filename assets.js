@@ -228,10 +228,10 @@ const ASSETS = {
     // Townsfolk (keyed by NPC id) and the market shopkeeper.
     characters: {
         mayor: 'assets/characters/mayor.png',
-        marnie: 'assets/characters/marnie.png',
-        robin: 'assets/characters/robin.png',
-        willy: 'assets/characters/willy.png',
-        sandy: 'assets/characters/sandy.png',
+        hattie: 'assets/characters/hattie.png',
+        ruby: 'assets/characters/ruby.png',
+        finn: 'assets/characters/finn.png',
+        poppy: 'assets/characters/poppy.png',
         shopkeeper: 'assets/characters/shopkeeper.png',
     },
 
@@ -239,10 +239,10 @@ const ASSETS = {
     // popups). null = frame the full-body drawing above instead.
     portraits: {
         mayor: 'assets/characters/portraits/mayor.png',
-        marnie: 'assets/characters/portraits/marnie.png',
-        robin: 'assets/characters/portraits/robin.png',
-        willy: 'assets/characters/portraits/willy.png',
-        sandy: 'assets/characters/portraits/sandy.png',
+        hattie: 'assets/characters/portraits/hattie.png',
+        ruby: 'assets/characters/portraits/ruby.png',
+        finn: 'assets/characters/portraits/finn.png',
+        poppy: 'assets/characters/portraits/poppy.png',
         shopkeeper: 'assets/characters/portraits/shopkeeper.png',
     },
 
@@ -251,18 +251,18 @@ const ASSETS = {
     // assets/raw/character_<id>.webp. null = the portrait instead.
     wave: {
         mayor: 'assets/characters/wave/mayor.png',
-        marnie: 'assets/characters/wave/marnie.png',
-        robin: 'assets/characters/wave/robin.png',
-        willy: 'assets/characters/wave/willy.png',
-        sandy: 'assets/characters/wave/sandy.png',
+        hattie: 'assets/characters/wave/hattie.png',
+        ruby: 'assets/characters/wave/ruby.png',
+        finn: 'assets/characters/wave/finn.png',
+        poppy: 'assets/characters/wave/poppy.png',
         shopkeeper: 'assets/characters/wave/shopkeeper.png',
     },
     cheer: {
         mayor: 'assets/characters/cheer/mayor.png',
-        marnie: 'assets/characters/cheer/marnie.png',
-        robin: 'assets/characters/cheer/robin.png',
-        willy: 'assets/characters/cheer/willy.png',
-        sandy: 'assets/characters/cheer/sandy.png',
+        hattie: 'assets/characters/cheer/hattie.png',
+        ruby: 'assets/characters/cheer/ruby.png',
+        finn: 'assets/characters/cheer/finn.png',
+        poppy: 'assets/characters/cheer/poppy.png',
         shopkeeper: 'assets/characters/cheer/shopkeeper.png',
     },
 
@@ -541,12 +541,12 @@ const ASSETS = {
             'assets/items/fert/03_compost.png',
             'assets/items/fert/04_rich_soil.png',
             'assets/items/fert/05_mushroom.png',
-            'assets/items/fert/06_basic_fert.png',
-            'assets/items/fert/07_quality_fert.png',
-            'assets/items/fert/08_speed_gro.png',
-            'assets/items/fert/09_deluxe_fert.png',
-            'assets/items/fert/10_magic_fert.png',
-            'assets/items/fert/11_iridium_fert.png',
+            'assets/items/fert/06_plant_food.png',
+            'assets/items/fert/07_super_plant_food.png',
+            'assets/items/fert/08_grow_tonic.png',
+            'assets/items/fert/09_garden_elixir.png',
+            'assets/items/fert/10_magic_mulch.png',
+            'assets/items/fert/11_starlight_mulch.png',
         ],
         // Cut from assets/raw/items_aqua.webp.
         aqua: [

@@ -70,10 +70,10 @@ List them under `buildingsRestored` in `assets.js`.
 | | House | File | What it shows |
 |---|---|---|---|
 | 🟡 | Townhall | `assets/town/townhall.svg` → `assets/town/townhall.png` | the Mayor's town hall with columns |
-| 🟡 | Carpenter | `assets/town/carpenter.svg` → `assets/town/carpenter.png` | Robin's log cabin carpenter shop |
-| 🟡 | Ranch | `assets/town/ranch.svg` → `assets/town/ranch.png` | Marnie's ranch house with a fence |
-| 🟡 | Fishshop | `assets/town/fishshop.svg` → `assets/town/fishshop.png` | Willy's fish shop by the water |
-| 🟡 | Flowershop | `assets/town/flowershop.svg` → `assets/town/flowershop.png` | Sandy's flower shop |
+| 🟡 | Carpenter | `assets/town/carpenter.svg` → `assets/town/carpenter.png` | Ruby's log cabin carpenter shop |
+| 🟡 | Ranch | `assets/town/ranch.svg` → `assets/town/ranch.png` | Hattie's ranch house with a fence |
+| 🟡 | Fishshop | `assets/town/fishshop.svg` → `assets/town/fishshop.png` | Finn's fish shop by the water |
+| 🟡 | Flowershop | `assets/town/flowershop.svg` → `assets/town/flowershop.png` | Poppy's flower shop |
 
 ## 4. Characters (6 people, 4 views each)
 
@@ -83,11 +83,11 @@ and **cheering** full body (after a fix).
 
 | | Character | Portrait | Waving | Standing | Cheering |
 |---|---|---|---|---|---|
-| ✅ | Mayor Pelican | ✅ | ✅ | ✅ | ✅ |
-| ✅ | Marnie, the rancher | ✅ | ✅ | ✅ | ✅ |
-| ✅ | Robin, the carpenter | ✅ | ✅ | ✅ | ✅ |
-| ✅ | Willy, the fisherman | ✅ | ✅ | ✅ | ✅ |
-| ✅ | Sandy, the florist | ✅ | ✅ | ✅ | ✅ |
+| ✅ | Mayor Bramble | ✅ | ✅ | ✅ | ✅ |
+| ✅ | Hattie, the rancher | ✅ | ✅ | ✅ | ✅ |
+| ✅ | Ruby, the carpenter | ✅ | ✅ | ✅ | ✅ |
+| ✅ | Finn, the fisherman | ✅ | ✅ | ✅ | ✅ |
+| ✅ | Poppy, the florist | ✅ | ✅ | ✅ | ✅ |
 | ✅ | the Market shopkeeper | ✅ | ✅ | ✅ | ✅ |
 
 ## 5. Props (4)
@@ -178,12 +178,12 @@ below it by its outline alone, bigger and fancier as it goes up; tiers 9-11 get 
 | ✅ | 3 | Compost | `assets/items/fert/03_compost.png` | a small heap of dark crumbly compost with a sprout on top |
 | ✅ | 4 | Rich Soil | `assets/items/fert/04_rich_soil.png` | a clay pot full of dark rich soil |
 | ✅ | 5 | Mushroom | `assets/items/fert/05_mushroom.png` | a cute red-capped mushroom with white spots |
-| ✅ | 6 | Basic Fert | `assets/items/fert/06_basic_fert.png` |  |
-| ✅ | 7 | Quality Fert | `assets/items/fert/07_quality_fert.png` |  |
-| ✅ | 8 | Speed-Gro | `assets/items/fert/08_speed_gro.png` | a fertilizer bottle with a lightning label |
-| ✅ | 9 | Deluxe Fert | `assets/items/fert/09_deluxe_fert.png` | a burlap sack with a gem on its tie |
-| ✅ | 10 | Magic Fert | `assets/items/fert/10_magic_fert.png` | a dark sack with gold trim and a lightning bolt |
-| ✅ | 11 | Iridium Fert | `assets/items/fert/11_iridium_fert.png` | a purple crystal sack of fertilizer |
+| ✅ | 6 | Plant Food | `assets/items/fert/06_plant_food.png` |  |
+| ✅ | 7 | Super Plant Food | `assets/items/fert/07_super_plant_food.png` |  |
+| ✅ | 8 | Grow Tonic | `assets/items/fert/08_grow_tonic.png` | a fertilizer bottle with a lightning label |
+| ✅ | 9 | Garden Elixir | `assets/items/fert/09_garden_elixir.png` | a burlap sack with a gem on its tie |
+| ✅ | 10 | Magic Mulch | `assets/items/fert/10_magic_mulch.png` | a dark sack with gold trim and a lightning bolt |
+| ✅ | 11 | Starlight Mulch | `assets/items/fert/11_starlight_mulch.png` | a purple crystal sack of fertilizer |
 
 ### Fish Pond
 

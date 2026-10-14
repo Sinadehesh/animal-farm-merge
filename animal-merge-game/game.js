@@ -61,7 +61,7 @@ const NAMES = {
     'farm': ['Seed', 'Sprout', 'Strawberry', 'Tomato', 'Corn', 'Carrot', 'Cabbage', 'Pumpkin', 'Watermelon', 'Golden Apple', 'Giant Sun'],
     'hay': ['Stalk', 'Bundle', 'Small Bale', 'Medium Bale', 'Large Bale', 'Hay Stack', 'Hay Tower', 'Hay Silo', 'Golden Hay', 'Magic Hay', 'Infinite Hay'],
     'barn': ['Egg', 'Chick', 'Chicken', 'Piglet', 'Pig', 'Calf', 'Cow', 'Horse', 'Bear', 'Elephant', 'Blue Whale'],
-    'fert': ['Dust', 'Ash', 'Scraps', 'Compost', 'Manure', 'Basic Fert', 'Quality Fert', 'Speed-Gro', 'Deluxe Fert', 'Magic Fert', 'Iridium Fert'],
+    'fert': ['Dust', 'Ash', 'Scraps', 'Compost', 'Manure', 'Plant Food', 'Super Plant Food', 'Grow Tonic', 'Garden Elixir', 'Magic Mulch', 'Starlight Mulch'],
     'aqua': ['Algae', 'Plankton', 'Shrimp', 'Goldfish', 'Clownfish', 'Turtle', 'Squid', 'Dolphin', 'Shark', 'Whale Shark', 'Kraken'],
     'flower': ['Seedling', 'Bud', 'Daisy', 'Tulip', 'Rose', 'Lily', 'Orchid', 'Lotus', 'Rafflesia', 'Crystal Flower', 'Tree of Life']
 };
@@ -69,11 +69,11 @@ const TIERS = [20, 30, 40, 55, 70, 85, 100, 120, 145, 170, 200];
 
 // --- TOWNSFOLK SYSTEM ---
 const npcs = [
-    { id: 'mayor', name: 'Mayor Pelican', emoji: '🎩', pref: ['farm', 'fert'], deliveries: 0, request: null },
-    { id: 'marnie', name: 'Marnie', emoji: '🐄', pref: ['barn'], deliveries: 0, request: null },
-    { id: 'robin', name: 'Robin', emoji: '🪓', pref: ['hay'], deliveries: 0, request: null },
-    { id: 'willy', name: 'Willy', emoji: '🎣', pref: ['aqua'], deliveries: 0, request: null },
-    { id: 'sandy', name: 'Sandy', emoji: '🌸', pref: ['flower'], deliveries: 0, request: null }
+    { id: 'mayor', name: 'Mayor Bramble', emoji: '🎩', pref: ['farm', 'fert'], deliveries: 0, request: null },
+    { id: 'hattie', name: 'Hattie', emoji: '🐄', pref: ['barn'], deliveries: 0, request: null },
+    { id: 'ruby', name: 'Ruby', emoji: '🪓', pref: ['hay'], deliveries: 0, request: null },
+    { id: 'finn', name: 'Finn', emoji: '🎣', pref: ['aqua'], deliveries: 0, request: null },
+    { id: 'poppy', name: 'Poppy', emoji: '🌸', pref: ['flower'], deliveries: 0, request: null }
 ];
 
 function generateRequestFor(npc) {
