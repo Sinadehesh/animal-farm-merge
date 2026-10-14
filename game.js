@@ -151,20 +151,20 @@ const CHESTS = {
     brown: {
         emoji: '🧰', name: 'Brown Chest',
         levels: [
-            { drops: 10, minutes: 1, skip: 2, contents: [['part', 1, 57], ['coin', 1, 11], ['coin', 2, 7], ['coin', 3, 3], ['energy', 1, 11], ['energy', 2, 7], ['energy', 3, 3]] },
-            { drops: 22, minutes: 5, skip: 10, contents: [['part', 1, 26], ['part', 2, 15], ['coin', 1, 14], ['coin', 2, 8], ['coin', 3, 7], ['energy', 1, 14], ['energy', 2, 8], ['energy', 3, 7]] },
+            { drops: 10, minutes: 1, skip: 2, contents: [['part', 1, 57], ['coin', 1, 11], ['coin', 2, 7], ['coin', 3, 3], ['energy', 1, 11], ['energy', 2, 7], ['energy', 3, 3], ['tool', 1, 8]] },
+            { drops: 22, minutes: 5, skip: 10, contents: [['part', 1, 26], ['part', 2, 15], ['coin', 1, 14], ['coin', 2, 8], ['coin', 3, 7], ['energy', 1, 14], ['energy', 2, 8], ['energy', 3, 7], ['tool', 1, 8], ['tool', 2, 5]] },
             // Levels 3-4 go past Merge Mansion's two, on the same curve (its Red Chest takes 3h).
-            { drops: 34, minutes: 20, skip: 28, contents: [['part', 1, 18], ['part', 2, 18], ['part', 3, 8], ['coin', 2, 12], ['coin', 3, 10], ['coin', 4, 6], ['energy', 2, 12], ['energy', 3, 10], ['energy', 4, 6]] },
-            { drops: 48, minutes: 60, skip: 70, contents: [['part', 2, 22], ['part', 3, 12], ['part', 4, 4], ['coin', 3, 14], ['coin', 4, 10], ['coin', 5, 6], ['energy', 3, 14], ['energy', 4, 10], ['gem', 1, 8]] },
+            { drops: 34, minutes: 20, skip: 28, contents: [['part', 1, 18], ['part', 2, 18], ['part', 3, 8], ['coin', 2, 12], ['coin', 3, 10], ['coin', 4, 6], ['energy', 2, 12], ['energy', 3, 10], ['energy', 4, 6], ['tool', 2, 8], ['tool', 3, 5]] },
+            { drops: 48, minutes: 60, skip: 70, contents: [['part', 2, 22], ['part', 3, 12], ['part', 4, 4], ['coin', 3, 14], ['coin', 4, 10], ['coin', 5, 6], ['energy', 3, 14], ['energy', 4, 10], ['gem', 1, 8], ['tool', 3, 8], ['tool', 4, 5]] },
         ],
     },
     blue: {
         emoji: '🧰', name: 'Blue Chest',
         levels: [
-            { drops: 10, minutes: 5, skip: 10, contents: [['part', 1, 46], ['part', 2, 20], ['coin', 1, 9], ['coin', 2, 5], ['coin', 3, 3], ['energy', 1, 9], ['energy', 2, 5], ['energy', 3, 3]] },
-            { drops: 22, minutes: 10, skip: 19, contents: [['part', 1, 23], ['part', 2, 19], ['part', 3, 7], ['coin', 1, 13], ['coin', 2, 9], ['coin', 3, 5], ['energy', 1, 13], ['energy', 2, 9], ['energy', 3, 5]] },
-            { drops: 34, minutes: 40, skip: 45, contents: [['part', 2, 22], ['part', 3, 14], ['part', 4, 5], ['coin', 2, 12], ['coin', 3, 9], ['coin', 4, 6], ['energy', 2, 12], ['energy', 3, 9], ['energy', 4, 6], ['gem', 1, 5]] },
-            { drops: 48, minutes: 120, skip: 120, contents: [['part', 3, 20], ['part', 4, 10], ['part', 5, 3], ['coin', 3, 13], ['coin', 4, 10], ['coin', 5, 7], ['energy', 3, 13], ['energy', 4, 10], ['gem', 1, 8], ['gem', 2, 6]] },
+            { drops: 10, minutes: 5, skip: 10, contents: [['part', 1, 46], ['part', 2, 20], ['coin', 1, 9], ['coin', 2, 5], ['coin', 3, 3], ['energy', 1, 9], ['energy', 2, 5], ['energy', 3, 3], ['tool', 1, 8], ['tool', 2, 4]] },
+            { drops: 22, minutes: 10, skip: 19, contents: [['part', 1, 23], ['part', 2, 19], ['part', 3, 7], ['coin', 1, 13], ['coin', 2, 9], ['coin', 3, 5], ['energy', 1, 13], ['energy', 2, 9], ['energy', 3, 5], ['tool', 2, 8], ['tool', 3, 4]] },
+            { drops: 34, minutes: 40, skip: 45, contents: [['part', 2, 22], ['part', 3, 14], ['part', 4, 5], ['coin', 2, 12], ['coin', 3, 9], ['coin', 4, 6], ['energy', 2, 12], ['energy', 3, 9], ['energy', 4, 6], ['gem', 1, 5], ['tool', 3, 8], ['tool', 4, 4]] },
+            { drops: 48, minutes: 120, skip: 120, contents: [['part', 3, 20], ['part', 4, 10], ['part', 5, 3], ['coin', 3, 13], ['coin', 4, 10], ['coin', 5, 7], ['energy', 3, 13], ['energy', 4, 10], ['gem', 1, 8], ['gem', 2, 6], ['tool', 4, 8], ['tool', 5, 5]] },
         ],
     },
 };
@@ -384,6 +384,7 @@ const DAILY_GOALS = [
     { id: 'sell', label: 'Sell 5 items', stat: 'sold', n: 5 },
     { id: 'xp', label: 'Earn ⭐10 XP', stat: 'xpEarned', n: 10 },
     { id: 'collect', label: 'Collect 8 coins, gems or stars', stat: 'collected', n: 8 },
+    { id: 'jobs', label: 'Fix 3 jobs', stat: 'jobs', n: 3 },
     { id: 'chest', label: 'Take 10 things out of chests or piggy banks', stat: 'chestDrops', n: 10, level: 3 },
 ];
 const DAILY_CHEST = [{ money: 100, energy: 20 }, { energy: 50, gems: 5 }, { chest: 'brown', gems: 15 }];
@@ -1153,6 +1154,19 @@ function grantReward(r, title) {
     }
     updateUI();
     toast(`${title} ${rewardText(r)}${where.length ? ` · ${where.join(' · ')}` : ''}`, 'good');
+    if (where.length) flyGift();
+}
+
+// A reward box flies from the middle of the screen to where it waits: the
+// board's 🎁, or the Merge button that leads there.
+function flyGift() {
+    setTimeout(() => {
+        if (AREAS[currentScene]) renderBoardHeader(currentScene); // its 🎁 shows the new count
+        const to = document.querySelector('.scene:not([hidden]) .crate-btn') || document.querySelector('.scene:not([hidden]) .fix-merge');
+        if (!to) return;
+        const st = stageEl.getBoundingClientRect();
+        flyReward('🎁', { x: st.left + st.width / 2, y: st.top + st.height * 0.45 }, to, 1, 0, 'big');
+    }, 350); // after the board or card redraws
 }
 
 // --- XP & PLAYER LEVEL ---
@@ -2683,8 +2697,28 @@ function openTaskCard(task) {
         actions: [ready
             ? { label: !hasSpot(task) ? 'Do it!' : here ? 'Fix it!' : `Go to ${task.zone ? ZONE[task.zone].name : landName(task.land)}`, primary: true, wide: true,
                 onClick: () => (!hasSpot(task) ? completeTask(task.id) : here ? fixJob(task.id) : goFix(task.land, task.id)) }
-            : { label: 'Go', primary: true, wide: true, onClick: () => goWork(task) }],
+            : { label: 'Go', primary: true, wide: true, onClick: () => goWork(task) },
+            ready ? null : toolOffer(task)].filter(Boolean),
     });
+}
+
+// Stuck on a tool (its toolbox resting, or that size not made yet): the job's
+// card offers it straight away for gems, priced by how big it is.
+const TOOL_GEMS = [3, 6, 12, 20, 35, 60, 100, 160];
+
+function toolOffer(task) {
+    const need = task.needs.find(n => n.item && TOOLS[n.item] && needProgress(task, n).have < needProgress(task, n).of);
+    if (!need || !unlocks[TOOLS[need.item].board]) return null;
+    const box = Object.values(grids).flat().concat(...Object.values(crates)).find(c => c && c.type === 'toolbox' && c.chain === need.item);
+    const resting = !box || (box.drops !== undefined && box.drops <= 0);
+    if (!resting && need.tier < 2) return null; // small ones are a few taps away
+    const price = TOOL_GEMS[Math.min(need.tier, TOOL_GEMS.length - 1)];
+    const name = itemName(need.item, need.tier);
+    return { icon: uiIcon('gem', '💎'), label: `Stuck? Get the ${name} now · 💎${price}`, wide: true, onClick: () => {
+        if (!spendGems(price)) return;
+        sendToBoard(TOOLS[need.item].board, { tier: need.tier, chain: need.item });
+        sfx('buy');
+    } };
 }
 
 // 📋's Show: off to the job's spot, which lights up, then up comes its card.
@@ -3266,6 +3300,7 @@ function completeTask(id, quiet = false) {
     restoration.done.push(task.id);
     document.querySelectorAll(`.fix-call[data-job="${task.id}"]`).forEach(el => el.remove());
     stats.jobs++;
+    addPassPoints(JOB_PASS_POINTS);
     fillJar(GEM_JAR.perJob);
     delete restoration.baselines[task.id];
     lastSale = null;
@@ -3323,7 +3358,7 @@ function cheer(task, npc) {
     el.className = 'fix-cheer';
     const happy = (ASSETS.cheer || {})[npc.id];
     el.innerHTML = iconize(`<img class="${happy ? 'happy' : 'face'}" src="${happy || npcPicture(npc)}" alt=""><span><b>“${task.line}”</b>
-                    <small>+${uiIcon('star', '⭐')}${task.xp}${task.reward ? ` · ${rewardText(task.reward)}` : ''}</small></span>`);
+                    <small>+${uiIcon('star', '⭐')}${task.xp} · 🎟️+${JOB_PASS_POINTS}${task.reward ? ` · ${rewardText(task.reward)}` : ''}</small></span>`);
     stageEl.appendChild(el);
     setTimeout(() => el.remove(), 2600);
 }
@@ -4171,13 +4206,13 @@ function thankYou(npc, r, from, levelUp) {
 }
 
 // Little icons flying in an arc from a point on screen to a counter, which bumps as they land.
-function flyReward(icon, from, toEl, count = 3, delay = 0) {
+function flyReward(icon, from, toEl, count = 3, delay = 0, size = '') {
     if (!toEl || !from) return;
     const to = toEl.getBoundingClientRect();
     const ex = to.left + to.width * 0.25, ey = to.top + to.height / 2;
     for (let i = 0; i < count; i++) {
         const el = document.createElement('div');
-        el.className = 'fly-reward';
+        el.className = `fly-reward ${size}`;
         el.innerHTML = iconize(icon);
         document.body.appendChild(el);
         const sx = from.x + (Math.random() - 0.5) * 40, sy = from.y + (Math.random() - 0.5) * 24;
@@ -5181,6 +5216,9 @@ function passClaimable() {
     return n;
 }
 
+// Every job fixed moves the Season Pass on too.
+const JOB_PASS_POINTS = 5;
+
 function addPassPoints(n) {
     const before = passProgress().level;
     pass.points += n;
@@ -5720,10 +5758,16 @@ function spawnNear(mode, index, item) {
 }
 
 // Picks one entry of a chest's or piggy bank's [what, level, weight] contents.
-function rollDrop(contents) {
+function rollDrop(contents, mode) {
     const total = contents.reduce((sum, c) => sum + c[2], 0);
     let roll = Math.random() * total;
     const [what, level] = contents.find(c => (roll -= c[2]) < 0) || contents[0];
+    if (what === 'tool') {
+        // A tool from one of this board's tool chains (its level is the tool's tier + 1).
+        const chains = Object.keys(TOOLS).filter(c => TOOLS[c].board === mode);
+        if (chains.length) return { tier: level - 1, chain: chains[Math.floor(Math.random() * chains.length)] };
+        return { type: 'coin', level };
+    }
     return { type: what === 'part' ? 'shop' : what, level };
 }
 
@@ -5812,7 +5856,7 @@ function dropFrom(mode, index, stage, name) {
     const source = grids[mode][index];
     const at = nearestEmpty(mode, index);
     if (source.drops === undefined) source.drops = stage.drops;
-    grids[mode][at] = rollDrop(stage.contents);
+    grids[mode][at] = rollDrop(stage.contents, mode);
     source.drops--;
     stats.chestDrops++;
     lastSale = null;
