@@ -517,7 +517,7 @@ const TOOLS = {
     worms:   { board: 'fert',   name: 'Worm Bin',      emoji: '🪱', what: 'worms and soil', minutes: 10, skip: 6, hue: 20,
                names: ['🪱 Worm', '🪱 Worm Family', '🟤 Worm Castings', '🪴 Potting Mix', '🌿 Herb Pot', '🍅 Tomato Plant', '🌳 Little Tree', '🏆 Golden Bonsai'] },
     boat:    { board: 'aqua',   name: 'Boatyard',      emoji: '🛶', what: 'boat parts',     minutes: 12, skip: 7, hue: 200,
-               names: ['🪵 Plank', '🪚 Planed Board', '🦴 Boat Frame', '🛶 Hull', '⛵ Mast and Sail', '🚣 Rowboat', '⛵ Sailboat', '🏆 Golden Yacht'] },
+               names: ['🪵 Driftwood', '🪚 Planed Board', '🦴 Boat Frame', '🛶 Hull', '⛵ Mast and Sail', '🚣 Dinghy', '⛵ Sailboat', '🏆 Golden Yacht'] },
     honey:   { board: 'flower', name: 'Beehive',       emoji: '🐝', what: 'honey things',   minutes: 15, skip: 8, hue: 45,
                names: ['🍯 Honey Drop', '🍯 Honey Jar', '🕯️ Beeswax Candle', '🧴 Honey Soap', '🎁 Honey Gift Box', '🧁 Honey Cakes', '🏺 Honey Barrel', '🏆 Golden Hive'] },
 };

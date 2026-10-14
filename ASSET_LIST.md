@@ -507,7 +507,7 @@ its own 8-step chain (`items.<chain>`, files `assets/items/<chain>/00.png` … `
 | ⬜ | 🌰 Seed Tin | Crop Field | ⬜ Seed, Seed Packet, Seedling Tray, Veg Bundle, Veg Basket, Veg Crate, Market Cart, Prize Pumpkin |
 | ⬜ | 🥖 Flour Mill | Hay Field | ⬜ Pinch of Flour, Bowl of Flour, Dough, Loaf, Croissants, Pie, Cake, Grand Wedding Cake |
 | ⬜ | 🪱 Worm Bin | Compost Yard | ⬜ Worm, Worm Family, Worm Castings, Potting Mix, Herb Pot, Tomato Plant, Little Tree, Golden Bonsai |
-| ⬜ | 🛶 Boatyard | Fish Pond | ⬜ Plank, Planed Board, Boat Frame, Hull, Mast and Sail, Rowboat, Sailboat, Golden Yacht |
+| ⬜ | 🛶 Boatyard | Fish Pond | ⬜ Driftwood, Planed Board, Boat Frame, Hull, Mast and Sail, Dinghy, Sailboat, Golden Yacht |
 | ⬜ | 🐝 Beehive | Flower Garden | ⬜ Honey Drop, Honey Jar, Beeswax Candle, Honey Soap, Honey Gift Box, Honey Cakes, Honey Barrel, Golden Hive |
 
 ## Sound effects

@@ -8,3 +8,6 @@
   content changes, so players get the new version straight away.
 - `sw.js` keeps pictures on players' devices for good (code and pages always come fresh from the network), so a
   changed picture must get a new file name or players keep seeing the old one.
+- Every picture must be easy to tell apart at a glance: each item in a chain (and each level of a chest, producer
+  or booster) gets its own distinct colour and silhouette, not just a bigger copy of the one before, and must not
+  look like an item in another chain. Item names must not repeat across chains. Write image prompts this way.
