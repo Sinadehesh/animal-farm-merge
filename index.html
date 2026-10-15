@@ -1761,6 +1761,12 @@
         .layout-panel select { max-width: 28cqw; padding: 1.2cqw; border-radius: 2cqw; border: 0; font: inherit; font-size: 3cqw; }
         .layout-panel button { min-width: 9cqw; padding: 1.5cqw 2.5cqw; border: 0; border-radius: 2cqw; background: #ffd34d; font: inherit; color: #3b2508; }
         .layout-text { width: 100%; height: 50cqw; font: 2.6cqw/1.3 monospace; }
+        .layout-panel { flex-direction: column; align-items: stretch; }
+        .layout-row { display: flex; gap: 1.5cqw; align-items: center; justify-content: center; }
+        .layout-picked { overflow: hidden; text-overflow: ellipsis; max-width: 52cqw; font-size: 3cqw; }
+        .layout-panel button { min-width: 8cqw; padding: 1.5cqw 2cqw; }
+        .layout-panel .layout-save { background: #6cc24a; color: #fff; }
+        .plot-prop img.flip { transform: scaleX(-1); }
         #scene-map:has(.page-scroll), #scene-town:has(.page-scroll) { background: #5f9a45; }
         /* An open job on a painting: a soft ring on the painted mess, its bubble above. */
         .fix-spot.chip { width: 10cqw; height: 10cqw; }
@@ -1907,7 +1913,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610151211"></script>
-    <script src="game.js?v=202610151211"></script>
+    <script src="assets.js?v=202610151322"></script>
+    <script src="game.js?v=202610151322"></script>
 </body>
 </html>

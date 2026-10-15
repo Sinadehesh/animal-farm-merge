@@ -2404,8 +2404,9 @@ const ZONE_SLOTS = [[30, 36], [70, 42], [46, 64], [22, 84], [74, 82]];
 // % down) and its prop, a picture standing there: 'weeds' stands there until
 // the job is done (mess, or something broken), '>lantern' appears once it's
 // done, and 'brushwood>firewood' swaps one for the other. The last number is
-// the prop's width (% of the plot's). A job without a prop just brings the
-// colour back around its spot. ?layout moves them about.
+// the prop's width (% of the plot's; negative = mirrored). An optional fifth
+// entry lists more copies of the prop, [x, y, width] each. A job without a prop
+// just brings the colour back around its spot. ?layout moves them about.
 const PLOT_JOBS = {
     // Barnyard
     barn1: ['planks', 30, 64, 11], barn2: ['weeds', 27, 48, 8], barn3: ['branch', 62, 36, 12],
@@ -2687,16 +2688,24 @@ function plotAt(task) {
     const job = plotJob(task);
     if (!job || !(ASSETS.plots || {})[task.zone]) return null;
     const [, x, y, w] = job;
-    return [x, w ? y - w * 0.6 : y];
+    return [x, w ? y - Math.abs(w) * 0.6 : y];
 }
 
-function addProp(stage, task, name, cls = '') {
-    const [, x, y, w] = plotJob(task);
+// Where a job's prop stands: its own place first, then any copies.
+function propPlaces(task) {
+    const [, x, y, w, more] = plotJob(task);
+    return [[x, y, w], ...(more || [])];
+}
+
+// Copy k (0 = the prop itself) of a job's prop, standing on the plot.
+function addProp(stage, task, name, cls = '', k = 0) {
+    const [x, y, w] = propPlaces(task)[k];
     const prop = document.createElement('span');
     prop.className = 'plot-prop' + (cls ? ' ' + cls : '');
     prop.dataset.prop = task.id;
-    prop.style.cssText = `left:${x}%;top:${y}%;width:${w}%;z-index:${Math.round(y)}`;
-    prop.innerHTML = `<img src="${ASSETS.plotProps[name]}" alt="" draggable="false">`;
+    prop.dataset.copy = k;
+    prop.style.cssText = `left:${x}%;top:${y}%;width:${Math.abs(w)}%;z-index:${Math.round(y)}`;
+    prop.innerHTML = `<img src="${ASSETS.plotProps[name]}" alt="" draggable="false"${w < 0 ? ' class="flip"' : ''}>`;
     stage.appendChild(prop);
     return prop;
 }
@@ -2712,7 +2721,7 @@ function paintPlotZone(el, zone, tasks, open) {
     const stage = el.querySelector('.plot-stage');
     tasks.forEach(task => {
         const name = plotProp(task, taskDone(task));
-        if (name) addProp(stage, task, name);
+        if (name) propPlaces(task).forEach((_, k) => addProp(stage, task, name, '', k));
     });
     if (open && !layoutMode) addJobChips(tasks, stage);
     // Bubbles stand in front of every prop.
@@ -2834,11 +2843,71 @@ function saveLayout(id, job) {
 function layoutPlot(el, zone, tasks) {
     const stage = el.querySelector('.plot-stage');
     stage.querySelectorAll('.plot-prop').forEach(p => p.remove());
+    const plotted = ZONES.filter(z => (ASSETS.plots || {})[z.id]);
     const panel = document.createElement('div');
     panel.className = 'layout-panel';
-    const plotted = ZONES.filter(z => (ASSETS.plots || {})[z.id]);
-    panel.innerHTML = `<select>${plotted.map(z => `<option value="${z.id}"${z === zone ? ' selected' : ''}>${z.name}</option>`).join('')}</select>
-        <span>Drag a prop</span><button data-k="-1">−</button><button data-k="1">＋</button><button data-k="copy">Copy</button>`;
+    panel.innerHTML = `<div class="layout-row"><select>${plotted.map(z => `<option value="${z.id}"${z === zone ? ' selected' : ''}>${z.name}</option>`).join('')}</select>
+            <span class="layout-picked">Tap or drag a prop</span></div>
+        <div class="layout-row"><button data-k="smaller" title="Smaller">−</button><button data-k="bigger" title="Bigger">＋</button>
+            <button data-k="copy" title="Add a copy">⧉ Copy</button><button data-k="flip" title="Mirror">⇄</button>
+            <button data-k="delete" title="Remove this copy">🗑</button><button data-k="save" class="layout-save">💾 Save</button></div>`;
+    el.appendChild(panel);
+    const label = panel.querySelector('.layout-picked');
+    let picked = null;
+    // A job's place, or its copy k's: [x, y, width].
+    const place = (task, k) => propPlaces(task)[k];
+    const setPlace = (task, k, xyw) => {
+        const j = [...plotJob(task)];
+        if (k === 0) [j[1], j[2], j[3]] = [xyw[0], xyw[1], j[3] === undefined ? undefined : xyw[2]];
+        else { j[4] = (j[4] || []).map(c => [...c]); j[4][k - 1] = xyw; }
+        saveLayout(task.id, j.filter(v => v !== undefined));
+    };
+    const pick = (task, handle) => {
+        stage.querySelectorAll('.layout.picked').forEach(h => h.classList.remove('picked'));
+        handle.classList.add('picked');
+        picked = { task, handle, k: Number(handle.dataset.copy || 0) };
+        label.textContent = task.name + (picked.k ? ` (copy ${picked.k})` : '');
+    };
+    const handleFor = (task, k) => {
+        const [prop] = plotJob(task);
+        const name = prop && (prop.split('>')[0] || prop.split('>')[1]);
+        let handle;
+        if (name) handle = addProp(stage, task, name, 'layout', k);
+        else {
+            const [x, y] = place(task, 0);
+            handle = document.createElement('span');
+            handle.className = 'plot-dot layout';
+            handle.dataset.prop = task.id;
+            handle.dataset.copy = 0;
+            handle.style.cssText = `left:${x}%;top:${y}%`;
+            stage.appendChild(handle);
+        }
+        handle.insertAdjacentHTML('beforeend', `<b class="layout-name">${task.name}${k ? ` ×${k + 1}` : ''}</b>`);
+        handle.addEventListener('pointerdown', e => {
+            e.stopPropagation(); // moves the prop, not the plot
+            e.preventDefault();
+            pick(task, handle);
+            const r = stage.getBoundingClientRect(), start = place(task, k);
+            const dx = e.clientX - (r.left + (start[0] / 100) * r.width), dy = e.clientY - (r.top + (start[1] / 100) * r.height);
+            const move = ev => {
+                const at = [...place(task, k)];
+                at[0] = Math.round(((ev.clientX - dx - r.left) / r.width) * 1000) / 10;
+                at[1] = Math.round(((ev.clientY - dy - r.top) / r.height) * 1000) / 10;
+                handle.style.left = at[0] + '%';
+                handle.style.top = at[1] + '%';
+                handle.style.zIndex = Math.round(at[1]);
+                setPlace(task, k, at);
+            };
+            const done = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', done); };
+            window.addEventListener('pointermove', move);
+            window.addEventListener('pointerup', done);
+        });
+        return handle;
+    };
+    tasks.forEach(task => {
+        if (!plotJob(task)) return;
+        propPlaces(task).forEach((_, k) => { if (k === 0 || plotJob(task)[0]) handleFor(task, k); });
+    });
     panel.querySelector('select').addEventListener('change', e => {
         const to = ZONE[e.target.value];
         fixLand = to.land;
@@ -2846,59 +2915,48 @@ function layoutPlot(el, zone, tasks) {
         const w = document.querySelector('#scene-fix .world'), z = w && w.querySelector(`.zone[data-zone="${to.id}"]`);
         if (z) w.scrollLeft = z.offsetLeft;
     });
-    el.appendChild(panel);
-    let picked = null;
-    const label = panel.querySelector('span');
-    tasks.forEach(task => {
-        const job = plotJob(task);
-        if (!job) return;
-        const [prop, x, y] = job;
-        const name = prop && (prop.split('>')[0] || prop.split('>')[1]);
-        let handle;
-        if (name) handle = addProp(stage, task, name, 'layout');
-        else {
-            handle = document.createElement('span');
-            handle.className = 'plot-dot layout';
-            handle.dataset.prop = task.id;
-            handle.style.cssText = `left:${x}%;top:${y}%`;
-            stage.appendChild(handle);
-        }
-        handle.insertAdjacentHTML('beforeend', `<b class="layout-name">${task.name}</b>`);
-        handle.addEventListener('pointerdown', e => {
-            e.stopPropagation(); // moves the prop, not the plot
-            e.preventDefault();
-            stage.querySelectorAll('.layout.picked').forEach(h => h.classList.remove('picked'));
-            handle.classList.add('picked');
-            picked = { task, handle };
-            label.textContent = task.name;
-            const r = stage.getBoundingClientRect(), start = plotJob(task);
-            const dx = e.clientX - (r.left + (start[1] / 100) * r.width), dy = e.clientY - (r.top + (start[2] / 100) * r.height);
-            const move = ev => {
-                const j = [...plotJob(task)];
-                j[1] = Math.round(((ev.clientX - dx - r.left) / r.width) * 1000) / 10;
-                j[2] = Math.round(((ev.clientY - dy - r.top) / r.height) * 1000) / 10;
-                handle.style.left = j[1] + '%';
-                handle.style.top = j[2] + '%';
-                handle.style.zIndex = Math.round(j[2]);
-                saveLayout(task.id, j);
-            };
-            const done = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', done); };
-            window.addEventListener('pointermove', move);
-            window.addEventListener('pointerup', done);
-        });
-    });
     panel.addEventListener('click', e => {
-        const k = e.target.dataset.k;
-        if (k === 'copy') {
-            const text = TASKS.filter(t => (ASSETS.plots || {})[t.zone] && plotJob(t)).map(t => `${t.id}: ${JSON.stringify(plotJob(t))},`).join('\n');
-            if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {});
-            showDialog({ title: 'Plot layout', body: `<p>Copied. Paste it to Claude.</p><textarea class="layout-text" readonly>${text}</textarea>`, actions: [{ label: 'OK', primary: true }] });
-        } else if (k && picked && plotJob(picked.task)[3]) {
-            const j = [...plotJob(picked.task)];
-            j[3] = Math.max(2, j[3] + Number(k));
-            picked.handle.style.width = j[3] + '%';
-            saveLayout(picked.task.id, j);
+        const k = e.target.closest('button') && e.target.closest('button').dataset.k;
+        if (k === 'save') return saveLayoutText();
+        if (!k) return;
+        if (!picked) return toast('Tap a prop first');
+        const { task, handle } = picked, at = [...place(task, picked.k)], hasProp = !!plotJob(task)[0];
+        if (!hasProp) return toast('This job has no prop to change');
+        if (k === 'smaller' || k === 'bigger') {
+            const size = Math.max(2, Math.abs(at[2]) + (k === 'bigger' ? 1 : -1));
+            at[2] = at[2] < 0 ? -size : size;
+            handle.style.width = size + '%';
+            setPlace(task, picked.k, at);
+        } else if (k === 'flip') {
+            at[2] = -at[2];
+            handle.querySelector('img').classList.toggle('flip', at[2] < 0);
+            setPlace(task, picked.k, at);
+        } else if (k === 'copy') {
+            const j = [...plotJob(task)];
+            j[4] = [...(j[4] || []), [Math.min(95, at[0] + 4), Math.min(95, at[1] + 3), at[2]]];
+            saveLayout(task.id, j);
+            pick(task, handleFor(task, j[4].length));
+            toast('Copy added: drag it into place');
+        } else if (k === 'delete') {
+            if (!picked.k) return toast('Only copies can be removed');
+            const j = [...plotJob(task)];
+            j[4] = j[4].filter((_, i) => i !== picked.k - 1);
+            if (!j[4].length) j.length = 4;
+            saveLayout(task.id, j);
+            goTo('fix'); // redraw, so the other copies keep their numbers
         }
+    });
+}
+
+// Save: the layout is kept on this device already; this also copies every
+// plot's positions (as PLOT_JOBS lines) to paste back to Claude for the game.
+function saveLayoutText() {
+    const text = TASKS.filter(t => (ASSETS.plots || {})[t.zone] && plotJob(t)).map(t => `${t.id}: ${JSON.stringify(plotJob(t))},`).join('\n');
+    if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {});
+    showDialog({
+        title: '💾 Layout saved',
+        body: `<p>Saved on this device, so it's here next time you open <b>?layout</b>. It's also copied: paste it to Claude to put it in the game for everyone.</p><textarea class="layout-text" readonly>${text}</textarea>`,
+        actions: [{ label: 'OK', primary: true }],
     });
 }
 
@@ -2911,7 +2969,7 @@ function swapProps(zoneEl, task) {
         setTimeout(() => p.remove(), 900);
     });
     const next = plotProp(task, true);
-    if (next) setTimeout(() => addProp(stage, task, next, 'prop-in'), 450);
+    if (next) setTimeout(() => propPlaces(task).forEach((_, k) => addProp(stage, task, next, 'prop-in', k)), 450);
 }
 
 // --- PAINTED PAGES ---
