@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**530 assets:** 499 done ✅, 6 placeholders 🟡, 25 missing ⬜.
+**588 assets:** 543 done ✅, 6 placeholders 🟡, 39 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -420,6 +420,82 @@ missing shows its emoji.
 | ✅ | 📺 TV with a play button | "Watch an ad" buttons | `assets/ui/ad.png` |
 | ✅ | 👆 pointing glove (white cartoon glove, index finger out) | the tutorial and guides: points at what to tap | `assets/ui/hand2.png` |
 | ⬜ | 🧩 part | producer parts in reward texts | not wired yet (needs a small code change) |
+
+## 12b. Plots (the newest look)
+
+Each area drawn as one **isometric diorama plot**, clean and restored, on a flat background (Gemini, with the
+Barnyard plot attached as the style reference). The game cuts it out, fades it and stands each job's **prop** on
+it: mess or something broken that puffs away when the job is done, or something new that pops up. An area with a
+plot shows it instead of its painting. Raw pictures in `assets/raw/plots/`; listed in `plots` and `plotProps` in
+`assets.js`; where each prop stands is `PLOT_JOBS` in `game.js` (open the game with `?layout` to move them).
+
+| | Area | File |
+|---|---|---|
+| ✅ | Barnyard | `assets/plots/barnyard.webp` |
+| ✅ | Hen House | `assets/plots/henhouse.webp` |
+| ✅ | Barn Storeroom | `assets/plots/bigbarn.webp` |
+| ✅ | Field Gate | `assets/plots/fieldgate.webp` |
+| ⬜ | Strawberry Rows | `assets/plots/berryrows.webp` |
+| ⬜ | Orchard | `assets/plots/orchard.webp` |
+| ⬜ | Meadow | `assets/plots/meadow.webp` |
+| ⬜ | Stables | `assets/plots/stables.webp` |
+| ⬜ | Windmill | `assets/plots/windmill.webp` |
+| ⬜ | Leaf Piles | `assets/plots/leafpiles.webp` |
+| ⬜ | Compost Bins | `assets/plots/compostbins.webp` |
+| ⬜ | Mushroom Corner | `assets/plots/mushrooms.webp` |
+| ⬜ | Muddy Shore | `assets/plots/muddyshore.webp` |
+| ⬜ | Lily Pond | `assets/plots/lilypond.webp` |
+| ⬜ | Boat Dock | `assets/plots/boatdock.webp` |
+| ⬜ | Garden Gate | `assets/plots/gardengate.webp` |
+| ⬜ | Rose Arch | `assets/plots/rosearch.webp` |
+| ⬜ | Greenhouse | `assets/plots/greenhouse.webp` |
+
+### Plot props
+
+Sheets of 8 on flat magenta, cut by name into `assets/plots/props/`. Shared by every plot.
+
+| | Prop | File |
+|---|---|---|
+| ✅ | weeds | `assets/plots/props/weeds.webp` |
+| ✅ | brambles | `assets/plots/props/brambles.webp` |
+| ✅ | branch | `assets/plots/props/branch.webp` |
+| ✅ | boulders | `assets/plots/props/boulders.webp` |
+| ✅ | planks | `assets/plots/props/planks.webp` |
+| ✅ | tyre | `assets/plots/props/tyre.webp` |
+| ✅ | scrap | `assets/plots/props/scrap.webp` |
+| ✅ | brushwood | `assets/plots/props/brushwood.webp` |
+| ✅ | cobweb | `assets/plots/props/cobweb.webp` |
+| ✅ | grain spill | `assets/plots/props/grain_spill.webp` |
+| ✅ | crate smashed | `assets/plots/props/crate_smashed.webp` |
+| ✅ | old straw | `assets/plots/props/old_straw.webp` |
+| ✅ | scrolls | `assets/plots/props/scrolls.webp` |
+| ✅ | jars broken | `assets/plots/props/jars_broken.webp` |
+| ✅ | old sacks | `assets/plots/props/old_sacks.webp` |
+| ✅ | puddle | `assets/plots/props/puddle.webp` |
+| ✅ | fence broken | `assets/plots/props/fence_broken.webp` |
+| ✅ | gate broken | `assets/plots/props/gate_broken.webp` |
+| ✅ | barrow broken | `assets/plots/props/barrow_broken.webp` |
+| ✅ | pump broken | `assets/plots/props/pump_broken.webp` |
+| ✅ | scaffold | `assets/plots/props/scaffold.webp` |
+| ✅ | tarp | `assets/plots/props/tarp.webp` |
+| ✅ | table broken | `assets/plots/props/table_broken.webp` |
+| ✅ | scarecrow fallen | `assets/plots/props/scarecrow_fallen.webp` |
+| ✅ | wire torn | `assets/plots/props/wire_torn.webp` |
+| ✅ | nest broken | `assets/plots/props/nest_broken.webp` |
+| ✅ | perch broken | `assets/plots/props/perch_broken.webp` |
+| ✅ | feeder broken | `assets/plots/props/feeder_broken.webp` |
+| ✅ | trough dry | `assets/plots/props/trough_dry.webp` |
+| ✅ | cart tipped | `assets/plots/props/cart_tipped.webp` |
+| ✅ | plough old | `assets/plots/props/plough_old.webp` |
+| ✅ | ditch | `assets/plots/props/ditch.webp` |
+| ✅ | lantern | `assets/plots/props/lantern.webp` |
+| ✅ | mailbox | `assets/plots/props/mailbox.webp` |
+| ✅ | tulips | `assets/plots/props/tulips.webp` |
+| ✅ | bench | `assets/plots/props/bench.webp` |
+| ✅ | bird feeder | `assets/plots/props/bird_feeder.webp` |
+| ✅ | firewood | `assets/plots/props/firewood.webp` |
+| ✅ | bunting | `assets/plots/props/bunting.webp` |
+| ✅ | wreath | `assets/plots/props/wreath.webp` |
 
 ## 12a. Painted pages (the new look)
 

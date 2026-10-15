@@ -2399,6 +2399,53 @@ const ZONE_REWARD = { gems: 5, chest: 'brown' };
 const ZONE_PERSON = [42, 56];
 // Spots for jobs without their own place in a picture yet, in order.
 const ZONE_SLOTS = [[30, 36], [70, 42], [46, 64], [22, 84], [74, 82]];
+
+// Areas drawn as plots (ASSETS.plots): each job's spot on its plot (% across,
+// % down) and its prop, a picture standing there: 'weeds' stands there until
+// the job is done (mess, or something broken), '>lantern' appears once it's
+// done, and 'brushwood>firewood' swaps one for the other. The last number is
+// the prop's width (% of the plot's). A job without a prop just brings the
+// colour back around its spot. ?layout moves them about.
+const PLOT_JOBS = {
+    // Barnyard
+    barn1: ['planks', 30, 64, 11], barn2: ['weeds', 27, 48, 8], barn3: ['branch', 62, 36, 12],
+    barn4: ['tarp', 44, 66, 9], barn5: ['fence_broken', 16, 60, 10], barn6: ['barrow_broken', 50, 30, 10],
+    barn7: ['pump_broken', 52, 53, 13], barn8: ['scrap', 60, 46, 9], barn9: ['>lantern', 57, 60, 5],
+    barn10: ['>mailbox', 23, 66, 5], barn11: ['>tulips', 70, 72, 7], barn12: [null, 20, 30],
+    barn13: [null, 45, 22], barn14: [null, 55, 44], barn15: ['>wreath', 31, 40, 4],
+    barn16: ['puddle', 56, 57, 9], barn17: [null, 39, 40], barn18: ['tyre', 23, 73, 6],
+    barn19: [null, 83, 35], barn20: ['old_straw', 41, 58, 9], barn21: ['brushwood>firewood', 71, 31, 8],
+    barn22: [null, 12, 56], barn23: [null, 67, 53], barn24: ['brambles', 87, 57, 9],
+    barn25: ['>bird_feeder', 75, 65, 5], barn26: [null, 88, 64], barn27: ['>bench', 33, 53, 8],
+    barn28: ['>bunting', 43, 48, 10], barn29: [null, 50, 86],
+    // Hen House
+    hen1: ['old_straw', 38, 62, 10], hen2: ['old_sacks', 48, 44, 10], hen3: ['nest_broken', 56, 35, 12],
+    hen4: ['wire_torn', 63, 52, 10], hen5: ['trough_dry', 77, 49, 13], hen6: ['perch_broken', 65, 33, 9],
+    hen7: ['feeder_broken', 72, 38, 7], hen8: [null, 30, 40], hen9: [null, 60, 72], hen10: [null, 52, 25],
+    barn30: [null, 56, 22], barn31: ['puddle', 52, 64, 9], barn32: [null, 27, 38], barn33: [null, 68, 43],
+    barn34: [null, 45, 80], barn35: ['planks', 24, 54, 9], barn36: [null, 35, 28], barn37: [null, 58, 45],
+    barn38: ['>lantern', 44, 47, 4], barn39: [null, 66, 28], barn40: [null, 62, 18], barn41: [null, 25, 64],
+    barn42: [null, 80, 60], barn43: ['weeds', 17, 46, 8], barn44: [null, 10, 52], barn45: [null, 72, 68],
+    barn46: [null, 45, 14], barn47: ['>bunting', 40, 72, 10],
+    // Barn Storeroom
+    big1: ['table_broken', 40, 87, 18], big2: ['scrolls', 30, 64, 10], big3: ['jars_broken', 14, 64, 11],
+    big4: ['grain_spill', 47, 51, 10], big5: [null, 12, 40], big6: [null, 45, 40],
+    big7: ['crate_smashed', 76, 74, 11], big8: ['puddle', 50, 60, 12], barn48: [null, 10, 48],
+    barn49: [null, 16, 33], barn50: [null, 30, 86], barn51: ['old_sacks', 35, 54, 10],
+    barn52: ['planks', 27, 77, 11], barn53: [null, 28, 28], barn54: [null, 33, 42], barn55: [null, 30, 20],
+    barn56: ['old_straw', 62, 82, 10], barn57: [null, 66, 50], barn58: [null, 85, 40], barn59: [null, 75, 22],
+    barn60: ['cobweb', 52, 22, 10], barn61: [null, 24, 23], barn62: [null, 40, 25], barn63: [null, 60, 35],
+    barn64: [null, 52, 70], barn65: [null, 17, 58],
+    // Field Gate
+    farm2: ['brambles', 45, 80, 7], farm3: ['boulders', 15, 56, 8], farm4: ['brushwood', 47, 26, 7],
+    farm5: ['scarecrow_fallen', 69, 31, 8], farm6: ['gate_broken', 31, 66, 14], farm7: ['cart_tipped', 37, 28, 13],
+    farm8: ['plough_old', 70, 53, 10], farm9: [null, 45, 15], farm10: [null, 55, 76], farm29: [null, 50, 35],
+    farm30: ['ditch', 22, 71, 10], farm31: [null, 80, 35], farm32: [null, 72, 22], farm33: [null, 38, 55],
+    farm34: [null, 40, 20], farm35: ['weeds', 60, 41, 6], farm36: [null, 45, 65], farm37: ['scaffold', 17, 42, 12],
+    farm38: [null, 22, 46], farm39: [null, 12, 35], farm40: [null, 65, 60], farm41: ['weeds', 35, 81, 6],
+    farm42: [null, 90, 50], farm43: [null, 25, 32], farm44: [null, 60, 25], farm45: [null, 75, 65],
+    farm46: [null, 48, 72],
+};
 // How wide each object stands in its area (% of the area), so things keep
 // their real size next to the people (about 11%). Others are 11.
 const OBJECT_SIZE = {
@@ -2573,7 +2620,8 @@ function renderZone(zone) {
     el.className = 'zone' + (open ? '' : ' locked') + (done === tasks.length ? ' zone-done' : '');
     el.dataset.zone = zone.id;
     const stages = (ASSETS.stages || {})[zone.id];
-    if (stages) {
+    if ((ASSETS.plots || {})[zone.id]) paintPlotZone(el, zone, tasks, open);
+    else if (stages) {
         // Painted: the whole area is one painting of how far along it is, tall
         // enough to scroll; its open jobs are bubbles over the painted mess.
         const pic = stages[stageIndex(done, tasks.length)];
@@ -2612,6 +2660,250 @@ function paintOldZone(el, zone, tasks, open) {
     if (open) addFixSpots(tasks, el.querySelector('.zone-frame'));
 }
 
+// --- PLOTS ---
+// An area drawn as a plot: the diorama on a meadow, bigger than the screen, so
+// you drag it about (and pinch or ctrl+scroll to zoom). Faded where its jobs
+// are still to do, like a painted area, with each job's prop standing on it.
+const PLOT_ZOOM = [1, 1.7, 3]; // least, first and most: the plot's width over the screen's
+const plotViews = {}; // each plot's zoom and the point in the middle of the screen
+const layoutMode = /[?&]layout\b/.test(location.search);
+
+// A job's place on its plot: [prop, % across, % down, width], moved by ?layout.
+function plotJob(task) {
+    return (layoutMode && plotLayout()[task.id]) || PLOT_JOBS[task.id] || null;
+}
+
+// The prop a job shows before it's done, or once it is (or none).
+function plotProp(task, done) {
+    const [prop] = plotJob(task) || [];
+    if (!prop) return null;
+    const [before, after = ''] = prop.split('>');
+    return (done ? after : before) || null;
+}
+
+// Where a job's ring sits on its plot: over its prop's middle, or its spot.
+function plotAt(task) {
+    const job = plotJob(task);
+    if (!job || !(ASSETS.plots || {})[task.zone]) return null;
+    const [, x, y, w] = job;
+    return [x, w ? y - w * 0.6 : y];
+}
+
+function addProp(stage, task, name, cls = '') {
+    const [, x, y, w] = plotJob(task);
+    const prop = document.createElement('span');
+    prop.className = 'plot-prop' + (cls ? ' ' + cls : '');
+    prop.dataset.prop = task.id;
+    prop.style.cssText = `left:${x}%;top:${y}%;width:${w}%;z-index:${Math.round(y)}`;
+    prop.innerHTML = `<img src="${ASSETS.plotProps[name]}" alt="" draggable="false">`;
+    stage.appendChild(prop);
+    return prop;
+}
+
+function paintPlotZone(el, zone, tasks, open) {
+    const pic = ASSETS.plots[zone.id];
+    el.classList.add('plotted');
+    el.innerHTML = `<div class="plot-meadow"></div>
+        <div class="plot-view"><div class="plot-pad"><div class="plot-stage">
+            <img class="zone-art plot-art" src="${pic}" alt="" draggable="false">
+            <img class="zone-worn" src="${pic}" alt="" draggable="false">
+        </div></div></div>`;
+    const stage = el.querySelector('.plot-stage');
+    tasks.forEach(task => {
+        const name = plotProp(task, taskDone(task));
+        if (name) addProp(stage, task, name);
+    });
+    if (open && !layoutMode) addJobChips(tasks, stage);
+    // Bubbles stand in front of every prop.
+    stage.querySelectorAll('.fix-spot').forEach(spot => { spot.style.zIndex = 200 + parseInt(spot.style.zIndex, 10); });
+    const art = el.querySelector('.zone-art');
+    const ready = () => { paintWear(el, zone.id); plotViewer(el, zone, tasks); if (layoutMode) layoutPlot(el, zone, tasks); };
+    if (art.complete && art.naturalWidth) requestAnimationFrame(ready);
+    else art.addEventListener('load', ready, { once: true });
+}
+
+// Dragging, pinching and zooming a plot. The view scrolls (overflow hidden, so
+// scrollIntoView still finds its spots); a drag that moved doesn't count as a tap.
+function plotViewer(el, zone, tasks) {
+    const view = el.querySelector('.plot-view'), stage = el.querySelector('.plot-stage');
+    const st = plotViews[zone.id] || (plotViews[zone.id] = { zoom: PLOT_ZOOM[1] });
+    const zoomTo = (z, cx = view.clientWidth / 2, cy = view.clientHeight / 2) => {
+        const fx = (view.scrollLeft + cx) / stage.offsetWidth, fy = (view.scrollTop + cy - stage.offsetTop) / stage.offsetHeight;
+        st.zoom = Math.min(PLOT_ZOOM[2], Math.max(PLOT_ZOOM[0], z));
+        stage.style.width = st.zoom * 100 + '%';
+        view.scrollLeft = fx * stage.offsetWidth - cx;
+        view.scrollTop = fy * stage.offsetHeight + stage.offsetTop - cy;
+    };
+    const centre = (fx, fy) => {
+        view.scrollLeft = fx * stage.offsetWidth - view.clientWidth / 2;
+        view.scrollTop = fy * stage.offsetHeight + stage.offsetTop - view.clientHeight / 2;
+    };
+    stage.style.width = st.zoom * 100 + '%';
+    if (st.fx === undefined) {
+        // First time here: the first job to do in the middle.
+        const i = tasks.findIndex(t => taskOpen(t)), at = i >= 0 ? jobAt(tasks[i], i) : [50, 50];
+        centre(at[0] / 100, at[1] / 100);
+    } else centre(st.fx, st.fy);
+    view.addEventListener('scroll', () => {
+        st.fx = (view.scrollLeft + view.clientWidth / 2) / stage.offsetWidth;
+        st.fy = (view.scrollTop + view.clientHeight / 2 - stage.offsetTop) / stage.offsetHeight;
+    }, { passive: true });
+    const pts = new Map();
+    let last = null, moved = false, dragged = false, glide = 0;
+    const now = () => {
+        const p = [...pts.values()];
+        const x = p.reduce((a, q) => a + q.x, 0) / p.length, y = p.reduce((a, q) => a + q.y, 0) / p.length;
+        return { x, y, d: p.length > 1 ? Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) : 0, n: p.length, t: performance.now(), vx: 0, vy: 0 };
+    };
+    view.addEventListener('pointerdown', e => {
+        cancelAnimationFrame(glide);
+        pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pts.size === 1) moved = false;
+        last = now();
+    });
+    view.addEventListener('pointermove', e => {
+        if (!pts.has(e.pointerId)) return;
+        pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        const cur = now();
+        if (cur.n !== last.n) { last = cur; return; }
+        if (!moved && Math.hypot(cur.x - last.x, cur.y - last.y) < 8 && cur.n < 2) return;
+        moved = true;
+        view.classList.add('dragging');
+        if (cur.n > 1 && last.d) {
+            const r = view.getBoundingClientRect();
+            zoomTo(st.zoom * cur.d / last.d, cur.x - r.left, cur.y - r.top);
+        }
+        view.scrollLeft -= cur.x - last.x;
+        view.scrollTop -= cur.y - last.y;
+        const dt = Math.max(1, cur.t - last.t);
+        cur.vx = (cur.x - last.x) / dt;
+        cur.vy = (cur.y - last.y) / dt;
+        last = cur;
+    });
+    const up = e => {
+        if (!pts.delete(e.pointerId)) return;
+        if (pts.size) { last = now(); return; }
+        view.classList.remove('dragging');
+        dragged = moved;
+        if (!moved || performance.now() - last.t > 80) return;
+        // Let it glide on and slow down.
+        let { vx, vy } = last, t0 = performance.now();
+        const step = t => {
+            const dt = t - t0;
+            t0 = t;
+            view.scrollLeft -= vx * dt;
+            view.scrollTop -= vy * dt;
+            vx *= Math.pow(0.94, dt / 16);
+            vy *= Math.pow(0.94, dt / 16);
+            if (Math.hypot(vx, vy) > 0.02) glide = requestAnimationFrame(step);
+        };
+        glide = requestAnimationFrame(step);
+    };
+    view.addEventListener('pointerup', up);
+    view.addEventListener('pointercancel', up);
+    view.addEventListener('click', e => {
+        if (!dragged) return;
+        dragged = false;
+        e.stopPropagation();
+        e.preventDefault();
+    }, true);
+    view.addEventListener('wheel', e => {
+        e.preventDefault();
+        const r = view.getBoundingClientRect();
+        if (e.ctrlKey) zoomTo(st.zoom * Math.exp(-e.deltaY / 200), e.clientX - r.left, e.clientY - r.top);
+        else { view.scrollLeft += e.deltaX; view.scrollTop += e.deltaY; }
+    }, { passive: false });
+}
+
+// ?layout: placing the props. Every prop (and spot without one) shows with its
+// job's name; drag it to move it, pick it and use − / + to size it, and Copy
+// gives every position as text to send back. Moves are kept in this browser.
+const LAYOUT_KEY = 'merge-farmstead-layout';
+
+function plotLayout() {
+    try { return JSON.parse(localStorage.getItem(LAYOUT_KEY)) || {}; } catch (e) { return {}; }
+}
+
+function saveLayout(id, job) {
+    const all = plotLayout();
+    all[id] = job;
+    try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(all)); } catch (e) { /* kept for this visit only */ }
+}
+
+function layoutPlot(el, zone, tasks) {
+    const stage = el.querySelector('.plot-stage');
+    stage.querySelectorAll('.plot-prop').forEach(p => p.remove());
+    const panel = document.createElement('div');
+    panel.className = 'layout-panel';
+    panel.innerHTML = `<span>Drag a prop</span><button data-k="-1">−</button><button data-k="1">＋</button><button data-k="copy">Copy</button>`;
+    el.appendChild(panel);
+    let picked = null;
+    const label = panel.querySelector('span');
+    tasks.forEach(task => {
+        const job = plotJob(task);
+        if (!job) return;
+        const [prop, x, y] = job;
+        const name = prop && (prop.split('>')[0] || prop.split('>')[1]);
+        let handle;
+        if (name) handle = addProp(stage, task, name, 'layout');
+        else {
+            handle = document.createElement('span');
+            handle.className = 'plot-dot layout';
+            handle.dataset.prop = task.id;
+            handle.style.cssText = `left:${x}%;top:${y}%`;
+            stage.appendChild(handle);
+        }
+        handle.insertAdjacentHTML('beforeend', `<b class="layout-name">${task.name}</b>`);
+        handle.addEventListener('pointerdown', e => {
+            e.stopPropagation(); // moves the prop, not the plot
+            e.preventDefault();
+            stage.querySelectorAll('.layout.picked').forEach(h => h.classList.remove('picked'));
+            handle.classList.add('picked');
+            picked = { task, handle };
+            label.textContent = task.name;
+            const r = stage.getBoundingClientRect(), start = plotJob(task);
+            const dx = e.clientX - (r.left + (start[1] / 100) * r.width), dy = e.clientY - (r.top + (start[2] / 100) * r.height);
+            const move = ev => {
+                const j = [...plotJob(task)];
+                j[1] = Math.round(((ev.clientX - dx - r.left) / r.width) * 1000) / 10;
+                j[2] = Math.round(((ev.clientY - dy - r.top) / r.height) * 1000) / 10;
+                handle.style.left = j[1] + '%';
+                handle.style.top = j[2] + '%';
+                handle.style.zIndex = Math.round(j[2]);
+                saveLayout(task.id, j);
+            };
+            const done = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', done); };
+            window.addEventListener('pointermove', move);
+            window.addEventListener('pointerup', done);
+        });
+    });
+    panel.addEventListener('click', e => {
+        const k = e.target.dataset.k;
+        if (k === 'copy') {
+            const text = tasks.filter(plotJob).map(t => `${t.id}: ${JSON.stringify(plotJob(t))},`).join('\n');
+            if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {});
+            showDialog({ title: `${zone.name} layout`, body: `<p>Copied. Paste it to Claude.</p><textarea class="layout-text" readonly>${text}</textarea>`, actions: [{ label: 'OK', primary: true }] });
+        } else if (k && picked && plotJob(picked.task)[3]) {
+            const j = [...plotJob(picked.task)];
+            j[3] = Math.max(2, j[3] + Number(k));
+            picked.handle.style.width = j[3] + '%';
+            saveLayout(picked.task.id, j);
+        }
+    });
+}
+
+// A just-fixed job's prop shakes and puffs away, and its new one pops up.
+function swapProps(zoneEl, task) {
+    const stage = zoneEl.querySelector('.plot-stage');
+    if (!stage) return;
+    stage.querySelectorAll(`.plot-prop[data-prop="${task.id}"]`).forEach(p => {
+        p.classList.add('prop-off');
+        setTimeout(() => p.remove(), 900);
+    });
+    const next = plotProp(task, true);
+    if (next) setTimeout(() => addProp(stage, task, next, 'prop-in'), 450);
+}
+
 // --- PAINTED PAGES ---
 // Which of a page's three paintings shows: ruined until half its jobs are done,
 // half fixed until the last one, then restored.
@@ -2623,7 +2915,7 @@ function stageIndex(done, total) {
 const HOUSE_AT = { townhall: [50, 24], carpenter: [14, 62], ranch: [87, 40], fishshop: [11, 38], flowershop: [86, 64] };
 
 function jobAt(task, i) {
-    return task.at || HOUSE_AT[task.house] || ZONE_SLOTS[i % ZONE_SLOTS.length];
+    return plotAt(task) || task.at || HOUSE_AT[task.house] || ZONE_SLOTS[i % ZONE_SLOTS.length];
 }
 
 // On a painting the things to fix are painted in, so each open job is a soft
@@ -3006,7 +3298,11 @@ function fixJob(id) {
         const zoneEl = spot.closest('.zone');
         const jobs = task.zone ? zoneTasks(task.zone) : landTasks(task.land);
         const done = jobs.filter(taskDone).length + 1;
-        if (zoneEl && zoneEl.classList.contains('painted')) {
+        if (zoneEl && zoneEl.classList.contains('plotted')) {
+            bloomWear(zoneEl, task.zone, task.id);
+            swapProps(zoneEl, task);
+            if (done === jobs.length) zoneEl.classList.add('zone-done');
+        } else if (zoneEl && zoneEl.classList.contains('painted')) {
             bloomWear(zoneEl, task.zone, task.id);
             turnPage(zoneEl.querySelector('.zone-art'), ASSETS.stages[task.zone][stageIndex(done, jobs.length)]);
             if (done === jobs.length) zoneEl.classList.add('zone-done');
@@ -3056,7 +3352,7 @@ function renderFix() {
     world.className = 'world';
     landZones(land).forEach(zone => {
         const el = renderZone(zone);
-        if (zoneOpen(zone) && !el.classList.contains('painted')) addZonePerson(el.querySelector('.zone-frame'), zoneTasks(zone.id), zone);
+        if (zoneOpen(zone) && !el.matches('.painted, .plotted')) addZonePerson(el.querySelector('.zone-frame'), zoneTasks(zone.id), zone);
         world.appendChild(el);
     });
     // Swipe sideways from area to area: dots for where you are, arrows naming the next one.
@@ -3127,7 +3423,7 @@ function unlockNewZones(land, world) {
 function newAreaCard(zone, tries = 0) {
     if (!dialogEl.hidden || fixing) return tries < 120 && setTimeout(() => newAreaCard(zone, tries + 1), 500);
     showDialog({
-        art: ((ASSETS.stages || {})[zone.id] || [])[2] || (ASSETS.areas || {})[zone.id] || ASSETS.buildings[zone.land],
+        art: (ASSETS.plots || {})[zone.id] || ((ASSETS.stages || {})[zone.id] || [])[2] || (ASSETS.areas || {})[zone.id] || ASSETS.buildings[zone.land],
         title: `✨ ${zone.name}`,
         body: `<p>New area! <b>${zoneTasks(zone.id).length}</b> things to fix.</p>`,
         actions: [{ label: 'Let\'s go!', primary: true }],

@@ -108,6 +108,36 @@ const ASSETS = {
         greenhouse: null,
     },
 
+    // Areas drawn as isometric plots (diorama pictures, cut from assets/raw/plots/):
+    // shown instead of their stage paintings, with the mess and new things of
+    // their jobs (props) standing on them. See PLOT_JOBS in game.js.
+    plots: {
+        barnyard: 'assets/plots/barnyard.webp', henhouse: 'assets/plots/henhouse.webp',
+        bigbarn: 'assets/plots/bigbarn.webp', fieldgate: 'assets/plots/fieldgate.webp',
+    },
+    // Plot props, by name: transparent pictures cut from the sheets in assets/raw/plots/.
+    plotProps: {
+        // Outdoor mess
+        weeds: 'assets/plots/props/weeds.webp', brambles: 'assets/plots/props/brambles.webp', branch: 'assets/plots/props/branch.webp',
+        boulders: 'assets/plots/props/boulders.webp', planks: 'assets/plots/props/planks.webp', tyre: 'assets/plots/props/tyre.webp',
+        scrap: 'assets/plots/props/scrap.webp', brushwood: 'assets/plots/props/brushwood.webp',
+        // Indoor mess
+        cobweb: 'assets/plots/props/cobweb.webp', grain_spill: 'assets/plots/props/grain_spill.webp', crate_smashed: 'assets/plots/props/crate_smashed.webp',
+        old_straw: 'assets/plots/props/old_straw.webp', scrolls: 'assets/plots/props/scrolls.webp', jars_broken: 'assets/plots/props/jars_broken.webp',
+        old_sacks: 'assets/plots/props/old_sacks.webp', puddle: 'assets/plots/props/puddle.webp',
+        // Broken things
+        fence_broken: 'assets/plots/props/fence_broken.webp', gate_broken: 'assets/plots/props/gate_broken.webp', barrow_broken: 'assets/plots/props/barrow_broken.webp',
+        pump_broken: 'assets/plots/props/pump_broken.webp', scaffold: 'assets/plots/props/scaffold.webp', tarp: 'assets/plots/props/tarp.webp',
+        table_broken: 'assets/plots/props/table_broken.webp', scarecrow_fallen: 'assets/plots/props/scarecrow_fallen.webp', wire_torn: 'assets/plots/props/wire_torn.webp',
+        nest_broken: 'assets/plots/props/nest_broken.webp', perch_broken: 'assets/plots/props/perch_broken.webp', feeder_broken: 'assets/plots/props/feeder_broken.webp',
+        trough_dry: 'assets/plots/props/trough_dry.webp', cart_tipped: 'assets/plots/props/cart_tipped.webp', plough_old: 'assets/plots/props/plough_old.webp',
+        ditch: 'assets/plots/props/ditch.webp',
+        // New things
+        lantern: 'assets/plots/props/lantern.webp', mailbox: 'assets/plots/props/mailbox.webp', tulips: 'assets/plots/props/tulips.webp',
+        bench: 'assets/plots/props/bench.webp', bird_feeder: 'assets/plots/props/bird_feeder.webp', firewood: 'assets/plots/props/firewood.webp',
+        bunting: 'assets/plots/props/bunting.webp', wreath: 'assets/plots/props/wreath.webp',
+    },
+
     // The things in each area, by name (transparent PNGs, cut from
     // assets/raw/objects_<area>.webp). null = the emoji in OBJECT_EMOJI.
     objects: {
