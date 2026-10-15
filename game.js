@@ -598,11 +598,11 @@ function itemIcon(mode, tier) {
 // (the slow boards pay more).
 const AREAS = {
     barn:   { name: 'Barn',          cost: 0,    level: 1, pay: 10, desc: 'Raise animals from feed.' },
-    farm:   { name: 'Crop Field',    cost: 200,  level: 2, pay: 10, desc: 'Grow crops with fertilizer.' },
-    hay:    { name: 'Hay Field',     cost: 400,  level: 3, pay: 15, desc: 'Grow hay from wheat.' },
-    fert:   { name: 'Compost Yard',  cost: 800,  level: 4, pay: 20, desc: 'Make your own fertilizer.' },
-    aqua:   { name: 'Fish Pond',     cost: 2000, level: 5, pay: 20, desc: 'Raise frogs, fish and ducks with fish food.' },
-    flower: { name: 'Flower Garden', cost: 5000, level: 6, pay: 30, desc: 'Grow flowers with your watering can.' },
+    farm:   { name: 'Crop Field',    cost: 1500,   level: 3,  pay: 10, desc: 'Grow crops with fertilizer.' },
+    hay:    { name: 'Hay Field',     cost: 6000,   level: 5,  pay: 15, desc: 'Grow hay from wheat.' },
+    fert:   { name: 'Compost Yard',  cost: 20000,  level: 7,  pay: 20, desc: 'Make your own fertilizer.' },
+    aqua:   { name: 'Fish Pond',     cost: 60000,  level: 9,  pay: 20, desc: 'Raise frogs, fish and ducks with fish food.' },
+    flower: { name: 'Flower Garden', cost: 150000, level: 11, pay: 30, desc: 'Grow flowers with your watering can.' },
 };
 
 // --- PRODUCERS ---
@@ -2377,22 +2377,40 @@ const ZONES = [
     { id: 'barnyard',    land: 'barn',   name: 'Barnyard',        level: 1, person: [66, 60] },
     { id: 'henhouse',    land: 'barn',   name: 'Hen House',       level: 2, person: [54, 32] },
     { id: 'bigbarn',     land: 'barn',   name: 'Barn Storeroom',    level: 3, person: [52, 56] },
-    { id: 'fieldgate',   land: 'farm',   name: 'Field Gate',      level: 2 },
-    { id: 'berryrows',   land: 'farm',   name: 'Strawberry Rows', level: 3 },
-    { id: 'orchard',     land: 'farm',   name: 'Orchard',         level: 4 },
-    { id: 'meadow',      land: 'hay',    name: 'Meadow',          level: 3 },
-    { id: 'stables',     land: 'hay',    name: 'Stables',         level: 4 },
-    { id: 'windmill',    land: 'hay',    name: 'Windmill',        level: 5 },
-    { id: 'leafpiles',   land: 'fert',   name: 'Leaf Piles',      level: 4 },
-    { id: 'compostbins', land: 'fert',   name: 'Compost Bins',    level: 5 },
-    { id: 'mushrooms',   land: 'fert',   name: 'Mushroom Corner', level: 6 },
-    { id: 'muddyshore',  land: 'aqua',   name: 'Muddy Shore',     level: 5 },
-    { id: 'lilypond',    land: 'aqua',   name: 'Lily Pond',       level: 6 },
-    { id: 'boatdock',    land: 'aqua',   name: 'Boat Dock',       level: 7 },
-    { id: 'gardengate',  land: 'flower', name: 'Garden Gate',     level: 6 },
-    { id: 'rosearch',    land: 'flower', name: 'Rose Arch',       level: 7 },
-    { id: 'greenhouse',  land: 'flower', name: 'Greenhouse',      level: 8 },
+    { id: 'fieldgate',   land: 'farm',   name: 'Field Gate',      level: 3 },
+    { id: 'berryrows',   land: 'farm',   name: 'Strawberry Rows', level: 4 },
+    { id: 'orchard',     land: 'farm',   name: 'Orchard',         level: 5 },
+    { id: 'meadow',      land: 'hay',    name: 'Meadow',          level: 5 },
+    { id: 'stables',     land: 'hay',    name: 'Stables',         level: 6 },
+    { id: 'windmill',    land: 'hay',    name: 'Windmill',        level: 7 },
+    { id: 'leafpiles',   land: 'fert',   name: 'Leaf Piles',      level: 7 },
+    { id: 'compostbins', land: 'fert',   name: 'Compost Bins',    level: 8 },
+    { id: 'mushrooms',   land: 'fert',   name: 'Mushroom Corner', level: 9 },
+    { id: 'muddyshore',  land: 'aqua',   name: 'Muddy Shore',     level: 9 },
+    { id: 'lilypond',    land: 'aqua',   name: 'Lily Pond',       level: 10 },
+    { id: 'boatdock',    land: 'aqua',   name: 'Boat Dock',       level: 11 },
+    { id: 'gardengate',  land: 'flower', name: 'Garden Gate',     level: 11 },
+    { id: 'rosearch',    land: 'flower', name: 'Rose Arch',       level: 12 },
+    { id: 'greenhouse',  land: 'flower', name: 'Greenhouse',      level: 13 },
 ];
+// Jobs ask for more as you go: each later job in an area a step or two more,
+// and each later area of a land a step more again, up to a top per land (the
+// whole chain for the smaller producers). Applied once, as the game loads.
+const LAND_TOP_TIER = { barn: 7, farm: 7, hay: 8, fert: 8, aqua: 9, flower: 9, town: 9 };
+(function raiseJobs() {
+    const raise = (task, bump) => task.needs.forEach(n => {
+        if (!n.item) return;
+        const top = TOOLS[n.item] ? NAMES[n.item].length - 1 : LAND_TOP_TIER[task.land];
+        n.tier = Math.max(n.tier, Math.min(top, n.tier + bump));
+    });
+    ZONES.forEach(zone => {
+        const step = ZONES.filter(z => z.land === zone.land).indexOf(zone);
+        const jobs = TASKS.filter(t => t.zone === zone.id);
+        jobs.forEach((t, i) => raise(t, Math.round(step + (2 * i) / Math.max(1, jobs.length - 1))));
+    });
+    TASKS.filter(t => t.land === 'town').forEach(t => raise(t, 3));
+})();
+
 // Finishing an area (other than a land's last) pays this.
 const ZONE_REWARD = { gems: 5, chest: 'brown' };
 // Where an area's person stands when it has no clear spot of its own (person).
@@ -4465,7 +4483,7 @@ function addMapSprites(scene) {
             onClick: () => unlocks[id] ? goFix(id) : offerDeed(id),
         });
         if (!unlocks[id]) {
-            addTag(spot, 'sale-sign', quests.level < area.level ? `${uiIcon('lock', '🔒')} Level ${area.level}` : `FOR SALE<br>💵 ${area.cost}`);
+            addTag(spot, 'sale-sign', quests.level < area.level ? `${uiIcon('lock', '🔒')} Level ${area.level}` : `FOR SALE<br>💵 ${shortNumber(area.cost)}`);
         } else {
             // Orders ready to hand in on this board, and rewards waiting in its crate.
             const ready = npcs.filter(n => n.request && n.request.mode === id && canFulfill(n)).length;
@@ -4531,7 +4549,7 @@ function addMapLabels(scene) {
         const spot = placeLabel(frame, id, MAP_LABELS[id], area.name, () => unlocks[id] ? goFix(id) : offerDeed(id));
         if (!unlocks[id]) {
             spot.classList.add('locked');
-            addTag(spot, 'sale-sign', quests.level < area.level ? `${uiIcon('lock', '🔒')} Lv ${area.level}` : `💵 ${area.cost}`);
+            addTag(spot, 'sale-sign', quests.level < area.level ? `${uiIcon('lock', '🔒')} Lv ${area.level}` : `💵 ${shortNumber(area.cost)}`);
             return;
         }
         const ready = npcs.filter(n => n.request && n.request.mode === id && canFulfill(n)).length;
@@ -4620,7 +4638,7 @@ function buyDeed(id) {
     res.money -= area.cost;
     sfx('buy');
     unlocks[id] = true;
-    if (grids[id].filter(Boolean).length <= 1) grids[id] = clutterBoard();
+    if (grids[id].filter(Boolean).length <= 1) grids[id] = clutterBoard(id);
     ensureToolboxes();
     updateUI();
     toast(`The ${area.name} is yours! Find it on the map.`, 'good');
@@ -4643,11 +4661,11 @@ const npcs = [
       home: 'flowershop', building: { x: 63, y: 58, w: 36 }, spot: { x: 72, y: 79, w: 17 } },
 ];
 
-// Orders grow with you: from level 4 the smallest asks creep up a tier every
-// three levels, and the bigger ones (paying double a tier) come up a bit more.
+// Orders grow with you: the smallest ask goes up a tier every two levels, and
+// most asks lean towards the biggest you can make (each tier pays double).
 function orderTier() {
-    const low = Math.min(maxTier, 1 + Math.floor(Math.max(0, quests.level - 3) / 3));
-    return low + Math.floor(Math.random() ** 0.8 * (maxTier - low + 1));
+    const low = Math.min(maxTier, 1 + Math.floor((quests.level - 1) / 2));
+    return Math.min(maxTier, low + Math.floor(Math.random() ** 0.7 * (maxTier - low + 1)));
 }
 
 function generateRequestFor(npc) {
@@ -4890,7 +4908,7 @@ function addMarketLabels(scene) {
     tile('flash', uiIcon('sale', '🏷️'), 'Flash Sale', openFlashSale);
     const deals = tile('deals', uiIcon('gift', '🎁'), 'Daily Deals', openDailyDeals);
     if (dealsWaiting()) addTag(deals, 'badge', '!');
-    if (maxTier < NAMES['barn'].length - 1) addTag(tile('guide', '📖', 'Growth Guide', offerUpgrade), 'price-tag', `💵${maxTier * 100}`);
+    if (maxTier < NAMES['barn'].length - 1) addTag(tile('guide', '📖', 'Growth Guide', offerUpgrade), 'price-tag', `💵${shortNumber(guideCost())}`);
     Object.keys(AREAS).filter(id => !unlocks[id]).forEach(id => {
         const deed = tile(`deed-${id}`, MAP_LABELS[id].icon, AREAS[id].name, () => offerDeed(id));
         deed.dataset.id = id;
@@ -4919,7 +4937,7 @@ function renderMarket() {
 
     if (maxTier < NAMES['barn'].length - 1) {
         const guide = makeSpot({ ...MARKET_LAYOUT.upgrade, z: 90, sprite: ASSETS.props.upgrade, label: 'Growth Guide', onClick: offerUpgrade });
-        addTag(guide, 'price-tag', `💵${maxTier * 100}`);
+        addTag(guide, 'price-tag', `💵${shortNumber(guideCost())}`);
         scene.appendChild(guide);
     }
 
@@ -6050,6 +6068,11 @@ function takeDeal(id) {
     goTo(currentScene);
 }
 
+// The Growth Guide for tier `next`: each one about 2.6 times the last.
+function guideCost(next = maxTier + 1) {
+    return Math.round((150 * 2.6 ** (next - 4)) / 50) * 50;
+}
+
 function offerUpgrade() {
     markGuide('upgrade');
     const next = maxTier + 1;
@@ -6058,12 +6081,12 @@ function offerUpgrade() {
         title: `Growth Guide · Tier ${next}`,
         body: `<p>Lets you merge one step further on every board, like ${itemIcon('barn', next)} <b>${itemName('barn', next)}</b> in the Barn.</p>
                <p class="hint">Townsfolk will start asking for bigger things too.</p>`,
-        actions: [buyAction(maxTier * 100, buyUpgrade), { label: 'Not now' }],
+        actions: [buyAction(guideCost(next), buyUpgrade), { label: 'Not now' }],
     });
 }
 
 function buyUpgrade() {
-    const cost = maxTier * 100;
+    const cost = guideCost();
     if (res.money < cost) return;
     res.money -= cost;
     sfx('buy');
@@ -6129,23 +6152,39 @@ const grids = {
 Object.keys(AREAS).forEach(mode => grids[mode][0] = { type: 'shop', level: FIRST_WORKING_LEVEL });
 
 // A fresh board starts cluttered, as in Merge Mansion: 📦 crates that open when
-// you merge next to them, each hiding a cobwebbed item, and cobwebbed items you
-// free by merging a matching item into them. The top two rows are mostly open,
-// the next two a mix, and the bottom four crates. Two crates hide a cobwebbed
-// level 1 producer part.
-function clutterBoard() {
+// you merge next to them, and cobwebbed items you free by merging a matching
+// item into them (or dust off with 💎). The deeper the row, the bigger what's
+// waiting: the top rows hold small things, the bottom rows big ones, so the
+// board takes a long time to clear. Some crates hold a free item from the
+// board's other producers, a few high-tier treasures sit near the top to aim
+// for, and two crates hide a cobwebbed level 1 producer part.
+function clutterBoard(mode = 'barn') {
     const board = Array(NUM_CELLS).fill(null);
     board[0] = { type: 'shop', level: FIRST_WORKING_LEVEL };
-    const webbed = () => ({ tier: Math.random() < 0.6 ? 0 : Math.random() < 0.7 ? 1 : 2, web: true });
+    const top = NAMES[mode].length - 1;
+    const roll = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+    const webbed = (lo, hi) => ({ tier: Math.min(top, roll(lo, hi)), web: true });
+    const treasure = () => webbed(5, 7);
+    const others = Object.keys(TOOLS).filter(c => TOOLS[c].board === mode);
+    // A free item from another producer on this board, bigger the deeper it lies.
+    const gift = row => {
+        const chain = others[Math.floor(Math.random() * others.length)];
+        return { tier: Math.min(NAMES[chain].length - 1, roll(row - 4, row - 3)), chain };
+    };
     const producerCrates = [30 + Math.floor(Math.random() * GAME_WIDTH), 42 + Math.floor(Math.random() * GAME_WIDTH)];
+    const lucky = 1 + Math.floor(Math.random() * 2 * GAME_WIDTH);
     for (let i = 1; i < NUM_CELLS; i++) {
         const row = Math.floor(i / GAME_WIDTH);
         if (row < 2) {
-            if (i === 4 || i === 9 || i === 11) board[i] = webbed();
+            if (i === 4 || i === 9 || i === 11) board[i] = webbed(0, 2);
+            else if (i === lucky && mode !== 'barn') board[i] = treasure();
         } else if (row < 4) {
-            board[i] = Math.random() < 0.5 ? webbed() : { type: 'box', hidden: webbed() };
+            const item = Math.random() < 0.08 ? treasure() : webbed(row - 1, row);
+            board[i] = Math.random() < 0.4 ? item : { type: 'box', hidden: item };
         } else {
-            const hidden = producerCrates.includes(i) ? { type: 'shop', level: 1, web: true } : webbed();
+            const hidden = producerCrates.includes(i) ? { type: 'shop', level: 1, web: true }
+                : others.length && Math.random() < 0.25 ? gift(row)
+                : webbed(row - 1, row);
             board[i] = { type: 'box', hidden };
         }
     }
