@@ -2502,6 +2502,7 @@ function zoneDone(zone) {
 
 // Open: the land is yours, its level is reached and the area before it is done.
 function zoneOpen(zone) {
+    if (layoutMode && (ASSETS.plots || {})[zone.id]) return true; // ?layout: every plot to work on
     if (!unlocks[zone.land] || quests.level < zone.level) return false;
     const list = landZones(zone.land);
     const i = list.indexOf(zone);
@@ -2835,7 +2836,16 @@ function layoutPlot(el, zone, tasks) {
     stage.querySelectorAll('.plot-prop').forEach(p => p.remove());
     const panel = document.createElement('div');
     panel.className = 'layout-panel';
-    panel.innerHTML = `<span>Drag a prop</span><button data-k="-1">−</button><button data-k="1">＋</button><button data-k="copy">Copy</button>`;
+    const plotted = ZONES.filter(z => (ASSETS.plots || {})[z.id]);
+    panel.innerHTML = `<select>${plotted.map(z => `<option value="${z.id}"${z === zone ? ' selected' : ''}>${z.name}</option>`).join('')}</select>
+        <span>Drag a prop</span><button data-k="-1">−</button><button data-k="1">＋</button><button data-k="copy">Copy</button>`;
+    panel.querySelector('select').addEventListener('change', e => {
+        const to = ZONE[e.target.value];
+        fixLand = to.land;
+        goTo('fix');
+        const w = document.querySelector('#scene-fix .world'), z = w && w.querySelector(`.zone[data-zone="${to.id}"]`);
+        if (z) w.scrollLeft = z.offsetLeft;
+    });
     el.appendChild(panel);
     let picked = null;
     const label = panel.querySelector('span');
@@ -2880,9 +2890,9 @@ function layoutPlot(el, zone, tasks) {
     panel.addEventListener('click', e => {
         const k = e.target.dataset.k;
         if (k === 'copy') {
-            const text = tasks.filter(plotJob).map(t => `${t.id}: ${JSON.stringify(plotJob(t))},`).join('\n');
+            const text = TASKS.filter(t => (ASSETS.plots || {})[t.zone] && plotJob(t)).map(t => `${t.id}: ${JSON.stringify(plotJob(t))},`).join('\n');
             if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {});
-            showDialog({ title: `${zone.name} layout`, body: `<p>Copied. Paste it to Claude.</p><textarea class="layout-text" readonly>${text}</textarea>`, actions: [{ label: 'OK', primary: true }] });
+            showDialog({ title: 'Plot layout', body: `<p>Copied. Paste it to Claude.</p><textarea class="layout-text" readonly>${text}</textarea>`, actions: [{ label: 'OK', primary: true }] });
         } else if (k && picked && plotJob(picked.task)[3]) {
             const j = [...plotJob(picked.task)];
             j[3] = Math.max(2, j[3] + Number(k));
@@ -3401,6 +3411,7 @@ function renderFix() {
 // An area that opened since you last looked plays its unlock: a golden key
 // over the padlock, the clouds blow away, then the area's card.
 function unlockNewZones(land, world) {
+    if (layoutMode) return;
     const fresh = landZones(land).filter(z => zoneOpen(z) && !restoration.zonesOpen.includes(z.id));
     if (!fresh.length || fixing || !tutorial.done || !dialogEl.hidden || !world) return;
     fresh.forEach(z => restoration.zonesOpen.push(z.id));
@@ -5259,6 +5270,7 @@ const GUIDES = [
 
 // Which guide (if any) runs now, and where its hand points.
 function updateGuides() {
+    if (layoutMode) return;
     if (settings.tips === false || fixing || document.body.classList.contains('busy')) { tutorialEl.hidden = true; return; }
     if (guide) {
         const step = guide.def.steps[guide.step];
@@ -7347,6 +7359,7 @@ const SAVE_KEY = 'merge-farmstead-save-v1';
 const SAVE_VERSION = 5;
 
 function saveGame() {
+    if (layoutMode) return; // ?layout plays on a scratch game and leaves the real one alone
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
             version: SAVE_VERSION,
@@ -7445,9 +7458,15 @@ document.querySelectorAll('[data-ui]').forEach(el => { el.innerHTML = uiIcon(el.
 ['map', 'town', 'market'].forEach(id => {
     document.getElementById(`scene-${id}`).style.backgroundImage = `url("${ASSETS.scenes[id]}")`;
 });
-if (!loadGame()) {
+if (layoutMode || !loadGame()) {
     initTown(true);
     grids.barn = tutorialBoard(clutterBoard());
+}
+if (layoutMode) {
+    // ?layout: straight to the plots, all open, with no tutorial or story.
+    tutorial.done = true;
+    story.intro = true;
+    unlocks.barn = unlocks.farm = true;
 }
 // Every land you own has its tool producer (older saves get theirs now); a
 // new game's wait until the tutorial is over.
@@ -7468,7 +7487,10 @@ updateUI();
 goTo('map');
 // A new game opens with the story's intro (its daily gift comes after the
 // tutorial). Otherwise the first visit each day opens the daily gift, as in Merge Gardens.
-if (!story.intro) setTimeout(playOpening, 150);
+if (layoutMode) {
+    fixLand = 'barn';
+    goTo('fix');
+} else if (!story.intro) setTimeout(playOpening, 150);
 else if (!tutorial.done) giftAfterTutorial = true; // back mid-tutorial: the gift still waits for its end
 else if (dailyAvailable()) setTimeout(openDailyGift, 600);
 
