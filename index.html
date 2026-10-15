@@ -1791,6 +1791,15 @@
         .world-sign .restore-tag { left: 50%; top: 125%; translate: -50% 0; }
         .world-sign .badge { right: -20%; top: -40%; }
         .world-view.far .task-pin, .world-view.far .zone-lock small { display: none; }
+        /* The farmer walking about the farm (walkHeroTo). */
+        .hero { position: absolute; z-index: 150; pointer-events: none; }
+        .hero-sprite { position: absolute; inset: 0; background-size: 1400% 100%; background-repeat: no-repeat; background-position: 0 0; }
+        .hero.left .hero-sprite { transform: scaleX(-1); }
+        .hero.walking .hero-sprite { animation: hero-walk 1.17s steps(14, jump-none) infinite; }
+        .hero.cheer .hero-sprite { animation: hero-hop 0.42s ease-out 3; }
+        .hero-shadow { position: absolute; left: 18%; right: 18%; bottom: -4%; height: 9%; background: radial-gradient(closest-side, rgba(40, 30, 10, 0.38), transparent); }
+        @keyframes hero-walk { from { background-position: 0 0; } to { background-position: 100% 0; } }
+        @keyframes hero-hop { 0%, 100% { translate: 0 0; } 40% { translate: 0 -16%; } 70% { translate: 0 -4%; } }
         /* ?layout */
         .plot-prop.layout, .plot-dot.layout { pointer-events: auto; cursor: move; touch-action: none; }
         .plot-prop.layout.picked img { outline: 0.5cqw dashed #fff; }
@@ -1958,7 +1967,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610151610"></script>
-    <script src="game.js?v=202610151610"></script>
+    <script src="assets.js?v=202610151803"></script>
+    <script src="game.js?v=202610151803"></script>
 </body>
 </html>

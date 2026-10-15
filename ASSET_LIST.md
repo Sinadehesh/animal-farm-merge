@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**588 assets:** 543 done ✅, 6 placeholders 🟡, 39 missing ⬜.
+**591 assets:** 544 done ✅, 6 placeholders 🟡, 41 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -496,6 +496,17 @@ Sheets of 8 on flat magenta, cut by name into `assets/plots/props/`. Shared by e
 | ✅ | firewood | `assets/plots/props/firewood.webp` |
 | ✅ | bunting | `assets/plots/props/bunting.webp` |
 | ✅ | wreath | `assets/plots/props/wreath.webp` |
+
+### The farmer
+
+She walks about the farm to each job. Walk cycles cut from short videos on flat magenta (Gemini), kept in
+`assets/raw/hero/`; listed in `hero` in `assets.js`. Still to come: walking away from the camera, and a jump-and-clap.
+
+| | Clip | File |
+|---|---|---|
+| ✅ | Walking towards the camera (14 frames) | `assets/hero/walk.webp` |
+| ⬜ | Walking away from the camera | `assets/hero/walk_away.webp` |
+| ⬜ | Jump and clap | `assets/hero/cheer.webp` |
 
 ## 12a. Painted pages (the new look)
 

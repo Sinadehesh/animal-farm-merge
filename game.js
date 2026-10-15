@@ -3231,6 +3231,7 @@ function renderWorld(scene) {
         ui.appendChild(sign);
     });
     ui.querySelectorAll('.fix-spot').forEach(spot => { spot.style.zIndex = 200 + parseInt(spot.style.zIndex, 10); });
+    addHero(ui);
     panZoom(wrap.querySelector('.world-view'), stage, worldView, WORLD_ZOOM, () => {
         // First time: the first job to do in the world, or the Barnyard.
         const task = openTasks().find(t => t.zone && inWorld(ZONE[t.zone]));
@@ -3244,6 +3245,62 @@ function renderWorld(scene) {
         return [(x - x0) / w, (y - y0) / h];
     });
     Object.keys(AREAS).filter(id => unlocks[id]).forEach(id => unlockNewZones(id, stage));
+}
+
+// The farmer: she stands on the farm and walks to each job you tap or fix
+// (her walk mirrored when she heads left), with a hop when it's done.
+const hero = { x: null, y: null };
+const HERO_HEIGHT = 250; // world units
+const HERO_SPEED = 600;  // world units a second
+
+// Where she stands to work on a job: just in front of its spot, or null when
+// the job isn't on a plot in the world.
+function jobWorldXY(task) {
+    const zone = task && ZONE[task.zone], job = task && plotJob(task);
+    if (!zone || !job || !inWorld(zone)) return null;
+    const [ax, ay, aw, ar] = PLOT_SHAPE[zone.id] || [50, 52, 97.5, 0.75];
+    const tw = WORLD_TILE / (aw / 100), th = tw * ar, [cx, cy] = cellXY(zone.id);
+    return [cx + ((job[1] - ax) / 100) * tw - 70, cy + ((job[2] - ay) / 100) * th + 70];
+}
+
+function placeHero(el) {
+    const w = HERO_HEIGHT * ASSETS.hero.aspect;
+    worldPlace(el, hero.x - w / 2, hero.y - HERO_HEIGHT, w, HERO_HEIGHT);
+}
+
+function addHero(ui) {
+    if (!ASSETS.hero) return;
+    if (hero.x === null) {
+        const task = openTasks().find(t => jobWorldXY(t));
+        [hero.x, hero.y] = jobWorldXY(task) || cellXY('barnyard');
+    }
+    const el = document.createElement('div');
+    el.className = 'hero';
+    el.innerHTML = `<i class="hero-shadow"></i><i class="hero-sprite" style="background-image:url('${ASSETS.hero.walk}')"></i>`;
+    placeHero(el);
+    ui.appendChild(el);
+}
+
+// Walks her to a job; `then` once she's there.
+function walkHeroTo(task, then) {
+    const el = document.querySelector('#scene-map .hero'), to = jobWorldXY(task);
+    if (!el || !to) return then && then();
+    const ms = Math.round(Math.min(1200, Math.max(250, (Math.hypot(to[0] - hero.x, to[1] - hero.y) / HERO_SPEED) * 1000)));
+    if (Math.abs(to[0] - hero.x) > 5) el.classList.toggle('left', to[0] < hero.x);
+    el.classList.remove('cheer');
+    el.classList.add('walking');
+    el.style.transition = `left ${ms}ms linear, top ${ms}ms linear`;
+    [hero.x, hero.y] = to;
+    placeHero(el);
+    setTimeout(() => { el.classList.remove('walking'); el.style.transition = ''; if (then) then(); }, ms);
+}
+
+function cheerHero() {
+    const el = document.querySelector('#scene-map .hero');
+    if (!el) return;
+    el.classList.remove('cheer');
+    void el.offsetWidth; // restart the hop
+    el.classList.add('cheer');
 }
 
 // The land whose row is nearest the middle of the screen (of those you own):
@@ -3490,6 +3547,7 @@ function addZonePerson(el, tasks, zone) {
 
 function tapFix(task) {
     if (fixing) return;
+    if (currentScene === 'map') walkHeroTo(task);
     if (taskDone(task)) return toast(`“${task.line}”`);
     if (!taskOpen(task)) return toast('🔒 Later!');
     openTaskCard(task);
@@ -3641,6 +3699,7 @@ function fixJob(id) {
     const spot = scene.hidden ? null : scene.querySelector(`[data-job="${id}"]`);
     if (!spot) return completeTask(id);
     fixing = true;
+    if (currentScene === 'map') walkHeroTo(task);
     spot.classList.remove('spotlight');
     closeDialog();
     document.querySelectorAll('.fix-call').forEach(el => el.remove());
@@ -3661,6 +3720,7 @@ function fixJob(id) {
         // The new look, and the building's next stage if it has one.
         spot.classList.remove('hammering', 'open', 'ready');
         spot.classList.add('fixed', 'just-fixed');
+        cheerHero();
         sfx('sparkle');
         buzz(30);
         spot.querySelectorAll('.task-pin, .fix-hammer').forEach(el => el.remove());

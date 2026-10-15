@@ -116,6 +116,8 @@ const ASSETS = {
         bigbarn: 'assets/plots/bigbarn.webp', fieldgate: 'assets/plots/fieldgate.webp',
     },
     // Plot props, by name: transparent pictures cut from the sheets in assets/raw/plots/.
+    // The farmer: a walk cycle (14 frames in a row, cut from assets/raw/hero/walk_towards.mp4).
+    hero: { walk: 'assets/hero/walk.webp', frames: 14, aspect: 204 / 360 },
     plotProps: {
         // Outdoor mess
         weeds: 'assets/plots/props/weeds.webp', brambles: 'assets/plots/props/brambles.webp', branch: 'assets/plots/props/branch.webp',
