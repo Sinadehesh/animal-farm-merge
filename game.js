@@ -2579,7 +2579,10 @@ function renderZone(zone) {
         const pic = stages[stageIndex(done, tasks.length)];
         el.classList.add('painted');
         el.innerHTML = `<div class="zone-backdrop" style="background-image:url('${pic}')"></div>
-                        <div class="zone-scroll"><div class="zone-frame"><img class="zone-art" src="${pic}" alt="" draggable="false">${ambience('zone')}</div></div>`;
+                        <div class="zone-scroll"><div class="zone-frame"><img class="zone-art" src="${pic}" alt="" draggable="false"><img class="zone-worn" src="${pic}" alt="" draggable="false">${ambience('zone')}</div></div>`;
+        const art = el.querySelector('.zone-art');
+        if (art.complete && art.naturalWidth) paintWear(el, zone.id);
+        else art.addEventListener('load', () => paintWear(el, zone.id), { once: true });
         if (open) addJobChips(tasks, el.querySelector('.zone-frame'));
     } else paintOldZone(el, zone, tasks, open);
     if (!open) {
@@ -2695,14 +2698,82 @@ function turnPage(img, src) {
     shine.className = 'page-shine';
     img.parentElement.appendChild(shine);
     setTimeout(() => shine.remove(), 1600);
-    const next = img.cloneNode();
-    next.classList.add('page-next');
-    next.src = src;
-    img.after(next);
-    const show = () => requestAnimationFrame(() => next.classList.add('in'));
-    if (next.complete) show();
-    else next.addEventListener('load', show, { once: true });
-    setTimeout(() => { img.src = src; next.remove(); }, 1500);
+    // The faded copy over a painted area turns with it.
+    const layers = [img, ...img.parentElement.querySelectorAll(':scope > .zone-worn')];
+    const nexts = layers.map(layer => {
+        const next = layer.cloneNode();
+        next.classList.add('page-next');
+        next.src = src;
+        layer.after(next);
+        return next;
+    });
+    const show = () => requestAnimationFrame(() => nexts.forEach(n => n.classList.add('in')));
+    if (nexts[0].complete) show();
+    else nexts[0].addEventListener('load', show, { once: true });
+    setTimeout(() => { layers.forEach(l => { l.src = src; }); nexts.forEach(n => n.remove()); }, 1500);
+}
+
+// A painted area's faded copy: each job owns the patch of the picture nearest
+// its spot (with wavy edges), and fixing it brings the colour back over that
+// patch, spreading out from the spot. Any painting works, so no extra art is
+// needed, and the colour stays put when the area's painting turns to its next
+// stage. The mask is a tiny picture the browser stretches, which softens it.
+const WEAR_W = 40;
+const wearCells = {};
+
+function wearCellsFor(zoneId, aspect) {
+    const key = zoneId + aspect.toFixed(3);
+    if (wearCells[key]) return wearCells[key];
+    const tasks = zoneTasks(zoneId);
+    const W = WEAR_W, H = Math.max(8, Math.round(W / aspect));
+    const spots = tasks.map((t, i) => jobAt(t, i)).map(([x, y]) => [x / 100 * W, y / 100 * H]);
+    const owner = new Int16Array(W * H), dist = new Float32Array(W * H), far = new Float32Array(tasks.length);
+    for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+            let best = 0, bd = Infinity;
+            spots.forEach(([sx, sy], k) => {
+                const d = Math.hypot(x + 0.5 - sx, y + 0.5 - sy) * (1 + 0.16 * Math.sin(x * 0.55 + k * 1.7) * Math.cos(y * 0.42 + k * 2.3));
+                if (d < bd) { bd = d; best = k; }
+            });
+            owner[y * W + x] = best;
+            dist[y * W + x] = bd;
+            if (bd > far[best]) far[best] = bd;
+        }
+    }
+    for (let i = 0; i < dist.length; i++) dist[i] /= far[owner[i]] || 1;
+    return wearCells[key] = { W, H, owner, dist, ids: tasks.map(t => t.id) };
+}
+
+// Paints the mask: faded where a job is still to do, clear where it's done,
+// and `growing` (a job being fixed) cleared `p` (0 to 1) of the way out.
+function paintWear(el, zoneId, growing = null, p = 1) {
+    const art = el.querySelector('.zone-art');
+    if (!art || !art.naturalWidth) return;
+    const c = wearCellsFor(zoneId, art.naturalWidth / art.naturalHeight);
+    const clear = c.ids.map(id => (restoration.done.includes(id) ? 2 : id === growing ? p * 1.25 - 0.25 : -1));
+    const canvas = document.createElement('canvas');
+    canvas.width = c.W;
+    canvas.height = c.H;
+    const ctx = canvas.getContext('2d');
+    const img = ctx.createImageData(c.W, c.H);
+    for (let i = 0; i < c.owner.length; i++) {
+        const edge = (c.dist[i] - clear[c.owner[i]]) / 0.25;
+        img.data[i * 4 + 3] = Math.round(255 * Math.min(1, Math.max(0, edge)));
+    }
+    ctx.putImageData(img, 0, 0);
+    const mask = `url(${canvas.toDataURL()})`;
+    el.querySelectorAll('.zone-worn').forEach(w => { w.style.maskImage = w.style.webkitMaskImage = mask; });
+}
+
+// The colour flowing back over a just-fixed job's patch.
+function bloomWear(el, zoneId, taskId) {
+    const t0 = performance.now(), ms = 1400;
+    const step = now => {
+        const k = Math.min(1, (now - t0) / ms);
+        paintWear(el, zoneId, taskId, 1 - (1 - k) * (1 - k));
+        if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
 }
 
 // The faded copy over an area's picture, with a clear hole around each fixed
@@ -2936,6 +3007,7 @@ function fixJob(id) {
         const jobs = task.zone ? zoneTasks(task.zone) : landTasks(task.land);
         const done = jobs.filter(taskDone).length + 1;
         if (zoneEl && zoneEl.classList.contains('painted')) {
+            bloomWear(zoneEl, task.zone, task.id);
             turnPage(zoneEl.querySelector('.zone-art'), ASSETS.stages[task.zone][stageIndex(done, jobs.length)]);
             if (done === jobs.length) zoneEl.classList.add('zone-done');
         } else if (zoneEl) {

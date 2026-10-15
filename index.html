@@ -14,6 +14,7 @@
     <title>Merge Farmstead</title>
     <style>
         :root {
+            --worn: grayscale(0.8) sepia(0.45) brightness(0.72) contrast(0.9);
             --ink: #4a3426;
             --paper: #fff8e7;
             /* One slim bar of info on top, under the phone's notch. */
@@ -1290,7 +1291,7 @@
         .zone-art, .zone-worn { position: absolute; inset: 0; background-size: cover; background-position: center; }
         /* Still broken: faded and dusty, with clear holes where fixes brought the colour back. */
         .zone-worn {
-            filter: grayscale(0.8) sepia(0.45) brightness(0.72) contrast(0.9);
+            filter: var(--worn);
             mask-size: 100% 100%;
             mask-composite: intersect;
             -webkit-mask-composite: source-in;
@@ -1722,6 +1723,10 @@
         .page-art, .zone.painted .zone-art { position: relative; inset: auto; display: block; width: 100%; height: auto; box-shadow: none; user-select: none; -webkit-user-drag: none; }
         .page-next { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1.2s ease, filter 1.2s ease; filter: brightness(1.6) saturate(1.3); }
         .page-next.in { opacity: 1; filter: none; }
+        /* A painted area's faded copy, cleared patch by patch as its jobs are fixed (paintWear). */
+        .zone.painted .zone-worn { position: absolute; inset: 0; display: block; width: 100%; height: 100%; pointer-events: none; user-select: none; -webkit-user-drag: none;
+            filter: var(--worn); mask-size: 100% 100%; -webkit-mask-size: 100% 100%; mask-repeat: no-repeat; -webkit-mask-repeat: no-repeat; mask-composite: add; transition: opacity 1.2s ease; }
+        .zone.painted .zone-worn.page-next.in { filter: var(--worn); }
         #scene-map:has(.page-scroll), #scene-town:has(.page-scroll) { background: #5f9a45; }
         /* An open job on a painting: a soft ring on the painted mess, its bubble above. */
         .fix-spot.chip { width: 10cqw; height: 10cqw; }
@@ -1868,7 +1873,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610141433"></script>
-    <script src="game.js?v=202610141433"></script>
+    <script src="assets.js?v=202610150937"></script>
+    <script src="game.js?v=202610150937"></script>
 </body>
 </html>
