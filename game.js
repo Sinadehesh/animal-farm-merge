@@ -2567,7 +2567,16 @@ function fixJobs(land) {
 // lit up, and up comes its card. Jobs are only ever fixed there, by hand.
 function goFix(land, jobId) {
     if (land === 'town') goTo('town');
-    else { fixLand = land; goTo('fix'); }
+    else {
+        fixLand = land;
+        const task = jobId && TASKS.find(t => t.id === jobId);
+        const zone = task ? ZONE[task.zone] : landZones(land).find(z => zoneOpen(z) && !zoneDone(z)) || landZones(land)[0];
+        if (zone && inWorld(zone)) {
+            goTo('map');
+            if (!task) document.querySelector(`#scene-map .world-tile[data-zone="${zone.id}"]`)?.scrollIntoView({ block: 'center', inline: 'center' });
+        } else if (zone) openAreaPage(zone);
+        else goTo('fix');
+    }
     if (jobId) pointAtJob(TASKS.find(t => t.id === jobId));
 }
 
@@ -2575,7 +2584,7 @@ function goFix(land, jobId) {
 let storyHoldUntil = 0;
 
 function pointAtJob(task) {
-    const spot = document.querySelector(`#scene-${task.land === 'town' ? 'town' : 'fix'} [data-job="${task.id}"]`);
+    const spot = document.querySelector(`.scene:not([hidden]) [data-job="${task.id}"]`);
     if (spot) {
         spot.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
         spot.classList.add('spotlight');
@@ -2756,7 +2765,6 @@ function paintPlotZone(el, zone, tasks, open) {
     el.innerHTML = `<div class="plot-meadow"></div>
         <div class="plot-view"><div class="plot-pad"><div class="plot-stage">
             <img class="zone-art plot-art" src="${pic}" alt="" draggable="false">
-            <img class="zone-worn" src="${pic}" alt="" draggable="false">
         </div></div></div>`;
     const stage = el.querySelector('.plot-stage');
     tasks.forEach(task => {
@@ -2767,20 +2775,32 @@ function paintPlotZone(el, zone, tasks, open) {
     // Bubbles stand in front of every prop.
     stage.querySelectorAll('.fix-spot').forEach(spot => { spot.style.zIndex = 200 + parseInt(spot.style.zIndex, 10); });
     const art = el.querySelector('.zone-art');
-    const ready = () => { paintWear(el, zone.id); plotViewer(el, zone, tasks); if (layoutMode) layoutPlot(el, zone, tasks); };
+    const ready = () => { plotViewer(el, zone, tasks); if (layoutMode) layoutPlot(el, zone, tasks); };
     if (art.complete && art.naturalWidth) requestAnimationFrame(ready);
     else art.addEventListener('load', ready, { once: true });
 }
 
-// Dragging, pinching and zooming a plot. The view scrolls (overflow hidden, so
-// scrollIntoView still finds its spots); a drag that moved doesn't count as a tap.
+// A plot page's view: the first job to do in the middle the first time.
 function plotViewer(el, zone, tasks) {
-    const view = el.querySelector('.plot-view'), stage = el.querySelector('.plot-stage');
     const st = plotViews[zone.id] || (plotViews[zone.id] = { zoom: PLOT_ZOOM[1] });
+    panZoom(el.querySelector('.plot-view'), el.querySelector('.plot-stage'), st, PLOT_ZOOM, () => {
+        const i = tasks.findIndex(t => taskOpen(t)), at = i >= 0 ? jobAt(tasks[i], i) : [50, 50];
+        return [at[0] / 100, at[1] / 100];
+    });
+}
+
+// Dragging, pinching and zooming a big picture (a plot, or the world). The view
+// scrolls (overflow hidden, so scrollIntoView still finds its spots); a drag
+// that moved doesn't count as a tap. `limits`: least, first and most zoom (the
+// stage's width over the view's), and below the fourth the bubbles hide.
+// `first()` gives the point to start in the middle of (fractions across, down).
+function panZoom(view, stage, st, limits, first) {
+    const far = () => view.classList.toggle('far', st.zoom < (limits[3] || 0));
     const zoomTo = (z, cx = view.clientWidth / 2, cy = view.clientHeight / 2) => {
         const fx = (view.scrollLeft + cx) / stage.offsetWidth, fy = (view.scrollTop + cy - stage.offsetTop) / stage.offsetHeight;
-        st.zoom = Math.min(PLOT_ZOOM[2], Math.max(PLOT_ZOOM[0], z));
+        st.zoom = Math.min(limits[2], Math.max(limits[0], z));
         stage.style.width = st.zoom * 100 + '%';
+        far();
         view.scrollLeft = fx * stage.offsetWidth - cx;
         view.scrollTop = fy * stage.offsetHeight + stage.offsetTop - cy;
     };
@@ -2789,11 +2809,9 @@ function plotViewer(el, zone, tasks) {
         view.scrollTop = fy * stage.offsetHeight + stage.offsetTop - view.clientHeight / 2;
     };
     stage.style.width = st.zoom * 100 + '%';
-    if (st.fx === undefined) {
-        // First time here: the first job to do in the middle.
-        const i = tasks.findIndex(t => taskOpen(t)), at = i >= 0 ? jobAt(tasks[i], i) : [50, 50];
-        centre(at[0] / 100, at[1] / 100);
-    } else centre(st.fx, st.fy);
+    far();
+    if (st.fx === undefined) centre(...first());
+    else centre(st.fx, st.fy);
     view.addEventListener('scroll', () => {
         st.fx = (view.scrollLeft + view.clientWidth / 2) / stage.offsetWidth;
         st.fy = (view.scrollTop + view.clientHeight / 2 - stage.offsetTop) / stage.offsetHeight;
@@ -3049,6 +3067,206 @@ function saveLayoutText() {
     });
 }
 
+// --- THE WORLD ---
+// The whole farm as one big meadow you drag about and zoom: each area a tile
+// (its plot, or a plain patch until it's drawn), each land's areas in a row,
+// the lands one under the other, joined by dirt paths, and the Market and Town
+// Square up front. Land you don't own yet waits under clouds with its sign.
+const WORLD_CELLS = {
+    market: [-1, -0.25], town: [-1, 0.95],
+    barnyard: [0, 0], henhouse: [1, 0], bigbarn: [2, 0],
+    fieldgate: [0, 1], berryrows: [1, 1], orchard: [2, 1],
+    meadow: [0, 2], stables: [1, 2], windmill: [2, 2],
+    leafpiles: [0, 3], compostbins: [1, 3], mushrooms: [2, 3],
+    muddyshore: [0, 4], lilypond: [1, 4], boatdock: [2, 4],
+    gardengate: [0, 5], rosearch: [1, 5], greenhouse: [2, 5],
+};
+// Where each plot's ground diamond sits in its picture: its middle (% across,
+// % down), its width (% of the picture's) and the picture's height over width.
+const PLOT_SHAPE = {
+    barnyard: [50, 53, 97.5, 0.759], henhouse: [50, 54, 97.5, 0.72],
+    bigbarn: [50, 58, 97.2, 0.852], fieldgate: [50, 52, 97.8, 0.609],
+};
+const WORLD_TILE = 1000;           // a tile's ground width, in world units
+const WORLD_STEP = [610, 370];     // half the step from one cell to the next, across and down
+const WORLD_ZOOM = [1.2, 5.5, 12, 3.2]; // least, first and most zoom, and where the bubbles hide
+const worldView = {};
+
+function cellXY(id) {
+    const [u, v] = WORLD_CELLS[id];
+    return [(u - v) * WORLD_STEP[0], (u + v) * WORLD_STEP[1]];
+}
+
+// The world's size: every cell with room around it.
+const WORLD_BOX = (() => {
+    const pts = Object.keys(WORLD_CELLS).map(cellXY);
+    const x0 = Math.min(...pts.map(p => p[0])) - WORLD_TILE, x1 = Math.max(...pts.map(p => p[0])) + WORLD_TILE;
+    const y0 = Math.min(...pts.map(p => p[1])) - WORLD_TILE, y1 = Math.max(...pts.map(p => p[1])) + WORLD_TILE * 0.8;
+    return { x0, y0, w: x1 - x0, h: y1 - y0 };
+})();
+
+// Places an element over a box of the world (world units).
+function worldPlace(el, x, y, w, h) {
+    el.style.left = ((x - WORLD_BOX.x0) / WORLD_BOX.w) * 100 + '%';
+    el.style.top = ((y - WORLD_BOX.y0) / WORLD_BOX.h) * 100 + '%';
+    el.style.width = (w / WORLD_BOX.w) * 100 + '%';
+    el.style.height = (h / WORLD_BOX.h) * 100 + '%';
+}
+
+// An area is shown in the world once it's drawn as a plot (?layout keeps the
+// plot pages, to place props on).
+function inWorld(zone) {
+    return !layoutMode && !!(ASSETS.plots || {})[zone.id];
+}
+
+// The dirt paths: along each land's row, down from land to land, and from the
+// Market and the Town Square to the Barnyard.
+function worldPaths() {
+    const links = [['market', 'barnyard'], ['town', 'barnyard'], ['market', 'town']];
+    Object.keys(AREAS).forEach((land, k, lands) => {
+        const zones = landZones(land);
+        zones.slice(1).forEach((z, i) => links.push([zones[i].id, z.id]));
+        if (k) links.push([landZones(lands[k - 1])[0].id, zones[0].id]);
+    });
+    const line = ([a, b], cls) => { const [x1, y1] = cellXY(a), [x2, y2] = cellXY(b); return `<line class="${cls}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`; };
+    return links.map(l => line(l, 'path-edge')).join('') + links.map(l => line(l, 'path-dirt')).join('');
+}
+
+function renderWorld(scene) {
+    const wrap = document.createElement('div');
+    wrap.className = 'world-wrap';
+    const { x0, y0, w, h } = WORLD_BOX;
+    wrap.innerHTML = `<div class="plot-view world-view"><div class="plot-pad"><div class="world-stage" style="aspect-ratio:${w}/${h}">
+        <svg class="world-paths" viewBox="${x0} ${y0} ${w} ${h}" preserveAspectRatio="none">${worldPaths()}</svg>
+        <div class="world-ui"></div></div></div></div>`;
+    scene.appendChild(wrap);
+    const stage = wrap.querySelector('.world-stage'), ui = wrap.querySelector('.world-ui');
+    // The Market and the Town Square: their paintings, cut to a diamond.
+    [['market', 'Market', (ASSETS.stages.market || [])[0], () => goTo('market')], ['town', TOWN_NAME, townPicture(), () => goTo('town')]].forEach(([id, name, pic, go]) => {
+        const [x, y] = cellXY(id);
+        const place = document.createElement('button');
+        place.className = 'spot world-place';
+        place.dataset.id = id;
+        place.innerHTML = `<span class="world-diamond" style="background-image:url('${pic}')"></span><span class="spot-label">${name}</span>`;
+        worldPlace(place, x - WORLD_TILE * 0.42, y - WORLD_TILE * 0.25, WORLD_TILE * 0.84, WORLD_TILE * 0.5);
+        place.style.zIndex = Math.round(y - y0);
+        place.addEventListener('click', go);
+        stage.insertBefore(place, ui);
+        if (id === 'town') {
+            const ready = npcs.filter(canFulfill).length;
+            if (ready) addTag(place, 'badge', ready);
+            const jobs = landTasks('town'), done = jobs.filter(taskDone).length;
+            if (done || openTasks().some(t => t.land === 'town')) addTag(place, 'restore-tag', done === jobs.length ? '✨' : `${uiIcon('hammer', '🔨')}${done}/${jobs.length}`);
+        } else if (dealsWaiting()) addTag(place, 'badge', '🎁');
+    });
+    ZONES.forEach(zone => {
+        const [x, y] = cellXY(zone.id);
+        const tasks = zoneTasks(zone.id), open = zoneOpen(zone);
+        const tile = document.createElement('section');
+        const twin = document.createElement('div'); // the tile's bubbles and signs, above every tile
+        twin.className = 'tile-ui';
+        twin.dataset.zone = zone.id;
+        tile.dataset.zone = zone.id;
+        tile.className = 'zone world-tile' + (open ? '' : ' locked') + (tasks.every(taskDone) ? ' zone-done' : '');
+        tile.style.zIndex = Math.round(y - y0);
+        if (inWorld(zone)) {
+            const [ax, ay, aw, ar] = PLOT_SHAPE[zone.id] || [50, 52, 97.5, 0.75];
+            const tw = WORLD_TILE / (aw / 100), th = tw * ar;
+            tile.classList.add('plotted');
+            tile.innerHTML = `<div class="plot-stage"><img class="zone-art plot-art" src="${ASSETS.plots[zone.id]}" alt="" draggable="false"></div>`;
+            const plot = tile.querySelector('.plot-stage');
+            tasks.forEach(task => {
+                const name = plotProp(task, taskDone(task));
+                if (name) propPlaces(task).forEach((_, k) => addProp(plot, task, name, '', k));
+            });
+            worldPlace(tile, x - (ax / 100) * tw, y - (ay / 100) * th, tw, th);
+            worldPlace(twin, x - (ax / 100) * tw, y - (ay / 100) * th, tw, th);
+            if (open) addJobChips(tasks, twin);
+        } else {
+            // Not drawn yet: a plain grassy patch; open, it leads to the area's page.
+            tile.classList.add('blank');
+            tile.innerHTML = '<span class="world-diamond"></span>';
+            worldPlace(tile, x - WORLD_TILE / 2, y - WORLD_TILE * 0.3, WORLD_TILE, WORLD_TILE * 0.6);
+            worldPlace(twin, x - WORLD_TILE / 2, y - WORLD_TILE * 0.3, WORLD_TILE, WORLD_TILE * 0.6);
+            if (open) {
+                const left = tasks.filter(t => !taskDone(t)).length;
+                const go = document.createElement('button');
+                go.className = 'world-visit';
+                go.innerHTML = iconize(`<b>${zone.name}</b><small>${left ? `${uiIcon('hammer', '🔨')} ${left} to fix` : '✨ Done'}</small>`);
+                go.addEventListener('click', () => openAreaPage(zone));
+                twin.appendChild(go);
+            }
+        }
+        stage.insertBefore(tile, ui);
+        ui.appendChild(twin);
+        if (!open) {
+            // Still locked: a soft cloud over its ground, saying what it waits for.
+            const cloud = document.createElement('div');
+            cloud.className = 'zone-clouds world-cloud';
+            cloud.dataset.zone = zone.id;
+            worldPlace(cloud, x - WORLD_TILE * 0.52, y - WORLD_TILE * 0.42, WORLD_TILE * 1.04, WORLD_TILE * 0.76);
+            if (unlocks[zone.land]) cloud.innerHTML = `<div class="zone-lock">${uiIcon('lock', '🔒')}<small>${zoneWaitsFor(zone)}</small></div>`;
+            ui.appendChild(cloud);
+        }
+    });
+    // Each land's sign at the start of its row: for sale, or its progress (tap: its board).
+    Object.keys(AREAS).forEach(id => {
+        const area = AREAS[id];
+        const [x, y] = cellXY(landZones(id)[0].id);
+        const sign = document.createElement('button');
+        sign.className = 'spot world-sign' + (unlocks[id] ? '' : ' locked');
+        sign.dataset.id = id;
+        sign.innerHTML = `<span class="spot-label">${area.name}</span>`;
+        worldPlace(sign, x - WORLD_TILE * 0.72, y - WORLD_TILE * 0.1, WORLD_TILE * 0.3, WORLD_TILE * 0.2);
+        sign.addEventListener('click', () => (unlocks[id] ? goTo(id) : offerDeed(id)));
+        if (!unlocks[id]) addTag(sign, 'sale-sign', quests.level < area.level ? `${uiIcon('lock', '🔒')} Lv ${area.level}` : `💵 ${shortNumber(area.cost)}`);
+        else {
+            const list = landTasks(id), done = list.filter(taskDone).length;
+            const ready = npcs.filter(n => n.request && n.request.mode === id && canFulfill(n)).length;
+            const parts = [ready && `✓${ready}`, crates[id].length && `🎁${crates[id].length}`].filter(Boolean);
+            if (parts.length) addTag(sign, 'badge', parts.join(' '));
+            sign.classList.toggle('restored', done === list.length);
+            addTag(sign, 'restore-tag', done === list.length ? '✨' : `${uiIcon('hammer', '🔨')}${done}/${list.length}`);
+        }
+        ui.appendChild(sign);
+    });
+    ui.querySelectorAll('.fix-spot').forEach(spot => { spot.style.zIndex = 200 + parseInt(spot.style.zIndex, 10); });
+    panZoom(wrap.querySelector('.world-view'), stage, worldView, WORLD_ZOOM, () => {
+        // First time: the first job to do in the world, or the Barnyard.
+        const task = openTasks().find(t => t.zone && inWorld(ZONE[t.zone]));
+        const zone = task ? ZONE[task.zone] : ZONE.barnyard;
+        let [x, y] = cellXY(zone.id);
+        if (task && PLOT_SHAPE[zone.id]) {
+            const [ax, ay, aw, ar] = PLOT_SHAPE[zone.id], tw = WORLD_TILE / (aw / 100), th = tw * ar, [jx, jy] = jobAt(task, 0);
+            x += ((jx - ax) / 100) * tw;
+            y += ((jy - ay) / 100) * th;
+        }
+        return [(x - x0) / w, (y - y0) / h];
+    });
+    Object.keys(AREAS).filter(id => unlocks[id]).forEach(id => unlockNewZones(id, stage));
+}
+
+// The land whose row is nearest the middle of the screen (of those you own):
+// where the Merge button takes you.
+function worldLand() {
+    const { x0, y0, w, h } = WORLD_BOX;
+    const cx = x0 + (worldView.fx ?? 0.5) * w, cy = y0 + (worldView.fy ?? 0.5) * h;
+    let best = lastBoard, far = Infinity;
+    ZONES.filter(z => unlocks[z.land]).forEach(z => {
+        const [x, y] = cellXY(z.id), d = Math.hypot(x - cx, y - cy);
+        if (d < far) { far = d; best = z.land; }
+    });
+    return best;
+}
+
+// An area not drawn as a plot yet: its page, as before.
+function openAreaPage(zone) {
+    fixLand = zone.land;
+    goTo('fix');
+    const w = document.querySelector('#scene-fix .world'), z = w && w.querySelector(`.zone[data-zone="${zone.id}"]`);
+    if (z) w.scrollLeft = z.offsetLeft;
+}
+
 // A just-fixed job's prop shakes and puffs away, and its new one pops up.
 function swapProps(zoneEl, task) {
     const stage = zoneEl.querySelector('.plot-stage');
@@ -3292,7 +3510,8 @@ function openTaskCard(task) {
         return tile(`${icon}<small>${n.own ? AREAS[n.own].name : `${p.have}/${p.of}`}</small><i class="tile-info" data-need="${i}">i</i>`, p.have >= p.of);
     }).join('');
     const pays = tile(`${uiIcon('star', '⭐')}<small>×${task.xp}</small>`) + (task.reward ? tile(`<small>${rewardText(task.reward)}</small>`) : '');
-    const here = task.land === 'town' ? currentScene === 'town' : currentScene === 'fix' && fixLand === task.land;
+    const here = task.land === 'town' ? currentScene === 'town'
+        : (currentScene === 'map' && task.zone && inWorld(ZONE[task.zone])) || (currentScene === 'fix' && fixLand === task.land);
     showDialog({
         sheet: true,
         art: npcPicture(npc),
@@ -3381,7 +3600,7 @@ function boardFab(mode) {
     const btn = document.createElement('button');
     btn.className = 'fab board-fab fix-merge';
     btn.innerHTML = `${uiIcon('merge', '🧺')}<small>Merge</small>`;
-    btn.addEventListener('click', () => goTo(mode));
+    btn.addEventListener('click', () => goTo(typeof mode === 'function' ? mode() : mode));
     return btn;
 }
 
@@ -3418,7 +3637,7 @@ function callToFix(task) {
 function fixJob(id) {
     const task = TASKS.find(t => t.id === id);
     if (!task || !taskReady(task) || fixing) return;
-    const scene = document.getElementById(task.land === 'town' ? 'scene-town' : 'scene-fix');
+    const scene = document.getElementById(task.land === 'town' ? 'scene-town' : currentScene === 'map' ? 'scene-map' : 'scene-fix');
     const spot = scene.hidden ? null : scene.querySelector(`[data-job="${id}"]`);
     if (!spot) return completeTask(id);
     fixing = true;
@@ -3452,11 +3671,10 @@ function fixJob(id) {
             p.style.setProperty('--a', `${k * 60}deg`);
         });
         // Colour comes back around the spot, and the building steps up if it has stages.
-        const zoneEl = spot.closest('.zone');
+        const zoneEl = spot.closest('.zone') || scene.querySelector(`.zone[data-zone="${task.zone}"]`);
         const jobs = task.zone ? zoneTasks(task.zone) : landTasks(task.land);
         const done = jobs.filter(taskDone).length + 1;
         if (zoneEl && zoneEl.classList.contains('plotted')) {
-            bloomWear(zoneEl, task.zone, task.id);
             swapProps(zoneEl, task);
             if (done === jobs.length) zoneEl.classList.add('zone-done');
         } else if (zoneEl && zoneEl.classList.contains('painted')) {
@@ -3563,16 +3781,29 @@ function unlockNewZones(land, world) {
     if (!fresh.length || fixing || !tutorial.done || !dialogEl.hidden || !world) return;
     fresh.forEach(z => restoration.zonesOpen.push(z.id));
     const zone = fresh[0];
-    const el = world.querySelector(`[data-zone="${zone.id}"]`);
+    let el = world.querySelector(`[data-zone="${zone.id}"]`);
+    if (world.classList.contains('world')) {
+        el.insertAdjacentHTML('beforeend', `<div class="zone-clouds"></div><div class="zone-key">${uiIcon('key', '🗝️')}</div>`);
+        world.scrollLeft = el.offsetLeft;
+    } else {
+        // In the world: a cloud over the tile, with the key turning in it.
+        el.scrollIntoView({ block: 'center', inline: 'center' });
+        const [x, y] = cellXY(zone.id);
+        el = document.createElement('div');
+        el.className = 'zone-clouds world-cloud';
+        el.dataset.zone = zone.id;
+        worldPlace(el, x - WORLD_TILE * 0.52, y - WORLD_TILE * 0.42, WORLD_TILE * 1.04, WORLD_TILE * 0.76);
+        el.innerHTML = `<div class="zone-key">${uiIcon('key', '🗝️')}</div>`;
+        world.querySelector('.world-ui').appendChild(el);
+    }
     el.classList.add('unlocking');
-    el.insertAdjacentHTML('beforeend', `<div class="zone-clouds"></div><div class="zone-key">${uiIcon('key', '🗝️')}</div>`);
-    world.scrollLeft = el.offsetLeft;
     document.body.classList.add('busy');
     setTimeout(() => { el.classList.add('opening'); sfx('unlock'); buzz([20, 40, 20]); }, 1000);
     setTimeout(() => {
         document.body.classList.remove('busy');
         el.classList.remove('unlocking', 'opening');
         el.querySelectorAll('.zone-clouds, .zone-key').forEach(c => c.remove());
+        if (el.classList.contains('world-cloud')) el.remove();
         newAreaCard(zone);
     }, 2000);
 }
@@ -3990,13 +4221,14 @@ function completeTask(id, quiet = false) {
     checkTasks();
     if (AREAS[currentScene]) refreshBoard(currentScene);
     else if (currentScene === 'fix') renderFix();
+    else if (currentScene === 'map') renderMap();
     else if (currentScene === 'town') renderTown();
 }
 
 // A job done: the place gives a little thump, as if the last nail went in
 // (a bigger one when a whole area or land is finished).
 function thump(big = false) {
-    const el = currentScene === 'fix' ? document.querySelector('#scene-fix .world') : document.querySelector('.scene:not([hidden]) .page-frame');
+    const el = currentScene === 'fix' ? document.querySelector('#scene-fix .world') : currentScene === 'map' ? document.querySelector('#scene-map .world-stage') : document.querySelector('.scene:not([hidden]) .page-frame');
     if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const d = big ? 9 : 5;
     el.animate([
@@ -4566,8 +4798,7 @@ function renderMap() {
     const scene = document.getElementById('scene-map');
     scene.innerHTML = '';
 
-    if ((ASSETS.stages || {}).map) addMapLabels(scene);
-    else addMapSprites(scene);
+    renderWorld(scene);
 
     // The Fair's ribbon: while it's on, and a reminder of the next one.
     if (quests.level >= FAIR_LEVEL) {
@@ -4598,7 +4829,7 @@ function renderMap() {
     side.querySelector('#btn-settings').addEventListener('click', openSettings);
     const offerBtn = side.querySelector('#btn-offer');
     if (offerBtn) offerBtn.addEventListener('click', openOffers);
-    scene.append(side, boardFab(lastBoard), tasksFab('btn-quests'));
+    scene.append(side, boardFab(worldLand), tasksFab('btn-quests'));
 }
 
 // ⚙️ Sound and vibration, on or off (saved).
@@ -4966,13 +5197,11 @@ function renderMarket() {
 const TUTORIAL_WEB = 13;
 
 const TUTORIAL = [
-    { id: 'barn', scene: 'map', who: 'mayor', text: 'The storm hit our Barn the hardest. Let\'s start there: tap the Barn!',
-      target: () => document.querySelector('#scene-map button.spot[data-id="barn"]'), done: () => currentScene !== 'map' || stats.merges > 0 },
-    { id: 'job', scene: 'fix', who: 'mayor', explain: true,
-      text: 'This is the Barnyard. Every job here needs something from you. This first one: open 1 box on the merge board.',
+    { id: 'job', scene: 'map', who: 'mayor', explain: true,
+      text: 'The storm hit our Barnyard the hardest, so we start here. Every job needs something from you. This first one: open 1 box on the merge board.',
       target: () => jobSpot(), done: () => currentScene === 'barn' || stats.merges > 0 },
-    { id: 'merge', scene: 'fix', who: 'mayor', text: 'Things are made on the merge board. Tap Merge to go there!',
-      target: () => document.querySelector('#scene-fix .fix-merge'), done: () => currentScene === 'barn' || stats.merges > 0 },
+    { id: 'merge', scene: 'map', who: 'mayor', text: 'Things are made on the merge board. Tap Merge to go there!',
+      target: () => document.querySelector('#scene-map .fix-merge'), done: () => currentScene === 'barn' || stats.merges > 0 },
     { id: 'board', scene: 'barn', who: 'mayor', explain: true,
       text: 'This is the merge board! The Feed Bin makes Feed. Each tap uses ⚡1 energy.',
       target: () => cellItem('barn', feedBin()), done: () => statNow('taps') >= 2 || stats.merges > 0 },
@@ -5002,18 +5231,18 @@ const TUTORIAL = [
       fallback: () => ({ text: 'Orders want items from the board. Tap Deliver when one is ready!',
           target: () => document.querySelector('#scene-barn .order-card:not(.task-card):not(.other)') }) },
     // The first fix, in the Barnyard itself.
-    { id: 'fix', scene: 'fix', who: 'mayor', text: 'You opened a box, so the planks can go! Tap the job to fix it.',
+    { id: 'fix', scene: 'map', who: 'mayor', text: 'You opened a box, so the planks can go! Tap the job to fix it.',
       target: () => jobSpot(), done: () => stats.jobs >= 1 },
     // Off you go: the next job, and how to see what any job needs.
-    { id: 'onward', scene: 'fix', who: 'mayor', explain: true,
-      text: 'That\'s how it\'s done! These are your next jobs. Tap one any time to see what it needs, then make it on the merge board.',
-      target: () => [...document.querySelectorAll('#scene-fix .task-pin')], done: () => stats.jobs >= 2 },
+    { id: 'onward', scene: 'map', who: 'mayor', explain: true,
+      text: 'That\'s how it\'s done! These are your next jobs. Tap one any time to see what it needs, then make it on the merge board. Drag to look around the farm!',
+      target: () => [...document.querySelectorAll('#scene-map .task-pin')], done: () => stats.jobs >= 2 },
 ];
 const tutorial = { step: 0, done: false, explained: [] };
 
 // The Barnyard's open job: its spot and its card.
 function jobSpot() {
-    return [document.querySelector('#scene-fix .fix-spot.open'), document.querySelector('#scene-fix .task-pin')];
+    return [document.querySelector('#scene-map .fix-spot.open'), document.querySelector('#scene-map .task-pin')];
 }
 
 function cellItem(mode, index) {
@@ -5086,21 +5315,18 @@ function updateTutorial() {
     let text = step.text;
     let drag = step.drag;
     let explain = step.explain;
-    if (currentScene !== step.scene || (step.scene === 'fix' && fixLand !== 'barn')) {
+    if (currentScene !== step.scene) {
         explain = drag = false;
-        if (step.scene === 'fix' && currentScene === 'barn') {
+        if (step.scene === 'map' && currentScene === 'barn') {
             // Back from the board to the Barnyard: its job card leads there.
             target = document.querySelector('#scene-barn .task-card') || backBtn;
             text = 'Now tap the job to go back to the Barnyard!';
-        } else if (step.scene === 'barn' && currentScene === 'fix' && fixLand === 'barn') {
-            target = document.querySelector('#scene-fix .fix-merge');
+        } else if (step.scene === 'barn' && currentScene === 'map') {
+            target = document.querySelector('#scene-map .fix-merge');
             text = 'Tap Merge to go to the merge board!';
         } else if (step.scene === 'map') {
             target = backBtn;
-            text = 'Back to the map!';
-        } else if (currentScene === 'map') {
-            target = document.querySelector('#scene-map button.spot[data-id="barn"]');
-            text = 'Tap the Barn!';
+            text = 'Back to the farm!';
         } else {
             target = backBtn;
             text = 'Back to the map!';

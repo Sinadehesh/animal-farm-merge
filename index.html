@@ -1752,6 +1752,45 @@
             100% { transform: translate(-50%, -100%) scale(0.15); opacity: 0; filter: brightness(2.2); }
         }
         @keyframes prop-in { from { transform: translate(-50%, -100%) scale(0); opacity: 0; } }
+        /* The world: every area a tile on one meadow, dragged and zoomed (renderWorld). */
+        .world-wrap { position: absolute; inset: 0; background: #8fbf57; }
+        .world-view { position: absolute; inset: 0; isolation: isolate; overflow: hidden; touch-action: none; overscroll-behavior: contain; cursor: grab; }
+        .world-view.dragging { cursor: grabbing; }
+        .world-stage { position: relative; flex: none; width: 550%;
+            background: radial-gradient(ellipse 30% 20% at 30% 30%, rgba(190, 220, 120, 0.55), transparent), radial-gradient(ellipse 35% 25% at 70% 65%, rgba(120, 170, 70, 0.45), transparent),
+                radial-gradient(ellipse 25% 18% at 55% 20%, rgba(170, 205, 100, 0.5), transparent), linear-gradient(160deg, #a9d06a, #8cbd55 55%, #79ab49); }
+        .world-paths { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+        .world-paths line { stroke-linecap: round; fill: none; }
+        .world-paths .path-edge { stroke: #b4905a; stroke-width: 150; }
+        .world-paths .path-dirt { stroke: #dcc28e; stroke-width: 105; }
+        .zone.world-tile { position: absolute; flex: none; overflow: visible; scroll-snap-align: none; }
+        .world-tile .plot-stage { width: 100%; }
+        .world-tile .plot-art { filter: drop-shadow(0 1.2% 1.5% rgba(40, 60, 15, 0.35)); }
+        .world-tile.locked .plot-art { filter: grayscale(0.6) brightness(1.05) blur(1px); }
+        .world-diamond { position: absolute; inset: 0; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); background-size: cover; background-position: center 45%; }
+        .world-tile.blank .world-diamond { background: radial-gradient(ellipse at 40% 40%, #b9dc7c, #93c25c 70%, #7aa94a); box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.2); }
+        .world-ui { position: absolute; inset: 0; z-index: 100000; pointer-events: none; }
+        .tile-ui { position: absolute; pointer-events: none; }
+        .tile-ui > .fix-spot, .tile-ui > .world-visit, .world-ui > .spot { pointer-events: auto; }
+        .world-cloud { inset: auto; z-index: auto; -webkit-mask-image: radial-gradient(closest-side, #000 62%, transparent); mask-image: radial-gradient(closest-side, #000 62%, transparent); backdrop-filter: none; }
+        .world-cloud.opening { opacity: 0; transform: scale(1.5); }
+        .world-cloud.opening .zone-key { animation: key-away 0.9s ease-in forwards; }
+        .world-cloud .zone-key { font-size: 16cqw; }
+        .world-cloud .zone-key .ui-icon { width: 18cqw; height: 18cqw; }
+        .world-cloud .zone-lock { font-size: 8cqw; padding: 1.6cqw 3cqw; }
+        .world-cloud .zone-lock .ui-icon { width: 8cqw; height: 8cqw; }
+        .world-visit { position: absolute; left: 50%; top: 50%; translate: -50% -50%; display: flex; flex-direction: column; align-items: center; gap: 0.5cqw;
+            padding: 1.6cqw 3.5cqw; background: var(--paper); border: 2px solid var(--ink); border-radius: 3cqw; box-shadow: 0 3px 0 var(--ink); font: inherit; color: var(--ink); white-space: nowrap; }
+        .world-visit b { font-size: 3.6cqw; }
+        .world-visit small { font-size: 3cqw; font-weight: 800; }
+        .world-visit .ui-icon { width: 3.4cqw; height: 3.4cqw; vertical-align: -0.5cqw; }
+        .world-place { filter: drop-shadow(0 4px 6px rgba(40, 60, 15, 0.35)); }
+        .world-place .spot-label, .world-sign .spot-label { bottom: auto; top: 100%; }
+        .world-sign .spot-label { top: 50%; translate: 0 -50%; }
+        .world-sign .sale-sign { top: 140%; }
+        .world-sign .restore-tag { left: 50%; top: 125%; translate: -50% 0; }
+        .world-sign .badge { right: -20%; top: -40%; }
+        .world-view.far .task-pin, .world-view.far .zone-lock small { display: none; }
         /* ?layout */
         .plot-prop.layout, .plot-dot.layout { pointer-events: auto; cursor: move; touch-action: none; }
         .plot-prop.layout.picked img { outline: 0.5cqw dashed #fff; }
@@ -1919,7 +1958,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610151502"></script>
-    <script src="game.js?v=202610151502"></script>
+    <script src="assets.js?v=202610151610"></script>
+    <script src="game.js?v=202610151610"></script>
 </body>
 </html>
