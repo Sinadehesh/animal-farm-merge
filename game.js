@@ -6277,8 +6277,13 @@ function refreshBoard(mode, poppedIndices = []) {
 // Orders for this board, Merge Mansion style: who wants what, the reward, and a
 // Deliver button as soon as the item is on the board. Cards for other boards
 // with orders jump straight there.
+// At most this many jobs and orders show over a board; the next ones wait their turn.
+const ORDERS_SHOWN = 6;
+
 function renderOrders(mode, el) {
-    // Restoration jobs come first: this land's own, and any needing items from this board.
+    // Restoration jobs (this land's own, and any needing items from this board),
+    // then the townsfolk's orders; whatever's ready jumps to the front.
+    const cards = [];
     openTasks().filter(t => t.land === mode || t.needs.some(n => needBoard(n) === mode)).forEach(task => {
         const ready = taskReady(task);
         const need = task.needs.find(n => needBoard(n) === mode) || task.needs[0];
@@ -6290,7 +6295,7 @@ function renderOrders(mode, el) {
             <span class="order-pay">${p.have}/${p.of} · ⭐${task.xp}</span>
             ${ready ? '<span class="order-go">Do it</span>' : `<span class="order-need">${task.name}</span>`}`);
         card.addEventListener('click', () => (ready && hasSpot(task) ? goFix(task.land, task.id) : openTaskCard(task)));
-        el.appendChild(card);
+        cards.push({ card, ready });
     });
 
     npcs.filter(n => n.request && n.request.mode === mode).forEach(npc => {
@@ -6304,8 +6309,18 @@ function renderOrders(mode, el) {
             <span class="order-pay">💵${r.rewardMoney} ⭐${r.rewardXp}${r.rewardProducer ? ' 🎁' : ''}</span>
             ${ready ? '<span class="order-go">Deliver</span>' : `<span class="order-need">${itemName(mode, r.tier)}</span>`}`);
         card.addEventListener('click', () => (ready ? deliver(npc) : openNpc(npc)));
-        el.appendChild(card);
+        cards.push({ card, ready });
     });
+    const shown = [...cards.filter(c => c.ready), ...cards.filter(c => !c.ready)].slice(0, ORDERS_SHOWN);
+    shown.forEach(c => el.appendChild(c.card));
+    if (cards.length > shown.length) {
+        // The rest wait their turn: a note of how many, opening the list of jobs.
+        const more = document.createElement('button');
+        more.className = 'order-card more';
+        more.innerHTML = iconize(`<span class="order-who">📋</span><span class="order-pay">+${cards.length - shown.length}</span><span class="order-need">waiting</span>`);
+        more.addEventListener('click', openTaskLog);
+        el.appendChild(more);
+    }
 
     const elsewhere = {};
     npcs.forEach(n => {
