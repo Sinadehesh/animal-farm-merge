@@ -2840,33 +2840,57 @@ function saveLayout(id, job) {
     try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(all)); } catch (e) { /* kept for this visit only */ }
 }
 
+// Jobs whose place has been saved in ?layout (ticked in its menu).
+const LAYOUT_DONE_KEY = 'merge-farmstead-layout-done';
+
+function layoutDone() {
+    try { return JSON.parse(localStorage.getItem(LAYOUT_DONE_KEY)) || []; } catch (e) { return []; }
+}
+
+function setLayoutDone(id, done) {
+    const list = layoutDone().filter(x => x !== id);
+    if (done) list.push(id);
+    try { localStorage.setItem(LAYOUT_DONE_KEY, JSON.stringify(list)); } catch (e) { /* this visit only */ }
+}
+
+const layoutJob = {}; // the job being placed on each plot
+
+// One job at a time: pick it in the menu (or take the next one not done yet),
+// and only its prop (and any copies) shows. Save ticks it off, hides it and
+// moves on to the next.
 function layoutPlot(el, zone, tasks) {
-    const stage = el.querySelector('.plot-stage');
+    const stage = el.querySelector('.plot-stage'), view = el.querySelector('.plot-view');
     stage.querySelectorAll('.plot-prop').forEach(p => p.remove());
+    const jobs = tasks.filter(plotJob);
     const plotted = ZONES.filter(z => (ASSETS.plots || {})[z.id]);
     const panel = document.createElement('div');
     panel.className = 'layout-panel';
-    panel.innerHTML = `<div class="layout-row"><select>${plotted.map(z => `<option value="${z.id}"${z === zone ? ' selected' : ''}>${z.name}</option>`).join('')}</select>
-            <span class="layout-picked">Tap or drag a prop</span></div>
-        <div class="layout-row"><button data-k="smaller" title="Smaller">−</button><button data-k="bigger" title="Bigger">＋</button>
-            <button data-k="copy" title="Add a copy">⧉ Copy</button><button data-k="flip" title="Mirror">⇄</button>
-            <button data-k="delete" title="Remove this copy">🗑</button><button data-k="save" class="layout-save">💾 Save</button></div>`;
+    panel.innerHTML = `<div class="layout-row"><select class="layout-plot">${plotted.map(z => `<option value="${z.id}"${z === zone ? ' selected' : ''}>${z.name}</option>`).join('')}</select>
+            <span class="layout-count"></span></div>
+        <div class="layout-row"><select class="layout-job"></select></div>
+        <div class="layout-row layout-tools"><button data-k="smaller" title="Smaller">−</button><button data-k="bigger" title="Bigger">＋</button>
+            <button data-k="copy" title="Add a copy">⧉</button><button data-k="flip" title="Mirror">⇄</button>
+            <button data-k="delete" title="Remove this copy">🗑</button><button data-k="save" class="layout-save">✓ Save</button></div>
+        <div class="layout-row"><button data-k="send" class="layout-send">📋 Send all to Claude</button></div>`;
     el.appendChild(panel);
-    const label = panel.querySelector('.layout-picked');
-    let picked = null;
-    // A job's place, or its copy k's: [x, y, width].
+    const jobMenu = panel.querySelector('.layout-job');
+    let current = null, picked = null;
+    const fillMenu = () => {
+        const done = layoutDone();
+        jobMenu.innerHTML = jobs.map(t => `<option value="${t.id}"${current && t.id === current.id ? ' selected' : ''}>${done.includes(t.id) ? '✓ ' : '• '}${t.name}${plotJob(t)[0] ? '' : ' (no prop)'}</option>`).join('');
+        panel.querySelector('.layout-count').textContent = `${jobs.filter(t => done.includes(t.id)).length}/${jobs.length} saved`;
+    };
     const place = (task, k) => propPlaces(task)[k];
     const setPlace = (task, k, xyw) => {
         const j = [...plotJob(task)];
-        if (k === 0) [j[1], j[2], j[3]] = [xyw[0], xyw[1], j[3] === undefined ? undefined : xyw[2]];
+        if (k === 0) { j[1] = xyw[0]; j[2] = xyw[1]; if (j[3] !== undefined) j[3] = xyw[2]; }
         else { j[4] = (j[4] || []).map(c => [...c]); j[4][k - 1] = xyw; }
-        saveLayout(task.id, j.filter(v => v !== undefined));
+        saveLayout(task.id, j);
     };
-    const pick = (task, handle) => {
+    const pick = handle => {
         stage.querySelectorAll('.layout.picked').forEach(h => h.classList.remove('picked'));
         handle.classList.add('picked');
-        picked = { task, handle, k: Number(handle.dataset.copy || 0) };
-        label.textContent = task.name + (picked.k ? ` (copy ${picked.k})` : '');
+        picked = { handle, k: Number(handle.dataset.copy || 0) };
     };
     const handleFor = (task, k) => {
         const [prop] = plotJob(task);
@@ -2886,7 +2910,7 @@ function layoutPlot(el, zone, tasks) {
         handle.addEventListener('pointerdown', e => {
             e.stopPropagation(); // moves the prop, not the plot
             e.preventDefault();
-            pick(task, handle);
+            pick(handle);
             const r = stage.getBoundingClientRect(), start = place(task, k);
             const dx = e.clientX - (r.left + (start[0] / 100) * r.width), dy = e.clientY - (r.top + (start[1] / 100) * r.height);
             const move = ev => {
@@ -2904,11 +2928,30 @@ function layoutPlot(el, zone, tasks) {
         });
         return handle;
     };
-    tasks.forEach(task => {
-        if (!plotJob(task)) return;
-        propPlaces(task).forEach((_, k) => { if (k === 0 || plotJob(task)[0]) handleFor(task, k); });
-    });
-    panel.querySelector('select').addEventListener('change', e => {
+    // Show one job: its prop and copies on the plot, in the middle of the screen.
+    const show = task => {
+        stage.querySelectorAll('.layout').forEach(h => h.remove());
+        current = task;
+        layoutJob[zone.id] = task && task.id;
+        picked = null;
+        fillMenu();
+        panel.querySelector('.layout-tools').hidden = !task;
+        if (!task) {
+            panel.querySelector('.layout-count').textContent = `All ${jobs.length} saved ✓`;
+            return;
+        }
+        const handles = propPlaces(task).map((_, k) => (k === 0 || plotJob(task)[0] ? handleFor(task, k) : null)).filter(Boolean);
+        pick(handles[0]);
+        requestAnimationFrame(() => {
+            const r = handles[0].getBoundingClientRect(), v = view.getBoundingClientRect();
+            view.scrollLeft += r.left + r.width / 2 - (v.left + v.width / 2);
+            view.scrollTop += r.top + r.height / 2 - (v.top + v.height * 0.4);
+        });
+    };
+    const next = () => jobs.find(t => !layoutDone().includes(t.id)) || null;
+    show(jobs.find(t => t.id === layoutJob[zone.id]) || next());
+    jobMenu.addEventListener('change', () => show(jobs.find(t => t.id === jobMenu.value)));
+    panel.querySelector('.layout-plot').addEventListener('change', e => {
         const to = ZONE[e.target.value];
         fixLand = to.land;
         goTo('fix');
@@ -2916,12 +2959,19 @@ function layoutPlot(el, zone, tasks) {
         if (z) w.scrollLeft = z.offsetLeft;
     });
     panel.addEventListener('click', e => {
-        const k = e.target.closest('button') && e.target.closest('button').dataset.k;
-        if (k === 'save') return saveLayoutText();
+        const b = e.target.closest('button'), k = b && b.dataset.k;
         if (!k) return;
-        if (!picked) return toast('Tap a prop first');
-        const { task, handle } = picked, at = [...place(task, picked.k)], hasProp = !!plotJob(task)[0];
-        if (!hasProp) return toast('This job has no prop to change');
+        if (k === 'send') return saveLayoutText();
+        if (!current) return;
+        const task = current;
+        if (k === 'save') {
+            setLayoutDone(task.id, true);
+            toast(`✓ ${task.name}`);
+            return show(next());
+        }
+        if (!plotJob(task)[0]) return toast('This job has no prop: just drag its dot');
+        if (!picked) return;
+        const { handle } = picked, at = [...place(task, picked.k)];
         if (k === 'smaller' || k === 'bigger') {
             const size = Math.max(2, Math.abs(at[2]) + (k === 'bigger' ? 1 : -1));
             at[2] = at[2] < 0 ? -size : size;
@@ -2935,15 +2985,14 @@ function layoutPlot(el, zone, tasks) {
             const j = [...plotJob(task)];
             j[4] = [...(j[4] || []), [Math.min(95, at[0] + 4), Math.min(95, at[1] + 3), at[2]]];
             saveLayout(task.id, j);
-            pick(task, handleFor(task, j[4].length));
-            toast('Copy added: drag it into place');
+            pick(handleFor(task, j[4].length));
         } else if (k === 'delete') {
             if (!picked.k) return toast('Only copies can be removed');
             const j = [...plotJob(task)];
             j[4] = j[4].filter((_, i) => i !== picked.k - 1);
             if (!j[4].length) j.length = 4;
             saveLayout(task.id, j);
-            goTo('fix'); // redraw, so the other copies keep their numbers
+            show(task); // redraw, so the other copies keep their numbers
         }
     });
 }
@@ -2954,8 +3003,8 @@ function saveLayoutText() {
     const text = TASKS.filter(t => (ASSETS.plots || {})[t.zone] && plotJob(t)).map(t => `${t.id}: ${JSON.stringify(plotJob(t))},`).join('\n');
     if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {});
     showDialog({
-        title: '💾 Layout saved',
-        body: `<p>Saved on this device, so it's here next time you open <b>?layout</b>. It's also copied: paste it to Claude to put it in the game for everyone.</p><textarea class="layout-text" readonly>${text}</textarea>`,
+        title: '📋 Copied',
+        body: `<p>Every plot's positions are copied. Paste them to Claude to put them in the game for everyone. (Your work is also kept on this device.)</p><textarea class="layout-text" readonly>${text}</textarea>`,
         actions: [{ label: 'OK', primary: true }],
     });
 }
