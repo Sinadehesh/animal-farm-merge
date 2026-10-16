@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**594 assets:** 547 done ✅, 6 placeholders 🟡, 41 missing ⬜.
+**604 assets:** 557 done ✅, 6 placeholders 🟡, 41 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -453,6 +453,24 @@ plot shows it instead of its painting. Raw pictures in `assets/raw/plots/`; list
 | ⬜ | Greenhouse | `assets/plots/greenhouse.webp` |
 
 The soil edge under each plot is cut off with `tools/decliff.py` so plots sit flat on the ground.
+
+### The world around the areas
+
+A repeating meadow under the whole map (`assets/raw/world/ground.jpg`, made seamless with `tools/seamless.py`) and
+scenery scattered on it at real size (cut from `assets/raw/world/scenery_sheet.jpg`; heights in `SCENERY` in `game.js`).
+
+| | Picture | File |
+|---|---|---|
+| ✅ | Meadow ground (repeats) | `assets/world/ground.webp` |
+| ✅ | Scenery: oak | `assets/world/scenery/oak.webp` |
+| ✅ | Scenery: pine | `assets/world/scenery/pine.webp` |
+| ✅ | Scenery: maple | `assets/world/scenery/maple.webp` |
+| ✅ | Scenery: bush | `assets/world/scenery/bush.webp` |
+| ✅ | Scenery: stump | `assets/world/scenery/stump.webp` |
+| ✅ | Scenery: cattails | `assets/world/scenery/cattails.webp` |
+| ✅ | Scenery: lavender | `assets/world/scenery/lavender.webp` |
+| ✅ | Scenery: tulips | `assets/world/scenery/tulips.webp` |
+| ✅ | Scenery: fence | `assets/world/scenery/fence.webp` |
 
 ### Plot props
 

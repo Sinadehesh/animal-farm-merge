@@ -22,9 +22,10 @@
             --safe-top: env(safe-area-inset-top, 0px);
             --hud-h: calc(44px + var(--safe-top));
             --avail-h: calc(100dvh - var(--hud-h) - env(safe-area-inset-bottom, 0px));
-            /* The stage fills the screen: as wide as fits (at most 9:16 of the height
-               left), and as tall as the screen allows, up to 9:20 on tall phones. */
-            --stage-w: min(100vw, 520px, calc(var(--avail-h) * 9 / 16));
+            /* The stage fills the screen's width (up to a small tablet's), and as tall
+               as the screen allows, up to 9:20 on tall phones. The merge boards keep a
+               phone-shaped column in the middle (.board-col). */
+            --stage-w: min(100vw, 680px);
             --stage-h: min(var(--avail-h), calc(var(--stage-w) * 20 / 9));
         }
         * { box-sizing: border-box; }
@@ -45,8 +46,7 @@
 
         /* --- HUD: one slim bar --- */
         .hud {
-            width: 100%;
-            max-width: 520px;
+            width: var(--stage-w);
             height: var(--hud-h);
             padding: var(--safe-top) 5px 0;
             display: flex;
@@ -286,6 +286,8 @@
 
         /* --- MERGE BOARDS --- */
         .board { display: flex; flex-direction: column; }
+        .board-col { position: absolute; top: 0; bottom: 0; left: 50%; translate: -50% 0; width: min(100%, calc(var(--stage-h) * 9 / 16));
+            display: flex; flex-direction: column; container-type: inline-size; }
         /* Above the grid: the orders this board can fill, then the info bar. */
         .board-header {
             flex: 1;
@@ -1763,6 +1765,8 @@
             background: radial-gradient(ellipse 30% 20% at 30% 30%, rgba(190, 220, 120, 0.55), transparent), radial-gradient(ellipse 35% 25% at 70% 65%, rgba(120, 170, 70, 0.45), transparent),
                 radial-gradient(ellipse 25% 18% at 55% 20%, rgba(170, 205, 100, 0.5), transparent), linear-gradient(160deg, #a9d06a, #8cbd55 55%, #79ab49); }
         .world-paths { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+        .world-thing { position: absolute; pointer-events: none; user-select: none; -webkit-user-drag: none; filter: drop-shadow(0 0.4cqw 0.4cqw rgba(30, 45, 10, 0.25)); }
+        .world-thing.flip { transform: scaleX(-1); }
         .world-paths line { stroke-linecap: round; fill: none; }
         .world-paths .path-edge { stroke: #b4905a; stroke-width: 150; }
         .world-paths .path-dirt { stroke: #dcc28e; stroke-width: 105; }
@@ -1771,7 +1775,7 @@
         .world-tile .plot-art { filter: drop-shadow(0 1.2% 1.5% rgba(40, 60, 15, 0.35)); }
         .world-tile.locked .plot-art { filter: grayscale(0.6) brightness(1.05) blur(1px); }
         .world-diamond { position: absolute; inset: 0; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); background-size: cover; background-position: center 45%; }
-        .world-tile.blank .world-diamond { background: radial-gradient(ellipse at 40% 40%, #b9dc7c, #93c25c 70%, #7aa94a); box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.2); }
+        .world-tile.blank .world-diamond { background: radial-gradient(ellipse at 40% 40%, rgba(255, 250, 200, 0.16), rgba(255, 255, 255, 0.04) 70%); box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.18); }
         .world-ui { position: absolute; inset: 0; z-index: 100000; pointer-events: none; }
         .tile-ui { position: absolute; pointer-events: none; }
         .tile-ui > .fix-spot, .tile-ui > .world-visit, .world-ui > .spot { pointer-events: auto; }
@@ -1797,7 +1801,6 @@
         /* The Market and Sunnyvale in the world: people at their doors, a banner over each stall (addPlace). */
         .tile-ui > .place-banner, .tile-ui > .place-person, .tile-ui > .place-say { pointer-events: auto; }
         .world-placeplot { position: absolute; overflow: visible; }
-        .world-placeplot.foggy .plot-art { filter: saturate(0.5) brightness(1.1) contrast(0.85) blur(0.6px); }
         .place-banner { position: absolute; z-index: 400; transform: translate(-50%, calc(-100% - 2.4cqw)); display: flex; align-items: center; gap: 2cqw; width: max-content; max-width: 52cqw;
             padding: 1.4cqw 2.6cqw 1.4cqw 1.4cqw; background: linear-gradient(#fffaf0, #f6e6c4); border: 0.7cqw solid #6b4422; border-radius: 3cqw; box-shadow: 0 1cqw 0 #6b4422, 0 2cqw 3cqw rgba(40, 25, 5, 0.35);
             font: inherit; color: var(--ink); text-align: left; animation: bob 2.2s ease-in-out infinite; transition: opacity 0.3s, scale 0.3s; }

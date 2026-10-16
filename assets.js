@@ -120,6 +120,17 @@ const ASSETS = {
     // The farmer: a walk cycle (14 frames in a row, cut from assets/raw/hero/walk_towards.mp4),
     // and how she stands still (from assets/raw/hero/stand.jpg).
     hero: { walk: 'assets/hero/walk.webp', stand: 'assets/hero/stand.webp', frames: 14, aspect: 204 / 360 },
+
+    // The world around the areas: a repeating meadow (assets/raw/world/ground.jpg, made
+    // seamless with tools/seamless.py) and scenery cut from assets/raw/world/scenery_sheet.jpg.
+    world: {
+        ground: 'assets/world/ground.webp',
+        scenery: {
+            oak: 'assets/world/scenery/oak.webp', pine: 'assets/world/scenery/pine.webp', maple: 'assets/world/scenery/maple.webp',
+            bush: 'assets/world/scenery/bush.webp', stump: 'assets/world/scenery/stump.webp', cattails: 'assets/world/scenery/cattails.webp',
+            lavender: 'assets/world/scenery/lavender.webp', tulips: 'assets/world/scenery/tulips.webp', fence: 'assets/world/scenery/fence.webp',
+        },
+    },
     plotProps: {
         // Outdoor mess
         weeds: 'assets/plots/props/weeds.webp', brambles: 'assets/plots/props/brambles.webp', branch: 'assets/plots/props/branch.webp',

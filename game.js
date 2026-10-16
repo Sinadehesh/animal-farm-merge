@@ -3142,6 +3142,71 @@ function worldPaths() {
     return links.map(l => line(l, 'path-edge')).join('') + links.map(l => line(l, 'path-dirt')).join('');
 }
 
+// --- SCENERY ---
+// Trees, bushes and flowers on the meadow between and around the areas, each
+// at its real size (world units tall) next to the farmer (88) and a barn (250).
+// Placed the same way every time; trees only where they can't hide an area.
+const SCENERY = { // height, width over height, how often (by weight)
+    oak: [210, 324 / 348, 3], pine: [240, 252 / 360, 3], maple: [180, 268 / 316, 2], bush: [62, 245 / 216, 4],
+    stump: [40, 246 / 201, 1], cattails: [52, 355 / 308, 2], lavender: [30, 341 / 264, 3], tulips: [26, 302 / 228, 3],
+};
+const GROUND_TILE = 420; // the meadow picture repeats every this many world units across
+let sceneryCache = null;
+
+function sceneryPlaces() {
+    if (sceneryCache) return sceneryCache;
+    let seed = 20261016;
+    const rand = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    const { x0, y0, w, h } = WORLD_BOX;
+    // What has to stay clear: every area's ground (a diamond), the Market's and
+    // Town's pictures, and the dirt paths.
+    const grounds = ZONES.map(z => cellXY(z.id));
+    const places = ['market', 'town'].filter(id => (ASSETS.plots || {})[id]).map(id => plotBox(id));
+    const paths = [...worldPaths().matchAll(/class="path-dirt" x1="([-\d.]+)" y1="([-\d.]+)" x2="([-\d.]+)" y2="([-\d.]+)"/g)].map(m => m.slice(1).map(Number));
+    const onGround = (x, y, pad) => grounds.some(([cx, cy]) => Math.abs(x - cx) / (WORLD_TILE * 0.52 + pad) + Math.abs(y - cy) / (WORLD_TILE * 0.31 + pad * 0.6) <= 1)
+        || places.some(([bx, by, bw, bh]) => x > bx - pad && x < bx + bw + pad && y > by - pad && y < by + bh + pad);
+    const nearPath = (x, y, r) => paths.some(([x1, y1, x2, y2]) => {
+        const len2 = (x2 - x1) ** 2 + (y2 - y1) ** 2 || 1, t = Math.max(0, Math.min(1, ((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) / len2));
+        return Math.hypot(x - x1 - t * (x2 - x1), y - y1 - t * (y2 - y1)) < r;
+    });
+    const kinds = Object.keys(SCENERY), total = kinds.reduce((s, k) => s + SCENERY[k][2], 0);
+    const pick = () => { let r = rand() * total; return kinds.find(k => (r -= SCENERY[k][2]) < 0) || kinds[0]; };
+    const out = [], step = 120;
+    for (let gy = y0 + 60; gy < y0 + h; gy += step * 0.6) {
+        for (let gx = x0 + 40; gx < x0 + w; gx += step) {
+            const x = gx + (rand() - 0.5) * step * 0.9, y = gy + (rand() - 0.5) * step * 0.5;
+            if (rand() < 0.35 || onGround(x, y, 30) || nearPath(x, y, 70)) continue;
+            let kind = pick();
+            const [ht, ar] = SCENERY[kind];
+            // A tall thing must not stand in front of an area (its top would cover it).
+            if (ht > 100 && ([0.3, 0.6, 0.9].some(f => onGround(x, y - ht * f, 10) || onGround(x - ht * ar * 0.4, y - ht * f, 10) || onGround(x + ht * ar * 0.4, y - ht * f, 10)))) {
+                kind = rand() < 0.5 ? 'bush' : 'lavender';
+            }
+            out.push({ kind, x, y, flip: rand() < 0.5 });
+        }
+    }
+    return (sceneryCache = out);
+}
+
+function addScenery(stage, ui) {
+    const pics = (ASSETS.world || {}).scenery;
+    if (!pics) return;
+    const frag = document.createDocumentFragment();
+    sceneryPlaces().forEach(({ kind, x, y, flip }) => {
+        const [ht, ar] = SCENERY[kind], wd = ht * ar;
+        const el = document.createElement('img');
+        el.className = 'world-thing' + (flip ? ' flip' : '');
+        el.src = pics[kind];
+        el.alt = '';
+        el.draggable = false;
+        el.loading = 'lazy';
+        worldPlace(el, x - wd / 2, y - ht, wd, ht);
+        el.style.zIndex = Math.round(y - WORLD_BOX.y0);
+        frag.appendChild(el);
+    });
+    stage.insertBefore(frag, ui);
+}
+
 function renderWorld(scene) {
     const wrap = document.createElement('div');
     wrap.className = 'world-wrap';
@@ -3151,6 +3216,11 @@ function renderWorld(scene) {
         <div class="world-ui"></div></div></div></div>`;
     scene.appendChild(wrap);
     const stage = wrap.querySelector('.world-stage'), ui = wrap.querySelector('.world-ui');
+    if ((ASSETS.world || {}).ground) {
+        stage.style.backgroundImage = `url('${ASSETS.world.ground}')`;
+        stage.style.backgroundSize = `${(GROUND_TILE / w) * 100}% auto`;
+    }
+    addScenery(stage, ui);
     // The Market and the Town Square: drawn as plots, with their people and
     // banners; until then, their paintings cut to a diamond.
     ['market', 'town'].filter(id => (ASSETS.plots || {})[id]).forEach(id => addPlace(id, stage, ui));
@@ -3669,7 +3739,6 @@ function addPlace(id, stage, ui) {
     tile.dataset.place = id;
     tile.style.zIndex = Math.round(y - WORLD_BOX.y0);
     tile.innerHTML = `<div class="plot-stage"><img class="zone-art plot-art" src="${ASSETS.plots[id]}" alt="" draggable="false"></div>`;
-    tile.classList.toggle('foggy', id === 'town' && !taskDone(TASKS.find(t => t.id === 'town1'))); // the storm's fog, until it's cleared
     worldPlace(tile, bx, by, bw, bh);
     stage.insertBefore(tile, ui);
     const twin = document.createElement('div');
@@ -6992,8 +7061,9 @@ Object.keys(AREAS).concat('fair').forEach(mode => {
     scene.id = `scene-${mode}`;
     scene.hidden = true;
     if (ASSETS.boards[mode]) scene.style.backgroundImage = `url("${ASSETS.boards[mode]}")`;
-    scene.innerHTML = `<div class="board-header"></div><div class="game-grid" id="grid-${mode}"></div>
-                       <div class="board-footer"><div class="info-bar"></div></div>`;
+    // A phone-shaped column in the middle (on a wide screen the picture behind fills the rest).
+    scene.innerHTML = `<div class="board-col"><div class="board-header"></div><div class="game-grid" id="grid-${mode}"></div>
+                       <div class="board-footer"><div class="info-bar"></div></div></div>`;
     stageEl.insertBefore(scene, dialogEl);
 });
 
