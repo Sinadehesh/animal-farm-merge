@@ -1054,7 +1054,7 @@
             line-height: 1.3;
             animation: popIn 0.25s ease-out;
         }
-        #tutorial.bubble-top .tut-bubble { top: 2%; bottom: auto; }
+        #tutorial.bubble-top .tut-bubble { top: calc(var(--hud-h) + 1.5cqw); bottom: auto; } /* below the top bar, which stays readable */
         .tut-bubble .face { width: 13cqw; height: 13cqw; border-radius: 50%; object-fit: cover; object-position: top; border: 2px solid var(--ink); flex: 0 0 auto; background: #fff; }
         .tut-say { flex: 1; display: flex; flex-direction: column; gap: 0.4cqw; }
         .tut-who { font-size: 2.8cqw; color: #a0522d; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -2028,7 +2028,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610161626"></script>
-    <script src="game.js?v=202610161626"></script>
+    <script src="assets.js?v=202610161627"></script>
+    <script src="game.js?v=202610161627"></script>
 </body>
 </html>
