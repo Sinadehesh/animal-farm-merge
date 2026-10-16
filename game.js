@@ -3142,6 +3142,47 @@ function worldPaths() {
     return links.map(l => line(l, 'path-edge')).join('') + links.map(l => line(l, 'path-dirt')).join('');
 }
 
+// --- THE FOG ---
+// Everything not yet yours lies under one big soft fog, as in Merge Mansion:
+// clear only around the areas you've opened, the Market and the Town Square,
+// with soft edges.
+function fogHoles() {
+    const holes = ZONES.filter(z => zoneOpen(z) && !layoutMode).map(z => [...cellXY(z.id), WORLD_TILE * 0.78, WORLD_TILE * 0.5]);
+    ['market', 'town'].forEach(id => {
+        const [bx, by, bw, bh] = (ASSETS.plots || {})[id] ? plotBox(id) : [...cellXY(id).map((v, i) => v - (i ? 250 : 420)), 840, 500];
+        holes.push([bx + bw / 2, by + bh / 2, bw * 0.78, bh * (bh > bw ? 0.62 : 0.72)]);
+    });
+    return holes;
+}
+
+function addFog(stage, ui) {
+    stage.querySelector('.world-fog')?.remove();
+    const { x0, y0, w, h } = WORLD_BOX;
+    // Puffs of cloud on a pale haze, repeating; holes fade from clear to fog.
+    let puffs = '';
+    const scatter = k => { const v = Math.sin(k * 12.9898) * 43758.5453; return v - Math.floor(v); }; // the same every time
+    for (let k = 0; k < 16; k++) {
+        const px = scatter(k) * 600, py = scatter(k + 50) * 420, r = 55 + scatter(k + 99) * 80;
+        // and its copies across the tile's edges, so the pattern joins up without seams
+        for (const dx of [-600, 0, 600]) for (const dy of [-420, 0, 420]) puffs += `<circle cx="${px + dx}" cy="${py + dy}" r="${r}" fill="url(#fog-puff)"/>`;
+    }
+    const holes = fogHoles().map(([cx, cy, rx, ry]) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#fog-hole)"/>`).join('');
+    stage.insertAdjacentHTML('beforeend', `<svg class="world-fog" viewBox="${x0} ${y0} ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+            <radialGradient id="fog-puff"><stop offset="0" stop-color="#fff" stop-opacity="0.9"/><stop offset="0.6" stop-color="#fff" stop-opacity="0.45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+            <radialGradient id="fog-hole"><stop offset="0.62" stop-color="#000"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+            <pattern id="fog-puffs" width="600" height="420" patternUnits="userSpaceOnUse">${puffs}</pattern>
+            <mask id="fog-mask" maskUnits="userSpaceOnUse" x="${x0}" y="${y0}" width="${w}" height="${h}">
+                <rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#fff"/>${holes}
+            </mask>
+        </defs>
+        <g mask="url(#fog-mask)">
+            <rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#e9f0f7" fill-opacity="0.93"/>
+            <rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="url(#fog-puffs)"/>
+        </g>
+    </svg>`);
+}
+
 // --- SCENERY ---
 // Trees, bushes and flowers on the meadow between and around the areas, each
 // at its real size (world units tall) next to the farmer (88) and a barn (250).
@@ -3175,7 +3216,7 @@ function sceneryPlaces() {
     for (let gy = y0 + 60; gy < y0 + h; gy += step * 0.6) {
         for (let gx = x0 + 40; gx < x0 + w; gx += step) {
             const x = gx + (rand() - 0.5) * step * 0.9, y = gy + (rand() - 0.5) * step * 0.5;
-            if (rand() < 0.35 || onGround(x, y, 30) || nearPath(x, y, 70)) continue;
+            if (rand() < 0.35 || onGround(x, y, 30) || nearPath(x, y, 70) || y - 260 < y0 || x < x0 + 80 || x > x0 + w - 80) continue;
             let kind = pick();
             const [ht, ar] = SCENERY[kind];
             // A tall thing must not stand in front of an area (its top would cover it).
@@ -3221,6 +3262,7 @@ function renderWorld(scene) {
         stage.style.backgroundSize = `${(GROUND_TILE / w) * 100}% auto`;
     }
     addScenery(stage, ui);
+    addFog(stage, ui);
     // The Market and the Town Square: drawn as plots, with their people and
     // banners; until then, their paintings cut to a diamond.
     ['market', 'town'].filter(id => (ASSETS.plots || {})[id]).forEach(id => addPlace(id, stage, ui));
@@ -3282,14 +3324,14 @@ function renderWorld(scene) {
         }
         stage.insertBefore(tile, ui);
         ui.appendChild(twin);
-        if (!open) {
-            // Still locked: a soft cloud over its ground, saying what it waits for.
-            const cloud = document.createElement('div');
-            cloud.className = 'zone-clouds world-cloud';
-            cloud.dataset.zone = zone.id;
-            worldPlace(cloud, x - WORLD_TILE * 0.52, y - WORLD_TILE * 0.42, WORLD_TILE * 1.04, WORLD_TILE * 0.76);
-            if (unlocks[zone.land]) cloud.innerHTML = `<div class="zone-lock">${uiIcon('lock', '🔒')}<small>${zoneWaitsFor(zone)}</small></div>`;
-            ui.appendChild(cloud);
+        if (!open && unlocks[zone.land]) {
+            // Still locked, in the fog: a padlock saying what it waits for.
+            const lock = document.createElement('div');
+            lock.className = 'world-lock';
+            lock.dataset.zone = zone.id;
+            worldPlace(lock, x - WORLD_TILE * 0.52, y - WORLD_TILE * 0.42, WORLD_TILE * 1.04, WORLD_TILE * 0.76);
+            lock.innerHTML = `<div class="zone-lock">${uiIcon('lock', '🔒')}<small>${zoneWaitsFor(zone)}</small></div>`;
+            ui.appendChild(lock);
         }
     });
     // Each land's sign at the start of its row: for sale, or its progress (tap: its board).
@@ -3328,6 +3370,7 @@ function renderWorld(scene) {
         }
         return [(x - x0) / w, (y - y0) / h];
     }, () => { heroFollow(view, stage); placesInView(view, stage); });
+    requestAnimationFrame(openNearestBanner);
     Object.keys(AREAS).filter(id => unlocks[id]).forEach(id => unlockNewZones(id, stage));
 }
 
@@ -3794,6 +3837,7 @@ function fillPlace(id, twin) {
 
 function refreshPlaces() {
     document.querySelectorAll('#scene-map .place-ui').forEach(twin => fillPlace(twin.dataset.place, twin));
+    openNearestBanner();
 }
 
 // Who says hello in a place, and what.
@@ -3828,8 +3872,24 @@ function placeSay(id, again = false) {
     setTimeout(hush, 4500);
 }
 
+// The stall sign nearest the middle of the screen opens into its banner (the
+// others stay small round signs, so the stalls themselves can be seen).
+function openNearestBanner() {
+    const view = document.querySelector('#scene-map .world-view');
+    if (!view) return;
+    const r = view.getBoundingClientRect(), mx = r.left + r.width / 2, my = r.top + r.height * 0.45;
+    let best = null, far = r.width * 0.45;
+    view.querySelectorAll('.place-banner:not(.place-progress)').forEach(el => {
+        const b = el.getBoundingClientRect(), d = Math.hypot(b.left + b.width / 2 - mx, b.bottom - my);
+        if (d < far) { far = d; best = el; }
+    });
+    view.querySelectorAll('.place-banner.open').forEach(el => el !== best && el.classList.remove('open'));
+    best?.classList.add('open');
+}
+
 // Once a drag stops: a place now in the middle of the screen says hello.
 function placesInView(view, stage) {
+    openNearestBanner();
     if (view.classList.contains('far') || fixing || !dialogEl.hidden) return;
     const { x0, y0, w, h } = WORLD_BOX;
     const cx = x0 + worldView.fx * w, cy = y0 + worldView.fy * h;
@@ -4399,7 +4459,11 @@ function unlockNewZones(land, world) {
         document.body.classList.remove('busy');
         el.classList.remove('unlocking', 'opening');
         el.querySelectorAll('.zone-clouds, .zone-key').forEach(c => c.remove());
-        if (el.classList.contains('world-cloud')) el.remove();
+        if (el.classList.contains('world-cloud')) {
+            el.remove();
+            const stage = world.querySelector('.world-stage');
+            if (stage) addFog(stage); // the fog lifts off the new area
+        }
         newAreaCard(zone);
     }, 2000);
 }
