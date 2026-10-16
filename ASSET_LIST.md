@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**604 assets:** 557 done ✅, 6 placeholders 🟡, 41 missing ⬜.
+**611 assets:** 564 done ✅, 6 placeholders 🟡, 41 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -527,7 +527,14 @@ She walks about the farm to each job. Walk cycles cut from short videos on flat 
 | | Clip | File |
 |---|---|---|
 | ✅ | Walking towards the camera (14 frames) | `assets/hero/walk.webp` |
-| ✅ | Standing still (one picture, shown when she isn't walking) | `assets/hero/stand.webp` |
+| ✅ | Pose: stand (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/stand.webp` |
+| ✅ | Pose: hammer (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/hammer.webp` |
+| ✅ | Pose: jump (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/jump.webp` |
+| ✅ | Pose: clap (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/clap.webp` |
+| ✅ | Pose: wave (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/wave.webp` |
+| ✅ | Pose: think (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/think.webp` |
+| ✅ | Pose: point (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/point.webp` |
+| ✅ | Pose: carry (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/carry.webp` |
 | ⬜ | Walking away from the camera | `assets/hero/walk_away.webp` |
 | ⬜ | Jump and clap | `assets/hero/cheer.webp` |
 

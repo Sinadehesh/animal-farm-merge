@@ -3623,7 +3623,7 @@ function addHero(ui) {
     const el = document.createElement('div');
     el.className = 'hero';
     el.innerHTML = `<i class="hero-shadow"></i><i class="hero-sprite" style="background-image:url('${ASSETS.hero.walk}')"></i>`
-        + (ASSETS.hero.stand ? `<img class="hero-stand" src="${ASSETS.hero.stand}" alt="" draggable="false">` : '');
+        + ((ASSETS.hero.poses || {}).stand ? `<img class="hero-stand" src="${ASSETS.hero.poses.stand}" alt="" draggable="false">` : '');
     placeHero(el);
     ui.appendChild(el);
     // A moment later: if a prop now stands where she was, she steps off it.
@@ -3662,6 +3662,7 @@ function walkHeroTo(task, then, most = HERO_WALK * 1000) {
         if (length(way) / HERO_SPEED > most / 1000) { popHero(el, to); way = [to]; }
     }
     if (!way.length) way = [to]; // already there
+    heroPose('stand');
     el.classList.remove('cheer');
     el.classList.add('walking');
     let t0 = performance.now(), k = 0;
@@ -3698,15 +3699,35 @@ function heroFollow(view, stage) {
     const hw = (view.clientWidth / stage.offsetWidth) * w / 2, hh = (view.clientHeight / stage.offsetHeight) * h / 2;
     if (Math.abs(hero.x - cx) < hw * 0.85 && hero.y - HERO_HEIGHT > cy - hh * 0.9 && hero.y < cy + hh * 0.8) return;
     const at = standNear(cx, cy + hh * 0.2, true, Math.min(hw, hh) * 0.7);
-    if (at) popHero(el, at);
+    if (at) { popHero(el, at); heroPose('wave', 1800); }
 }
 
+// Her poses, by their height on the sheet (all drawn at one scale), so each
+// shows at its right size next to the standing one.
+const HERO_POSE_HEIGHT = { stand: 362, hammer: 337, jump: 371, clap: 385, wave: 382, think: 379, point: 375, carry: 377 };
+let heroPoseTimer = 0;
+
+// She strikes a pose (back to standing after `ms`, if given).
+function heroPose(name, ms) {
+    const el = heroEl(), img = el && el.querySelector('.hero-stand'), poses = ASSETS.hero.poses || {};
+    if (!img) return;
+    const pose = poses[name] ? name : 'stand';
+    img.src = poses[pose];
+    img.style.height = (95 * HERO_POSE_HEIGHT[pose]) / HERO_POSE_HEIGHT.stand + '%';
+    el.dataset.pose = pose;
+    clearTimeout(heroPoseTimer);
+    if (ms && pose !== 'stand') heroPoseTimer = setTimeout(() => heroPose('stand'), ms);
+}
+
+// A job done: she jumps for joy, then claps.
 function cheerHero() {
     const el = heroEl();
     if (!el) return;
+    heroPose('jump');
     el.classList.remove('cheer');
     void el.offsetWidth; // restart the hop
     el.classList.add('cheer');
+    heroPoseTimer = setTimeout(() => heroPose('clap', 1300), 700);
 }
 
 // --- THE MARKET AND THE TOWN SQUARE, IN THE WORLD ---
@@ -4143,7 +4164,7 @@ function addZonePerson(el, tasks, zone) {
 
 function tapFix(task) {
     if (fixing) return;
-    if (currentScene === 'map') walkHeroTo(task);
+    if (currentScene === 'map') walkHeroTo(task, () => heroPose(taskReady(task) ? 'point' : 'think', 2000));
     if (taskDone(task)) return toast(`“${task.line}”`);
     if (!taskOpen(task)) return toast('🔒 Later!');
     openTaskCard(task);
@@ -4294,7 +4315,7 @@ function fixJob(id) {
     const scene = document.getElementById(task.land === 'town' ? 'scene-town' : currentScene === 'map' ? 'scene-map' : 'scene-fix');
     const spot = scene.hidden ? null : scene.querySelector(`[data-job="${id}"]`);
     if (!spot) return completeTask(id);
-    if (currentScene === 'map') walkHeroTo(task, null, 900);
+    if (currentScene === 'map') walkHeroTo(task, () => heroPose('hammer', 1400), 900);
     fixing = true;
     spot.classList.remove('spotlight');
     closeDialog();

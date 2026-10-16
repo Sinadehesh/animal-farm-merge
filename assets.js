@@ -118,8 +118,15 @@ const ASSETS = {
     },
     // Plot props, by name: transparent pictures cut from the sheets in assets/raw/plots/.
     // The farmer: a walk cycle (14 frames in a row, cut from assets/raw/hero/walk_towards.mp4),
-    // and how she stands still (from assets/raw/hero/stand.jpg).
-    hero: { walk: 'assets/hero/walk.webp', stand: 'assets/hero/stand.webp', frames: 14, aspect: 204 / 360 },
+    // and her poses when she isn't walking (cut from assets/raw/hero/poses.jpg, all at one scale).
+    hero: {
+        walk: 'assets/hero/walk.webp', frames: 14, aspect: 204 / 360,
+        poses: {
+            stand: 'assets/hero/poses/stand.webp', hammer: 'assets/hero/poses/hammer.webp', jump: 'assets/hero/poses/jump.webp',
+            clap: 'assets/hero/poses/clap.webp', wave: 'assets/hero/poses/wave.webp', think: 'assets/hero/poses/think.webp',
+            point: 'assets/hero/poses/point.webp', carry: 'assets/hero/poses/carry.webp',
+        },
+    },
 
     // The world around the areas: a repeating meadow (assets/raw/world/ground.jpg, made
     // seamless with tools/seamless.py) and scenery cut from assets/raw/world/scenery_sheet.jpg.
