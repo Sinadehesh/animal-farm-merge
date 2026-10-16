@@ -2793,8 +2793,9 @@ function plotViewer(el, zone, tasks) {
 // scrolls (overflow hidden, so scrollIntoView still finds its spots); a drag
 // that moved doesn't count as a tap. `limits`: least, first and most zoom (the
 // stage's width over the view's), and below the fourth the bubbles hide.
-// `first()` gives the point to start in the middle of (fractions across, down).
-function panZoom(view, stage, st, limits, first) {
+// `first()` gives the point to start in the middle of (fractions across, down);
+// `settled()`, if given, runs once the view stops moving.
+function panZoom(view, stage, st, limits, first, settled) {
     const far = () => view.classList.toggle('far', st.zoom < (limits[3] || 0));
     const zoomTo = (z, cx = view.clientWidth / 2, cy = view.clientHeight / 2) => {
         const fx = (view.scrollLeft + cx) / stage.offsetWidth, fy = (view.scrollTop + cy - stage.offsetTop) / stage.offsetHeight;
@@ -2812,11 +2813,14 @@ function panZoom(view, stage, st, limits, first) {
     far();
     if (st.fx === undefined) centre(...first());
     else centre(st.fx, st.fy);
+    const pts = new Map();
+    let still = 0;
     view.addEventListener('scroll', () => {
         st.fx = (view.scrollLeft + view.clientWidth / 2) / stage.offsetWidth;
         st.fy = (view.scrollTop + view.clientHeight / 2 - stage.offsetTop) / stage.offsetHeight;
+        clearTimeout(still);
+        if (settled) still = setTimeout(function wait() { if (pts.size) still = setTimeout(wait, 200); else settled(); }, 250);
     }, { passive: true });
-    const pts = new Map();
     let last = null, moved = false, dragged = false, glide = 0;
     const now = () => {
         const p = [...pts.values()];
@@ -3089,8 +3093,8 @@ const PLOT_SHAPE = {
 };
 const WORLD_TILE = 1000;           // a tile's ground width, in world units
 const WORLD_STEP = [610, 370];     // half the step from one cell to the next, across and down
-const WORLD_ZOOM = [1.2, 5.5, 12, 3.2]; // least, first and most zoom, and where the bubbles hide
-const worldView = {};
+const WORLD_ZOOM = [1.2, 13, 26, 5]; // least, first and most zoom, and where the bubbles hide
+const worldView = { zoom: WORLD_ZOOM[1] };
 
 function cellXY(id) {
     const [u, v] = WORLD_CELLS[id];
@@ -3231,8 +3235,9 @@ function renderWorld(scene) {
         ui.appendChild(sign);
     });
     ui.querySelectorAll('.fix-spot').forEach(spot => { spot.style.zIndex = 200 + parseInt(spot.style.zIndex, 10); });
+    const view = wrap.querySelector('.world-view');
     addHero(ui);
-    panZoom(wrap.querySelector('.world-view'), stage, worldView, WORLD_ZOOM, () => {
+    panZoom(view, stage, worldView, WORLD_ZOOM, () => {
         // First time: the first job to do in the world, or the Barnyard.
         const task = openTasks().find(t => t.zone && inWorld(ZONE[t.zone]));
         const zone = task ? ZONE[task.zone] : ZONE.barnyard;
@@ -3243,24 +3248,229 @@ function renderWorld(scene) {
             y += ((jy - ay) / 100) * th;
         }
         return [(x - x0) / w, (y - y0) / h];
-    });
+    }, () => heroFollow(view, stage));
     Object.keys(AREAS).filter(id => unlocks[id]).forEach(id => unlockNewZones(id, stage));
 }
 
-// The farmer: she stands on the farm and walks to each job you tap or fix
-// (her walk mirrored when she heads left), with a hop when it's done.
+// The farmer: she stands on the farm's paths and grass, never on water, a
+// building or a mess, and walks there along the paths to each job you tap or
+// fix (her walk mirrored when she heads left), with a hop when it's done. Drag
+// to another part of the farm and she pops up there, on a path near the middle.
 const hero = { x: null, y: null };
-const HERO_HEIGHT = 250; // world units
-const HERO_SPEED = 600;  // world units a second
+const HERO_HEIGHT = 88;  // world units (a barn is about 250)
+const HERO_SPEED = 160;  // world units a second
+const HERO_WALK = 3.5;   // longest walk, in seconds: further, she pops up near the job first
 
-// Where she stands to work on a job: just in front of its spot, or null when
-// the job isn't on a plot in the world.
+// Where she can stand on each plot (made by tools/walkmask.py): 100 x 100 cells
+// over its picture, 0 blocked, 1 grass, 2 path or floor, 3 not the picture.
+const PLOT_WALK = {
+    barnyard: '//////////////////////////////////////////////////////////////////////////////////wD///////////////////////////////wAPP/////////////////////////////wAAA/////////////////////////////wAAAP////////////////////////////8AAAD/////////////////////////////AAAAP////////////////////////////AAAAA///////////////////////////8AAAAAP///////////////////////////wAAAAD///////////////////////////8AAAAAP///////////////////////////AAAAAD///////////////////////////AAAAAA///////////////////////////wAAAAAP//////////////////////////8AAAAAD/////////////////////wD////wAAAAP/////////////////////8AD//8DAAAAD/////////////////////8AAP/8AAAAAA/////////////////////8AAA/8AAAAAD//////////////////////AAAAwAAAAAAA//////////////////P//AAAAAAAAAAAAD////////////////AD//wAAAAAAAAAAAAP///////////////wAPPwAAAAAAAAAAAAA///////////////8AAA8AAAAAAAAAAAAAA//////////////wAAADAAAAAAAAAAAAAAD/////////////AAAAAAAAAAAAAAAAAAAAD////////////wAAAAAAAAAAAAAAAAAAAAP///////////8AAAAAAAAAAAAAAAAAAAAAz/////P/////AAAAAAAAAAAAAAAAAAAAAA/////A/z///wAAAAAAAAAAAAAAAAAAAAAD////ADAD//8AAAAAAAAAAAAAAAEAAAAAAP///wAAA//8AAAAAAAAAAAAAAAFQAAAAAAP/8AAAAP/8AAAAAAAAAAAAAAABoAAAAAAD/8AAAAP//AAAAAAAAAAAAAAAAWgAAAAAAA/wAAAAD/AAAAAAAAAAAAAAAAFqAEAAAAAP8AAAAAPwAAAAAAAAAAAAAAAFaoBVAAAAAwAAAAAP8AAAAAAAAAAAAAAAVWqqVgAAAAAAAAAAA/zAAAAAAAAAAAAAAVWKqqgAAAAAAAAAAD//AAAAAAAAAAAAAAFVAqqqAAAAAAAAAAA//wAAAAAAAAAAAAAFWgCqqgAAAAAAAAAAA/wAAAAAAAAAAAAAFWgAKqoAAAAAAAAAAAD8AAAAAAAAAAAAAVWoAAqqqAAAAAAAAAAA/AAAAAAAAAAAAAVaqAAKqqoAAAAAAAAAAP/8AAAAAAAAAAAlaqAAApqqgAAAAAAAAD///AwAAAAAAAAqqqqgAABqqqQAAAAAAAA///w8AAAAAAAAKqqqoAAAaqqlAAAAAAAAP///8AAAAAAAAKqqqqAAglqqqogAAAAAAD//8AAAAAqAAACqqqZAAimqqqqgAAAAAAA///AAAAAqgAAFqqqaAAAlWqqqAAAAAAAA///wAAAAqqAAVaqqkAACVqqqgAAAAAAAAA//AAAAAKqoAVWqqkAACWqqpUAAAAAAAAAP/wAAAAAqqVVVaqpAACWqqqVAAAAAAAAAA/8AAAAAIKhVVqqqgABWqqqBQAAAAAAAAAP/AAAAAAAAVaqqqoABWqaqgEAAAAAAAAAD/wAAAAAAABVqqqqQAWqqqkAAAAAAAAAAD//AAAAAAAAVqqqqpAKaqqpAAAAAAAAAAA//8AAAAAAAGqqqqqoGqqqqQAAAAAAAAAA///wAAAAEAFqqqqqKqqqqqgAAAAAAAAAA////AAAABBVWqqqqCqqqqqgAAAAAAAAAA////8AAAAVVWqqoKqpqqoKAAAAAAAAAAA/////wAAABVaqqoAqqqqqCAAAAAAAAAAA//////AAAAFaqqUACqqqqAoACAAAAAAAA//////8AAABWqqUAAKqqVQAAAKAAAAAAA///////wAAAVqqkAAAmlYAAAAAoAAAAAA////////AAAGqqUAAABVVBAAAACgAAAAA////////8AABapQAAAAJVAAAAAAoAAAAD/////////wABqoAAAAAAlAAUAAACgAAAD//////////wAKqAAAAAAIAApAAAAoAAAD///////////AAqgAAAAAIAAVgAAAIAAAD///////////8ACoAAAAAKAAagAAAAAAAD////////////wAAAAAAACgAWAAAAAAgAD/////////////AAAAAAAAkAYAAAAAAAAD/////////////8AAAAAAAEAYAAAAAAAAD//////////////wAAAAAAABQAAAAJQAAD///////////////wAAAAAACgAAAABAAAP////////////////AAAAAABoAAAAFAAAP////////////////8AAAAABCAAAAFQAAP/////////////////wAAAABAAAAABUAAP//////////////////AAAABgAAAAFQAAP//////////////////8AAAFAAAAAJQAAP///////////////////wAAFAAAAAJQAAP////////////////////AAAAAAAAFQAAP////////////////////8AAAAAAAlAAA//////////////////////8AAAAAAFAAA///////////////////////wAAAAAZAAA////////////////////////AAAAAEAAA////////////////////////8AAAAAAAA/////////////////////////wAAAAAAA//////////////////////////AAAAAAA//////////////////////////8AAAAAA///////////////////////////wAAAAA////////////////////////////AAAAA////////////////////////////8AAAD/////////////////////////////wAAD//////////////////////////////wAD///////////////////////////////AD///////////////////////////////8D////////////////////////////////z/////////////////////////////////////////////////w==',
+    henhouse: '///////////////////////////////////////////////////////////////////////////////////D///////////////////////////////8AP///////////////////////////////ADDw/////////////////////////////wAw8P///////////////////////////8MAMDD///////////////////////////8AADAw///////////////////////////8AwDwMP///////////////////////////AAAADD//////////////////////////wwAAAAw//////////////////////////wMADAAMP/////////////////////////8AAADwDD//////////////////////////AMAAAAw//////////////////////////wPAAAAMP/////////////////////////8AAAAAAD//////////////////////////wAAAAAAAP////////////////////////wAAAAAAAD////////////////////////8DwAAAAAAP///////////////////////AAAAAAAAAA//////////////////////wAAAAAAAAAAD/////////////////////wAAAAAAAAAAAP////////////////////wAAAAAAAAAAAA////////////////////wAAAAAAAAAAAAD///////////////////wAAAAAAAAAAAAAP//////////////////wAAAAAAAAAAAAAAA/////////////////wAAAAAAAAAAAAAAMP////////////////AAAAAAAAAAAAAAAAD////////////////AAAAAAAAAAAAAAAAAP///////////////AAAAAAAAAAAAAAAAAA///////////////AAAAAAAAAAAAAAAAAAA//////////////8AAAAAAAAAAAAAAAAAMD//////////////AAAAAAAAAAAAAAAAAAMP///////////8wAAAAAAAAAAAAAAAAAAPA////////////AAAAAAAAAAAAAAAAAAAAADz//////////wAAAAAAAAAAAAAAAAAAAAAA//////////AAAAAAAAAAAAAAAAAAAAAAAP/////////wAAAAAAAAAAAAAAAAAAAAAAD/////////wAAAAAAAAAAAAAAAAAAAAAAA//////////AAAAAAAAAAAAAAAAAAAAAAAP/////////AAAAAAAAAAAAAAAAAAAAAAAD/////////AAAAAAAAAAAAAAAAAAAAAAAAP////////wAAAAAAAAABAAAAAAAAAAAAAD////////8AAAAAAAAAAEAAAAAAAAAAAAAD///////wAAAAAAAAAABAAAAAAAAAAAAAA///////8AAAAAAAAAARVAAAAAAAAAAAAAD//////8AAAAAAAAABVVUAAAAAAAAAAAAAP/////8BQAAAAAAABVVVUAAAAAAAAAAAAA/////8CVAAAAAAABVVVVUAAAAAAAAAAAAD////8KpUAQAAAABVVVVVQAAAAAAAAAAAAD///wKqpRYAAAABVVVVVVAAAAAAAAAAAAAD//wCqqVaAAAABVVVVVVVAAAAAAAAAAAAAP/AFaqqqoAAEAVVVVVVVUAAAAAAAAAAAAA/wFVqqqqgAFQFVVVVVVVVAAAAAAAAAAAADwFVaqqqqAFVFVVVVVVVVVAAAAAAAAAAFA8AVVaqqqpVVVVVVVVVVVVVQAAAAAAAAVA/8BVVqqqoVVVVVVVVVVVVVVQAAAAAABVA//ABVVqqqFVVVVVVVVVVVVVVAFAAAAFVA//8AFVaqqlVVVVVVVVVVVVVVUFaqqpVVA///wAVVqqqlVVVVVVVVVVVVVVFaqqpVVA////wBVVqqpVVVVVVVVVVVVVVVaqqlVUA/////AFVWqqpVVVVVVVVVVVVVVaqqVVUA/////8AVVaqqlVVVVVVVVVVVVVaqqlVUA//////wAVVaqqlVVVVVVVVVVVVqqqVVUA///////ABVWqqpVVVVVVVVVVVQqqqVVQD////////AFVWqqpVVVVVVVVVVUKqqVVQD////////wAVVaqqlVVVVVVVVVVKqqVVQD/////////ABVWqqqVVVVVVVVVVqqqVVQD//////////ABVVqqpVVVVVVVVQqqqVVQD//////////8AFVaqqVVVVVVVVUqqqVVAD///////////wAVVqqqlVVVVVVWqqlVVAD////////////ABVVqqpVVVVVVVqqpVVAD////////////8ABVVqqpVVVVVWqqpVVAP/////////////wAFVaqqlVVVVWqqlVUAP//////////////wAVVqqqVVVVWqqVVUAP///////////////ABVWqqpVVVWqqlVUAP///////////////8AFVaqqlVVWqqpVUAP////////////////wAVVqqqVVaqqlVUAP/////////////////AAVWqqqRWqqpVUAP/////////////////8ABVaqqgKqqpVQAP//////////////////wAFVqqqKqqpVQAP///////////////////AAVVqqqqqlVQA////////////////////8AAVWqqqqVVQA/////////////////////wABVaqqqlVQA//////////////////////AAFWqqqpVQA///////////////////////AAVqqqqBAA///////////////////////8AAqqqqoAA////////////////////////wAKqqqqAA/////////////////////////AAKqqqAA/////////////////////////8AAqmoAA//////////////////////////8ACVYAD///////////////////////////wAFUAD///////////////////////////8AAUAD////////////////////////////8AAAD/////////////////////////////wAAD//////////////////////////////AAD///////////////////////////////AD///////////////////////////////8D//////////////////////////////////////////////////////////////////////////////////w==',
+    bigbarn: '///////////////////////////////////////////////////////////////////////////////////A///////////////////////////////8AD//////////////////////////////wAAD/////////////////////////////wAAAP////////////////////////////AAAAAP///////////////////////////AAAAAA//////////////////////////8AAAAAAA/////////////////////////wAAAAAAAA////////////////////////wAAAAAAAAD///////////////////////AAAAAAAAAAD//////////////////////AAAAAAAAAAAP////////////////////8AAAAAAAAAAAAP///////////////////8AAAAAAAAAAAAAP//////////////////wAAAAAAAAAAAAAA//////////////////wAAAAAAAAAAAAAAD/////////////////AAAAAAAAAAAAAAAAD///////////////8AAAAAAAAAAAAAAAAAD//////////////8AAAAAAAAAAAAAAAAAAP/////////////wAAAAAAAAAAAAAAAAAAAP////////////AAAAAAAAAAAAAAAAAAAAAP///////////AAAAAAAAAAAAAAAAAAAAAA//////////8AAAAAAAAAAAAAAAAAAAAAAD/////////8AAAAAAAAAAAAAAAAAAAAAAAD////////wAAAAAAAAAAAAAAAAAAAAAAAAD///////wAAAAAAAAAAAAAAAAAAAAAAAAAP//////AAAAAAAAAAAAAAAAAAAAAAAAAAAP/////AAAAAAAAAAAAAAAAAAAAAAAAAAAA////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAA///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAqAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAqoAAAAAACAAAAAAA8AAAAAAAAAAAAACgAKqgAAAAAAgAAAAAAPAAAAAAAAAAAAAKgoCqqCgAAAAgIAAAAADwAAAAAAAAAAAACqqqqqgoAAAAICAAAAAA8AAAAAAAAAAAAiqqqqqoKAAAAKAAAAAAAPAAAAAAAAAAACqqqqqqqKgAAACggAAAAADwAAAAAAAAAAKqqqqqqqCoKqgAoIAAAAAA8AAAAAAAAAAKqqqqqqqgKKqoACCAAAAAAPAAAAAAAAAAqqqqqoCCqKqqqoAAAAAAAADwAAAAAAAACqqqqaqigGqqqQqCAAAAAAAA8AAAAAAAAKqqqoKqqqqqqoAKgoCAAAAAAPAAAAAAAACqqqgqqqqqqqqACoKAqAAAAADwAAAACgqAKqqAqqqqqqqggCqCgqgAAAAA8AAAAAoKqCqqqqqqqqqqoIAKAoKoAAAAAPAAAAAKqqqqqqqqqqqqqqgACgICCAAAAADwAAACqqqqqqgqqqqqqqqqAAoKAoAAAAAA8AAAAqqqqqqoqqqqqqqqqgAICgqAAAAAAPAAAAKqqqqqqKqqqqqqqqoACAoKgAAAAADwAAACqqqqqqiqqqqqqqqqCKoKCqAAAAAA8AAACoCqqqqoqqqqqqqqqgqpKAqqAAAAAPAAAAKAKqqqqCqqqqqqqqoKqCgKaYAAAADwAAAAAAqqqqoqqqqqqqqoKqgoKoIAAAAA8AAAAAAKqqqqCqqqqqqqqCqoKCqoAAAAAP8AAAAAKqqqgAqqqqqqqqAqqCgqqAAAAA//wAAAACqqqqAKqqqqqqoACqqgqoAAAAA///wAAAAKqqoACCqqqqqgAAqqoKoAAAAD////AAAAAKqoAAQKCqqoAAACqqCoAAAAD/////AAAAAqoAACKgAAAAAAAqqqgAAAAP/////8AAAACqAAAqqAAAAAAAqqqgAAAAP//////8AAAACgAACqqqoAAAAKqqAAAAA////////8AAAAIAAAqqgKAAAAAqqAAAAD/////////wAAAAAAAAqACAAAAAKoAAAAD//////////wAAAAAAAAACgAAAACoAAAAP///////////AAAAAAAAAKgAAAACoAAAAP////////////AAAAAAAKoAAAAACgAAAA/////////////8AAAAAAAKAAAAAqgAAAA//////////////8AAAAAAAgAAAAKAAAAD///////////////8AAAAAAAAAAABAAAAP////////////////wAAAAAAAAAAAAAAAP/////////////////wAAAAAAAAAAAAAA///////////////////AAAAAAAAAAAAAA////////////////////AAAAAAAAAAAAD////////////////////8AAAAAAAAAAAD/////////////////////8AAAAAAAAAAP//////////////////////wAAAAAAAAAP///////////////////////wAAAAAAAA/////////////////////////wAAAAAAD//////////////////////////AAAAAAD///////////////////////////AAAAAP///////////////////////////8AAAAP////////////////////////////8AAA//////////////////////////////wAA///////////////////////////////wD//////////////////////////////////////////////////////////////////////////////////w==',
+    fieldgate: '//////////////////////////////////////////////////////////////////////////////////8P///////////////////////////////8A///////////////////////////////8AA//////////////////////////////8AAD/////////////////////////////wAAAP////////////////////////////wAAAA////////////////////////////8AAAAD///////////////////////////wAAAAAP//////////////////////////wAAAAAA//////////////////////////wAAAAAAA/////////////////////////wAAAAAAAD////////////////////////wAAAAAAAAP///////////////////////AAAAAAAAAA///////////////////////AAAAAAAAAAD/P////////////////////AAAAAAAAAAADD////////////////////wAAAAAAAAAAAAP///////////////////AAAAAABpAAAAAP///////////////////AAAAAABqUAAAAA///////////////////AAAAAQAqqUAAAAD//////////////////AAAAAVBKqpQAAAAP//////////////8A/AAAAABVqqqlAAADD//////////////8AAAAAAAAVqoaqUAAAP//////////////8AAAAAAAAFqgAWpQAAD8P////////////8AAAAAAAAAqQABqlAAA8A////////////8AAAAAAAAAqgAAKqUAAAAD///////////8AAAAAAAAAKQAAAqpQAAAAP//////////8AAAAAAAAAKQAAAAqlVAAAA//////////8AAAAAAAAACQAAAACqlQAAAD/////////wAAAAAAAAACQAAAAAKqUAAAAP////////8AAAAAAAAACQAAAAAAapQAAAA/////////wAAAAAAAAKAAAAAAABqlAAAAD////////8AAAAAAAFqQAAAAAAAaqUAAAAP////////AAAAAAAGpQAAAAAAABqpQAAAA////////wAAAAAAGqAAAAAAAAAaqlAAAAA///////wAAAAAAWqAAAAAAAAAGqqlAAAAD//////AAAAAAACqAAAAAAAAABqqqUAAAAP/////wAAAAAAAKAAAAAAAAABqqqpQAAAA/////wAAAAAAABAAAAAAAAAAqgGqlAAAAD////8AAAAAAAAAAAAAAAAACqQAKqUAAAAP////AAAAAAAAAAAAAAAAACqQAAqqQAAAA////wAAAAAAAAAAAAAAAACqQAACqpAAAAA///8AAAAAAAAAAAAAAAACqgAAAKqkAAAAD///AAAAAAAAAAAAAAAACqgAAAAqqQAAAAP//AAAAAAAAAAAAAAAACqAAAAACqpAAAAD/8AAAAAAAAAAAAAAAACpAAAAAAGqlAAAA/8AAAAAAAAAAAAAAAACqQAAAAAAaqUAAAP8ABAAAAAAAAAAAAAAGqAAAAAAABqpQAAD8AFUAAAAoAAAAAAAAGqAAAAAAAAGqlAAAPAFVUAAKqAAAAAAAAKqAAAAAAAAAaoEAADwBVVAAKCgAAAAAAAKqAAAAAAAAAGpAAAA8AVVVAAAAAAAAAAAKqAAAAAAAAAAZQAAAPABVVUAIAAQAAAAAKpAAAAAAAAAAFQAAAD8AFVVACAAJAAAAAKqAAAAAAAAAABUAAAA/wAVVVAAAAkAAAACqAAAAAAAAAABVAAAA//ABVVQAoACAAAAAoAAAAAAAAAABQAAAD//8ABVVAKAABAAAKoAAAAAAAAAABUAAAD///wAVVVAgAAkAAKqAAAAAAAAAAAQAAAD////AAVVUIAACQAKqAAAAAAAAAAAAAAAD////8ABVVYAAAJAKqAAAAAAAAAAAAAAAD/////wAFVWAAAAqoqAAAAAAAAAAAAAAAD//////AAVVgAAACoCAAAAAAAAAAAAAAAD//////8ABVWAAAAAAQAAAAAAAAAAAAAAD///////wAFVQAAAAAEAAAAAAAAAAAAAAD////////wAVUAAAAABAAAAAAAAAAAAAAD/////////ABVQAAAgAUAAAAAAAAAAAAAD/////////8AFWoAAIAJAAAAAAAAAAAAAD//////////wAaqgAAAClAAAAAAAAAAAAD///////////AKqqAAAAqkAAAAAAAAAAAP///////////8CqqoAAACqQAAAAAAAAAAP////////////wAqqgCAAKpAAAAAAAAAAP/////////////ACqqggAAqkAAAAAAAAAP/////////////8AKqpIAAKqQAAAAAAAAP//////////////8AKpWAAACpAAAAAAAAP///////////////wApVQAAAqgAAAAAAAP////////////////AKVUAAAIoAAAAAAAP////////////////8KlVAAACCJAEAAAAP/////////////////woFVUAAgqpVAAAAP//////////////////AAVVUAEKqUAAAA///////////////////8ABVVUACCUAAAA////////////////////wAFVVQAQVAAAA/////////////////////AAVVUAEAQAAA/////////////////////8ABVVUAAAAAA//////////////////////wAFVVQAAAAA///////////////////////wAVVUAAAAA////////////////////////ABVVUAAAA////////////////////////8ABVVQAAD/////////////////////////wAFVVAAD//////////////////////////AAVVUAD//////////////////////////8ABVUAD///////////////////////////wAFUAD////////////////////////////AAUAD////////////////////////////8AAAD/////////////////////////////wAAD//////////////////////////////wAD///////////////////////////////AD///////////////////////////////8P//////////////////////////////////////////////////////////////////////////////////w==',
+};
+const plotWalk = {};
+
+function plotWalkCells(id) {
+    if (!plotWalk[id] && PLOT_WALK[id]) {
+        const bytes = atob(PLOT_WALK[id]), cells = new Uint8Array(bytes.length * 4);
+        for (let i = 0; i < bytes.length; i++) {
+            const b = bytes.charCodeAt(i);
+            cells.set([b >> 6, (b >> 4) & 3, (b >> 2) & 3, b & 3], i * 4);
+        }
+        plotWalk[id] = cells;
+    }
+    return plotWalk[id] || null;
+}
+
+// The whole world as a grid of WALK_CELL squares: 0 blocked, 1 grass, 2 path,
+// 4 under a prop (she walks past, but doesn't stop there).
+const WALK_CELL = 15;
+const WALK_PATCH = 50;  // the fewest cells a patch of ground needs to count
+let walkMap = null;
+
+// A plot's picture box in the world: left, top, width, height.
+function plotBox(zone) {
+    const [ax, ay, aw, ar] = PLOT_SHAPE[zone.id] || [50, 52, 97.5, 0.75];
+    const tw = WORLD_TILE / (aw / 100), th = tw * ar, [x, y] = cellXY(zone.id);
+    return [x - (ax / 100) * tw, y - (ay / 100) * th, tw, th];
+}
+
+function buildWalkMap() {
+    const { x0, y0, w, h } = WORLD_BOX, cols = Math.ceil(w / WALK_CELL), rows = Math.ceil(h / WALK_CELL);
+    const cells = new Uint8Array(cols * rows).fill(1);
+    const each = (bx, by, bw, bh, fn) => {
+        const c0 = Math.max(0, Math.floor((bx - x0) / WALK_CELL)), c1 = Math.min(cols - 1, Math.floor((bx + bw - x0) / WALK_CELL));
+        const r0 = Math.max(0, Math.floor((by - y0) / WALK_CELL)), r1 = Math.min(rows - 1, Math.floor((by + bh - y0) / WALK_CELL));
+        for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
+            const v = fn(x0 + (c + 0.5) * WALK_CELL, y0 + (r + 0.5) * WALK_CELL);
+            if (v !== undefined) cells[r * cols + c] = v;
+        }
+    };
+    const walkIndex = (x, y) => Math.floor((y - y0) / WALK_CELL) * cols + Math.floor((x - x0) / WALK_CELL);
+    const diamond = (cx, cy, hw, hh, v) => each(cx - hw, cy - hh, hw * 2, hh * 2, (x, y) => (Math.abs(x - cx) / hw + Math.abs(y - cy) / hh <= 1 ? v : undefined));
+    // The dirt paths between the areas.
+    worldPaths().match(/class="path-dirt"[^>]*/g).forEach(l => {
+        const [x1, y1, x2, y2] = ['x1', 'y1', 'x2', 'y2'].map(k => +l.match(new RegExp(` ${k}="([-\\d.]+)"`))[1]);
+        const len2 = (x2 - x1) ** 2 + (y2 - y1) ** 2 || 1;
+        each(Math.min(x1, x2) - 60, Math.min(y1, y2) - 60, Math.abs(x2 - x1) + 120, Math.abs(y2 - y1) + 120, (x, y) => {
+            const t = Math.max(0, Math.min(1, ((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) / len2));
+            return Math.hypot(x - x1 - t * (x2 - x1), y - y1 - t * (y2 - y1)) < 45 ? 2 : undefined;
+        });
+    });
+    // The Market and the Town Square are buildings.
+    ['market', 'town'].forEach(id => { const [x, y] = cellXY(id); diamond(x, y, WORLD_TILE * 0.42, WORLD_TILE * 0.25, 0); });
+    ZONES.forEach(zone => {
+        const [x, y] = cellXY(zone.id), grid = inWorld(zone) && plotWalkCells(zone.id);
+        if (!zoneOpen(zone)) return diamond(x, y, WORLD_TILE * 0.66, WORLD_TILE * 0.46, 0); // in its fog
+        if (!grid) return;
+        const [bx, by, bw, bh] = plotBox(zone);
+        each(bx, by, bw, bh, (px, py) => {
+            const v = grid[Math.min(99, Math.floor(((py - by) / bh) * 100)) * 100 + Math.min(99, Math.floor(((px - bx) / bw) * 100))];
+            return v === 3 ? undefined : v;
+        });
+        // Where a prop stands (a mess, or the thing that's fixed) she may walk
+        // past, but never stops.
+        zoneTasks(zone.id).forEach(task => {
+            if (!plotProp(task, taskDone(task))) return;
+            propPlaces(task).forEach(([px, py, pw]) => {
+                const fx = bx + (px / 100) * bw, fy = by + (py / 100) * bh, rx = (Math.abs(pw) / 100) * bw * 0.32 + 4, ry = rx * 0.5;
+                each(fx - rx, fy - ry * 1.6, rx * 2, ry * 2, (x, y) => {
+                    const i = walkIndex(x, y);
+                    return cells[i] && ((x - fx) / rx) ** 2 + ((y - fy + ry * 0.6) / ry) ** 2 <= 1 ? 4 : undefined;
+                });
+            });
+        });
+    });
+    // Patches of ground cut off from the rest, too small to walk about, don't count.
+    const part = new Int32Array(cells.length), sizes = [0];
+    for (let i = 0; i < cells.length; i++) {
+        if (!cells[i] || part[i]) continue;
+        const id = sizes.length, todo = [i];
+        part[i] = id;
+        let n = 0;
+        const visit = k => { if (cells[k] && !part[k]) { part[k] = id; todo.push(k); } };
+        while (todo.length) {
+            const j = todo.pop(), c = j % cols;
+            n++;
+            if (c > 0) visit(j - 1);
+            if (c < cols - 1) visit(j + 1);
+            if (j >= cols) visit(j - cols);
+            if (j + cols < cells.length) visit(j + cols);
+        }
+        sizes.push(n);
+    }
+    for (let i = 0; i < cells.length; i++) if (cells[i] && sizes[part[i]] < WALK_PATCH) cells[i] = 0;
+    return { cells, cols, rows };
+}
+
+// Made again only when an area opens or a job is done.
+function walkGrid() {
+    const key = ZONES.map(z => (zoneOpen(z) ? 1 : 0)).join('') + TASKS.filter(taskDone).length;
+    if (!walkMap || walkMap.key !== key) walkMap = { ...buildWalkMap(), key };
+    return walkMap;
+}
+
+// The cell under a point, and a cell's middle.
+function walkCell(x, y) {
+    const { cols, rows } = walkGrid(), { x0, y0 } = WORLD_BOX;
+    return Math.max(0, Math.min(rows - 1, Math.floor((y - y0) / WALK_CELL))) * cols + Math.max(0, Math.min(cols - 1, Math.floor((x - x0) / WALK_CELL)));
+}
+
+function cellMiddle(i) {
+    const { cols } = walkGrid();
+    return [WORLD_BOX.x0 + ((i % cols) + 0.5) * WALK_CELL, WORLD_BOX.y0 + (Math.floor(i / cols) + 0.5) * WALK_CELL];
+}
+
+// The nearest place to stand to a point (a path, if `path` and there's one
+// within `reach`), or null. She stands with open ground just in front of her,
+// so nothing painted in front of her looks as if she's standing on it.
+function standNear(x, y, path = false, reach = 400) {
+    const { cells, cols, rows } = walkGrid(), c0 = Math.floor((x - WORLD_BOX.x0) / WALK_CELL), r0 = Math.floor((y - WORLD_BOX.y0) / WALK_CELL);
+    const want = path ? 2 : 1, most = Math.ceil(reach / WALK_CELL);
+    for (let d = 0; d <= most; d++) {
+        let best = null, far = Infinity;
+        for (let r = r0 - d; r <= r0 + d; r++) for (let c = c0 - d; c <= c0 + d; c++) {
+            if (Math.max(Math.abs(r - r0), Math.abs(c - c0)) !== d || r < 0 || c < 0 || r >= rows || c >= cols) continue;
+            const v = cells[r * cols + c], dist = (r - r0) ** 2 + (c - c0) ** 2;
+            if (v >= want && v < 4 && dist < far && [1, 2, 3, 4].every(k => r + k >= rows || cells[(r + k) * cols + c])) { far = dist; best = r * cols + c; }
+        }
+        if (best !== null) return cellMiddle(best);
+    }
+    return path ? standNear(x, y, false, reach) : null;
+}
+
+// The way from one place to another over ground she can stand on, preferring
+// paths (A*, then straightened); null when there's none.
+function heroRoute(from, to) {
+    const { cells, cols } = walkGrid(), a = walkCell(...from), b = walkCell(...to);
+    if (!cells[a] || !cells[b]) return null;
+    const cost = new Float64Array(cells.length).fill(Infinity), back = new Int32Array(cells.length).fill(-1);
+    const heap = [[0, a]], [bc, br] = [b % cols, Math.floor(b / cols)];
+    const guess = i => Math.hypot((i % cols) - bc, Math.floor(i / cols) - br) * 0.8;
+    const push = n => { heap.push(n); let k = heap.length - 1; while (k && heap[(k - 1) >> 1][0] > heap[k][0]) { [heap[k], heap[(k - 1) >> 1]] = [heap[(k - 1) >> 1], heap[k]]; k = (k - 1) >> 1; } };
+    const pop = () => {
+        const top = heap[0], last = heap.pop();
+        if (heap.length) {
+            heap[0] = last;
+            for (let k = 0; ;) {
+                let m = k;
+                [2 * k + 1, 2 * k + 2].forEach(c => { if (c < heap.length && heap[c][0] < heap[m][0]) m = c; });
+                if (m === k) break;
+                [heap[k], heap[m]] = [heap[m], heap[k]];
+                k = m;
+            }
+        }
+        return top;
+    };
+    cost[a] = 0;
+    while (heap.length) {
+        const [, i] = pop();
+        if (i === b) break;
+        const c = i % cols;
+        for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+            if ((dc === 1 && c === cols - 1) || (dc === -1 && c === 0)) continue;
+            const j = i + dr * cols + dc;
+            if (j < 0 || j >= cells.length || !cells[j]) continue;
+            const step = (dc && dr ? 1.414 : 1) * [0, 1, 0.8, 0, 3][cells[j]], n = cost[i] + step;
+            if (n < cost[j]) { cost[j] = n; back[j] = i; push([n + guess(j), j]); }
+        }
+    }
+    if (back[b] < 0 && a !== b) return null;
+    const way = [];
+    for (let i = b; i !== a; i = back[i]) way.unshift(i);
+    // Straighten it: skip every corner she can see past.
+    const clear = (p, q) => {
+        const n = Math.ceil(Math.hypot(q[0] - p[0], q[1] - p[1]) / (WALK_CELL / 2));
+        for (let k = 1; k < n; k++) if (!cells[walkCell(p[0] + ((q[0] - p[0]) * k) / n, p[1] + ((q[1] - p[1]) * k) / n)]) return false;
+        return true;
+    };
+    const pts = way.map(cellMiddle);
+    pts[pts.length - 1] = to;
+    const out = [];
+    let at = from;
+    for (let k = 0; k < pts.length;) {
+        let far = k;
+        while (far + 1 < pts.length && clear(at, pts[far + 1])) far++;
+        out.push(pts[far]);
+        at = pts[far];
+        k = far + 1;
+    }
+    return out;
+}
+
+// Where she stands to work on a job: on open ground just in front of its
+// prop, or null when the job isn't on a plot in the world.
 function jobWorldXY(task) {
     const zone = task && ZONE[task.zone], job = task && plotJob(task);
     if (!zone || !job || !inWorld(zone)) return null;
-    const [ax, ay, aw, ar] = PLOT_SHAPE[zone.id] || [50, 52, 97.5, 0.75];
-    const tw = WORLD_TILE / (aw / 100), th = tw * ar, [cx, cy] = cellXY(zone.id);
-    return [cx + ((job[1] - ax) / 100) * tw - 70, cy + ((job[2] - ay) / 100) * th + 70];
+    const [bx, by, bw, bh] = plotBox(zone);
+    const x = bx + (job[1] / 100) * bw, y = by + (job[2] / 100) * bh;
+    return standNear(x - 75, y + 45, false, 300) || [x, y];
+}
+
+function heroEl() {
+    return document.querySelector('#scene-map .hero');
 }
 
 function placeHero(el) {
@@ -3270,33 +3480,93 @@ function placeHero(el) {
 
 function addHero(ui) {
     if (!ASSETS.hero) return;
-    if (hero.x === null) {
+    const firstPlace = () => {
         const task = openTasks().find(t => jobWorldXY(t));
-        [hero.x, hero.y] = jobWorldXY(task) || cellXY('barnyard');
-    }
+        [hero.x, hero.y] = jobWorldXY(task) || standNear(...cellXY('barnyard'), true) || cellXY('barnyard');
+    };
+    if (hero.x === null) firstPlace();
     const el = document.createElement('div');
     el.className = 'hero';
     el.innerHTML = `<i class="hero-shadow"></i><i class="hero-sprite" style="background-image:url('${ASSETS.hero.walk}')"></i>`;
     placeHero(el);
     ui.appendChild(el);
+    // A moment later: if a prop now stands where she was, she steps off it.
+    setTimeout(() => {
+        if (!el.isConnected || el.classList.contains('walking') || [1, 2].includes(walkGrid().cells[walkCell(hero.x, hero.y)])) return;
+        const at = standNear(hero.x, hero.y, false, 300);
+        if (at) popHero(el, at);
+        else { firstPlace(); placeHero(el); }
+    }, 400);
 }
 
-// Walks her to a job; `then` once she's there.
-function walkHeroTo(task, then) {
-    const el = document.querySelector('#scene-map .hero'), to = jobWorldXY(task);
+// She pops up at a place (a little puff, no walk).
+function popHero(el, at) {
+    [hero.x, hero.y] = at;
+    placeHero(el);
+    el.classList.remove('popping', 'cheer');
+    void el.offsetWidth;
+    el.classList.add('popping');
+}
+
+let heroWalk = 0;
+
+// Walks her to a job (`then` once she's there); a long way, she pops up near
+// it first. `most`: the most milliseconds the walk may take.
+function walkHeroTo(task, then, most = HERO_WALK * 1000) {
+    const el = heroEl(), to = jobWorldXY(task);
+    cancelAnimationFrame(heroWalk);
     if (!el || !to) return then && then();
-    const ms = Math.round(Math.min(1200, Math.max(250, (Math.hypot(to[0] - hero.x, to[1] - hero.y) / HERO_SPEED) * 1000)));
-    if (Math.abs(to[0] - hero.x) > 5) el.classList.toggle('left', to[0] < hero.x);
+    let way = heroRoute([hero.x, hero.y], to);
+    const length = pts => pts.reduce((sum, p, k) => sum + Math.hypot(p[0] - (k ? pts[k - 1] : [hero.x, hero.y])[0], p[1] - (k ? pts[k - 1] : [hero.x, hero.y])[1]), 0);
+    if (!way || length(way) / HERO_SPEED > most / 1000) {
+        // Too far (or no way there): she pops up a short walk from it.
+        const near = standNear(to[0] + (hero.x < to[0] ? -120 : 120), to[1] + 60, true, 200);
+        popHero(el, near && heroRoute(near, to) ? near : to);
+        way = heroRoute([hero.x, hero.y], to) || [to];
+        if (length(way) / HERO_SPEED > most / 1000) { popHero(el, to); way = [to]; }
+    }
+    if (!way.length) way = [to]; // already there
     el.classList.remove('cheer');
     el.classList.add('walking');
-    el.style.transition = `left ${ms}ms linear, top ${ms}ms linear`;
-    [hero.x, hero.y] = to;
-    placeHero(el);
-    setTimeout(() => { el.classList.remove('walking'); el.style.transition = ''; if (then) then(); }, ms);
+    let t0 = performance.now(), k = 0;
+    const face = () => { const dx = way[k][0] - hero.x; if (Math.abs(dx) > 3) el.classList.toggle('left', dx < 0); };
+    face();
+    const step = t => {
+        let go = (HERO_SPEED * (t - t0)) / 1000;
+        t0 = t;
+        while (go > 0 && k < way.length) {
+            const [x, y] = way[k], d = Math.hypot(x - hero.x, y - hero.y);
+            if (d <= go) { [hero.x, hero.y] = [x, y]; go -= d; k++; if (k < way.length) face(); }
+            else { hero.x += ((x - hero.x) / d) * go; hero.y += ((y - hero.y) / d) * go; go = 0; }
+        }
+        placeHero(el);
+        if (k < way.length) heroWalk = requestAnimationFrame(step);
+        else {
+            el.classList.remove('walking');
+            // Facing her job.
+            const job = plotJob(task), [bx, , bw] = plotBox(ZONE[task.zone]), jx = bx + (job[1] / 100) * bw;
+            if (Math.abs(jx - hero.x) > 10) el.classList.toggle('left', jx < hero.x);
+            if (then) then();
+        }
+    };
+    heroWalk = requestAnimationFrame(step);
+}
+
+// Once a drag stops: if she's out of sight, she pops up on a path near the
+// middle of the screen (or on grass, if there's no path).
+function heroFollow(view, stage) {
+    const el = heroEl();
+    if (!el || el.classList.contains('walking') || fixing || view.classList.contains('far')) return;
+    const { x0, y0, w, h } = WORLD_BOX;
+    const cx = x0 + worldView.fx * w, cy = y0 + worldView.fy * h;
+    const hw = (view.clientWidth / stage.offsetWidth) * w / 2, hh = (view.clientHeight / stage.offsetHeight) * h / 2;
+    if (Math.abs(hero.x - cx) < hw * 0.85 && hero.y - HERO_HEIGHT > cy - hh * 0.9 && hero.y < cy + hh * 0.8) return;
+    const at = standNear(cx, cy + hh * 0.2, true, Math.min(hw, hh) * 0.7);
+    if (at) popHero(el, at);
 }
 
 function cheerHero() {
-    const el = document.querySelector('#scene-map .hero');
+    const el = heroEl();
     if (!el) return;
     el.classList.remove('cheer');
     void el.offsetWidth; // restart the hop
@@ -3698,8 +3968,8 @@ function fixJob(id) {
     const scene = document.getElementById(task.land === 'town' ? 'scene-town' : currentScene === 'map' ? 'scene-map' : 'scene-fix');
     const spot = scene.hidden ? null : scene.querySelector(`[data-job="${id}"]`);
     if (!spot) return completeTask(id);
+    if (currentScene === 'map') walkHeroTo(task, null, 900);
     fixing = true;
-    if (currentScene === 'map') walkHeroTo(task);
     spot.classList.remove('spotlight');
     closeDialog();
     document.querySelectorAll('.fix-call').forEach(el => el.remove());
