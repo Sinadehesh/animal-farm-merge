@@ -3509,7 +3509,8 @@ function addHero(ui) {
     if (hero.x === null) firstPlace();
     const el = document.createElement('div');
     el.className = 'hero';
-    el.innerHTML = `<i class="hero-shadow"></i><i class="hero-sprite" style="background-image:url('${ASSETS.hero.walk}')"></i>`;
+    el.innerHTML = `<i class="hero-shadow"></i><i class="hero-sprite" style="background-image:url('${ASSETS.hero.walk}')"></i>`
+        + (ASSETS.hero.stand ? `<img class="hero-stand" src="${ASSETS.hero.stand}" alt="" draggable="false">` : '');
     placeHero(el);
     ui.appendChild(el);
     // A moment later: if a prop now stands where she was, she steps off it.

@@ -117,8 +117,9 @@ const ASSETS = {
         market: 'assets/plots/market.webp', town: 'assets/plots/town.webp',
     },
     // Plot props, by name: transparent pictures cut from the sheets in assets/raw/plots/.
-    // The farmer: a walk cycle (14 frames in a row, cut from assets/raw/hero/walk_towards.mp4).
-    hero: { walk: 'assets/hero/walk.webp', frames: 14, aspect: 204 / 360 },
+    // The farmer: a walk cycle (14 frames in a row, cut from assets/raw/hero/walk_towards.mp4),
+    // and how she stands still (from assets/raw/hero/stand.jpg).
+    hero: { walk: 'assets/hero/walk.webp', stand: 'assets/hero/stand.webp', frames: 14, aspect: 204 / 360 },
     plotProps: {
         // Outdoor mess
         weeds: 'assets/plots/props/weeds.webp', brambles: 'assets/plots/props/brambles.webp', branch: 'assets/plots/props/branch.webp',

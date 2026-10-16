@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**593 assets:** 546 done ✅, 6 placeholders 🟡, 41 missing ⬜.
+**594 assets:** 547 done ✅, 6 placeholders 🟡, 41 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -509,6 +509,7 @@ She walks about the farm to each job. Walk cycles cut from short videos on flat 
 | | Clip | File |
 |---|---|---|
 | ✅ | Walking towards the camera (14 frames) | `assets/hero/walk.webp` |
+| ✅ | Standing still (one picture, shown when she isn't walking) | `assets/hero/stand.webp` |
 | ⬜ | Walking away from the camera | `assets/hero/walk_away.webp` |
 | ⬜ | Jump and clap | `assets/hero/cheer.webp` |
 
