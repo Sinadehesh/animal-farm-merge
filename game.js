@@ -3233,7 +3233,9 @@ function addScenery(stage, ui) {
     const pics = (ASSETS.world || {}).scenery;
     if (!pics) return;
     const frag = document.createDocumentFragment();
-    sceneryPlaces().forEach(({ kind, x, y, flip }) => {
+    // Only what shows: deep in the fog nothing can be seen, so nothing is drawn there.
+    const holes = fogHoles(), seen = (x, y) => holes.some(([cx, cy, rx, ry]) => ((x - cx) / (rx * 1.15)) ** 2 + ((y - cy) / (ry * 1.25)) ** 2 <= 1);
+    sceneryPlaces().filter(({ x, y }) => seen(x, y)).forEach(({ kind, x, y, flip }) => {
         const [ht, ar] = SCENERY[kind], wd = ht * ar;
         const el = document.createElement('img');
         el.className = 'world-thing' + (flip ? ' flip' : '');

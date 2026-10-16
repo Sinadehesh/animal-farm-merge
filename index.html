@@ -1762,14 +1762,14 @@
             background: radial-gradient(ellipse 30% 20% at 30% 30%, rgba(190, 220, 120, 0.55), transparent), radial-gradient(ellipse 35% 25% at 70% 65%, rgba(120, 170, 70, 0.45), transparent),
                 radial-gradient(ellipse 25% 18% at 55% 20%, rgba(170, 205, 100, 0.5), transparent), linear-gradient(160deg, #a9d06a, #8cbd55 55%, #79ab49); }
         .world-paths { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-        .world-thing { position: absolute; pointer-events: none; user-select: none; -webkit-user-drag: none; filter: drop-shadow(0 0.4cqw 0.4cqw rgba(30, 45, 10, 0.25)); }
+        .world-thing { position: absolute; pointer-events: none; user-select: none; -webkit-user-drag: none; } /* no filters: hundreds of them made the map crawl on phones */
         .world-thing.flip { transform: scaleX(-1); }
         .world-paths line { stroke-linecap: round; fill: none; }
         .world-paths .path-edge { stroke: #b4905a; stroke-width: 150; }
         .world-paths .path-dirt { stroke: #dcc28e; stroke-width: 105; }
         .zone.world-tile { position: absolute; flex: none; overflow: visible; scroll-snap-align: none; }
         .world-tile .plot-stage { width: 100%; }
-        .world-tile .plot-art { filter: drop-shadow(0 1.2% 1.5% rgba(40, 60, 15, 0.35)); }
+        .world-tile .plot-art { filter: none; } /* a filter on a picture this big is costly to draw on phones */
         .world-tile.locked .plot-art { filter: grayscale(0.6) brightness(1.05) blur(1px); }
         .world-diamond { position: absolute; inset: 0; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); background-size: cover; background-position: center 45%; }
         .world-tile.blank .world-diamond { background: radial-gradient(ellipse at 40% 40%, rgba(255, 250, 200, 0.16), rgba(255, 255, 255, 0.04) 70%); box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.18); }
@@ -1792,7 +1792,7 @@
         .world-visit b { font-size: 3.6cqw; }
         .world-visit small { font-size: 3cqw; font-weight: 800; }
         .world-visit .ui-icon { width: 3.4cqw; height: 3.4cqw; vertical-align: -0.5cqw; }
-        .world-place { filter: drop-shadow(0 4px 6px rgba(40, 60, 15, 0.35)); }
+        .world-place { filter: none; }
         .world-place .spot-label, .world-sign .spot-label { bottom: auto; top: 100%; }
         .world-sign .spot-label { top: 50%; translate: 0 -50%; }
         .world-sign .sale-sign { top: 140%; }
@@ -1831,7 +1831,7 @@
         .place-banner:not(.open):not(.place-progress).hot::before { right: -0.5cqw; top: -0.5cqw; width: 4.5cqw; height: 4.5cqw; font-size: 3cqw; }
         .place-banner.open { z-index: 450; animation: popIn 0.3s cubic-bezier(0.3, 1.6, 0.5, 1); }
         .place-person { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; }
-        .place-person img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0.6cqw 0.5cqw rgba(30, 20, 5, 0.35)); pointer-events: none; }
+        .place-person img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
         .place-person .task-pin { bottom: 96%; }
         .place-say { position: absolute; z-index: 500; transform: translate(-50%, calc(-100% - 2.6cqw)); width: max-content; max-width: 62cqw; padding: 2.2cqw 3cqw; background: #fff; border: 0.7cqw solid var(--ink);
             border-radius: 4cqw; box-shadow: 0 1.5cqw 3cqw rgba(30, 20, 5, 0.3); font-size: 3.6cqw; font-weight: 700; line-height: 1.3; color: var(--ink); animation: popIn 0.35s cubic-bezier(0.3, 1.6, 0.5, 1); cursor: pointer; }
