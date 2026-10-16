@@ -3444,9 +3444,11 @@ function heroRoute(from, to) {
         return top;
     };
     cost[a] = 0;
+    let budget = 30000; // a walk on screen needs far fewer: past that, there's no way (she pops up instead)
     while (heap.length) {
         const [, i] = pop();
         if (i === b) break;
+        if (--budget < 0) return null;
         const c = i % cols;
         for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
             if ((dc === 1 && c === cols - 1) || (dc === -1 && c === 0)) continue;

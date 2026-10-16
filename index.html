@@ -1772,7 +1772,7 @@
         .world-ui { position: absolute; inset: 0; z-index: 100000; pointer-events: none; }
         .tile-ui { position: absolute; pointer-events: none; }
         .tile-ui > .fix-spot, .tile-ui > .world-visit, .world-ui > .spot { pointer-events: auto; }
-        .world-cloud { inset: auto; z-index: auto; -webkit-mask-image: radial-gradient(closest-side, #000 62%, transparent); mask-image: radial-gradient(closest-side, #000 62%, transparent); backdrop-filter: none; }
+        .world-cloud { inset: auto; z-index: auto; animation: none; /* still: drifting this much fog repaints the whole map every frame */ -webkit-mask-image: radial-gradient(closest-side, #000 62%, transparent); mask-image: radial-gradient(closest-side, #000 62%, transparent); backdrop-filter: none; }
         .world-cloud.opening { opacity: 0; transform: scale(1.5); }
         .world-cloud.opening .zone-key { animation: key-away 0.9s ease-in forwards; }
         .world-cloud .zone-key { font-size: 16cqw; }
