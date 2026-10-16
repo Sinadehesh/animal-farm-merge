@@ -112,8 +112,9 @@ const ASSETS = {
     // shown instead of their stage paintings, with the mess and new things of
     // their jobs (props) standing on them. See PLOT_JOBS in game.js.
     plots: {
-        barnyard: 'assets/plots/barnyard.webp', henhouse: 'assets/plots/henhouse.webp',
-        bigbarn: 'assets/plots/bigbarn.webp', fieldgate: 'assets/plots/fieldgate.webp',
+        barnyard: 'assets/plots/barnyard_flat.webp', henhouse: 'assets/plots/henhouse_flat.webp',
+        bigbarn: 'assets/plots/bigbarn_flat.webp', fieldgate: 'assets/plots/fieldgate_flat.webp',
+        market: 'assets/plots/market.webp', town: 'assets/plots/town.webp',
     },
     // Plot props, by name: transparent pictures cut from the sheets in assets/raw/plots/.
     // The farmer: a walk cycle (14 frames in a row, cut from assets/raw/hero/walk_towards.mp4).

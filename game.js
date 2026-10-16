@@ -3077,7 +3077,7 @@ function saveLayoutText() {
 // the lands one under the other, joined by dirt paths, and the Market and Town
 // Square up front. Land you don't own yet waits under clouds with its sign.
 const WORLD_CELLS = {
-    market: [-1, -0.25], town: [-1, 0.95],
+    market: [-2.46, -0.65], town: [-1, 0.95],
     barnyard: [0, 0], henhouse: [1, 0], bigbarn: [2, 0],
     fieldgate: [0, 1], berryrows: [1, 1], orchard: [2, 1],
     meadow: [0, 2], stables: [1, 2], windmill: [2, 2],
@@ -3090,11 +3090,14 @@ const WORLD_CELLS = {
 const PLOT_SHAPE = {
     barnyard: [50, 53, 97.5, 0.759], henhouse: [50, 54, 97.5, 0.72],
     bigbarn: [50, 58, 97.2, 0.852], fieldgate: [50, 52, 97.8, 0.609],
+    town: [50, 50, 95, 0.614], market: [50, 52, 117, 1.558], // the Market is a tall strip: drawn 855 wide
 };
 const WORLD_TILE = 1000;           // a tile's ground width, in world units
 const WORLD_STEP = [610, 370];     // half the step from one cell to the next, across and down
-const WORLD_ZOOM = [1.2, 13, 26, 5]; // least, first and most zoom, and where the bubbles hide
-const worldView = { zoom: WORLD_ZOOM[1] };
+// How much of the world shows across the screen, in world units: first, at
+// the closest, and where the bubbles hide (the furthest out shows it all).
+const WORLD_SPAN = [340, 170, 900];
+const worldView = {};
 
 function cellXY(id) {
     const [u, v] = WORLD_CELLS[id];
@@ -3108,6 +3111,9 @@ const WORLD_BOX = (() => {
     const y0 = Math.min(...pts.map(p => p[1])) - WORLD_TILE, y1 = Math.max(...pts.map(p => p[1])) + WORLD_TILE * 0.8;
     return { x0, y0, w: x1 - x0, h: y1 - y0 };
 })();
+
+const WORLD_ZOOM = [1.2, ...WORLD_SPAN.map(span => WORLD_BOX.w / span)]; // least, first and most zoom, and where the bubbles hide
+worldView.zoom = WORLD_ZOOM[1];
 
 // Places an element over a box of the world (world units).
 function worldPlace(el, x, y, w, h) {
@@ -3145,8 +3151,11 @@ function renderWorld(scene) {
         <div class="world-ui"></div></div></div></div>`;
     scene.appendChild(wrap);
     const stage = wrap.querySelector('.world-stage'), ui = wrap.querySelector('.world-ui');
-    // The Market and the Town Square: their paintings, cut to a diamond.
+    // The Market and the Town Square: drawn as plots, with their people and
+    // banners; until then, their paintings cut to a diamond.
+    ['market', 'town'].filter(id => (ASSETS.plots || {})[id]).forEach(id => addPlace(id, stage, ui));
     [['market', 'Market', (ASSETS.stages.market || [])[0], () => goTo('market')], ['town', TOWN_NAME, townPicture(), () => goTo('town')]].forEach(([id, name, pic, go]) => {
+        if ((ASSETS.plots || {})[id]) return;
         const [x, y] = cellXY(id);
         const place = document.createElement('button');
         place.className = 'spot world-place';
@@ -3248,7 +3257,7 @@ function renderWorld(scene) {
             y += ((jy - ay) / 100) * th;
         }
         return [(x - x0) / w, (y - y0) / h];
-    }, () => heroFollow(view, stage));
+    }, () => { heroFollow(view, stage); placesInView(view, stage); });
     Object.keys(AREAS).filter(id => unlocks[id]).forEach(id => unlockNewZones(id, stage));
 }
 
@@ -3264,10 +3273,12 @@ const HERO_WALK = 3.5;   // longest walk, in seconds: further, she pops up near 
 // Where she can stand on each plot (made by tools/walkmask.py): 100 x 100 cells
 // over its picture, 0 blocked, 1 grass, 2 path or floor, 3 not the picture.
 const PLOT_WALK = {
-    barnyard: '//////////////////////////////////////////////////////////////////////////////////wD///////////////////////////////wAPP/////////////////////////////wAAA/////////////////////////////wAAAP////////////////////////////8AAAD/////////////////////////////AAAAP////////////////////////////AAAAA///////////////////////////8AAAAAP///////////////////////////wAAAAD///////////////////////////8AAAAAP///////////////////////////AAAAAD///////////////////////////AAAAAA///////////////////////////wAAAAAP//////////////////////////8AAAAAD/////////////////////wD////wAAAAP/////////////////////8AD//8DAAAAD/////////////////////8AAP/8AAAAAA/////////////////////8AAA/8AAAAAD//////////////////////AAAAwAAAAAAA//////////////////P//AAAAAAAAAAAAD////////////////AD//wAAAAAAAAAAAAP///////////////wAPPwAAAAAAAAAAAAA///////////////8AAA8AAAAAAAAAAAAAA//////////////wAAADAAAAAAAAAAAAAAD/////////////AAAAAAAAAAAAAAAAAAAAD////////////wAAAAAAAAAAAAAAAAAAAAP///////////8AAAAAAAAAAAAAAAAAAAAAz/////P/////AAAAAAAAAAAAAAAAAAAAAA/////A/z///wAAAAAAAAAAAAAAAAAAAAAD////ADAD//8AAAAAAAAAAAAAAAEAAAAAAP///wAAA//8AAAAAAAAAAAAAAAFQAAAAAAP/8AAAAP/8AAAAAAAAAAAAAAABoAAAAAAD/8AAAAP//AAAAAAAAAAAAAAAAWgAAAAAAA/wAAAAD/AAAAAAAAAAAAAAAAFqAEAAAAAP8AAAAAPwAAAAAAAAAAAAAAAFaoBVAAAAAwAAAAAP8AAAAAAAAAAAAAAAVWqqVgAAAAAAAAAAA/zAAAAAAAAAAAAAAVWKqqgAAAAAAAAAAD//AAAAAAAAAAAAAAFVAqqqAAAAAAAAAAA//wAAAAAAAAAAAAAFWgCqqgAAAAAAAAAAA/wAAAAAAAAAAAAAFWgAKqoAAAAAAAAAAAD8AAAAAAAAAAAAAVWoAAqqqAAAAAAAAAAA/AAAAAAAAAAAAAVaqAAKqqoAAAAAAAAAAP/8AAAAAAAAAAAlaqAAApqqgAAAAAAAAD///AwAAAAAAAAqqqqgAABqqqQAAAAAAAA///w8AAAAAAAAKqqqoAAAaqqlAAAAAAAAP///8AAAAAAAAKqqqqAAglqqqogAAAAAAD//8AAAAAqAAACqqqZAAimqqqqgAAAAAAA///AAAAAqgAAFqqqaAAAlWqqqAAAAAAAA///wAAAAqqAAVaqqkAACVqqqgAAAAAAAAA//AAAAAKqoAVWqqkAACWqqpUAAAAAAAAAP/wAAAAAqqVVVaqpAACWqqqVAAAAAAAAAA/8AAAAAIKhVVqqqgABWqqqBQAAAAAAAAAP/AAAAAAAAVaqqqoABWqaqgEAAAAAAAAAD/wAAAAAAABVqqqqQAWqqqkAAAAAAAAAAD//AAAAAAAAVqqqqpAKaqqpAAAAAAAAAAA//8AAAAAAAGqqqqqoGqqqqQAAAAAAAAAA///wAAAAEAFqqqqqKqqqqqgAAAAAAAAAA////AAAABBVWqqqqCqqqqqgAAAAAAAAAA////8AAAAVVWqqoKqpqqoKAAAAAAAAAAA/////wAAABVaqqoAqqqqqCAAAAAAAAAAA//////AAAAFaqqUACqqqqAoACAAAAAAAA//////8AAABWqqUAAKqqVQAAAKAAAAAAA///////wAAAVqqkAAAmlYAAAAAoAAAAAA////////AAAGqqUAAABVVBAAAACgAAAAA////////8AABapQAAAAJVAAAAAAoAAAAD/////////wABqoAAAAAAlAAUAAACgAAAD//////////wAKqAAAAAAIAApAAAAoAAAD///////////AAqgAAAAAIAAVgAAAIAAAD///////////8ACoAAAAAKAAagAAAAAAAD////////////wAAAAAAACgAWAAAAAAgAD/////////////AAAAAAAAkAYAAAAAAAAD/////////////8AAAAAAAEAYAAAAAAAAD//////////////wAAAAAAABQAAAAJQAAD///////////////wAAAAAACgAAAABAAAP////////////////AAAAAABoAAAAFAAAP////////////////8AAAAABCAAAAFQAAP/////////////////wAAAABAAAAABUAAP//////////////////AAAABgAAAAFQAAP//////////////////8AAAFAAAAAJQAAP///////////////////wAAFAAAAAJQAAP////////////////////AAAAAAAAFQAAP////////////////////8AAAAAAAlAAA//////////////////////8AAAAAAFAAA///////////////////////wAAAAAZAAA////////////////////////AAAAAEAAA////////////////////////8AAAAAAAA/////////////////////////wAAAAAAA//////////////////////////AAAAAAA//////////////////////////8AAAAAA///////////////////////////wAAAAA////////////////////////////AAAAA////////////////////////////8AAAD/////////////////////////////wAAD//////////////////////////////wAD///////////////////////////////AD///////////////////////////////8D////////////////////////////////z/////////////////////////////////////////////////w==',
-    henhouse: '///////////////////////////////////////////////////////////////////////////////////D///////////////////////////////8AP///////////////////////////////ADDw/////////////////////////////wAw8P///////////////////////////8MAMDD///////////////////////////8AADAw///////////////////////////8AwDwMP///////////////////////////AAAADD//////////////////////////wwAAAAw//////////////////////////wMADAAMP/////////////////////////8AAADwDD//////////////////////////AMAAAAw//////////////////////////wPAAAAMP/////////////////////////8AAAAAAD//////////////////////////wAAAAAAAP////////////////////////wAAAAAAAD////////////////////////8DwAAAAAAP///////////////////////AAAAAAAAAA//////////////////////wAAAAAAAAAAD/////////////////////wAAAAAAAAAAAP////////////////////wAAAAAAAAAAAA////////////////////wAAAAAAAAAAAAD///////////////////wAAAAAAAAAAAAAP//////////////////wAAAAAAAAAAAAAAA/////////////////wAAAAAAAAAAAAAAMP////////////////AAAAAAAAAAAAAAAAD////////////////AAAAAAAAAAAAAAAAAP///////////////AAAAAAAAAAAAAAAAAA///////////////AAAAAAAAAAAAAAAAAAA//////////////8AAAAAAAAAAAAAAAAAMD//////////////AAAAAAAAAAAAAAAAAAMP///////////8wAAAAAAAAAAAAAAAAAAPA////////////AAAAAAAAAAAAAAAAAAAAADz//////////wAAAAAAAAAAAAAAAAAAAAAA//////////AAAAAAAAAAAAAAAAAAAAAAAP/////////wAAAAAAAAAAAAAAAAAAAAAAD/////////wAAAAAAAAAAAAAAAAAAAAAAA//////////AAAAAAAAAAAAAAAAAAAAAAAP/////////AAAAAAAAAAAAAAAAAAAAAAAD/////////AAAAAAAAAAAAAAAAAAAAAAAAP////////wAAAAAAAAABAAAAAAAAAAAAAD////////8AAAAAAAAAAEAAAAAAAAAAAAAD///////wAAAAAAAAAABAAAAAAAAAAAAAA///////8AAAAAAAAAARVAAAAAAAAAAAAAD//////8AAAAAAAAABVVUAAAAAAAAAAAAAP/////8BQAAAAAAABVVVUAAAAAAAAAAAAA/////8CVAAAAAAABVVVVUAAAAAAAAAAAAD////8KpUAQAAAABVVVVVQAAAAAAAAAAAAD///wKqpRYAAAABVVVVVVAAAAAAAAAAAAAD//wCqqVaAAAABVVVVVVVAAAAAAAAAAAAAP/AFaqqqoAAEAVVVVVVVUAAAAAAAAAAAAA/wFVqqqqgAFQFVVVVVVVVAAAAAAAAAAAADwFVaqqqqAFVFVVVVVVVVVAAAAAAAAAAFA8AVVaqqqpVVVVVVVVVVVVVQAAAAAAAAVA/8BVVqqqoVVVVVVVVVVVVVVQAAAAAABVA//ABVVqqqFVVVVVVVVVVVVVVAFAAAAFVA//8AFVaqqlVVVVVVVVVVVVVVUFaqqpVVA///wAVVqqqlVVVVVVVVVVVVVVFaqqpVVA////wBVVqqpVVVVVVVVVVVVVVVaqqlVUA/////AFVWqqpVVVVVVVVVVVVVVaqqVVUA/////8AVVaqqlVVVVVVVVVVVVVaqqlVUA//////wAVVaqqlVVVVVVVVVVVVqqqVVUA///////ABVWqqpVVVVVVVVVVVQqqqVVQD////////AFVWqqpVVVVVVVVVVUKqqVVQD////////wAVVaqqlVVVVVVVVVVKqqVVQD/////////ABVWqqqVVVVVVVVVVqqqVVQD//////////ABVVqqpVVVVVVVVQqqqVVQD//////////8AFVaqqVVVVVVVVUqqqVVAD///////////wAVVqqqlVVVVVVWqqlVVAD////////////ABVVqqpVVVVVVVqqpVVAD////////////8ABVVqqpVVVVVWqqpVVAP/////////////wAFVaqqlVVVVWqqlVUAP//////////////wAVVqqqVVVVWqqVVUAP///////////////ABVWqqpVVVWqqlVUAP///////////////8AFVaqqlVVWqqpVUAP////////////////wAVVqqqVVaqqlVUAP/////////////////AAVWqqqRWqqpVUAP/////////////////8ABVaqqgKqqpVQAP//////////////////wAFVqqqKqqpVQAP///////////////////AAVVqqqqqlVQA////////////////////8AAVWqqqqVVQA/////////////////////wABVaqqqlVQA//////////////////////AAFWqqqpVQA///////////////////////AAVqqqqBAA///////////////////////8AAqqqqoAA////////////////////////wAKqqqqAA/////////////////////////AAKqqqAA/////////////////////////8AAqmoAA//////////////////////////8ACVYAD///////////////////////////wAFUAD///////////////////////////8AAUAD////////////////////////////8AAAD/////////////////////////////wAAD//////////////////////////////AAD///////////////////////////////AD///////////////////////////////8D//////////////////////////////////////////////////////////////////////////////////w==',
-    bigbarn: '///////////////////////////////////////////////////////////////////////////////////A///////////////////////////////8AD//////////////////////////////wAAD/////////////////////////////wAAAP////////////////////////////AAAAAP///////////////////////////AAAAAA//////////////////////////8AAAAAAA/////////////////////////wAAAAAAAA////////////////////////wAAAAAAAAD///////////////////////AAAAAAAAAAD//////////////////////AAAAAAAAAAAP////////////////////8AAAAAAAAAAAAP///////////////////8AAAAAAAAAAAAAP//////////////////wAAAAAAAAAAAAAA//////////////////wAAAAAAAAAAAAAAD/////////////////AAAAAAAAAAAAAAAAD///////////////8AAAAAAAAAAAAAAAAAD//////////////8AAAAAAAAAAAAAAAAAAP/////////////wAAAAAAAAAAAAAAAAAAAP////////////AAAAAAAAAAAAAAAAAAAAAP///////////AAAAAAAAAAAAAAAAAAAAAA//////////8AAAAAAAAAAAAAAAAAAAAAAD/////////8AAAAAAAAAAAAAAAAAAAAAAAD////////wAAAAAAAAAAAAAAAAAAAAAAAAD///////wAAAAAAAAAAAAAAAAAAAAAAAAAP//////AAAAAAAAAAAAAAAAAAAAAAAAAAAP/////AAAAAAAAAAAAAAAAAAAAAAAAAAAA////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAA///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAqAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAqoAAAAAACAAAAAAA8AAAAAAAAAAAAACgAKqgAAAAAAgAAAAAAPAAAAAAAAAAAAAKgoCqqCgAAAAgIAAAAADwAAAAAAAAAAAACqqqqqgoAAAAICAAAAAA8AAAAAAAAAAAAiqqqqqoKAAAAKAAAAAAAPAAAAAAAAAAACqqqqqqqKgAAACggAAAAADwAAAAAAAAAAKqqqqqqqCoKqgAoIAAAAAA8AAAAAAAAAAKqqqqqqqgKKqoACCAAAAAAPAAAAAAAAAAqqqqqoCCqKqqqoAAAAAAAADwAAAAAAAACqqqqaqigGqqqQqCAAAAAAAA8AAAAAAAAKqqqoKqqqqqqoAKgoCAAAAAAPAAAAAAAACqqqgqqqqqqqqACoKAqAAAAADwAAAACgqAKqqAqqqqqqqggCqCgqgAAAAA8AAAAAoKqCqqqqqqqqqqoIAKAoKoAAAAAPAAAAAKqqqqqqqqqqqqqqgACgICCAAAAADwAAACqqqqqqgqqqqqqqqqAAoKAoAAAAAA8AAAAqqqqqqoqqqqqqqqqgAICgqAAAAAAPAAAAKqqqqqqKqqqqqqqqoACAoKgAAAAADwAAACqqqqqqiqqqqqqqqqCKoKCqAAAAAA8AAACoCqqqqoqqqqqqqqqgqpKAqqAAAAAPAAAAKAKqqqqCqqqqqqqqoKqCgKaYAAAADwAAAAAAqqqqoqqqqqqqqoKqgoKoIAAAAA8AAAAAAKqqqqCqqqqqqqqCqoKCqoAAAAAP8AAAAAKqqqgAqqqqqqqqAqqCgqqAAAAA//wAAAACqqqqAKqqqqqqoACqqgqoAAAAA///wAAAAKqqoACCqqqqqgAAqqoKoAAAAD////AAAAAKqoAAQKCqqoAAACqqCoAAAAD/////AAAAAqoAACKgAAAAAAAqqqgAAAAP/////8AAAACqAAAqqAAAAAAAqqqgAAAAP//////8AAAACgAACqqqoAAAAKqqAAAAA////////8AAAAIAAAqqgKAAAAAqqAAAAD/////////wAAAAAAAAqACAAAAAKoAAAAD//////////wAAAAAAAAACgAAAACoAAAAP///////////AAAAAAAAAKgAAAACoAAAAP////////////AAAAAAAKoAAAAACgAAAA/////////////8AAAAAAAKAAAAAqgAAAA//////////////8AAAAAAAgAAAAKAAAAD///////////////8AAAAAAAAAAABAAAAP////////////////wAAAAAAAAAAAAAAAP/////////////////wAAAAAAAAAAAAAA///////////////////AAAAAAAAAAAAAA////////////////////AAAAAAAAAAAAD////////////////////8AAAAAAAAAAAD/////////////////////8AAAAAAAAAAP//////////////////////wAAAAAAAAAP///////////////////////wAAAAAAAA/////////////////////////wAAAAAAD//////////////////////////AAAAAAD///////////////////////////AAAAAP///////////////////////////8AAAAP////////////////////////////8AAA//////////////////////////////wAA///////////////////////////////wD//////////////////////////////////////////////////////////////////////////////////w==',
-    fieldgate: '//////////////////////////////////////////////////////////////////////////////////8P///////////////////////////////8A///////////////////////////////8AA//////////////////////////////8AAD/////////////////////////////wAAAP////////////////////////////wAAAA////////////////////////////8AAAAD///////////////////////////wAAAAAP//////////////////////////wAAAAAA//////////////////////////wAAAAAAA/////////////////////////wAAAAAAAD////////////////////////wAAAAAAAAP///////////////////////AAAAAAAAAA///////////////////////AAAAAAAAAAD/P////////////////////AAAAAAAAAAADD////////////////////wAAAAAAAAAAAAP///////////////////AAAAAABpAAAAAP///////////////////AAAAAABqUAAAAA///////////////////AAAAAQAqqUAAAAD//////////////////AAAAAVBKqpQAAAAP//////////////8A/AAAAABVqqqlAAADD//////////////8AAAAAAAAVqoaqUAAAP//////////////8AAAAAAAAFqgAWpQAAD8P////////////8AAAAAAAAAqQABqlAAA8A////////////8AAAAAAAAAqgAAKqUAAAAD///////////8AAAAAAAAAKQAAAqpQAAAAP//////////8AAAAAAAAAKQAAAAqlVAAAA//////////8AAAAAAAAACQAAAACqlQAAAD/////////wAAAAAAAAACQAAAAAKqUAAAAP////////8AAAAAAAAACQAAAAAAapQAAAA/////////wAAAAAAAAKAAAAAAABqlAAAAD////////8AAAAAAAFqQAAAAAAAaqUAAAAP////////AAAAAAAGpQAAAAAAABqpQAAAA////////wAAAAAAGqAAAAAAAAAaqlAAAAA///////wAAAAAAWqAAAAAAAAAGqqlAAAAD//////AAAAAAACqAAAAAAAAABqqqUAAAAP/////wAAAAAAAKAAAAAAAAABqqqpQAAAA/////wAAAAAAABAAAAAAAAAAqgGqlAAAAD////8AAAAAAAAAAAAAAAAACqQAKqUAAAAP////AAAAAAAAAAAAAAAAACqQAAqqQAAAA////wAAAAAAAAAAAAAAAACqQAACqpAAAAA///8AAAAAAAAAAAAAAAACqgAAAKqkAAAAD///AAAAAAAAAAAAAAAACqgAAAAqqQAAAAP//AAAAAAAAAAAAAAAACqAAAAACqpAAAAD/8AAAAAAAAAAAAAAAACpAAAAAAGqlAAAA/8AAAAAAAAAAAAAAAACqQAAAAAAaqUAAAP8ABAAAAAAAAAAAAAAGqAAAAAAABqpQAAD8AFUAAAAoAAAAAAAAGqAAAAAAAAGqlAAAPAFVUAAKqAAAAAAAAKqAAAAAAAAAaoEAADwBVVAAKCgAAAAAAAKqAAAAAAAAAGpAAAA8AVVVAAAAAAAAAAAKqAAAAAAAAAAZQAAAPABVVUAIAAQAAAAAKpAAAAAAAAAAFQAAAD8AFVVACAAJAAAAAKqAAAAAAAAAABUAAAA/wAVVVAAAAkAAAACqAAAAAAAAAABVAAAA//ABVVQAoACAAAAAoAAAAAAAAAABQAAAD//8ABVVAKAABAAAKoAAAAAAAAAABUAAAD///wAVVVAgAAkAAKqAAAAAAAAAAAQAAAD////AAVVUIAACQAKqAAAAAAAAAAAAAAAD////8ABVVYAAAJAKqAAAAAAAAAAAAAAAD/////wAFVWAAAAqoqAAAAAAAAAAAAAAAD//////AAVVgAAACoCAAAAAAAAAAAAAAAD//////8ABVWAAAAAAQAAAAAAAAAAAAAAD///////wAFVQAAAAAEAAAAAAAAAAAAAAD////////wAVUAAAAABAAAAAAAAAAAAAAD/////////ABVQAAAgAUAAAAAAAAAAAAAD/////////8AFWoAAIAJAAAAAAAAAAAAAD//////////wAaqgAAAClAAAAAAAAAAAAD///////////AKqqAAAAqkAAAAAAAAAAAP///////////8CqqoAAACqQAAAAAAAAAAP////////////wAqqgCAAKpAAAAAAAAAAP/////////////ACqqggAAqkAAAAAAAAAP/////////////8AKqpIAAKqQAAAAAAAAP//////////////8AKpWAAACpAAAAAAAAP///////////////wApVQAAAqgAAAAAAAP////////////////AKVUAAAIoAAAAAAAP////////////////8KlVAAACCJAEAAAAP/////////////////woFVUAAgqpVAAAAP//////////////////AAVVUAEKqUAAAA///////////////////8ABVVUACCUAAAA////////////////////wAFVVQAQVAAAA/////////////////////AAVVUAEAQAAA/////////////////////8ABVVUAAAAAA//////////////////////wAFVVQAAAAA///////////////////////wAVVUAAAAA////////////////////////ABVVUAAAA////////////////////////8ABVVQAAD/////////////////////////wAFVVAAD//////////////////////////AAVVUAD//////////////////////////8ABVUAD///////////////////////////wAFUAD////////////////////////////AAUAD////////////////////////////8AAAD/////////////////////////////wAAD//////////////////////////////wAD///////////////////////////////AD///////////////////////////////8P//////////////////////////////////////////////////////////////////////////////////w==',
+    barnyard: '//////////////////////////////////////////////////////////////////////////////////wD///////////////////////////////wAPP/////////////////////////////wAAA/////////////////////////////8AAAP/////////////////////////////AAAD/////////////////////////////wAAAP////////////////////////////AAAAA////////////////////////////wAAAAP///////////////////////////8AAAAD////////////////////////////AAAAAP///////////////////////////AAAAAD///////////////////////////8AAAAA////////////////////////////MAAAAP///////////////////////////zAAAMD/////////////////////wD////88ADD//////////////////////8AD//8DPAAw//////////////////////8AAP/8ADwAM//////////////////////8AAA/8AAAAAD//////////////////////AAAAwAAAAAAA//////////////////P//AAAAAAAAAAAAD////////////////AD//wAAAAAAAAAAAAP///////////////wAPPwAAAAAAAAAAAAA///////////////8AAA8AAAAAAAAAAAAAA//////////////wAAADAAAAAAAAAAAAAAD/////////////AAAAAAAAAAAAAAAAAAAAD////////////8AAAAAAAAAAAAAAAAAAAA/////////////AAAAAAAAAAAAAAAAAAAAPz/////P/////wAAAAAAAAAAAAAAAAAAAA8/////A/z///8AAAAAAAAAAAAAAAAAAAAAD////wDAP///AAAAAAAAAAAAAAAEAAAAAAP///8AAD//8wAAAAAAAAAAAAAABQAAAAAAP/8AAAA//8AAAAAAAAAAAAAAABoAAAAAAD//AAAAP//AAAAAAAAAAAAAAAAagAAAAAAA/wAAAAP//AAAAAAAAAAAAAAAFqAEAAAAAP8AAAAD//wAAAAAAAAAAAAAAFaoBVAAAAA8AAAAA//8AAAAAAAAAAAAAAVWqqVgAAAAAAAAAAP//AAAAAAAAAAAAAAVWKqqgAAAAAAAAAAD//AAAAAAAAAAAAAAFVAqqqAAAAAAAAAAA//wAAAAAAAAAAAAAFWgCqqgAAAAAAAAAAA//8AAAAAAAAAAAAFWgAKqoAAAAAAAAAAD///AAAAAAAAAAAAVWoAAqqqAAAAAAAAAA///8wAAAAAAAAAAVaqAAKqqoAAAAAAAAA/////AAAAAAAAAAlaqAAApqqgAAAAAAAAD////8AAAAAAAAqqqqgAABqqqQAAAAAAAD////8AAAAAAAAKqqqoAAAaqqlAAAAAAAA////8AAAAAAAAKqqqqAAglqqqogAAAAAAP//8AAAAAqAAACqqqpAAimaqqqgAAAAAAD///AAAAAqgAAFqqqaAAAlWqqqAAAAAAAA///wAAAAqqAAFaqqkAACVqqqgAAAAAAAAA//AAAAAKqoAVWqqmAACWqqpUAAAAAAAAAP/wAAAAAqqVVVaqpAACWqqqVAAAAAAAAAA//AAAAAIKhVVqqqgACWqqqAQAAAAAAAAA//8AAAAAAAVaqqqoABWqaqgEAAAAAAAAA///wAAAAIABWqqqpQAWqqqkAAAAAAAAAA////AAAAAAAVqqqqpAKaqqpAAAAAAAAAA////8AAAAAAGqqqqqoGqqqqQAAAAAAAAA/////wAAAEAFqqqqqKqqqqqgAAAAAAAAD//////AAABBVWqqqqCqqqqqgAAAAAAAAD//////8AAAVVWqqoKqqqqoKAAAAAAAAAD///////8AABVaqqoAqqqqqCAAAAAAAAAD////////wAAFaqqUACqqqqAoACAAAAAAD/////////AABWqqUAAKqqVQAAAKAAAAAD/////////8AAVqqkAAAqlYQAAAAoAAAAD//////////wAGqqUAAABVVBAAAACgAAAD///////////ABapQAAAAJVAAAAAAIAAAD///////////8BqoAAAAAAlAAUAAACgAAD////////////wKqAAAAAAIAApAAAAoAAD/////////////AqgAAAAAIAAVgAAAIAAP/////////////8CoAAAAAKAAagAAAAAAP//////////////8AAAAAACgAWAAAAAAgP///////////////wAAAAAAEAYAAAAAAAP////////////////AAAAAAAAYAAAAAAAP////////////////8AAAAAABQAAAAJQAP/////////////////wAAAAACgAAAABUAP//////////////////AAAAABoAAAAlAA////////////////////AAAABQAAAAFQA////////////////////8AAABAAAAABUA/////////////////////wAABgAAAAFQA//////////////////////AAFAAAAAJQA//////////////////////8AFAAAAAJQA///////////////////////wAAAAAAFQA////////////////////////AAAAAAlAA////////////////////////8AAAAAFAA/////////////////////////wAAAAZAA//////////////////////////AAAAEAD//////////////////////////8AAAAAD///////////////////////////8AAAAD////////////////////////////wAAAD/////////////////////////////AAAD/////////////////////////////8AAD//////////////////////////////wAD///////////////////////////////AD///////////////////////////////8D//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////w==',
+    henhouse: '///////////////////////////////////////////////////////////////////////////////////D///////////////////////////////8AP///////////////////////////////ADDw/////////////////////////////wAw8P///////////////////////////8MAMDD///////////////////////////8DAPAw////////////////////////////AwDwMP///////////////////////////wAAADD//////////////////////////wwAAAAw//////////////////////////wMADAAMP/////////////////////////8AAADwDD//////////////////////////A/AAAAw//////////////////////////wPAAAAMP//////////////////////////AAAAAAD//////////////////////////wAAAAAAAP////////////////////////wAAAAAAAD////////////////////////8DwAAAAAA////////////////////////AAAAAAAAAP//////////////////////wAAAAAAAAAAP/////////////////////wAAAAAAAAAAP/////////////////////wAAAAAAAAAAD/////////////////////wAAAAAAAAAAAP////////////////////wAAAAAAAAAAAAP///////////////////wAAAAAAAAAAAAA/w/////////////////wAAAAAAAAAAAAADMP////////////////AAAAAAAAAAAAAAA/D////////////////AAAAAAAAAAAAAAAAw////////////////AAAAAAAAAAAAAAAAMP///////////////wAAAAAAAAAAAAAAAAD8//////////////8AAAAAAAAAAAAAAAAAP///////////////AAAAAAAAAAAAAAAAAA/////////////8wAAAAAAAAAAAAAAAAAAPz////////////AAAAAAAAAAAAAAAAAAAAP/z//////////wAAAAAAAAAAAAAAAAAAAA/w//////////AAAAAAAAAAAAAAAAAAAAAD8P/////////wAAAAAAAAAAAAAAAAAAAAADD/////////wAAAAAAAAAAAAAAAAAAAAAAA//////////AAAAAAAAAAAAAAAAAAAAAAAP/////////AAAAAAAAAAAAAAAAAAAAAAAD/////////AAAAAAAAAAAAAAAAAAAAAAAAP////////wAAAAAAAAABAAAAAAAAAAAAAD////////8AAAAAAAAAAEAAAAAAAAAAAAAD///////wAAAAAAAAAABAAAAAAAAAAAAAA///////8AAAAAAAAAARVAAAAAAAAAAAAAD//////8AAAAAAAAABVVUAAAAAAAAAAAAAP/////8BQAAAAAAABVVVUAAAAAAAAAAAAA/////8CVAAAAAAABVVVVUAAAAAAAAAAAAD////8KpUAaAAAABVVVVVQAAAAAAAAAAAAD///wKqpRYAAAABVVVVVVAAAAAAAAAAAAAD//wCqqVaAAAABVVVVVVVAAAAAAAAAAAAAP/AFqqqaoAAEAVVVVVVVUAAAAAAAAAAAAA/wFVqqqqgAFQFVVVVVVVVAAAAAAAAAAAADwFVaqqqqAFVFVVVVVVVVVAAAAAAAAAAFA8AVVaqqqpVVVVVVVVVVVVVQAAAAAAAAVA/8BVVqqqoVVVVVVVVVVVVVVQAAAAAABVA//ABVVqqqFVVVVVVVVVVVVVVAFAAAAFVA//8AFVaqqlVVVVVVVVVVVVVVUFaqqpVVA///wAVVqqqlVVVVVVVVVVVVVVFaqqpVVA////wBVVqqpVVVVVVVVVVVVVVVaqqlVUA/////AFVWqqpVVVVVVVVVVVVVVaqqVVUA/////8AVVaqqlVVVVVVVVVVVVVaqqlVUA//////wAVVaqqlVVVVVVVVVVVVqqqVVUA///////ABVWqqpVVVVVVVVVVVQqqqVVQD////////AFVWqqpVVVVVVVVVVUKqqVVQD////////wAVVaqqlVVVVVVVVVVKqqVVQD/////////ABVWqqqVVVVVVVVVVqqqVVQD//////////ABVVqqpVVVVVVVVVqqqVVQD//////////8AFVaqqVVVVVVVVWqqqVVAD///////////wAVVqqqlVVVVVVWqqlVVAD////////////ABVVqqpVVVVVVWqqpVVAD////////////8ABVVqqpVVVVVWqqpVVAP/////////////wAFVaqqlVVVVWqqlVUAP//////////////wAVVqqqVVVVWqqVVUAP///////////////ABVWqqpVVVWqqlVUAP///////////////8AFVaqqlVVWqqpVUAP////////////////wAVVqqqVVaqqlVUAP/////////////////AAVWqqqRWqqpVUAP/////////////////8ABVaqqoKqqpVQAP//////////////////wAFVqqqKqqpVQAP///////////////////AAVVqqqqqlVQA////////////////////8AAVWqqqqVVQA/////////////////////wABVaqqqlVQA//////////////////////AAFWqqqpVQA///////////////////////AAVqqqqBAA///////////////////////8AAqqqqoAA////////////////////////wAKqqqqAA/////////////////////////AAKqqqAA/////////////////////////8wAqmoAP///////////////////////////ACVYAP///////////////////////////wAFUAP////////////////////////////AAUAP/////////////////////////////AAAP/////////////////////////////wAAD//////////////////////////////AAD///////////////////////////////AD///////////////////////////////8D//////////////////////////////////////////////////////////////////////////////////w==',
+    bigbarn: '///////////////////////////////////////////////////////////////////////////////////A///////////////////////////////8AD//////////////////////////////wAAD/////////////////////////////wAAAP////////////////////////////AAAAAP///////////////////////////AAAAAA//////////////////////////8AAAAAAA/////////////////////////wAAAAAAAA////////////////////////wAAAAAAAAD///////////////////////AAAAAAAAAAD//////////////////////AAAAAAAAAAAP////////////////////8AAAAAAAAAAAAP///////////////////8AAAAAAAAAAAAAP//////////////////wAAAAAAAAAAAAAA//////////////////wAAAAAAAAAAAAAAD/////////////////AAAAAAAAAAAAAAAAD///////////////8AAAAAAAAAAAAAAAAAD//////////////8AAAAAAAAAAAAAAAAAAP/////////////wAAAAAAAAAAAAAAAAAAAP////////////AAAAAAAAAAAAAAAAAAAAAP///////////AAAAAAAAAAAAAAAAAAAAAA//////////8AAAAAAAAAAAAAAAAAAAAAAD/////////8AAAAAAAAAAAAAAAAAAAAAAAD////////wAAAAAAAAAAAAAAAAAAAAAAAAD///////wAAAAAAAAAAAAAAAAAAAAAAAAAP//////AAAAAAAAAAAAAAAAAAAAAAAAAAAP/////AAAAAAAAAAAAAAAAAAAAAAAAAAAA////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAA///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAqAAAAAAAQAAAAAADwAAAAAAAAAAAAAAAAqoAAAAAACAAAAAAA8AAAAAAAAAAAAACgAKqgAAAAAAgAAAAAAPAAAAAAAAAAAAAKgoCqqCgAAAAQAAAAAADwAAAAAAAAAAAACqqqqqgoAAAAIAAAAAAA8AAAAAAAAAAAAiqqqqqoKAAAAKAAAAAAAPAAAAAAAAAAACqqqqqqqqgAAACgAAAAAADwAAAAAAAAAAKqqqqqqqCoKqgAoAAAAAAA8AAAAAAAAAAKqqqqqqqgKKqoACAAAAAAAPAAAAAAAAAAqqqqqoCCqKqqqoAAAAAAAADwAAAAAAAACqqqqaqigCqqqQqCAAAAAAAA8AAAAAAAACqqqpaqqqqqqoAKgoCAAAAAAPAAAAAAAACqqqgqqqqqqqqAKoKAqAAAAADwAAAACgiAKqqAqqqqqqqggCqCgqgAAAAA8AAAAAoKqKqqqqqqqqqqoIAKAoKoAAAAAPAAAAAKqqqqqqqqqqqqqqgACgICgAAAAADwAAACKqqqqqgqqqqqqqqqAAoKAoAAAAAA8AAAAqqqqqqoKqqqqqqqqgAICgqAAAAAAPAAAAKqqqqqqKqqqqqqqqoACAoKgAAAAADwAAACqqqqqqqqqqqqqqqqCKoKCqAAAAAA/AAACoCqqqqoqqqqqqqqqgqpKAqqAAAAA/8AAAKAKqqqqCqqqqqqqqoKqCgKaYAAAD//8AAAAAqqqqgqqqqqqqqoKqgoKpoAAAD///8AAAAKqqqqCqqqqqqqqCqoKCqoAAAP////wAAAKqqqoAqqqqqqqqAqqCgqqAAAP/////wAACqqqqAKqqqqqqoACqqgqoAAA///////AAAKqqoACCqqqqqgAAqqoKoAAA////////AAAKqoAAQKCqqoAAACqqCoAAD////////8AAAqoAAKKgAAAAAAAqqqgAAD/////////8AACqAAAqqAAAAAAAKqqgAAP//////////wAACgAACqqqoAAAACqqAAA////////////wAAIAAAqqgKAAAAAqqAAA/////////////wAAAAAAqACAAAAAKoAAD//////////////AAAAAAAAAgAAAACoAAD///////////////AAAAAAAIgAAAACoAAP///////////////8AAAAAKoAAAAACgAAP////////////////8AAAAAKAAAAAqgAA//////////////////8AAAAAgAAAAKAAD///////////////////wAAAAAAAAABAAD////////////////////wAAAAAAAAAAAP/////////////////////AAAAAAAAAAAP//////////////////////AAAAAAAAAA///////////////////////8AAAAAAAAA////////////////////////8AAAAAAAD/////////////////////////wAAAAAAD//////////////////////////wAAAAAP///////////////////////////AAAAAP////////////////////////////AAAA//////////////////////////////AAD//////////////////////////////8AD///////////////////////////////8P//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////w==',
+    fieldgate: '//////////////////////////////////////////////////////////////////////////////////8P///////////////////////////////8A///////////////////////////////8AA//////////////////////////////8AAD/////////////////////////////wAAAP////////////////////////////wAAAA////////////////////////////8AAAAD///////////////////////////wAAAAAP//////////////////////////wAAAAAA//////////////////////////wAAAAAAA/////////////////////////wAAAAAAAD////////////////////////wAAAAAAAAP///////////////////////AAAAAAAAAA///////////////////////AAAAAAAAAAD/P////////////////////AAAAAAAAAAADD////////////////////wAAAAAAAAAAAw////////////////////AAAAAABpAAAAMP///////////////////AAAAAABqUAAADz///////////////////AAAAAQAqqUAAAMP//////////////////AAAAAVBKqpQAADP///////////////8A/AAAAABVqqqlAAAz///////////////8AAAAAAAAVqoaqUAAAP//////////////8AAAAAAAAFqgAWpQAAD8P////////////8AAAAAAAAAqQABqlAAA8A////////////8AAAAAAAAAqgAAKqUAAAAD///////////8AAAAAAAAAKQAAAqpQAAAAP//////////8AAAAAAAAAKQAAAAqlVAAAA//////////8AAAAAAAAACQAAAACqVQAAAD/////////8AAAAAAAAACQAAAAAKqUAAAAP/////////AAAAAAAAACQAAAAAAapQAAAA/////////wAAAAAAAAKAAAAAAABqlAAAAD////////8AAAAAAAFqQAAAAAAAaqUAAAAP////////AAAAAAAGpQAAAAAAABqpQAAAA////////wAAAAAAGqAAAAAAAAAaqlAAAAA///////wAAAAAAWqAAAAAAAAAGqqlAAAAD//////AAAAAAACqAAAAAAAAABqqqUAAAAP/////wAAAAAAAKAAAAAAAAABqqqpQAAAA/////wAAAAAAABAAAAAAAAAAqQGqlAAAAD////8AAAAAAAAAAAAAAAAACqQAKqUAAAAP////AAAAAAAAAAAAAAAAACqQAAqpQAAAA////wAAAAAAAAAAAAAAAACqQAACqpAAAAA///8AAAAAAAAAAAAAAAACqgAAAKqkAAAAD///AAAAAAAAAAAAAAAACqgAAAAqqQAAAAP//AAAAAAAAAAAAAAAACqAAAAACqpAAAAD/8AAAAAAAAAAAAAAAACpAAAAAAGqlAAAA/8AAAAAAAAAAAAAAAACqQAAAAAAqqUAAAP8ABAAAAAAAAAAAAAAGqAAAAAAABqpQAAD8AFUAAAAoAAAAAAAAGqAAAAAAAAGqlAAAPAFVUAAKqAAAAAAAAKqAAAAAAAAAaoEAAD8BVVAAKCgAAAAAAAKqQAAAAAAAAGpAAAD/wFVVAAAAAAAAAAAKqAAAAAAAAAAZQAAD//AVVUAIAAQAAAAAKpAAAAAAAAAAFQAAD//8BVVACAAJAAAAAKqAAAAAAAAAABUAAD///8FVVAAAAkAAAACqAAAAAAAAAABVAAD////wVVQAoACAAAAAoAAAAAAAAAABUAAP/////BVVAKAAJAAAKoAAAAAAAAAABUAAP/////8FVVAgAAkAAKqAAAAAAAAAABQAAP//////wVVUIAACQAKqAAAAAAAAAABQAAP///////BVVYAAAJAKqAAAAAAAAAAAUAAP///////8BVWAAAAqoqAAAAAAAAAAAAAAP////////wFVgAAACoCAAAAAAAAAAAAAAP/////////AVWAAAAAAQAAAAAAAAAAAAAP//////////BVQAAAAAEAAAAAAAAAAAAAP//////////8FUAAAAABAAAAAAAAAAAAAP///////////wVQAAAgAUAAAAAAAAAAAAP////////////BWoAAIAJAAAAAAAAAAAAP////////////8KqgAAAClAAAAAAAAAAA//////////////wqqAAAAqkAAAAAAAAAA///////////////CqoAAACqQAAAAAAAAA///////////////8KqgCAAKpAAAAAAAAA////////////////wKqggAAqkAAAAAAAA/////////////////AqpIAAKqQAAAAAAA/////////////////8CpWAAACpAAAAAAA//////////////////8JVQAAAqgAAAAAA///////////////////wVUAAAIoAAAAAA////////////////////BVAAACCJAEAAD////////////////////8FVUAAgqpVAAD/////////////////////wVVUAEKqUAAD//////////////////////AVVUACCUAAD//////////////////////8BVVQAQVAAD///////////////////////wFVUAEAQAD////////////////////////AVVUAAAAD////////////////////////8BVVQAAAD/////////////////////////8FVUAAAD//////////////////////////wVVVAAD///////////////////////////BVVQAP///////////////////////////8FVVAP////////////////////////////wVVUP/////////////////////////////BVUP/////////////////////////////8BUP//////////////////////////////wUP///////////////////////////////AP///////////////////////////////8P//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////w==',
+    town: '/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////D////////////////////////////////w////////////////////////////////8P///z///////////////////////////8A///wP///////////////////////////AP//8A///////////////////////////wA//8AP//////////////////////////wAP/8AA//////////////////////////8AD//wAP//////////////////////////AA//wAD//////////////////////////wAP/8AAP/////////////////////////8AA/8AAD//////////////////////////AAD/AAA//////////////////////////wAAPAAAA/////////////////////////wAAAAAAAD////////////////////////AAAAAAAAAP///////////////////////AAAAAAAAAAP//////////////////////AAAAAAAAAAD//////////////////////AAAAAAAAAAAD/////////////////////wAAAAAAAAAAAP////////////////////8AAAAAAAgAAAA///////////////////8/AAAAAAAIAAAKA//D//P////////////8PwAAAAAACAAACoP/wP/D///////////88D8AAAAAAAgAAAKgPwA8A////////////AA/AAAAAAAIAAACqA8AAAP///////////wAPwAAAAACqAAAAqoAAAAA///////////wAA8AAAAAAqgAAAKqAAAAAP//////////wAAPAAAAAAKgAAAKqgAAAAA//////////AAAAAAAAAACoCAAKqoAAAAAP/////////AAAAAAAAAAAqigAKqqAAAAAD/////////AAAAAAAAAAAKgoAAKqgAAAAAP////////wAAAAAAAAAACoKAACqoAAAAAA////////wAAAAAAAAAAAqCgAAqoAAAAAAD///////wAAAAAAAAAAAKgoAAKgAAAAAAAP//////8AAAAAAAAAAACAKAACoAAAAAAAD//z//P8AAAAAAIAAAAAACgAAoAAAAAAAA//w//A/AAAAAACgAAAAAgoAAKAAAAAAAAP/8D/wDwAAAAAAqgAAAAoKAAAAAAAAAAAD/8A/wA8AAAAAAKqgAqAAAAAAAAAAAAAAA//AD8APAAAAAACqqqIAAAAAAAAAAAAAAAD/wA/AAwAAAAAAqqqCCAAAAAAAAAAAAAAAzwAP8AAAAAAAAKqqgKgAAAAACoAAAAAAAA8AP/AAAAAAAACqqoKoAAAAAAqAAAAAAAAMAD/wAAAAAAAAqqqCqAAAAAAKoAAAAAAAAAA/8AAAAAAAAAAAACAAAACACqAAAAAAAAAAP/AAAAAAAAAAAAAAAAACgAKgAAAAAAAgAD/AAAAAAAAAAAAAAAAAAqAAoAAAAAAACAA/AAAAAAAAAAAAAAAAAAKgAIAAAAAAAqAADwAAAAAAAAAAAAAAAAACoAJKqqqgAKqgAA8AAAAAAAAAAAAACAAAAAAAAAAAKoKqgAAPwAAAAAAIAAAAACgAAAAAAAAAABqqqgAAP/AAAAAACAAAAAAoAAAAAAAAAAAqqqgAAP/8AAAAIigAAAAAAAAAAAAAAAAAKqqgAA///8AAACqoAAAAAAAqqAoAAAAAACqqgAA////wAACqqAAAAAAAKqAqAAAAAAAqqgAA/////AAAqqgAAAAAACqoqgAAAAAAKqoAA/////8ACaqoAAAAACAKCqoAAAAAACqqAA//////wAqqqAAAAAAqAAKqAAAAAAAqqgA///////ACqqgAAAAAKoAAqgAAAAAAKqgA///////8AKqoAAAAACqgAqoAAAAAACqgA////////wAqqAAAAAAqqAKqAAAAAAAqgD/////////wCogAAAAACqqCqgAAAAAAKgD//////////AKAAAAAAACqgqoAAAAAACgD//////////8AgAAAAAAAqqqqAAAAAAAgD///////////wAAAAAAAAGqqqgAAAAAAAD////////////AAAAAAAACqqqgAAAAAAAD////////////8AAAAAAAAqqqoAAAAAAAP/////////////8AAAAAAAKqqqAAAAAAAP//////////////wAAAAAACqqqoAAAAAAP///////////////AAAAAAACqqqgAAAAAP///////////////8AAAAAAAqqKoAAAAAP////////////////wAAAAAAKqAqgAAAAP/////////////////AAAAAACiAKqAAAAP/////////////////8AAAAAAgAAqoAAAP//////////////////wAAAAAIAAKqgAAP///////////////////AAAAACAACqqqA/////////////////////AAAAAgAAKqqA/////////////////////8AAAAAAACqqA//////////////////////wAAAAAAAqqA///////////////////////AAAAAAACqA///////////////////////8AAAAAAAKA////////////////////////wAAAAAAAD/////////////////////////wAAAAAAD//////////////////////////AAAAAAD//////////////////////////8AAAAAD///////////////////////////wAAAAD////////////////////////////AAAAD////////////////////////////8AAAD/////////////////////////////wAAD//////////////////////////////AAD//////////////////////////////8AP///////////////////////////////8P//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////w==',
+    market: '////////////////w///////////////////////////////8AA//////////////////////////////AAAAP///////////////////////////wAAAAAP//////////////////////////AAAAAAAD/////////////////////////AAAAAAAAA////////////////////////wAAAAAAAAP///////////////////////8AAAAAAAAD////////////////////////AAAAAAAAA////////////////////////wAAAAAAAAP///////////////////////wAAAAAAAAA////////////////////////AAAAAAAAAP///////////////////////wAAAAAAAAD///////////////////////8AAAAAAAAA////////////////////////AAAAAAAAA/////////////////A//////wAAAAAAAAD///w////////////wA/////8AAAAAAAAA///8A///////////wAAP///AAAAAAAAAAP//8AA//////////wAAAD/8AAAAAAAAAAAP/8AAAP////////wAAAADwAAAAAAAAAAAADwAAAAA///////wAAAAAAAAAAAAAAAAAAAAAAAAAD//////wAAAAAAAAAAAAAAAAAAAAAAAAAA//////wAAAAAAAqAAAAAAAAAAAAAAAAAAP/////8AAAAAAAKoAAAAAAAAAAAAAAAAAD//////wAAAAAACgAAAAAAAAAAAAAAAAAA//////8AAAAAAAAAIAAAAAAAAAAAAAAAAP//////AAAAAAAAAKgAAAAAAKqgAAAAAAD//////wAAAAAAAAqqqqogAKqqoAAAAAAA//////8AAAAAAAACqqqqqqqqqoAAAAAAAD/////8AAAAAAAAACqqqqqqqqqAAAAAAAAP////wAAAAAAAAAACqqqqqqqqgAAAAAAAA///8CgAAAAAAAAACqqqqqqqqqAAAAAAAAAP/wKqAAAAAAAAKqqqqqqqqqqoAAAAAAAAAP8KqoAAAAAAAqqqqqqqqqqqqgAAAAAAAAA/AAKiAAAAAKqqqqqqqqqqqqoAAAAAAAAA//AAIKgAAKqqqqqqqCqqqqqqoAAAAAAAA//wACqqAKqqqqqqqAACqqqqqqqgAAAqoD//8AAAqqqqqqqqqgAAAAqqqqqqqAACqoP///AAACqqqqqqqoAAAAAAqqqqqqqqqqg////wAAAKqqqqqqAAAAAAAAqqqqqqoAKA////wAAAAqqqqqoAAAAAAAAAKqoAqoAAAP///wAAAAAACqqqAAAAAAAAAACqAAAAAAD///8AAAAAAAAAqgAAAAAAAAAAqgAAAAAAP///8AAAAAAAAKoAAAAAAAAAAKoAAAAAAAD////wAAAAAAAqAAAAAAAAAACqAAAAAAAAD///8AAAAAAAKgAAAAAAAAAAqgAAAAAAAA////AAAAAAACAAAAAAAAAAACoAAAAAAAAP///AAAAAAAAgAAAAAAAAAAACAAAAAAAAD///wAAAAAAAIAAAAAAAAAAAAgAAAAAAAA////wAAAAAACAAAAAAAAAAAAAAAAAAAAAP///8AAAAAAAoAAAAAAAAAAACAAAAAAAAD////AAAAAAAAgAAAAAAAAAAqgAAAAAAAA////AAAAAAAACAAAAAAAAAAqoAAAAAAAAP//8AAAAAAAAAqAAAAAAAACqqAAAAAAAAAP/8AAAAAAAAAKqgAAAAAAqqqgAAAAAAAAD//AAAAAAAAACqqoAAAACqqqqAAAAAAAAD//8AAAAAAAAKqqqoAAAKqqqqqAAAAAAAD///8AAAAAAACqqqqqAKqqqqqqqgAAAAAP////wAAAAAAKqqqqqqqqqqqqqqqAAAAA//////wAAAAKqqqqqqqqqqqqqqqqqAAAAP//////AAAKqqqqqqqqqqoAKACqqqqCgAD//////wKqqqqqqqqqqqqqAAAAAqqqKgAA//////8AqqqqqqqqqqqqqgAAAAAAACAAAP/////8AAqqoAqqqqqqqqoAAAAAAAAAAAA/////8AAqqqAAAAqqqqqqAAAAAAAAAAAAD////AAKqqqgAAAACqqqqgAAAAAAAAAAAA///8AAKqqqoAAAAAqqqqoAAAAAAAAAAAAD//wAACqqqqAAAAAKqqqqAAAAAAAAAAAAAD/yACqqqqqgAAAACqqqqgAAAAAAAAAAAAAP8IKqqqqqoAAAAAKqqqoAAAAAAAAAgAAAD/CqqqqqqqAAAAACqqqqAAAAAAAAAIAAAD//KqqqqqqgAAAAAqqqqgAAAAAAAACAAAD///CqqqqqoAAAAAqqqqoAAAAAAAAAAAAP///8KqqqqqAAAAAKqqqqAAAAAAAAAAAAP////8KqqqqgAAAAAqqqqAAAAAAAAAAAA//////8KqoCgAAAAAAqqqqoAAAAAAAAAD///////8KqAAAAAAAAAqqqoAAAAAAAAAP////////8CgAAAAAAAAAAKqoAAAAAAAA//////////wAAAAAAAAAAAAqqoAAAAAAA///////////wAAAAAAAAAAAAqqCoAoAAD////////////wAAAAAAAAAAACqqqqoAAP/////////////wKgAAAAAAAAAKqqqqAA///////////////yqoAAAAAAAACqqqgoD////////////////AAoAAIAAAAAKqAAAD/////////////////AAqooAAAAACqgAAP//////////////////AAAgAAAAAAoAAA////////////////////AAAAAAAAAAAAD/////////////////////AAAAAAAAAAAP/////////////////////8AAAAAAAAAAP//////////////////////8AAAAAAAAA////////////////////////8AAAAAAAD/////////////////////////8AAAAAAP//////////////////////////8AAAAA////////////////////////////wVQQA/////////////////////////////wBVD//////////////////////////////wAP///////////////////////////////w////////////////////////////////////////////////////////////////////////////////////////////////////////////////////w==',
 };
 const plotWalk = {};
 
@@ -3291,8 +3302,9 @@ let walkMap = null;
 
 // A plot's picture box in the world: left, top, width, height.
 function plotBox(zone) {
-    const [ax, ay, aw, ar] = PLOT_SHAPE[zone.id] || [50, 52, 97.5, 0.75];
-    const tw = WORLD_TILE / (aw / 100), th = tw * ar, [x, y] = cellXY(zone.id);
+    const id = zone.id || zone;
+    const [ax, ay, aw, ar] = PLOT_SHAPE[id] || [50, 52, 97.5, 0.75];
+    const tw = WORLD_TILE / (aw / 100), th = tw * ar, [x, y] = cellXY(id);
     return [x - (ax / 100) * tw, y - (ay / 100) * th, tw, th];
 }
 
@@ -3318,8 +3330,16 @@ function buildWalkMap() {
             return Math.hypot(x - x1 - t * (x2 - x1), y - y1 - t * (y2 - y1)) < 45 ? 2 : undefined;
         });
     });
-    // The Market and the Town Square are buildings.
-    ['market', 'town'].forEach(id => { const [x, y] = cellXY(id); diamond(x, y, WORLD_TILE * 0.42, WORLD_TILE * 0.25, 0); });
+    // The Market and the Town Square: their plots' ground, or (as paintings) in the way.
+    ['market', 'town'].forEach(id => {
+        const grid = (ASSETS.plots || {})[id] && plotWalkCells(id), [x, y] = cellXY(id);
+        if (!grid) return diamond(x, y, WORLD_TILE * 0.42, WORLD_TILE * 0.25, 0);
+        const [bx, by, bw, bh] = plotBox(id);
+        each(bx, by, bw, bh, (px, py) => {
+            const v = grid[Math.min(99, Math.floor(((py - by) / bh) * 100)) * 100 + Math.min(99, Math.floor(((px - bx) / bw) * 100))];
+            return v === 3 ? undefined : v;
+        });
+    });
     ZONES.forEach(zone => {
         const [x, y] = cellXY(zone.id), grid = inWorld(zone) && plotWalkCells(zone.id);
         if (!zoneOpen(zone)) return diamond(x, y, WORLD_TILE * 0.66, WORLD_TILE * 0.46, 0); // in its fog
@@ -3573,6 +3593,180 @@ function cheerHero() {
     el.classList.add('cheer');
 }
 
+// --- THE MARKET AND THE TOWN SQUARE, IN THE WORLD ---
+// Nothing to fix here (the Town's houses aside). Drag one onto the screen and
+// its people say hello; then a banner over each stall or board says what it is
+// and what it does, and a tap does it. People and banners are drawn by the
+// game, not the picture, so prices and missions stay up to date.
+
+// Where things are on each picture (% across, % down): where people stand (at
+// their feet) and where each banner's tail points.
+const PLACE_SPOTS = {
+    market: {
+        keeper: [48, 31],
+        banners: { shop: [50, 8], deeds: [19, 14], guide: [80, 17], energy: [19, 40], treasure: [84, 39], deals: [67, 60], well: [34, 66] },
+    },
+    town: {
+        progress: [36, 3],
+        banners: { missions: [57, 34], show: [56, 15] },
+        homes: { townhall: [41, 42], carpenter: [23, 55], ranch: [71, 49], fishshop: [45, 69], flowershop: [57, 77] }, // each owner at their door
+        jobs: { town1: [50, 47], town7: [50, 58], townhall: [35, 27], carpenter: [17, 40], ranch: [77, 34], fishshop: [34, 58], flowershop: [65, 63] },
+    },
+};
+const PERSON_HEIGHT = 100; // a person's picture, in world units (they stand about as tall as the farmer)
+const WELL_GIFTS = [{ money: 150 }, { energy: 15 }, { gems: 3 }];
+const placeSaid = {}; // which places have said hello this visit
+
+// What each banner shows and does: its icon, name and what it does (null: not shown).
+function placeBanner(id) {
+    const ads = !nativeApp;
+    const next = firstLandForSale() || Object.keys(AREAS).find(a => !unlocks[a]);
+    switch (id) {
+        case 'shop': return { icon: uiIcon('offer', '🏪'), name: 'Market', what: 'Deeds, offers and more', go: () => goTo('market'), spot: 'market' };
+        case 'deeds': return { icon: `<img src="${ASSETS.props.deed}" alt="📜">`, name: 'Land Deeds',
+            what: !next ? 'All the land is yours!' : quests.level < AREAS[next].level ? `${AREAS[next].name} · ${uiIcon('lock', '🔒')} Lv ${AREAS[next].level}` : `${AREAS[next].name} · 💵 ${shortNumber(AREAS[next].cost)}`,
+            go: () => (next ? offerDeed(next) : toast('All the land is yours!')), hot: !!firstLandForSale() };
+        case 'guide': return maxTier < NAMES.barn.length - 1 && { icon: `<img src="${ASSETS.props.upgrade}" alt="📘">`, name: 'Growth Guide',
+            what: `Everything grows one size bigger · 💵 ${shortNumber(guideCost())}`, go: offerUpgrade };
+        case 'energy': return { icon: uiIcon('energy', '⚡'), name: 'Energy', what: 'Refill your ⚡ and keep merging', go: () => openEnergy() };
+        case 'treasure': return { icon: uiIcon('gem', '💎'), name: 'Gems & Chests', what: 'Gem packs and treasure chests', go: () => openShop() };
+        case 'deals': return { icon: uiIcon('sale', '🏷️'), name: 'Daily Deals', what: 'New bargains every day', go: openDailyDeals, hot: dealsWaiting() };
+        case 'well': return ads && { icon: uiIcon('ad', '📺'), name: 'Wishing Well', what: adsLeft() > 0 ? 'Watch a short ad: a free gift!' : 'Resting until tomorrow', go: wishingWell, hot: adsLeft() > 0 };
+        case 'missions': return { icon: uiIcon('jobs', '📋'), name: 'Missions', what: 'Daily tasks, and a chest when they\'re done', go: openDailyGoals, hot: dailyClaimable() > 0 };
+        case 'show': return ads && { icon: uiIcon('ad', '📺'), name: 'Showtime!', what: adsLeft() > 0 ? `Watch a show for ⚡${AD_ENERGY}` : 'Next show tomorrow', go: () => { if (adsLeft() > 0) { watchAdForEnergy(); refreshPlaces(); } else toast('Next show tomorrow!'); }, hot: adsLeft() > 0 };
+    }
+    return null;
+}
+
+function wishingWell() {
+    if (adsLeft() <= 0) return toast('The well is resting. Come back tomorrow!');
+    showRewardedAd(() => {
+        shop.adsWatched++;
+        grantReward(WELL_GIFTS[Math.floor(Math.random() * WELL_GIFTS.length)], '🪙 The wishing well:');
+        refreshPlaces();
+    });
+}
+
+// A person standing on a place's picture, at their feet's spot (% of it).
+function addPlacePerson(twin, id, at, pic, name, onClick) {
+    const [, , bw, bh] = plotBox(id), w = (PERSON_HEIGHT / bw) * 100, h = (PERSON_HEIGHT / bh) * 100;
+    const el = document.createElement('button');
+    el.className = 'place-person';
+    el.style.cssText = `left:${at[0] - w / 2}%;top:${at[1] - h * 0.94}%;width:${w}%;height:${h}%;z-index:${Math.round(at[1]) + 30}`;
+    el.innerHTML = `<img src="${pic}" alt="${name}" draggable="false">`;
+    el.addEventListener('click', onClick);
+    twin.appendChild(el);
+    return el;
+}
+
+function addPlace(id, stage, ui) {
+    const [bx, by, bw, bh] = plotBox(id), [, y] = cellXY(id), spots = PLACE_SPOTS[id];
+    const tile = document.createElement('section');
+    tile.className = 'world-tile plotted world-placeplot';
+    tile.dataset.place = id;
+    tile.style.zIndex = Math.round(y - WORLD_BOX.y0);
+    tile.innerHTML = `<div class="plot-stage"><img class="zone-art plot-art" src="${ASSETS.plots[id]}" alt="" draggable="false"></div>`;
+    tile.classList.toggle('foggy', id === 'town' && !taskDone(TASKS.find(t => t.id === 'town1'))); // the storm's fog, until it's cleared
+    worldPlace(tile, bx, by, bw, bh);
+    stage.insertBefore(tile, ui);
+    const twin = document.createElement('div');
+    twin.className = 'tile-ui place-ui';
+    twin.dataset.place = id;
+    worldPlace(twin, bx, by, bw, bh);
+    ui.appendChild(twin);
+    fillPlace(id, twin);
+}
+
+// The place's people, banners and jobs (drawn again when something changes).
+function fillPlace(id, twin) {
+    twin.innerHTML = '';
+    const spots = PLACE_SPOTS[id];
+    Object.entries(spots.banners).forEach(([b, at]) => {
+        const info = placeBanner(b);
+        if (!info) return;
+        const el = document.createElement('button');
+        el.className = 'place-banner' + (info.hot ? ' hot' : '') + (info.spot ? ' spot' : '');
+        if (info.spot) el.dataset.id = info.spot;
+        el.dataset.banner = b;
+        el.style.left = at[0] + '%';
+        el.style.top = at[1] + '%';
+        el.innerHTML = iconize(`<span class="pb-icon">${info.icon}</span><span class="pb-text"><b>${info.name}</b><small>${info.what}</small></span>`);
+        el.addEventListener('click', info.go);
+        twin.appendChild(el);
+    });
+    if (id === 'market') {
+        addPlacePerson(twin, id, spots.keeper, ASSETS.characters.shopkeeper, 'Shopkeeper', () => placeSay(id, true));
+        return;
+    }
+    // Sunnyvale: how far its rebuilding has come, its jobs, and its people at their doors.
+    const jobs = landTasks('town'), done = jobs.filter(taskDone).length;
+    const bar = document.createElement('button');
+    bar.className = 'place-banner place-progress spot';
+    bar.dataset.id = 'town';
+    bar.style.left = spots.progress[0] + '%';
+    bar.style.top = spots.progress[1] + '%';
+    bar.innerHTML = iconize(`<span class="pb-text"><b>${TOWN_NAME}</b><span class="pb-bar"><i style="width:${(done / jobs.length) * 100}%"></i></span>
+        <small class="restore-tag">${done === jobs.length ? '✨ All restored!' : `${uiIcon('hammer', '🔨')} ${done}/${jobs.length} restored`}</small></span>`);
+    bar.addEventListener('click', () => goTo('town'));
+    twin.appendChild(bar);
+    addJobChips(jobs, twin, task => spots.jobs[task.house || task.id] || [50, 50]);
+    npcs.forEach(npc => {
+        const at = spots.homes[npc.home];
+        if (!at) return;
+        const person = addPlacePerson(twin, id, at, ASSETS.characters[npc.id], npc.name, () => openNpc(npc));
+        person.dataset.npc = npc.id;
+        const r = npc.request;
+        if (r) addTag(person, 'task-pin' + (canFulfill(npc) ? ' ready' : ''), `<span class="pin-item${canFulfill(npc) ? ' met' : ''}">${itemIcon(r.mode, r.tier)}</span>`);
+    });
+}
+
+function refreshPlaces() {
+    document.querySelectorAll('#scene-map .place-ui').forEach(twin => fillPlace(twin.dataset.place, twin));
+}
+
+// Who says hello in a place, and what.
+function placeGreeting(id) {
+    if (id === 'market') {
+        const line = dealsWaiting() ? 'Fresh Daily Deals on my cart today! Take a look.' : SHOPKEEPER_LINES[shopkeeperLine++ % SHOPKEEPER_LINES.length];
+        return { who: 'Shopkeeper', at: PLACE_SPOTS.market.keeper, line };
+    }
+    const ready = npcs.find(canFulfill);
+    if (ready) return { who: ready.name, at: PLACE_SPOTS.town.homes[ready.home], line: `You have my ${itemName(ready.request.mode, ready.request.tier)}! Tap me to hand it over.` };
+    const jobs = landTasks('town'), done = jobs.filter(taskDone).length, mayor = npcs.find(n => n.id === 'mayor');
+    return { who: mayor.name, at: PLACE_SPOTS.town.homes.townhall,
+        line: done < jobs.length ? `Welcome to ${TOWN_NAME}! ${done} of ${jobs.length} jobs done. The notice board has today's missions.` : `${TOWN_NAME} is good as new, thanks to you! Check the notice board for missions.` };
+}
+
+// Its person speaks up (banners wait until they've had their say).
+function placeSay(id, again = false) {
+    const twin = document.querySelector(`#scene-map .place-ui[data-place="${id}"]`);
+    if (!twin || (placeSaid[id] && !again)) return;
+    placeSaid[id] = true;
+    twin.querySelectorAll('.place-say').forEach(el => el.remove());
+    const { who, at, line } = placeGreeting(id), [, , , bh] = plotBox(id);
+    const say = document.createElement('div');
+    say.className = 'place-say';
+    say.style.left = at[0] + '%';
+    say.style.top = at[1] - (PERSON_HEIGHT / bh) * 100 * 0.95 + '%';
+    say.innerHTML = `<b>${who}</b>${line}`;
+    twin.appendChild(say);
+    twin.classList.add('talking');
+    const hush = () => { say.remove(); twin.classList.remove('talking'); };
+    say.addEventListener('click', hush);
+    setTimeout(hush, 4500);
+}
+
+// Once a drag stops: a place now in the middle of the screen says hello.
+function placesInView(view, stage) {
+    if (view.classList.contains('far') || fixing || !dialogEl.hidden) return;
+    const { x0, y0, w, h } = WORLD_BOX;
+    const cx = x0 + worldView.fx * w, cy = y0 + worldView.fy * h;
+    ['market', 'town'].filter(id => (ASSETS.plots || {})[id]).forEach(id => {
+        const [bx, by, bw, bh] = plotBox(id);
+        if (cx > bx + bw * 0.15 && cx < bx + bw * 0.85 && cy > by + bh * 0.1 && cy < by + bh * 0.9) placeSay(id);
+    });
+}
+
 // The land whose row is nearest the middle of the screen (of those you own):
 // where the Merge button takes you.
 function worldLand() {
@@ -3623,10 +3817,10 @@ function jobAt(task, i) {
 // On a painting the things to fix are painted in, so each open job is a soft
 // glowing ring on its spot with a bubble over it: the job's name and what it
 // needs, ticked off as you make them. Done and later jobs show nothing.
-function addJobChips(tasks, el) {
+function addJobChips(tasks, el, at = jobAt) {
     tasks.forEach((task, i) => {
         if (!taskOpen(task)) return;
-        const [x, y] = jobAt(task, i);
+        const [x, y] = at(task, i);
         const ready = taskReady(task);
         const spot = document.createElement('button');
         spot.className = 'fix-spot chip open' + (ready ? ' ready' : '');

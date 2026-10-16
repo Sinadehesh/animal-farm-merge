@@ -13,9 +13,11 @@ pink on a copy of each picture there (wm_<plot>.png), to check by eye.
 
 The colours pick out the ground; BLOCK lists, in % of the picture, the bits the
 colours get wrong (a fenced run, sacks on a barn floor). Add a new plot's
-PLOT_SHAPE (from game.js) to SHAPE, run it, and look at its preview.
+PLOT_SHAPE (from game.js) to SHAPE, run it, and look at its preview. The
+pictures are the ones assets.js names.
 """
 import base64
+import re
 import sys
 from collections import deque
 
@@ -27,11 +29,25 @@ from PIL import Image, ImageDraw
 SHAPE = {
     'barnyard': [50, 53, 97.5, 0.759], 'henhouse': [50, 54, 97.5, 0.72],
     'bigbarn': [50, 58, 97.2, 0.852], 'fieldgate': [50, 52, 97.8, 0.609],
+    'town': [50, 50, 95, 0.614], 'market': [50, 52, 117, 1.558],
 }
+NO_DIAMOND = {'market'}  # not a square plot: its whole picture is ground
 INDOORS = {'bigbarn'}
 BLOCK = {
     'henhouse': [[[46, 30], [62, 18], [98, 52], [86, 58], [70, 57], [58, 52], [46, 44]]],  # the chicken run
     'bigbarn': [[[40, 24], [52, 22], [56, 35], [50, 48], [40, 44]]],  # the grain sacks
+    'market': [  # the store, stalls, fountain and well (pale stone and canvas read as path)
+        [[36, 0], [64, 0], [66, 22], [56, 27], [42, 27], [34, 20]], [[8, 13], [30, 15], [31, 34], [20, 37], [9, 30]],
+        [[69, 14], [90, 18], [91, 34], [80, 37], [70, 30]], [[34, 40], [50, 35], [66, 42], [66, 52], [50, 58], [34, 52]],
+        [[5, 40], [30, 42], [32, 58], [18, 60], [6, 55]], [[70, 40], [95, 43], [95, 57], [80, 60], [70, 54]],
+        [[26, 63], [42, 65], [42, 82], [34, 84], [26, 80]], [[56, 60], [84, 63], [84, 77], [68, 80], [56, 74]],
+    ],
+    'town': [  # the houses, the fountain, the stage, the notice board, the dock and canal
+        [[26, 6], [45, 6], [46, 40], [36, 42], [26, 36]], [[44, 41], [56, 41], [56, 56], [44, 56]],
+        [[51, 15], [61, 15], [61, 30], [51, 30]], [[53, 33], [61, 33], [61, 47], [53, 47]],
+        [[57, 52], [78, 52], [78, 76], [62, 78], [57, 70]], [[24, 47], [42, 47], [42, 66], [24, 66]],
+        [[22, 64], [47, 72], [47, 88], [22, 78]], [[9, 23], [28, 23], [29, 50], [9, 50]], [[67, 22], [88, 22], [88, 50], [67, 50]],
+    ],
 }
 W = 400  # the size the colours are judged at
 
@@ -79,7 +95,8 @@ def big_parts(m, least):
 
 def plot_mask(name):
     ax, ay, aw, _ = SHAPE[name]
-    im = Image.open(f'assets/plots/{name}.webp').convert('RGBA')
+    path = re.search(rf"\b{name}: '(assets/plots/[^']+)'", open('assets.js').read()).group(1)
+    im = Image.open(path).convert('RGBA')
     hgt = round(W * im.height / im.width)
     px = np.asarray(im.resize((W, hgt), Image.LANCZOS))
     rgb, alpha = px[..., :3], px[..., 3] / 255
@@ -93,6 +110,8 @@ def plot_mask(name):
     yy, xx = np.mgrid[0:hgt, 0:W]
     hw = aw / 100 * W / 2
     ground = np.abs(xx - ax / 100 * W) / hw + np.abs(yy - ay / 100 * hgt) / (hw * 0.6) <= 0.97
+    if name in NO_DIAMOND:
+        ground = np.ones_like(ground)
     stand = (grass | path) & (alpha > 0.9) & ground
     stand = big_parts(shrink(grow(stand), 3), 150)
     no = Image.new('L', (W, hgt), 0)

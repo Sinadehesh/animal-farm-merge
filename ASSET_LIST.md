@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**591 assets:** 544 done ✅, 6 placeholders 🟡, 41 missing ⬜.
+**593 assets:** 546 done ✅, 6 placeholders 🟡, 41 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -431,10 +431,12 @@ plot shows it instead of its painting. Raw pictures in `assets/raw/plots/`; list
 
 | | Area | File |
 |---|---|---|
-| ✅ | Barnyard | `assets/plots/barnyard.webp` |
-| ✅ | Hen House | `assets/plots/henhouse.webp` |
-| ✅ | Barn Storeroom | `assets/plots/bigbarn.webp` |
-| ✅ | Field Gate | `assets/plots/fieldgate.webp` |
+| ✅ | Market (shops, banners drawn by the game) | `assets/plots/market.webp` |
+| ✅ | Sunnyvale town square | `assets/plots/town.webp` |
+| ✅ | Barnyard | `assets/plots/barnyard_flat.webp` |
+| ✅ | Hen House | `assets/plots/henhouse_flat.webp` |
+| ✅ | Barn Storeroom | `assets/plots/bigbarn_flat.webp` |
+| ✅ | Field Gate | `assets/plots/fieldgate_flat.webp` |
 | ⬜ | Strawberry Rows | `assets/plots/berryrows.webp` |
 | ⬜ | Orchard | `assets/plots/orchard.webp` |
 | ⬜ | Meadow | `assets/plots/meadow.webp` |
@@ -449,6 +451,8 @@ plot shows it instead of its painting. Raw pictures in `assets/raw/plots/`; list
 | ⬜ | Garden Gate | `assets/plots/gardengate.webp` |
 | ⬜ | Rose Arch | `assets/plots/rosearch.webp` |
 | ⬜ | Greenhouse | `assets/plots/greenhouse.webp` |
+
+The soil edge under each plot is cut off with `tools/decliff.py` so plots sit flat on the ground.
 
 ### Plot props
 

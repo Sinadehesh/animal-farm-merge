@@ -11,6 +11,6 @@
 - Every picture must be easy to tell apart at a glance: each item in a chain (and each level of a chest, producer
   or booster) gets its own distinct colour and silhouette, not just a bigger copy of the one before, and must not
   look like an item in another chain. Item names must not repeat across chains. Write image prompts this way.
-- When a plot picture is added or changed, add its `PLOT_SHAPE` to `tools/walkmask.py`, run
-  `python3 tools/walkmask.py <preview_dir>`, check the pink previews (where the farmer may stand), and paste the
-  printed `PLOT_WALK` table into `game.js`.
+- When a plot picture is added or changed, cut its soil edge off with `tools/decliff.py`, add its `PLOT_SHAPE` to
+  `tools/walkmask.py`, run `python3 tools/walkmask.py <preview_dir>`, check the pink previews (where the farmer may
+  stand), and paste the printed `PLOT_WALK` table into `game.js`.
