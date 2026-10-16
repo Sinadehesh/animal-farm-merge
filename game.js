@@ -6083,13 +6083,18 @@ function showPointer(target, who, text, closeLabel, opts = {}) {
     tutorialEl.classList.toggle('blocking', !!opts.block);
     pointerAllows = opts.block ? (opts.explain ? [] : drag ? targets.slice(0, 1) : targets) : null;
 
-    const stage = stageEl.getBoundingClientRect();
+    // Positions are taken over the whole layer (the top bar and the stage).
+    const view = stageEl.getBoundingClientRect(), stage = tutorialEl.getBoundingClientRect();
     const rect = el => el.getBoundingClientRect();
     const centre = el => { const r = rect(el); return { x: r.left + r.width / 2 - stage.left, y: r.top + r.height / 2 - stage.top }; };
-    // Something to tap that's scrolled out of view comes into view.
+    // Something to tap that's scrolled out of view comes into view (the top bar is always in view).
     const r0 = rect(targets[0]);
-    if (r0.bottom < stage.top || r0.top > stage.bottom || r0.left < stage.left || r0.right > stage.right) {
-        targets[0].scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+    // On the map it comes to the middle, clear of the banners along the top.
+    const onMap = !!targets[0].closest('.world-view');
+    const margin = onMap ? view.height * 0.18 : 0;
+    if (!targets[0].closest('.hud') && (r0.top < view.top + margin || r0.bottom > view.bottom - margin || r0.left < view.left || r0.right > view.right)) {
+        // (on the map at once, so the hand below aims at where it ends up, not where it was)
+        targets[0].scrollIntoView({ block: onMap ? 'center' : 'nearest', inline: 'center', behavior: onMap ? 'auto' : 'smooth' });
     }
 
     // The spotlight: the screen dims, with a glowing window over each thing
@@ -8065,7 +8070,7 @@ function fxLayer() {
     if (!el) {
         el = document.createElement('div');
         el.id = 'fx';
-        stageEl.insertBefore(el, tutorialEl);
+        stageEl.insertBefore(el, document.getElementById('toasts'));
     }
     return el;
 }
@@ -8557,7 +8562,8 @@ function loadGame() {
 }
 
 // Initial setup
-stageEl.insertBefore(tutorialEl, document.getElementById('toasts'));
+// Over the whole screen, the top bar too, so the hand can point at its buttons.
+document.body.appendChild(tutorialEl);
 document.querySelectorAll('[data-ui]').forEach(el => { el.innerHTML = uiIcon(el.dataset.ui, el.textContent); });
 ['map', 'town', 'market'].forEach(id => {
     document.getElementById(`scene-${id}`).style.backgroundImage = `url("${ASSETS.scenes[id]}")`;

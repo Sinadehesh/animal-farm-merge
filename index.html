@@ -1027,7 +1027,8 @@
 
         /* First-play tutorial: the screen dims around what to tap, a hand shows
            how, and someone says why. Taps elsewhere are held back by game.js. */
-        #tutorial { position: absolute; inset: 0; z-index: 150; pointer-events: none; }
+        /* Over the top bar and the stage alike (it's not inside the stage), so it can point at the bar's buttons. */
+        #tutorial { position: fixed; top: 0; left: 50%; translate: -50% 0; width: var(--stage-w); height: calc(var(--hud-h) + var(--stage-h)); z-index: 1500; pointer-events: none; container-type: inline-size; overflow: hidden; }
         #tutorial[hidden] { display: none; }
         .tut-dim, .tut-rings { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
         .tut-dim > rect { fill: rgba(28, 18, 10, 0.55); }
@@ -2027,7 +2028,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610161500"></script>
-    <script src="game.js?v=202610161500"></script>
+    <script src="assets.js?v=202610161626"></script>
+    <script src="game.js?v=202610161626"></script>
 </body>
 </html>
