@@ -1011,12 +1011,12 @@ function openShop(note = '') {
     const actions = [];
     if (!shop.offerBought) {
         actions.push({
-            label: `⭐ ${SPECIAL_OFFER.name}: 💎 ${SPECIAL_OFFER.gems} + 💵 ${SPECIAL_OFFER.money.toLocaleString()} + ⚡ ${SPECIAL_OFFER.energy} · ${SPECIAL_OFFER.price}`,
+            label: `⭐ ${SPECIAL_OFFER.name}: 💎 ${SPECIAL_OFFER.gems} + 💵 ${withCommas(SPECIAL_OFFER.money)} + ⚡ ${SPECIAL_OFFER.energy} · ${SPECIAL_OFFER.price}`,
             primary: true, wide: true, onClick: buySpecialOffer,
         });
     }
     GEM_PACKS.forEach(pack => actions.push({
-        label: `${pack.name}: 💎 ${pack.gems.toLocaleString()}${pack.tag ? ` (${pack.tag})` : ''} · ${pack.price}`,
+        label: `${pack.name}: 💎 ${withCommas(pack.gems)}${pack.tag ? ` (${pack.tag})` : ''} · ${pack.price}`,
         primary: true, wide: true,
         onClick: () => purchase(pack.id),
     }));
@@ -1041,7 +1041,7 @@ function openSpecialOffer(title = SPECIAL_OFFER.name) {
     showDialog({
         title,
         body: `<p><b>One-time ${SPECIAL_OFFER.name}</b></p>
-               <p>💎 ${SPECIAL_OFFER.gems} + 💵 ${SPECIAL_OFFER.money.toLocaleString()} + ⚡ ${SPECIAL_OFFER.energy}</p>`,
+               <p>💎 ${SPECIAL_OFFER.gems} + 💵 ${withCommas(SPECIAL_OFFER.money)} + ⚡ ${SPECIAL_OFFER.energy}</p>`,
         actions: [
             { label: `Get it for ${SPECIAL_OFFER.price}`, primary: true, wide: true, onClick: buySpecialOffer },
             { label: 'No thanks' },
@@ -1095,7 +1095,7 @@ function grantPurchase(id) {
     const pack = GEM_PACKS.find(p => p.id === id);
     if (pack) {
         res.gems += pack.gems;
-        return `+💎 ${pack.gems.toLocaleString()}`;
+        return `+💎 ${withCommas(pack.gems)}`;
     }
     const offer = OFFERS.find(o => o.id === id);
     if (offer) {
@@ -1109,7 +1109,7 @@ function grantPurchase(id) {
         res.money += SPECIAL_OFFER.money;
         res.energy += SPECIAL_OFFER.energy;
         tickEnergy();
-        return `+💎 ${SPECIAL_OFFER.gems} +💵 ${SPECIAL_OFFER.money.toLocaleString()} +⚡ ${SPECIAL_OFFER.energy}`;
+        return `+💎 ${SPECIAL_OFFER.gems} +💵 ${withCommas(SPECIAL_OFFER.money)} +⚡ ${SPECIAL_OFFER.energy}`;
     }
     if (id === DAILY_BASKET.id) {
         shop.basketStart = today();
@@ -3194,8 +3194,12 @@ const SCENERY = { // height, width over height, how often (by weight)
 const GROUND_TILE = 420; // the meadow picture repeats every this many world units across
 let sceneryCache = null;
 
+// The scenery near the clearings (deep in the fog nothing can be seen, so
+// nothing is placed there). Made again when a clearing opens.
 function sceneryPlaces() {
-    if (sceneryCache) return sceneryCache;
+    const holes = fogHoles(), key = JSON.stringify(holes);
+    if (sceneryCache && sceneryCache.key === key) return sceneryCache.list;
+    const seen = (x, y) => holes.some(([cx, cy, rx, ry]) => ((x - cx) / (rx * 1.15)) ** 2 + ((y - cy) / (ry * 1.25)) ** 2 <= 1);
     let seed = 20261016;
     const rand = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
     const { x0, y0, w, h } = WORLD_BOX;
@@ -3216,7 +3220,7 @@ function sceneryPlaces() {
     for (let gy = y0 + 60; gy < y0 + h; gy += step * 0.6) {
         for (let gx = x0 + 40; gx < x0 + w; gx += step) {
             const x = gx + (rand() - 0.5) * step * 0.9, y = gy + (rand() - 0.5) * step * 0.5;
-            if (rand() < 0.35 || onGround(x, y, 30) || nearPath(x, y, 70) || y - 260 < y0 || x < x0 + 80 || x > x0 + w - 80) continue;
+            if (rand() < 0.35 || !seen(x, y) || onGround(x, y, 30) || nearPath(x, y, 70) || y - 260 < y0 || x < x0 + 80 || x > x0 + w - 80) continue;
             let kind = pick();
             const [ht, ar] = SCENERY[kind];
             // A tall thing must not stand in front of an area (its top would cover it).
@@ -3226,23 +3230,22 @@ function sceneryPlaces() {
             out.push({ kind, x, y, flip: rand() < 0.5 });
         }
     }
-    return (sceneryCache = out);
+    sceneryCache = { key, list: out };
+    return out;
 }
 
 function addScenery(stage, ui) {
     const pics = (ASSETS.world || {}).scenery;
     if (!pics) return;
     const frag = document.createDocumentFragment();
-    // Only what shows: deep in the fog nothing can be seen, so nothing is drawn there.
-    const holes = fogHoles(), seen = (x, y) => holes.some(([cx, cy, rx, ry]) => ((x - cx) / (rx * 1.15)) ** 2 + ((y - cy) / (ry * 1.25)) ** 2 <= 1);
-    sceneryPlaces().filter(({ x, y }) => seen(x, y)).forEach(({ kind, x, y, flip }) => {
+    sceneryPlaces().forEach(({ kind, x, y, flip }) => {
         const [ht, ar] = SCENERY[kind], wd = ht * ar;
         const el = document.createElement('img');
         el.className = 'world-thing' + (flip ? ' flip' : '');
         el.src = pics[kind];
         el.alt = '';
         el.draggable = false;
-        el.loading = 'lazy';
+        el.decoding = 'async';
         worldPlace(el, x - wd / 2, y - ht, wd, ht);
         el.style.zIndex = Math.round(y - WORLD_BOX.y0);
         frag.appendChild(el);
@@ -5313,12 +5316,12 @@ function toast(message, kind = '') {
 
 // A "Buy" dialog button that explains the shortfall instead of failing silently.
 // A "Buy" dialog button. When 💵 is short, gems cover the rest.
-function buyAction(cost, onBuy, label = `Buy for 💵 ${cost.toLocaleString()}`) {
+function buyAction(cost, onBuy, label = `Buy for 💵 ${withCommas(cost)}`) {
     const short = cost - res.money;
     if (short <= 0) return { label, primary: true, onClick: onBuy };
     const gems = Math.ceil(short / COINS_PER_GEM);
     return {
-        label: res.money > 0 ? `Buy for 💵 ${res.money.toLocaleString()} + 💎 ${gems}` : `Buy for 💎 ${gems}`,
+        label: res.money > 0 ? `Buy for 💵 ${withCommas(res.money)} + 💎 ${gems}` : `Buy for 💎 ${gems}`,
         primary: true,
         onClick: () => {
             if (!spendGems(gems)) return;
@@ -7006,11 +7009,17 @@ function buyUpgrade() {
     goTo(currentScene);
 }
 
+// 12450 -> "12,450" (by hand: toLocaleString's first call loads the phone's
+// locale data, a noticeable pause on a slow phone).
+function withCommas(n) {
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
 // 12,450 -> "12.4k" so the top bar fits on small phones.
 function shortNumber(n) {
     if (n >= 100000) return Math.floor(n / 1000) + 'k';
     if (n >= 10000) return (Math.floor(n / 100) / 10) + 'k';
-    return n.toLocaleString();
+    return withCommas(n);
 }
 
 function updateUI() {
@@ -8611,6 +8620,21 @@ setInterval(() => {
     saveGame();
 }, 1000);
 addEventListener('pagehide', saveGame);
+
+// The map's big pictures, decoded in the background soon after start, so they
+// are ready when you drag to them instead of popping in late.
+const preloaded = [];
+(window.requestIdleCallback || (go => setTimeout(go, 1500)))(() => {
+    const A = ASSETS, srcs = [...Object.values(A.plots || {}), (A.world || {}).ground, ...Object.values((A.world || {}).scenery || {}),
+        ...Object.values((A.hero || {}).poses || {}), (A.hero || {}).walk, ...Object.values(A.characters || {})].filter(Boolean);
+    srcs.forEach(src => {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = src;
+        if (img.decode) img.decode().catch(() => {});
+        preloaded.push(img);
+    });
+});
 
 // Installable and playable offline (on the published site; not while developing).
 // In the Android app the game is already on the phone: no service worker,
