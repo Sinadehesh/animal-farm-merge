@@ -6917,28 +6917,28 @@ function clutterBoard(mode = 'barn') {
     const top = NAMES[mode].length - 1;
     const roll = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
     const webbed = (lo, hi) => ({ tier: Math.min(top, roll(lo, hi)), web: true });
-    const treasure = () => webbed(5, 7);
+    const treasure = () => webbed(6, 8);
     const others = Object.keys(TOOLS).filter(c => TOOLS[c].board === mode);
     // A free item from another producer on this board, bigger the deeper it lies.
     const gift = row => {
         const chain = others[Math.floor(Math.random() * others.length)];
-        return { tier: Math.min(NAMES[chain].length - 1, roll(row - 4, row - 3)), chain };
+        return { tier: Math.min(NAMES[chain].length - 1, roll(row - 3, row - 2)), chain };
     };
     const producerCrates = [30 + Math.floor(Math.random() * GAME_WIDTH), 42 + Math.floor(Math.random() * GAME_WIDTH)];
     const lucky = 1 + Math.floor(Math.random() * 2 * GAME_WIDTH);
     for (let i = 1; i < NUM_CELLS; i++) {
         const row = Math.floor(i / GAME_WIDTH);
         if (row < 2) {
-            if (i === 4 || i === 9 || i === 11) board[i] = webbed(0, 2);
+            if (i === 4 || i === 9 || i === 11) board[i] = webbed(1, 3);
             else if (i === lucky && mode !== 'barn') board[i] = treasure();
         } else if (row < 4) {
-            const item = Math.random() < 0.08 ? treasure() : webbed(row - 1, row);
-            board[i] = Math.random() < 0.4 ? item : { type: 'box', hidden: item };
+            const item = Math.random() < 0.08 ? treasure() : webbed(row, row + 1);
+            board[i] = Math.random() < 0.4 ? item : { type: 'box', hidden: item, need: crateNeed(i) };
         } else {
             const hidden = producerCrates.includes(i) ? { type: 'shop', level: 1, web: true }
                 : others.length && Math.random() < 0.25 ? gift(row)
-                : webbed(row - 1, row);
-            board[i] = { type: 'box', hidden };
+                : webbed(row, row + 1);
+            board[i] = { type: 'box', hidden, need: crateNeed(i) };
         }
     }
     return board;
@@ -6952,17 +6952,31 @@ function tutorialBoard(board) {
     board[11] = { tier: 0, web: true };
     board[12] = { tier: 0, web: true };
     board[TUTORIAL_WEB] = { tier: 1, web: true };
-    board[TUTORIAL_WEB + 1] = { type: 'box', hidden: { tier: 0, web: true } };
-    board[TUTORIAL_WEB + GAME_WIDTH] = { type: 'box', hidden: { tier: 2, web: true } };
+    board[TUTORIAL_WEB + 1] = { type: 'box', hidden: { tier: 0, web: true }, need: 1 };
+    board[TUTORIAL_WEB + GAME_WIDTH] = { type: 'box', hidden: { tier: 2, web: true }, need: 1 };
     return board;
 }
 
-// Merging next to a crate opens it and reveals the cobwebbed item inside.
-function openBoxesAround(mode, index) {
+let toldCrate = false; // the "too small" hint, once a visit
+
+// How strong a crate is: the size (tier) a merge next to it must make to open
+// it. The deeper the row, the stronger: row 3 opens to two Feed merged, the
+// bottom row only to something five merges up.
+function crateNeed(index) {
+    return Math.max(1, Math.floor(index / GAME_WIDTH) - 1);
+}
+
+// A merge next to a crate opens it, if what it made is big enough, and
+// reveals the cobwebbed item inside. Too small: the crate just shakes.
+function openBoxesAround(mode, index, made) {
     const opened = [];
+    const size = made ? (made.type ? levelOf(made) - 1 : made.tier) : Infinity;
     getNeighbors(index).forEach(n => {
         const cell = grids[mode][n];
-        if (cell && cell.type === 'box') {
+        if (cell && cell.type === 'box' && size < (cell.need ?? crateNeed(n))) {
+            setTimeout(() => cellItem(mode, n)?.classList.add('crate-shake'), 30); // after the board redraws
+            if (!toldCrate) { toldCrate = true; toast(`Too small to break that crate! Merge a size ${cell.need ?? crateNeed(n)} or bigger next to it (the number on the crate).`); }
+        } else if (cell && cell.type === 'box') {
             grids[mode][n] = cell.hidden;
             stats.boxes++;
             opened.push(n);
@@ -7479,7 +7493,7 @@ function renderInfoBar(mode) {
         const name = boardItemName(mode, item);
         html += icon + text(`${name} · ${uiIcon('cobweb', '🕸️')}`, `Covered in cobwebs. Merge a free ${name} into it to free it.`) + button('dust-btn', `Dust<br>💎${dustPrice(item)}`);
     } else if (item.type === 'box') {
-        html += `<span class="info-icon">📦</span>` + text('Crate', 'Merge anything next to it to open it.');
+        html += `<span class="info-icon">📦</span>` + text(`Crate · size ${item.need ?? 1}`, `Merge something of size ${item.need ?? 1} or bigger next to it (the number on an item's corner) to break it open.`);
     } else if (item.type === 'bubble') {
         html += icon + text('Double Bubble', `A free ${boardItemName(mode, item.inner)} inside! Pop it before it's gone: ${countdown(item.until)}`)
             + button('pop-btn', `Pop<br>💎${item.gems}`);
@@ -7848,7 +7862,7 @@ function handleDragEnd(e) {
             } else if (sameLevel) {
                 toast(`That's already a ${boardItemName(mode, sourceItem)}, the best there is!`);
             } else if (targetItem && targetItem.type === 'box') {
-                toast('Crates stay put. Merge something next to one to open it.');
+                toast(`Crates stay put. Merge something of size ${targetItem.need ?? 1} or bigger next to it to break it open.`);
             } else if (targetItem && targetItem.web) {
                 toast('Cobwebbed items stay put. Merge a matching item into one to free it.');
             } else if (targetItem && targetItem.type === 'bubble') {
@@ -7870,7 +7884,7 @@ function handleDragEnd(e) {
                     stats.webs++;
                     toast('🕸️ Freed!', 'good');
                 }
-                const opened = openBoxesAround(mode, targetIndex);
+                const opened = openBoxesAround(mode, targetIndex, made);
                 popped = [targetIndex, ...opened, ...afterMerge(mode, targetIndex, made)];
                 fxLater = () => {
                     fxMerge(mode, targetIndex, made.type ? made.level : made.tier);
@@ -8178,7 +8192,8 @@ function itemFace(mode, item) {
     }
     switch (item.type) {
         case 'box':
-            return ASSETS.props.crate ? { cls: ['box', 'has-sprite'], html: sprite(ASSETS.props.crate) } : { cls: ['box'], html: emoji('📦') };
+            return { ...(ASSETS.props.crate ? { cls: ['box', 'has-sprite'], html: sprite(ASSETS.props.crate) } : { cls: ['box'], html: emoji('📦') }),
+                badge: item.need ?? 1, badgeCls: 'crate-need' }; // the size (an item's badge) it takes to break it
         case 'shop': {
             const level = levelOf(item);
             const art = (ASSETS.producers[artKey(mode)] || [])[level - 1];
@@ -8366,6 +8381,8 @@ function loadGame() {
         maxTier = save.maxTier;
         Object.keys(grids).forEach(mode => {
             if (save.grids[mode] && save.grids[mode].length === NUM_CELLS) grids[mode] = save.grids[mode];
+            // Crates from before they had a strength get the one for their row.
+            grids[mode].forEach((cell, i) => { if (cell && cell.type === 'box' && cell.need === undefined) cell.need = crateNeed(i); });
         });
         (save.npcs || []).forEach(saved => {
             const npc = npcs.find(n => n.id === saved.id);
