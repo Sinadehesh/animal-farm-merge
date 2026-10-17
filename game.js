@@ -3374,8 +3374,8 @@ function renderWorld(scene) {
             y += ((jy - ay) / 100) * th;
         }
         return [(x - x0) / w, (y - y0) / h];
-    }, () => { heroFollow(view, stage); placesInView(view, stage); });
-    requestAnimationFrame(openNearestBanner);
+    }, () => { heroFollow(view, stage); placesInView(view); });
+    requestAnimationFrame(() => placesInView(view, true));
     Object.keys(AREAS).filter(id => unlocks[id]).forEach(id => unlockNewZones(id, stage));
 }
 
@@ -3763,6 +3763,7 @@ const PLACE_SPOTS = {
     },
 };
 const PERSON_HEIGHT = 100; // a person's picture, in world units (they stand about as tall as the farmer)
+const PERSON_STAND = 84; // how tall someone with poses stands, in world units (as tall as the farmer)
 const WELL_GIFTS = [{ money: 150 }, { energy: 15 }, { gems: 3 }];
 const placeSaid = {}; // which places have said hello this visit
 
@@ -3796,17 +3797,105 @@ function wishingWell() {
     });
 }
 
-// A person standing on a place's picture, at their feet's spot (% of it).
-function addPlacePerson(twin, id, at, pic, name, onClick) {
-    const [, , bw, bh] = plotBox(id), w = (PERSON_HEIGHT / bw) * 100, h = (PERSON_HEIGHT / bh) * 100;
+// A person standing on a place's picture, at their feet's spot (% of it), in
+// the pose they're in (if they have poses).
+function addPlacePerson(twin, id, at, who, name, onClick) {
+    const [, , bw, bh] = plotBox(id), set = (ASSETS.poses || {})[who];
     const el = document.createElement('button');
     el.className = 'place-person';
-    el.style.cssText = `left:${at[0] - w / 2}%;top:${at[1] - h * 0.94}%;width:${w}%;height:${h}%;z-index:${Math.round(at[1]) + 30}`;
-    el.innerHTML = `<img src="${pic}" alt="${name}" draggable="false">`;
+    el.dataset.who = who;
+    if (set) {
+        const [fw, fh, tall, feet] = set.frame, k = PERSON_STAND / tall, w = ((fw * k) / bw) * 100, h = ((fh * k) / bh) * 100;
+        const pose = personPose(who);
+        el.classList.add('posed');
+        el.dataset.pose = pose;
+        el.style.cssText = `left:${at[0] - w / 2}%;top:${at[1] - h + ((feet * k) / bh) * 100}%;width:${w}%;height:${h}%;z-index:${Math.round(at[1]) + 30}`;
+        el.innerHTML = `<img src="${set[pose]}" alt="${name}" draggable="false">`;
+    } else {
+        const w = (PERSON_HEIGHT / bw) * 100, h = (PERSON_HEIGHT / bh) * 100;
+        el.style.cssText = `left:${at[0] - w / 2}%;top:${at[1] - h * 0.94}%;width:${w}%;height:${h}%;z-index:${Math.round(at[1]) + 30}`;
+        el.innerHTML = `<img src="${ASSETS.characters[who]}" alt="${name}" draggable="false">`;
+    }
     el.addEventListener('click', onClick);
     twin.appendChild(el);
     return el;
 }
+
+// --- THEIR POSES ---
+// Someone with poses waves as you drag their place into view, talks while
+// their bubble shows, holds out their hands while you have what they asked
+// for, cheers and claps when it's handed over or their job is done, and now
+// and then thinks, asks after their order, or points the way.
+const personNow = {}; // who -> { pose, until, timer }: a passing pose
+const cheerLater = new Set(); // who got their order or job while out of sight
+const placeShown = {}; // which places are on screen
+
+// The pose they're in: a passing one, or how they stand.
+function personPose(who) {
+    const now = personNow[who];
+    if (now && now.until > Date.now()) return now.pose;
+    const npc = npcs.find(n => n.id === who);
+    return npc && canFulfill(npc) ? 'ask' : 'stand';
+}
+
+function drawPerson(who) {
+    const set = (ASSETS.poses || {})[who], pose = personPose(who);
+    if (set) document.querySelectorAll(`#scene-map .place-person[data-who="${who}"]`).forEach(el => {
+        el.dataset.pose = pose;
+        el.querySelector('img').src = set[pose];
+    });
+}
+
+// They strike poses one after another ([pose, ms] each), then stand again.
+function posePerson(who, ...steps) {
+    if (!(ASSETS.poses || {})[who]) return;
+    const now = personNow[who] || (personNow[who] = {});
+    clearTimeout(now.timer);
+    const next = () => {
+        const [pose, ms] = steps.shift() || [];
+        now.pose = pose;
+        now.until = pose ? Date.now() + ms : 0;
+        drawPerson(who);
+        if (pose) now.timer = setTimeout(next, ms);
+    };
+    next();
+}
+
+// Which place someone stands in.
+function personPlace(who) {
+    return who === 'shopkeeper' ? 'market' : 'town';
+}
+
+// An order handed over or a job done: they cheer and clap, now if their
+// place is on screen, otherwise when it next is.
+function cheerPerson(who) {
+    if (currentScene === 'map' && placeShown[personPlace(who)]) posePerson(who, ['cheer', 1000], ['clap', 1500]);
+    else cheerLater.add(who);
+}
+
+// A place comes into view: its people wave (or cheer, if you did something
+// for them while away), each a moment apart.
+function greetPlace(id) {
+    document.querySelectorAll(`#scene-map .place-ui[data-place="${id}"] .place-person.posed`).forEach((el, i) => {
+        const who = el.dataset.who;
+        setTimeout(() => {
+            if (cheerLater.delete(who)) posePerson(who, ['cheer', 1000], ['clap', 1500]);
+            else if (!(personNow[who]?.until > Date.now())) posePerson(who, ['wave', 1400]);
+        }, 150 + i * 220);
+    });
+}
+
+// Now and then, someone on screen strikes a pose.
+setInterval(() => {
+    if (currentScene !== 'map' || document.hidden) return;
+    const idle = [...document.querySelectorAll('#scene-map .place-person.posed')].filter(el =>
+        placeShown[el.closest('.place-ui').dataset.place] && !(personNow[el.dataset.who]?.until > Date.now()));
+    const el = idle[Math.floor(Math.random() * idle.length)];
+    if (!el || Math.random() < 0.35) return;
+    const who = el.dataset.who, npc = npcs.find(n => n.id === who);
+    const choices = npc?.request && !canFulfill(npc) ? ['ask', 'ask', 'think'] : who === 'shopkeeper' || who === 'mayor' ? ['point', 'think'] : ['think'];
+    posePerson(who, [choices[Math.floor(Math.random() * choices.length)], 2200]);
+}, 3000);
 
 function addPlace(id, stage, ui) {
     const [bx, by, bw, bh] = plotBox(id), [, y] = cellXY(id), spots = PLACE_SPOTS[id];
@@ -3843,7 +3932,7 @@ function fillPlace(id, twin) {
         twin.appendChild(el);
     });
     if (id === 'market') {
-        addPlacePerson(twin, id, spots.keeper, ASSETS.characters.shopkeeper, 'Shopkeeper', () => placeSay(id, true));
+        addPlacePerson(twin, id, spots.keeper, 'shopkeeper', 'Shopkeeper', () => placeSay(id, true));
         return;
     }
     // Sunnyvale: how far its rebuilding has come, its jobs, and its people at their doors.
@@ -3861,7 +3950,7 @@ function fillPlace(id, twin) {
     npcs.forEach(npc => {
         const at = spots.homes[npc.home];
         if (!at) return;
-        const person = addPlacePerson(twin, id, at, ASSETS.characters[npc.id], npc.name, () => openNpc(npc));
+        const person = addPlacePerson(twin, id, at, npc.id, npc.name, () => openNpc(npc));
         person.dataset.npc = npc.id;
         const r = npc.request;
         if (r) addTag(person, 'task-pin' + (canFulfill(npc) ? ' ready' : ''), `<span class="pin-item${canFulfill(npc) ? ' met' : ''}">${itemIcon(r.mode, r.tier)}</span>`);
@@ -3877,12 +3966,12 @@ function refreshPlaces() {
 function placeGreeting(id) {
     if (id === 'market') {
         const line = dealsWaiting() ? 'Fresh Daily Deals on my cart today! Take a look.' : SHOPKEEPER_LINES[shopkeeperLine++ % SHOPKEEPER_LINES.length];
-        return { who: 'Shopkeeper', at: PLACE_SPOTS.market.keeper, line };
+        return { id: 'shopkeeper', who: 'Shopkeeper', at: PLACE_SPOTS.market.keeper, line };
     }
     const ready = npcs.find(canFulfill);
-    if (ready) return { who: ready.name, at: PLACE_SPOTS.town.homes[ready.home], line: `You have my ${itemName(ready.request.mode, ready.request.tier)}! Tap me to hand it over.` };
+    if (ready) return { id: ready.id, who: ready.name, at: PLACE_SPOTS.town.homes[ready.home], line: `You have my ${itemName(ready.request.mode, ready.request.tier)}! Tap me to hand it over.` };
     const jobs = landTasks('town'), done = jobs.filter(taskDone).length, mayor = npcs.find(n => n.id === 'mayor');
-    return { who: mayor.name, at: PLACE_SPOTS.town.homes.townhall,
+    return { id: 'mayor', who: mayor.name, at: PLACE_SPOTS.town.homes.townhall,
         line: done < jobs.length ? `Welcome to ${TOWN_NAME}! ${done} of ${jobs.length} jobs done. The notice board has today's missions.` : `${TOWN_NAME} is good as new, thanks to you! Check the notice board for missions.` };
 }
 
@@ -3892,7 +3981,7 @@ function placeSay(id, again = false) {
     if (!twin || (placeSaid[id] && !again)) return;
     placeSaid[id] = true;
     twin.querySelectorAll('.place-say').forEach(el => el.remove());
-    const { who, at, line } = placeGreeting(id), [, , , bh] = plotBox(id);
+    const { id: speaker, who, at, line } = placeGreeting(id), [, , , bh] = plotBox(id);
     const say = document.createElement('div');
     say.className = 'place-say';
     say.style.left = at[0] + '%';
@@ -3900,7 +3989,12 @@ function placeSay(id, again = false) {
     say.innerHTML = `<b>${who}</b>${line}`;
     twin.appendChild(say);
     twin.classList.add('talking');
-    const hush = () => { say.remove(); twin.classList.remove('talking'); };
+    posePerson(speaker, ...(again ? [] : [['wave', 1100]]), ['talk', again ? 4500 : 3400]);
+    const hush = () => {
+        say.remove();
+        twin.classList.remove('talking');
+        if (personNow[speaker]?.pose === 'talk') posePerson(speaker);
+    };
     say.addEventListener('click', hush);
     setTimeout(hush, 4500);
 }
@@ -3920,15 +4014,20 @@ function openNearestBanner() {
     best?.classList.add('open');
 }
 
-// Once a drag stops: a place now in the middle of the screen says hello.
-function placesInView(view, stage) {
+// Once a drag stops: a place now in the middle of the screen says hello, and
+// its people wave as it comes into view (`quiet`: the map just drawn, so they
+// only wave).
+function placesInView(view, quiet = false) {
     openNearestBanner();
-    if (view.classList.contains('far') || fixing || !dialogEl.hidden) return;
     const { x0, y0, w, h } = WORLD_BOX;
     const cx = x0 + worldView.fx * w, cy = y0 + worldView.fy * h;
+    const busy = view.classList.contains('far') || fixing || !dialogEl.hidden;
     ['market', 'town'].filter(id => (ASSETS.plots || {})[id]).forEach(id => {
         const [bx, by, bw, bh] = plotBox(id);
-        if (cx > bx + bw * 0.15 && cx < bx + bw * 0.85 && cy > by + bh * 0.1 && cy < by + bh * 0.9) placeSay(id);
+        const shown = !busy && cx > bx + bw * 0.15 && cx < bx + bw * 0.85 && cy > by + bh * 0.1 && cy < by + bh * 0.9;
+        if (shown && !placeShown[id]) greetPlace(id);
+        if (shown && !quiet) placeSay(id);
+        if (!busy) placeShown[id] = shown;
     });
 }
 
@@ -4883,6 +4982,7 @@ function completeTask(id, quiet = false) {
     delete restoration.baselines[task.id];
     lastSale = null;
     const npc = npcs.find(n => n.id === task.who);
+    cheerPerson(task.who);
     const restored = landRestored(task.land);
     const zone = task.zone && ZONE[task.zone];
     const zoneFinished = zone && zoneDone(zone) && !restored; // a land's last area pays the land's reward
@@ -5341,6 +5441,7 @@ function buyAction(cost, onBuy, label = `Buy for 💵 ${withCommas(cost)}`) {
 // --- NAVIGATION ---
 
 function goTo(scene) {
+    if (scene === 'map' && currentScene !== 'map') Object.keys(placeShown).forEach(id => delete placeShown[id]); // back on the map: its people wave again
     currentScene = scene;
     document.querySelectorAll('.fix-banner').forEach(el => el.remove());
     closeDialog();
@@ -5759,6 +5860,7 @@ function deliver(npc) {
     generateRequestFor(npc);
     checkTasks();
     goTo(currentScene); // the town, or the board you delivered from
+    cheerPerson(npc.id);
 }
 
 // A delivery: the customer pops up over their order to say thanks, and the

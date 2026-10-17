@@ -1834,6 +1834,10 @@
         .place-person { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; }
         .place-person img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
         .place-person .task-pin { bottom: 96%; }
+        /* Someone with poses: a shadow at their feet, and a hop when they cheer. */
+        .place-person.posed::before { content: ''; position: absolute; left: 24%; right: 24%; bottom: -2%; height: 6%; background: radial-gradient(closest-side, rgba(40, 30, 10, 0.35), transparent); }
+        .place-person.posed img { position: relative; }
+        .place-person[data-pose="cheer"] img { animation: hero-hop 0.5s ease-out 2; }
         .place-say { position: absolute; z-index: 500; transform: translate(-50%, calc(-100% - 2.6cqw)); width: max-content; max-width: 62cqw; padding: 2.2cqw 3cqw; background: #fff; border: 0.7cqw solid var(--ink);
             border-radius: 4cqw; box-shadow: 0 1.5cqw 3cqw rgba(30, 20, 5, 0.3); font-size: 3.6cqw; font-weight: 700; line-height: 1.3; color: var(--ink); animation: popIn 0.35s cubic-bezier(0.3, 1.6, 0.5, 1); cursor: pointer; }
         .place-say b { display: block; color: #b0531c; font-size: 3.2cqw; }
@@ -2028,7 +2032,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610171115"></script>
-    <script src="game.js?v=202610171115"></script>
+    <script src="assets.js?v=202610171626"></script>
+    <script src="game.js?v=202610171626"></script>
 </body>
 </html>

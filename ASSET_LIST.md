@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**611 assets:** 564 done ✅, 6 placeholders 🟡, 41 missing ⬜.
+**651 assets:** 604 done ✅, 6 placeholders 🟡, 41 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -75,20 +75,23 @@ List them under `buildingsRestored` in `assets.js`.
 | 🟡 | Fishshop | `assets/town/fishshop.svg` → `assets/town/fishshop.png` | Finn's fish shop by the water |
 | 🟡 | Flowershop | `assets/town/flowershop.svg` → `assets/town/flowershop.png` | Poppy's flower shop |
 
-## 4. Characters (6 people, 4 views each)
+## 4. Characters (6 people)
 
-One 2x2 sheet per person (`assets/raw/character_<id>.webp`), cut into: a head-and-shoulders **portrait** (round
-frames), **waving** from the waist up (calling you over, story scenes), **standing** full body (in the areas)
-and **cheering** full body (after a fix).
+One pose sheet per person (`assets/raw/characters/<id>_poses.jpg`: 4 × 2 full-body poses on flat magenta, in the
+order stand, wave, talk, cheer / clap, think, point, ask), cut by `tools/cutposes.py` into the 8 **poses** they
+strike in the town and the market (`assets/characters/poses/<id>/`), plus a head-and-shoulders **portrait** (round
+frames), **waving** from the waist up (calling you over, story scenes), **standing** in a square (the areas, the
+opening) and **cheering** (after a fix). Who has no pose sheet yet keeps their older 2x2 sheet
+(`assets/raw/character_<id>.webp`) and stands still.
 
-| | Character | Portrait | Waving | Standing | Cheering |
-|---|---|---|---|---|---|
-| ✅ | Mayor Bramble | ✅ | ✅ | ✅ | ✅ |
-| ✅ | Hattie, the rancher | ✅ | ✅ | ✅ | ✅ |
-| ✅ | Ruby, the carpenter | ✅ | ✅ | ✅ | ✅ |
-| ✅ | Finn, the fisherman | ✅ | ✅ | ✅ | ✅ |
-| ✅ | Poppy, the florist | ✅ | ✅ | ✅ | ✅ |
-| ✅ | the Market shopkeeper | ✅ | ✅ | ✅ | ✅ |
+| | Character | Portrait | Waving | Standing | Cheering | Poses |
+|---|---|---|---|---|---|---|
+| ✅ | Mayor Bramble | ✅ | ✅ | ✅ | ✅ | ✅ 8 |
+| 🟡 | Hattie, the rancher | ✅ | ✅ | ✅ | ✅ | ⬜ sheet wanted |
+| ✅ | Ruby, the carpenter | ✅ | ✅ | ✅ | ✅ | ✅ 8 |
+| ✅ | Finn, the fisherman | ✅ | ✅ | ✅ | ✅ | ✅ 8 |
+| ✅ | Poppy, the florist | ✅ | ✅ | ✅ | ✅ | ✅ 8 |
+| ✅ | the Market shopkeeper | ✅ | ✅ | ✅ | ✅ | ✅ 8 |
 
 ## 5. Props (4)
 

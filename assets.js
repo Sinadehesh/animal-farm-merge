@@ -277,45 +277,77 @@ const ASSETS = {
         flowershop: 'assets/town/flowershop.svg',
     },
 
-    // Townsfolk (keyed by NPC id) and the market shopkeeper.
+    // Townsfolk (keyed by NPC id) and the market shopkeeper, standing.
     characters: {
-        mayor: 'assets/characters/mayor.png',
+        mayor: 'assets/characters/poses/mayor/body.webp',
         hattie: 'assets/characters/hattie.png',
-        ruby: 'assets/characters/ruby.png',
-        finn: 'assets/characters/finn.png',
-        poppy: 'assets/characters/poppy.png',
-        shopkeeper: 'assets/characters/shopkeeper.png',
+        ruby: 'assets/characters/poses/ruby/body.webp',
+        finn: 'assets/characters/poses/finn/body.webp',
+        poppy: 'assets/characters/poses/poppy/body.webp',
+        shopkeeper: 'assets/characters/poses/shopkeeper/body.webp',
     },
 
     // Head-and-shoulders portraits, shown in a round frame (cards, the town,
     // popups). null = frame the full-body drawing above instead.
     portraits: {
-        mayor: 'assets/characters/portraits/mayor.png',
+        mayor: 'assets/characters/poses/mayor/face.webp',
         hattie: 'assets/characters/portraits/hattie.png',
-        ruby: 'assets/characters/portraits/ruby.png',
-        finn: 'assets/characters/portraits/finn.png',
-        poppy: 'assets/characters/portraits/poppy.png',
-        shopkeeper: 'assets/characters/portraits/shopkeeper.png',
+        ruby: 'assets/characters/poses/ruby/face.webp',
+        finn: 'assets/characters/poses/finn/face.webp',
+        poppy: 'assets/characters/poses/poppy/face.webp',
+        shopkeeper: 'assets/characters/poses/shopkeeper/face.webp',
     },
 
     // The same people from the waist up, waving (calling you over, story
-    // scenes), and full body cheering (after a fix). Cut from
-    // assets/raw/character_<id>.webp. null = the portrait instead.
+    // scenes), and full body cheering (after a fix). null = the portrait instead.
     wave: {
-        mayor: 'assets/characters/wave/mayor.png',
+        mayor: 'assets/characters/poses/mayor/hello.webp',
         hattie: 'assets/characters/wave/hattie.png',
-        ruby: 'assets/characters/wave/ruby.png',
-        finn: 'assets/characters/wave/finn.png',
-        poppy: 'assets/characters/wave/poppy.png',
-        shopkeeper: 'assets/characters/wave/shopkeeper.png',
+        ruby: 'assets/characters/poses/ruby/hello.webp',
+        finn: 'assets/characters/poses/finn/hello.webp',
+        poppy: 'assets/characters/poses/poppy/hello.webp',
+        shopkeeper: 'assets/characters/poses/shopkeeper/hello.webp',
     },
     cheer: {
-        mayor: 'assets/characters/cheer/mayor.png',
+        mayor: 'assets/characters/poses/mayor/cheer.webp',
         hattie: 'assets/characters/cheer/hattie.png',
-        ruby: 'assets/characters/cheer/ruby.png',
-        finn: 'assets/characters/cheer/finn.png',
-        poppy: 'assets/characters/cheer/poppy.png',
-        shopkeeper: 'assets/characters/cheer/shopkeeper.png',
+        ruby: 'assets/characters/poses/ruby/cheer.webp',
+        finn: 'assets/characters/poses/finn/cheer.webp',
+        poppy: 'assets/characters/poses/poppy/cheer.webp',
+        shopkeeper: 'assets/characters/poses/shopkeeper/cheer.webp',
+    },
+
+    // Each person's poses in the town and the market, cut from
+    // assets/raw/characters/<id>_poses.jpg with tools/cutposes.py (which also
+    // makes the body, face and hello pictures above). All are drawn on one
+    // frame: [width, height, the standing figure's height, the feet's height
+    // above the bottom], in px. Who has none stands in one picture.
+    poses: {
+        mayor: {
+            frame: [186, 263, 253, 4],
+            stand: 'assets/characters/poses/mayor/stand.webp', wave: 'assets/characters/poses/mayor/wave.webp', talk: 'assets/characters/poses/mayor/talk.webp', cheer: 'assets/characters/poses/mayor/cheer.webp',
+            clap: 'assets/characters/poses/mayor/clap.webp', think: 'assets/characters/poses/mayor/think.webp', point: 'assets/characters/poses/mayor/point.webp', ask: 'assets/characters/poses/mayor/ask.webp',
+        },
+        ruby: {
+            frame: [172, 262, 244, 4],
+            stand: 'assets/characters/poses/ruby/stand.webp', wave: 'assets/characters/poses/ruby/wave.webp', talk: 'assets/characters/poses/ruby/talk.webp', cheer: 'assets/characters/poses/ruby/cheer.webp',
+            clap: 'assets/characters/poses/ruby/clap.webp', think: 'assets/characters/poses/ruby/think.webp', point: 'assets/characters/poses/ruby/point.webp', ask: 'assets/characters/poses/ruby/ask.webp',
+        },
+        finn: {
+            frame: [202, 267, 256, 4],
+            stand: 'assets/characters/poses/finn/stand.webp', wave: 'assets/characters/poses/finn/wave.webp', talk: 'assets/characters/poses/finn/talk.webp', cheer: 'assets/characters/poses/finn/cheer.webp',
+            clap: 'assets/characters/poses/finn/clap.webp', think: 'assets/characters/poses/finn/think.webp', point: 'assets/characters/poses/finn/point.webp', ask: 'assets/characters/poses/finn/ask.webp',
+        },
+        poppy: {
+            frame: [194, 272, 249, 4],
+            stand: 'assets/characters/poses/poppy/stand.webp', wave: 'assets/characters/poses/poppy/wave.webp', talk: 'assets/characters/poses/poppy/talk.webp', cheer: 'assets/characters/poses/poppy/cheer.webp',
+            clap: 'assets/characters/poses/poppy/clap.webp', think: 'assets/characters/poses/poppy/think.webp', point: 'assets/characters/poses/poppy/point.webp', ask: 'assets/characters/poses/poppy/ask.webp',
+        },
+        shopkeeper: {
+            frame: [184, 264, 256, 4],
+            stand: 'assets/characters/poses/shopkeeper/stand.webp', wave: 'assets/characters/poses/shopkeeper/wave.webp', talk: 'assets/characters/poses/shopkeeper/talk.webp', cheer: 'assets/characters/poses/shopkeeper/cheer.webp',
+            clap: 'assets/characters/poses/shopkeeper/clap.webp', think: 'assets/characters/poses/shopkeeper/think.webp', point: 'assets/characters/poses/shopkeeper/point.webp', ask: 'assets/characters/poses/shopkeeper/ask.webp',
+        },
     },
 
     // Tool producers, one per land (a single picture each), by chain. Their
