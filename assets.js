@@ -110,11 +110,12 @@ const ASSETS = {
 
     // Areas drawn as isometric plots (diorama pictures, cut from assets/raw/plots/):
     // shown instead of their stage paintings, with the mess and new things of
-    // their jobs (props) standing on them. See PLOT_JOBS in game.js.
+    // their jobs (props) standing on them. See PLOT_JOBS in game.js. Every map
+    // picture (plots, props, scenery, the ground) has been through tools/brighten.py.
     plots: {
-        barnyard: 'assets/plots/barnyard_flat.webp', henhouse: 'assets/plots/henhouse_flat.webp',
-        bigbarn: 'assets/plots/bigbarn_flat.webp', fieldgate: 'assets/plots/fieldgate_flat.webp',
-        market: 'assets/plots/market.webp', town: 'assets/plots/town.webp',
+        barnyard: 'assets/map/plots/barnyard.webp', henhouse: 'assets/map/plots/henhouse.webp',
+        bigbarn: 'assets/map/plots/bigbarn.webp', fieldgate: 'assets/map/plots/fieldgate.webp',
+        market: 'assets/map/plots/market.webp', town: 'assets/map/plots/town.webp',
     },
     // Plot props, by name: transparent pictures cut from the sheets in assets/raw/plots/.
     // The farmer: a walk cycle (14 frames in a row, cut from assets/raw/hero/walk_towards.mp4),
@@ -129,35 +130,36 @@ const ASSETS = {
     },
 
     // The world around the areas: a repeating meadow (assets/raw/world/ground.jpg, made
-    // seamless with tools/seamless.py) and scenery cut from assets/raw/world/scenery_sheet.jpg.
+    // seamless with tools/seamless.py), scenery cut from assets/raw/world/scenery_sheet.jpg,
+    // and the dirt the roads between areas are painted with (tools/dirt.py).
     world: {
-        ground: 'assets/world/ground.webp',
+        ground: 'assets/map/ground.webp', dirt: 'assets/map/dirt.webp',
         scenery: {
-            oak: 'assets/world/scenery/oak.webp', pine: 'assets/world/scenery/pine.webp', maple: 'assets/world/scenery/maple.webp',
-            bush: 'assets/world/scenery/bush.webp', stump: 'assets/world/scenery/stump.webp', cattails: 'assets/world/scenery/cattails.webp',
-            lavender: 'assets/world/scenery/lavender.webp', tulips: 'assets/world/scenery/tulips.webp', fence: 'assets/world/scenery/fence.webp',
+            oak: 'assets/map/scenery/oak.webp', pine: 'assets/map/scenery/pine.webp', maple: 'assets/map/scenery/maple.webp',
+            bush: 'assets/map/scenery/bush.webp', stump: 'assets/map/scenery/stump.webp', cattails: 'assets/map/scenery/cattails.webp',
+            lavender: 'assets/map/scenery/lavender.webp', tulips: 'assets/map/scenery/tulips.webp', fence: 'assets/map/scenery/fence.webp',
         },
     },
     plotProps: {
         // Outdoor mess
-        weeds: 'assets/plots/props/weeds.webp', brambles: 'assets/plots/props/brambles.webp', branch: 'assets/plots/props/branch.webp',
-        boulders: 'assets/plots/props/boulders.webp', planks: 'assets/plots/props/planks.webp', tyre: 'assets/plots/props/tyre.webp',
-        scrap: 'assets/plots/props/scrap.webp', brushwood: 'assets/plots/props/brushwood.webp',
+        weeds: 'assets/map/props/weeds.webp', brambles: 'assets/map/props/brambles.webp', branch: 'assets/map/props/branch.webp',
+        boulders: 'assets/map/props/boulders.webp', planks: 'assets/map/props/planks.webp', tyre: 'assets/map/props/tyre.webp',
+        scrap: 'assets/map/props/scrap.webp', brushwood: 'assets/map/props/brushwood.webp',
         // Indoor mess
-        cobweb: 'assets/plots/props/cobweb.webp', grain_spill: 'assets/plots/props/grain_spill.webp', crate_smashed: 'assets/plots/props/crate_smashed.webp',
-        old_straw: 'assets/plots/props/old_straw.webp', scrolls: 'assets/plots/props/scrolls.webp', jars_broken: 'assets/plots/props/jars_broken.webp',
-        old_sacks: 'assets/plots/props/old_sacks.webp', puddle: 'assets/plots/props/puddle.webp',
+        cobweb: 'assets/map/props/cobweb.webp', grain_spill: 'assets/map/props/grain_spill.webp', crate_smashed: 'assets/map/props/crate_smashed.webp',
+        old_straw: 'assets/map/props/old_straw.webp', scrolls: 'assets/map/props/scrolls.webp', jars_broken: 'assets/map/props/jars_broken.webp',
+        old_sacks: 'assets/map/props/old_sacks.webp', puddle: 'assets/map/props/puddle.webp',
         // Broken things
-        fence_broken: 'assets/plots/props/fence_broken.webp', gate_broken: 'assets/plots/props/gate_broken.webp', barrow_broken: 'assets/plots/props/barrow_broken.webp',
-        pump_broken: 'assets/plots/props/pump_broken.webp', scaffold: 'assets/plots/props/scaffold.webp', tarp: 'assets/plots/props/tarp.webp',
-        table_broken: 'assets/plots/props/table_broken.webp', scarecrow_fallen: 'assets/plots/props/scarecrow_fallen.webp', wire_torn: 'assets/plots/props/wire_torn.webp',
-        nest_broken: 'assets/plots/props/nest_broken.webp', perch_broken: 'assets/plots/props/perch_broken.webp', feeder_broken: 'assets/plots/props/feeder_broken.webp',
-        trough_dry: 'assets/plots/props/trough_dry.webp', cart_tipped: 'assets/plots/props/cart_tipped.webp', plough_old: 'assets/plots/props/plough_old.webp',
-        ditch: 'assets/plots/props/ditch.webp',
+        fence_broken: 'assets/map/props/fence_broken.webp', gate_broken: 'assets/map/props/gate_broken.webp', barrow_broken: 'assets/map/props/barrow_broken.webp',
+        pump_broken: 'assets/map/props/pump_broken.webp', scaffold: 'assets/map/props/scaffold.webp', tarp: 'assets/map/props/tarp.webp',
+        table_broken: 'assets/map/props/table_broken.webp', scarecrow_fallen: 'assets/map/props/scarecrow_fallen.webp', wire_torn: 'assets/map/props/wire_torn.webp',
+        nest_broken: 'assets/map/props/nest_broken.webp', perch_broken: 'assets/map/props/perch_broken.webp', feeder_broken: 'assets/map/props/feeder_broken.webp',
+        trough_dry: 'assets/map/props/trough_dry.webp', cart_tipped: 'assets/map/props/cart_tipped.webp', plough_old: 'assets/map/props/plough_old.webp',
+        ditch: 'assets/map/props/ditch.webp',
         // New things
-        lantern: 'assets/plots/props/lantern.webp', mailbox: 'assets/plots/props/mailbox.webp', tulips: 'assets/plots/props/tulips.webp',
-        bench: 'assets/plots/props/bench.webp', bird_feeder: 'assets/plots/props/bird_feeder.webp', firewood: 'assets/plots/props/firewood.webp',
-        bunting: 'assets/plots/props/bunting.webp', wreath: 'assets/plots/props/wreath.webp',
+        lantern: 'assets/map/props/lantern.webp', mailbox: 'assets/map/props/mailbox.webp', tulips: 'assets/map/props/tulips.webp',
+        bench: 'assets/map/props/bench.webp', bird_feeder: 'assets/map/props/bird_feeder.webp', firewood: 'assets/map/props/firewood.webp',
+        bunting: 'assets/map/props/bunting.webp', wreath: 'assets/map/props/wreath.webp',
     },
 
     // The things in each area, by name (transparent PNGs, cut from

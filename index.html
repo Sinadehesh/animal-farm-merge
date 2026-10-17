@@ -1766,8 +1766,10 @@
         .world-thing { position: absolute; pointer-events: none; user-select: none; -webkit-user-drag: none; } /* no filters: hundreds of them made the map crawl on phones */
         .world-thing.flip { transform: scaleX(-1); }
         .world-paths line { stroke-linecap: round; fill: none; }
-        .world-paths .path-edge { stroke: #b4905a; stroke-width: 150; }
-        .world-paths .path-dirt { stroke: #dcc28e; stroke-width: 105; }
+        .world-paths .path-wear { stroke: rgba(84, 104, 34, 0.2); stroke-width: 180; }
+        .world-paths .path-edge { stroke: rgba(196, 160, 98, 0.7); stroke-width: 132; }
+        .world-paths .path-dirt { stroke: #dcc28e; stroke-width: 110; }
+        .world-paths.textured .path-dirt { stroke: url(#world-dirt); }
         .zone.world-tile { position: absolute; flex: none; overflow: visible; scroll-snap-align: none; }
         .world-tile .plot-stage { width: 100%; }
         .world-tile .plot-art { filter: none; } /* a filter on a picture this big is costly to draw on phones */
@@ -2032,7 +2034,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610171626"></script>
-    <script src="game.js?v=202610171626"></script>
+    <script src="assets.js?v=202610171634"></script>
+    <script src="game.js?v=202610171634"></script>
 </body>
 </html>

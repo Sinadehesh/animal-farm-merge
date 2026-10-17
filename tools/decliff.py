@@ -6,8 +6,9 @@ Usage:
 
 edge_px is how tall the soil edge is in the picture (measure it once: it is the
 same all along the front of a plot). In every column, the bottom edge_px pixels
-of each run of picture are made see-through, unless they are leaves (a tree
-hanging over the edge), and the new edge fades out over a few pixels.
+of the picture (its lowest run, the plot's front) are made see-through, unless
+they are leaves (a tree hanging over the edge), and the new edge fades out over
+a few pixels. Higher runs are left alone: a gap between leaves is not an edge.
 """
 import sys
 
@@ -25,19 +26,16 @@ leafy = (hue > 55) & (hue < 160) & (sat > 0.3)
 height, width = alpha.shape
 solid = alpha > 30
 for x in range(width):
-    y = height - 1
-    while y >= 0:
-        if not solid[y, x]:
-            y -= 1
-            continue
-        top = max(0, y - edge + 1)
-        if leafy[max(top, y - 12):y + 1, x].mean() < 0.5:
-            alpha[top:y + 1, x] = 0
-            for k in range(1, FADE + 1):  # a soft new edge
-                if top - k >= 0:
-                    alpha[top - k, x] *= k / (FADE + 1)
-        while y >= 0 and solid[y, x]:
-            y -= 1
+    ys = np.nonzero(solid[:, x])[0]
+    if not len(ys):
+        continue
+    y = ys[-1]
+    top = max(0, y - edge + 1)
+    if leafy[max(top, y - 12):y + 1, x].mean() < 0.5:
+        alpha[top:y + 1, x] = 0
+        for k in range(1, FADE + 1):  # a soft new edge
+            if top - k >= 0:
+                alpha[top - k, x] *= k / (FADE + 1)
 px[..., 3] = alpha
 Image.fromarray(px.astype(np.uint8), 'RGBA').save(out, quality=88, alpha_quality=95, method=6)
 print(out)

@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**651 assets:** 604 done ✅, 6 placeholders 🟡, 41 missing ⬜.
+**652 assets:** 605 done ✅, 6 placeholders 🟡, 41 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -434,93 +434,97 @@ plot shows it instead of its painting. Raw pictures in `assets/raw/plots/`; list
 
 | | Area | File |
 |---|---|---|
-| ✅ | Market (shops, banners drawn by the game) | `assets/plots/market.webp` |
-| ✅ | Sunnyvale town square | `assets/plots/town.webp` |
-| ✅ | Barnyard | `assets/plots/barnyard_flat.webp` |
-| ✅ | Hen House | `assets/plots/henhouse_flat.webp` |
-| ✅ | Barn Storeroom | `assets/plots/bigbarn_flat.webp` |
-| ✅ | Field Gate | `assets/plots/fieldgate_flat.webp` |
-| ⬜ | Strawberry Rows | `assets/plots/berryrows.webp` |
-| ⬜ | Orchard | `assets/plots/orchard.webp` |
-| ⬜ | Meadow | `assets/plots/meadow.webp` |
-| ⬜ | Stables | `assets/plots/stables.webp` |
-| ⬜ | Windmill | `assets/plots/windmill.webp` |
-| ⬜ | Leaf Piles | `assets/plots/leafpiles.webp` |
-| ⬜ | Compost Bins | `assets/plots/compostbins.webp` |
-| ⬜ | Mushroom Corner | `assets/plots/mushrooms.webp` |
-| ⬜ | Muddy Shore | `assets/plots/muddyshore.webp` |
-| ⬜ | Lily Pond | `assets/plots/lilypond.webp` |
-| ⬜ | Boat Dock | `assets/plots/boatdock.webp` |
-| ⬜ | Garden Gate | `assets/plots/gardengate.webp` |
-| ⬜ | Rose Arch | `assets/plots/rosearch.webp` |
-| ⬜ | Greenhouse | `assets/plots/greenhouse.webp` |
+| ✅ | Market (shops, banners drawn by the game) | `assets/map/plots/market.webp` |
+| ✅ | Sunnyvale town square | `assets/map/plots/town.webp` |
+| ✅ | Barnyard | `assets/map/plots/barnyard.webp` |
+| ✅ | Hen House | `assets/map/plots/henhouse.webp` |
+| ✅ | Barn Storeroom | `assets/map/plots/bigbarn.webp` |
+| ✅ | Field Gate | `assets/map/plots/fieldgate.webp` |
+| ⬜ | Strawberry Rows | `assets/map/plots/berryrows.webp` |
+| ⬜ | Orchard | `assets/map/plots/orchard.webp` |
+| ⬜ | Meadow | `assets/map/plots/meadow.webp` |
+| ⬜ | Stables | `assets/map/plots/stables.webp` |
+| ⬜ | Windmill | `assets/map/plots/windmill.webp` |
+| ⬜ | Leaf Piles | `assets/map/plots/leafpiles.webp` |
+| ⬜ | Compost Bins | `assets/map/plots/compostbins.webp` |
+| ⬜ | Mushroom Corner | `assets/map/plots/mushrooms.webp` |
+| ⬜ | Muddy Shore | `assets/map/plots/muddyshore.webp` |
+| ⬜ | Lily Pond | `assets/map/plots/lilypond.webp` |
+| ⬜ | Boat Dock | `assets/map/plots/boatdock.webp` |
+| ⬜ | Garden Gate | `assets/map/plots/gardengate.webp` |
+| ⬜ | Rose Arch | `assets/map/plots/rosearch.webp` |
+| ⬜ | Greenhouse | `assets/map/plots/greenhouse.webp` |
 
-The soil edge under each plot is cut off with `tools/decliff.py` so plots sit flat on the ground.
+The soil edge under each plot is cut off with `tools/decliff.py` so plots sit flat on the ground. Every map picture
+(plots, props, scenery, the ground, the road dirt) is then brightened once with `tools/brighten.py`, which also cleans
+the pink fringe left by the magenta background. They all live in `assets/map/`.
 
 ### The world around the areas
 
 A repeating meadow under the whole map (`assets/raw/world/ground.jpg`, made seamless with `tools/seamless.py`) and
 scenery scattered on it at real size (cut from `assets/raw/world/scenery_sheet.jpg`; heights in `SCENERY` in `game.js`).
+The roads between areas are painted with a repeating dirt texture made by `tools/dirt.py`.
 
 | | Picture | File |
 |---|---|---|
-| ✅ | Meadow ground (repeats) | `assets/world/ground.webp` |
-| ✅ | Scenery: oak | `assets/world/scenery/oak.webp` |
-| ✅ | Scenery: pine | `assets/world/scenery/pine.webp` |
-| ✅ | Scenery: maple | `assets/world/scenery/maple.webp` |
-| ✅ | Scenery: bush | `assets/world/scenery/bush.webp` |
-| ✅ | Scenery: stump | `assets/world/scenery/stump.webp` |
-| ✅ | Scenery: cattails | `assets/world/scenery/cattails.webp` |
-| ✅ | Scenery: lavender | `assets/world/scenery/lavender.webp` |
-| ✅ | Scenery: tulips | `assets/world/scenery/tulips.webp` |
-| ✅ | Scenery: fence | `assets/world/scenery/fence.webp` |
+| ✅ | Meadow ground (repeats) | `assets/map/ground.webp` |
+| ✅ | Road dirt (repeats) | `assets/map/dirt.webp` |
+| ✅ | Scenery: oak | `assets/map/scenery/oak.webp` |
+| ✅ | Scenery: pine | `assets/map/scenery/pine.webp` |
+| ✅ | Scenery: maple | `assets/map/scenery/maple.webp` |
+| ✅ | Scenery: bush | `assets/map/scenery/bush.webp` |
+| ✅ | Scenery: stump | `assets/map/scenery/stump.webp` |
+| ✅ | Scenery: cattails | `assets/map/scenery/cattails.webp` |
+| ✅ | Scenery: lavender | `assets/map/scenery/lavender.webp` |
+| ✅ | Scenery: tulips | `assets/map/scenery/tulips.webp` |
+| ✅ | Scenery: fence | `assets/map/scenery/fence.webp` |
 
 ### Plot props
 
-Sheets of 8 on flat magenta, cut by name into `assets/plots/props/`. Shared by every plot.
+Sheets of 8 on flat magenta, cut by name into `assets/map/props/`. Shared by every plot.
 
 | | Prop | File |
 |---|---|---|
-| ✅ | weeds | `assets/plots/props/weeds.webp` |
-| ✅ | brambles | `assets/plots/props/brambles.webp` |
-| ✅ | branch | `assets/plots/props/branch.webp` |
-| ✅ | boulders | `assets/plots/props/boulders.webp` |
-| ✅ | planks | `assets/plots/props/planks.webp` |
-| ✅ | tyre | `assets/plots/props/tyre.webp` |
-| ✅ | scrap | `assets/plots/props/scrap.webp` |
-| ✅ | brushwood | `assets/plots/props/brushwood.webp` |
-| ✅ | cobweb | `assets/plots/props/cobweb.webp` |
-| ✅ | grain spill | `assets/plots/props/grain_spill.webp` |
-| ✅ | crate smashed | `assets/plots/props/crate_smashed.webp` |
-| ✅ | old straw | `assets/plots/props/old_straw.webp` |
-| ✅ | scrolls | `assets/plots/props/scrolls.webp` |
-| ✅ | jars broken | `assets/plots/props/jars_broken.webp` |
-| ✅ | old sacks | `assets/plots/props/old_sacks.webp` |
-| ✅ | puddle | `assets/plots/props/puddle.webp` |
-| ✅ | fence broken | `assets/plots/props/fence_broken.webp` |
-| ✅ | gate broken | `assets/plots/props/gate_broken.webp` |
-| ✅ | barrow broken | `assets/plots/props/barrow_broken.webp` |
-| ✅ | pump broken | `assets/plots/props/pump_broken.webp` |
-| ✅ | scaffold | `assets/plots/props/scaffold.webp` |
-| ✅ | tarp | `assets/plots/props/tarp.webp` |
-| ✅ | table broken | `assets/plots/props/table_broken.webp` |
-| ✅ | scarecrow fallen | `assets/plots/props/scarecrow_fallen.webp` |
-| ✅ | wire torn | `assets/plots/props/wire_torn.webp` |
-| ✅ | nest broken | `assets/plots/props/nest_broken.webp` |
-| ✅ | perch broken | `assets/plots/props/perch_broken.webp` |
-| ✅ | feeder broken | `assets/plots/props/feeder_broken.webp` |
-| ✅ | trough dry | `assets/plots/props/trough_dry.webp` |
-| ✅ | cart tipped | `assets/plots/props/cart_tipped.webp` |
-| ✅ | plough old | `assets/plots/props/plough_old.webp` |
-| ✅ | ditch | `assets/plots/props/ditch.webp` |
-| ✅ | lantern | `assets/plots/props/lantern.webp` |
-| ✅ | mailbox | `assets/plots/props/mailbox.webp` |
-| ✅ | tulips | `assets/plots/props/tulips.webp` |
-| ✅ | bench | `assets/plots/props/bench.webp` |
-| ✅ | bird feeder | `assets/plots/props/bird_feeder.webp` |
-| ✅ | firewood | `assets/plots/props/firewood.webp` |
-| ✅ | bunting | `assets/plots/props/bunting.webp` |
-| ✅ | wreath | `assets/plots/props/wreath.webp` |
+| ✅ | weeds | `assets/map/props/weeds.webp` |
+| ✅ | brambles | `assets/map/props/brambles.webp` |
+| ✅ | branch | `assets/map/props/branch.webp` |
+| ✅ | boulders | `assets/map/props/boulders.webp` |
+| ✅ | planks | `assets/map/props/planks.webp` |
+| ✅ | tyre | `assets/map/props/tyre.webp` |
+| ✅ | scrap | `assets/map/props/scrap.webp` |
+| ✅ | brushwood | `assets/map/props/brushwood.webp` |
+| ✅ | cobweb | `assets/map/props/cobweb.webp` |
+| ✅ | grain spill | `assets/map/props/grain_spill.webp` |
+| ✅ | crate smashed | `assets/map/props/crate_smashed.webp` |
+| ✅ | old straw | `assets/map/props/old_straw.webp` |
+| ✅ | scrolls | `assets/map/props/scrolls.webp` |
+| ✅ | jars broken | `assets/map/props/jars_broken.webp` |
+| ✅ | old sacks | `assets/map/props/old_sacks.webp` |
+| ✅ | puddle | `assets/map/props/puddle.webp` |
+| ✅ | fence broken | `assets/map/props/fence_broken.webp` |
+| ✅ | gate broken | `assets/map/props/gate_broken.webp` |
+| ✅ | barrow broken | `assets/map/props/barrow_broken.webp` |
+| ✅ | pump broken | `assets/map/props/pump_broken.webp` |
+| ✅ | scaffold | `assets/map/props/scaffold.webp` |
+| ✅ | tarp | `assets/map/props/tarp.webp` |
+| ✅ | table broken | `assets/map/props/table_broken.webp` |
+| ✅ | scarecrow fallen | `assets/map/props/scarecrow_fallen.webp` |
+| ✅ | wire torn | `assets/map/props/wire_torn.webp` |
+| ✅ | nest broken | `assets/map/props/nest_broken.webp` |
+| ✅ | perch broken | `assets/map/props/perch_broken.webp` |
+| ✅ | feeder broken | `assets/map/props/feeder_broken.webp` |
+| ✅ | trough dry | `assets/map/props/trough_dry.webp` |
+| ✅ | cart tipped | `assets/map/props/cart_tipped.webp` |
+| ✅ | plough old | `assets/map/props/plough_old.webp` |
+| ✅ | ditch | `assets/map/props/ditch.webp` |
+| ✅ | lantern | `assets/map/props/lantern.webp` |
+| ✅ | mailbox | `assets/map/props/mailbox.webp` |
+| ✅ | tulips | `assets/map/props/tulips.webp` |
+| ✅ | bench | `assets/map/props/bench.webp` |
+| ✅ | bird feeder | `assets/map/props/bird_feeder.webp` |
+| ✅ | firewood | `assets/map/props/firewood.webp` |
+| ✅ | bunting | `assets/map/props/bunting.webp` |
+| ✅ | wreath | `assets/map/props/wreath.webp` |
 
 ### The farmer
 

@@ -10,3 +10,4 @@ app/android/local.properties
 *.jks
 *.keystore
 keystore.properties
+__pycache__/

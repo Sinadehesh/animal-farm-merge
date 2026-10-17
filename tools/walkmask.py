@@ -14,7 +14,8 @@ pink on a copy of each picture there (wm_<plot>.png), to check by eye.
 The colours pick out the ground; BLOCK lists, in % of the picture, the bits the
 colours get wrong (a fenced run, sacks on a barn floor). Add a new plot's
 PLOT_SHAPE (from game.js) to SHAPE, run it, and look at its preview. The
-pictures are the ones assets.js names.
+pictures are the ones assets.js names, brightened (tools/brighten.py); their
+colours are judged as they were before that.
 """
 import base64
 import re
@@ -23,6 +24,8 @@ from collections import deque
 
 import numpy as np
 from PIL import Image, ImageDraw
+
+from brighten import ungrade
 
 # From game.js: the ground diamond's middle (% across, % down), its width (% of
 # the picture's) and the picture's height over width.
@@ -95,12 +98,13 @@ def big_parts(m, least):
 
 def plot_mask(name):
     ax, ay, aw, _ = SHAPE[name]
-    path = re.search(rf"\b{name}: '(assets/plots/[^']+)'", open('assets.js').read()).group(1)
+    path = re.search(rf"\b{name}: '(assets/map/plots/[^']+)'", open('assets.js').read()).group(1)
     im = Image.open(path).convert('RGBA')
     hgt = round(W * im.height / im.width)
     px = np.asarray(im.resize((W, hgt), Image.LANCZOS))
     rgb, alpha = px[..., :3], px[..., 3] / 255
-    hsv = np.asarray(Image.fromarray(rgb).convert('HSV')).astype(float) / 255
+    drawn = ungrade(rgb.astype(float)).round().astype(np.uint8)  # the colours below were set before tools/brighten.py
+    hsv = np.asarray(Image.fromarray(drawn).convert('HSV')).astype(float) / 255
     h, s, v = hsv[..., 0] * 360, hsv[..., 1], hsv[..., 2]
     sd = np.sqrt(np.maximum(box_mean(v * v, 5) - box_mean(v, 5) ** 2, 0))  # how busy it looks
     grass = (h > 60) & (h < 120) & (s > 0.3) & (v > 0.42) & (sd < 0.09)
