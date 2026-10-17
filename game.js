@@ -3457,6 +3457,13 @@ function buildWalkMap() {
             const v = grid[Math.min(99, Math.floor(((py - by) / bh) * 100)) * 100 + Math.min(99, Math.floor(((px - bx) / bw) * 100))];
             return v === 3 ? undefined : v;
         });
+        // Where its people stand, with their bubbles above them: she may walk
+        // past, but never stops in front of, on or behind one of them.
+        const spots = PLACE_SPOTS[id], people = id === 'market' ? [spots.keeper] : Object.values(spots.homes);
+        people.forEach(([ax, ay]) => {
+            const fx = bx + (ax / 100) * bw, fy = by + (ay / 100) * bh;
+            each(fx - 70, fy - 210, 140, 300, (px, py) => (cells[walkIndex(px, py)] ? 4 : undefined));
+        });
     });
     ZONES.forEach(zone => {
         const [x, y] = cellXY(zone.id), grid = inWorld(zone) && plotWalkCells(zone.id);
