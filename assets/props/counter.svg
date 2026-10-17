@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 200" width="440" height="200">
+  <g stroke="#4a3426" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="14" y="70" width="412" height="122" fill="#a5683d"/>
+    <rect x="34" y="92" width="114" height="80" rx="6" fill="#8f5631" stroke-width="4"/>
+    <rect x="163" y="92" width="114" height="80" rx="6" fill="#8f5631" stroke-width="4"/>
+    <rect x="292" y="92" width="114" height="80" rx="6" fill="#8f5631" stroke-width="4"/>
+    <rect x="4" y="56" width="432" height="20" rx="4" fill="#d9a066"/>
+    <!-- cash register -->
+    <path d="M326 56 L334 24 H408 L416 56 Z" fill="#e2733a"/>
+    <rect x="346" y="6" width="50" height="22" rx="4" fill="#bfe9ff" stroke-width="4"/>
+    <path d="M346 40 H362 M372 40 H388 M352 48 H404" stroke-width="3.5"/>
+    <!-- basket of apples -->
+    <path d="M220 56 L228 34 H286 L294 56 Z" fill="#c8955c" stroke-width="4"/>
+    <circle cx="240" cy="30" r="9" fill="#e8483b" stroke-width="3.5"/>
+    <circle cx="258" cy="26" r="9" fill="#e8483b" stroke-width="3.5"/>
+    <circle cx="276" cy="30" r="9" fill="#9ad66a" stroke-width="3.5"/>
+  </g>
+</svg>

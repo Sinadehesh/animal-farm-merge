@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 190" width="200" height="190">
+  <ellipse cx="100" cy="180" rx="94" ry="8" fill="#000" opacity=".15"/>
+  <g stroke="#4a3426" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="22" y="72" width="156" height="100" fill="#f7c6d9"/>
+    <path d="M12 78 Q100 6 188 78 Z" fill="#9b6bc9"/>
+    <circle cx="100" cy="52" r="14" fill="#fff8e7" stroke-width="4"/>
+    <circle cx="100" cy="52" r="5" fill="#f26b8a" stroke-width="3"/>
+    <!-- awning -->
+    <path d="M30 90 H170 L164 106 H36 Z" fill="#5cbf4a" stroke-width="4"/>
+    <!-- door + windows -->
+    <path d="M84 172 V128 Q84 116 100 116 Q116 116 116 128 V172 Z" fill="#8a5a33"/>
+    <rect x="34" y="112" width="36" height="30" fill="#bfe9ff" stroke-width="4"/>
+    <rect x="130" y="112" width="36" height="30" fill="#bfe9ff" stroke-width="4"/>
+    <!-- window boxes -->
+    <rect x="30" y="142" width="44" height="12" fill="#c8955c" stroke-width="4"/>
+    <rect x="126" y="142" width="44" height="12" fill="#c8955c" stroke-width="4"/>
+    <g stroke-width="3">
+      <circle cx="40" cy="140" r="6" fill="#f26b8a"/><circle cx="54" cy="138" r="6" fill="#ffd34d"/><circle cx="66" cy="140" r="6" fill="#b36bf2"/>
+      <circle cx="136" cy="140" r="6" fill="#ff8f5a"/><circle cx="150" cy="138" r="6" fill="#f26b8a"/><circle cx="162" cy="140" r="6" fill="#ffd34d"/>
+    </g>
+    <!-- pots -->
+    <path d="M10 176 L14 158 H34 L38 176 Z" fill="#d9734a" stroke-width="4"/>
+    <circle cx="24" cy="150" r="9" fill="#5cbf4a" stroke-width="4"/>
+    <path d="M162 176 L166 158 H186 L190 176 Z" fill="#d9734a" stroke-width="4"/>
+    <circle cx="176" cy="150" r="9" fill="#f26b8a" stroke-width="4"/>
+  </g>
+</svg>
