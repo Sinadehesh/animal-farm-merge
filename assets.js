@@ -129,6 +129,14 @@ const ASSETS = {
         },
     },
 
+    // The sparkle layer's pictures (see THE SPARKLE LAYER in game.js), cut from
+    // assets/raw/fx/sheet.jpg (light on black) by tools/cutfx.py, which turns the black
+    // see-through. null = drawn by the game at start-up instead.
+    fx: {
+        sparkle: 'assets/fx/sparkle.webp', glow: 'assets/fx/glow.webp', rays: 'assets/fx/rays.webp', ring: 'assets/fx/ring.webp',
+        shine: 'assets/fx/shine.webp', dust: 'assets/fx/dust.webp', swirl: 'assets/fx/swirl.webp', stars: 'assets/fx/stars.webp',
+    },
+
     // The world around the areas: a repeating meadow (assets/raw/world/ground.jpg, made
     // seamless with tools/seamless.py), scenery cut from assets/raw/world/scenery_sheet.jpg,
     // and the dirt the roads between areas are painted with (tools/dirt.py).

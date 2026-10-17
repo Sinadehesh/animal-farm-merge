@@ -627,11 +627,7 @@
         .item.has-sprite.dragging { box-shadow: none; }
         /* An item some order on this board wants: green glow and a tick. */
         .item.wanted { box-shadow: 0 0 0 3px #3ccf5a, 0 0 12px rgba(60, 207, 90, 0.8); }
-        /* Wanted by an order or job: it brightens like a glint every few seconds, and a star twinkles on it. */
-        .item.wanted > img, .item.wanted > .emoji { animation: glint 3.2s ease-in-out infinite; }
-        @keyframes glint { 0%, 60%, 100% { filter: brightness(1); } 72% { filter: brightness(1.45) saturate(1.2); } }
-        .twinkle-star { position: absolute; left: 6%; top: 2%; font-size: 3.4cqw; line-height: 1; color: #fff; text-shadow: 0 0 1cqw #ffe27a, 0 0 2cqw #ffd23f; pointer-events: none; animation: twinkle-star 3.2s ease-in-out infinite; }
-        @keyframes twinkle-star { 0%, 58%, 100% { opacity: 0; transform: scale(0.3) rotate(0deg); } 72% { opacity: 1; transform: scale(1.2) rotate(45deg); } 86% { opacity: 0; transform: scale(0.5) rotate(90deg); } }
+        /* Wanted by an order or job: now and then the sparkle layer twinkles on it (twinkleWanted in game.js). */
         /* Out of energy: the bolt pulses; a tap without energy makes it shake. */
         .res-energy.out { animation: energy-out 1.2s ease-in-out infinite; }
         @keyframes energy-out { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 120, 60, 0); } 50% { box-shadow: 0 0 0 3px rgba(255, 140, 60, 0.85), 0 0 14px rgba(255, 120, 40, 0.9); } }
@@ -1139,9 +1135,12 @@
         .quest small { color: #8a6a50; }
         .quest-bar { grid-column: 1 / -1; height: 2cqw; background: #e2d8c8; border-radius: 999px; overflow: hidden; }
         .quest-bar i { display: block; height: 100%; background: #5cc15a; }
-        .item.pop { animation: squash-pop 0.42s ease-out; }
-        @keyframes squash-pop { 0% { transform: scale(0.3); } 45% { transform: scale(1.18, 0.86); } 70% { transform: scale(0.94, 1.08); } 100% { transform: scale(1); } }
-        /* Little board effects (see fxMerge and friends in game.js). */
+        .item.pop { animation: squash-pop 0.46s ease-out; }
+        @keyframes squash-pop { 0% { transform: scale(0.3); } 40% { transform: scale(1.22, 0.82); } 62% { transform: scale(0.9, 1.1); } 80% { transform: scale(1.04, 0.97); } 100% { transform: scale(1); } }
+        /* The sparkle layer (PixiJS, see THE SPARKLE LAYER in game.js): over everything, never in the way, hidden while still. */
+        #sparkle { position: fixed; left: 0; top: 0; z-index: 2600; pointer-events: none; visibility: hidden; }
+        #sparkle.on { visibility: visible; }
+        /* Little board effects (see fxMerge and friends in game.js), where there's no sparkle layer. */
         #fx { position: absolute; inset: 0; z-index: 140; pointer-events: none; overflow: hidden; }
         .fx { position: absolute; left: 0; top: 0; pointer-events: none; }
         .fx-ring { width: var(--s); height: var(--s); border-radius: 50%; border: 0.8cqw solid #fff7c2; box-shadow: 0 0 2cqw #ffe27a, inset 0 0 2cqw #ffe27a; }
@@ -2034,7 +2033,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610171634"></script>
-    <script src="game.js?v=202610171634"></script>
+    <script src="assets.js?v=202610171713"></script>
+    <script src="game.js?v=202610171713"></script>
 </body>
 </html>

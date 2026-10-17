@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**652 assets:** 605 done ✅, 6 placeholders 🟡, 41 missing ⬜.
+**660 assets:** 613 done ✅, 6 placeholders 🟡, 41 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -544,6 +544,22 @@ She walks about the farm to each job. Walk cycles cut from short videos on flat 
 | ✅ | Pose: carry (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/carry.webp` |
 | ⬜ | Walking away from the camera | `assets/hero/walk_away.webp` |
 | ⬜ | Jump and clap | `assets/hero/cheer.webp` |
+
+### Effects (the sparkle layer)
+
+Light on black, one sheet of 8 (`assets/raw/fx/sheet.jpg`), cut by `tools/cutfx.py`, which turns the black see-through.
+PixiJS draws them on one canvas over the game (see THE SPARKLE LAYER in `game.js`); a missing one is drawn by the game.
+
+| | Effect | File | Used for |
+|---|---|---|---|
+| ✅ | sparkle | `assets/fx/sparkle.webp` | the gold sparks in every burst, trails behind flying coins, twinkles on wanted items |
+| ✅ | glow | `assets/fx/glow.webp` | the soft light behind bursts, flying coins and the level badge |
+| ✅ | rays | `assets/fx/rays.webp` | big merges, fixes, unlocks, level up |
+| ✅ | ring | `assets/fx/ring.webp` | the ring that opens out from a merge |
+| ✅ | shine | `assets/fx/shine.webp` | the glint across a wanted item |
+| ✅ | dust | `assets/fx/dust.webp` | a producer tap, a crate breaking, hammering |
+| ✅ | swirl | `assets/fx/swirl.webp` | the magic trail rising from a fix |
+| ✅ | stars | `assets/fx/stars.webp` | little stars opening behind the big bursts |
 
 ## 12a. Painted pages (the new look)
 

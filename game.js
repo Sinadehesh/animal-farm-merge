@@ -1283,6 +1283,7 @@ function showLevelUp(level, reward) {
     if (level !== quests.level) return; // a later level-up has its own popup
     if (!dialogEl.hidden) return setTimeout(() => showLevelUp(level, reward), 500); // after the card that's up (a job, an area)
     celebrate('level');
+    fxLevelUp();
     const land = Object.keys(AREAS).find(id => AREAS[id].level === level);
     showDialog({
         title: `⭐ Level ${level}!`,
@@ -4444,8 +4445,15 @@ function fixJob(id) {
     addTag(spot, 'fix-hammer', uiIcon('hammer', '🔨'));
     [0, 320, 640, 960].forEach(t => setTimeout(() => { sfx('knock'); buzz(15); }, t)); // knock, knock...
     const fx = (cls, html, delay) => setTimeout(() => addTag(spot, cls, html), delay);
-    fx('fix-dust', '💨', 500);
-    fx('fix-dust two', '💨', 850);
+    if (FX.app) {
+        [500, 850, 1150].forEach(t => setTimeout(() => {
+            const at = fxAt(spot);
+            if (at) fxDust(at.x, at.y, Math.max(at.size, 50), 3);
+        }, t));
+    } else {
+        fx('fix-dust', '💨', 500);
+        fx('fix-dust two', '💨', 850);
+    }
     setTimeout(() => {
         // The new look, and the building's next stage if it has one.
         spot.classList.remove('hammering', 'open', 'ready');
@@ -4456,10 +4464,17 @@ function fixJob(id) {
         spot.querySelectorAll('.task-pin, .fix-hammer').forEach(el => el.remove());
         if (!spot.classList.contains('chip')) spot.querySelector('.fix-face').innerHTML = fixFace(task, true) || '✨';
         addTag(spot, 'fix-swirl', '');
-        ['✨', '⭐', '✨', '⭐', '✨', '⭐'].forEach((s, k) => {
-            const p = addTag(spot, 'fix-spark', s);
-            p.style.setProperty('--a', `${k * 60}deg`);
-        });
+        const at = FX.app && fxAt(spot);
+        if (at) {
+            const size = Math.max(at.size, 60);
+            fxBurst({ ...at, size }, true, { stars: true });
+            fxPart('swirl', at.x, at.y, { layer: FX.back, size: size * 2, s0: 0.5, s1: 1.15, spin: 1.2, vy: -size * 0.8, life: 1100, tint: 0xfff3b0, alpha: 0.9, fadeIn: 0.15, fade: 0.5 });
+        } else {
+            ['✨', '⭐', '✨', '⭐', '✨', '⭐'].forEach((s, k) => {
+                const p = addTag(spot, 'fix-spark', s);
+                p.style.setProperty('--a', `${k * 60}deg`);
+            });
+        }
         // Colour comes back around the spot, and the building steps up if it has stages.
         const zoneEl = spot.closest('.zone') || scene.querySelector(`.zone[data-zone="${task.zone}"]`);
         const jobs = task.zone ? zoneTasks(task.zone) : landTasks(task.land);
@@ -4588,7 +4603,16 @@ function unlockNewZones(land, world) {
     }
     el.classList.add('unlocking');
     document.body.classList.add('busy');
-    setTimeout(() => { el.classList.add('opening'); sfx('unlock'); buzz([20, 40, 20]); }, 1000);
+    setTimeout(() => {
+        el.classList.add('opening');
+        sfx('unlock');
+        buzz([20, 40, 20]);
+        const at = fxAt(el.querySelector('.zone-key') || el);
+        if (at && FX.app) {
+            fxBurst({ ...at, size: 90 }, true, { stars: true });
+            fxGlow(at.x, at.y, 320, { life: 900, alpha: 0.7 });
+        }
+    }, 1000);
     setTimeout(() => {
         document.body.classList.remove('busy');
         el.classList.remove('unlocking', 'opening');
@@ -5011,6 +5035,14 @@ function completeTask(id, quiet = false) {
                    ${nextZone ? `<p class="hint">Next: ${nextZone.name}${quests.level < nextZone.level ? ` (level ${nextZone.level})` : ''}</p>` : ''}` : ''}`,
         actions: [{ label: 'Yay!', primary: true }],
     });
+    // What it paid flies from the job (or the middle of the screen) to the counters.
+    const spot = fxAt(document.querySelector(`.scene:not([hidden]) [data-job="${task.id}"]`)), st = stageEl.getBoundingClientRect();
+    const from = spot || { x: st.left + st.width / 2, y: st.top + st.height * 0.4, size: 80 };
+    const paid = [task.reward, restored && LAND_REWARD, zoneFinished && ZONE_REWARD].filter(Boolean);
+    flyReward('⭐', from, document.getElementById('btn-level'), 3, 200);
+    if (paid.some(r => r.money)) flyReward('💵', from, document.getElementById('btn-coins'), 4, 350);
+    if (paid.some(r => r.gems)) flyReward('💎', from, document.getElementById('btn-gems'), 3, 500);
+    if (FX.app && !restored && !zoneFinished) fxConfetti(30, from);
     // XP last: a level-up popup follows this one.
     addXp(task.xp);
     checkTasks();
@@ -5394,6 +5426,7 @@ function buzz(pattern) {
 
 // A burst of confetti over the whole screen, for the big moments.
 function confetti(count = 70) {
+    if (FX.app) return fxConfetti(count);
     const layer = document.createElement('div');
     layer.className = 'confetti';
     const colors = ['#ffd34d', '#ff6b6b', '#5cc15a', '#4dabf7', '#f783ac', '#ffa94d', '#9775fa'];
@@ -5669,6 +5702,7 @@ function buyDeed(id) {
     ensureToolboxes();
     updateUI();
     toast(`The ${area.name} is yours! Find it on the map.`, 'good');
+    confetti(60);
     checkTasks();
     goTo(currentScene);
 }
@@ -5883,6 +5917,10 @@ function thankYou(npc, r, from, levelUp) {
     el.style.top = `${at.bottom - stage.top + 6}px`;
     setTimeout(() => el.remove(), 2400);
     const centre = { x: (at.left + at.right) / 2, y: (at.top + at.bottom) / 2 };
+    if (FX.app) {
+        fxBurst({ ...centre, size: Math.min(at.right - at.left || 60, 90) }, false, { stars: true });
+        fxConfetti(26, centre);
+    }
     flyReward('💵', centre, document.getElementById('btn-coins'), 4, 250);
     flyReward('⭐', centre, document.getElementById('btn-level'), 2, 400);
     if (levelUp) flyReward('💎', centre, document.getElementById('btn-gems'), 2, 550);
@@ -5891,6 +5929,8 @@ function thankYou(npc, r, from, levelUp) {
 // Little icons flying in an arc from a point on screen to a counter, which bumps as they land.
 function flyReward(icon, from, toEl, count = 3, delay = 0, size = '') {
     if (!toEl || !from) return;
+    const picture = (ASSETS.ui || {})[EMOJI_ICONS[icon]];
+    if (FX.app && picture) return fxFly(picture, from, toEl, count, delay, size === 'big');
     const to = toEl.getBoundingClientRect();
     const ex = to.left + to.width * 0.25, ey = to.top + to.height / 2;
     for (let i = 0; i < count; i++) {
@@ -7563,6 +7603,7 @@ function rushChest(mode, index) {
     updateUI();
     toast(`${chestName(item)} is open! Tap it to take things out.`, 'good');
     refreshBoard(mode, [index]);
+    if (FX.app) fxBurst(fxCell(mode, index), true, { stars: true });
 }
 
 // One tap on an open chest or a Piggy Bank drops one thing next to it; it
@@ -7585,6 +7626,8 @@ function dropFrom(mode, index, stage, name) {
     updateUI();
     refreshBoard(mode, [at]);
     fxSpawn(mode, index, at);
+    const box = FX.app && fxCell(mode, index);
+    if (box) fxSparkles(box.x, box.y - box.size * 0.2, 6, box.size, { speed: 1.8, lift: box.size });
 }
 
 function boardFull(mode) {
@@ -8171,6 +8214,404 @@ function handleDragEnd(e) {
     if (fxLater) fxLater();
 }
 
+// --- THE SPARKLE LAYER ---
+// The glitter of the big merge games: glows, sparkles, light rays, confetti,
+// and coins, stars and gems flying to their counters. PixiJS draws it all on one
+// see-through canvas over the whole game, so none of it is page elements (those
+// made phones crawl). It loads a moment after the game starts, draws only while
+// something moves (and hides when nothing does), and without WebGL, or with
+// reduced motion asked for, it does nothing: the older page effects stand in
+// for the merge burst, the confetti and the flying rewards. Its pictures are
+// ASSETS.fx's, or drawn here at start-up where there's none.
+const FX = { app: null, parts: [], pool: [], tex: {}, added: {}, icons: {}, art: {} };
+const FX_GOLD = [0xffd84a, 0xffe78a, 0xffc93a, 0xfff2b8]; // tints for the sparkle picture (the drawn one is gold already)
+const FX_CONFETTI = [0xffd34d, 0xff6b6b, 0x5cc15a, 0x4dabf7, 0xf783ac, 0xffa94d, 0x9775fa];
+
+function loadFx() {
+    if (FX.loading || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    FX.loading = true;
+    const script = document.createElement('script');
+    script.src = 'vendor/pixi.min.js';
+    script.onload = startFx;
+    document.head.appendChild(script);
+}
+
+function startFx() {
+    // In three steps, each its own moment, so the game never stalls for long.
+    const later = go => setTimeout(() => (window.requestIdleCallback || (f => f()))(go, { timeout: 1000 }), 0);
+    let app;
+    try {
+        if (!window.PIXI || !PIXI.utils.isWebGLSupported()) return;
+        PIXI.utils.skipHello();
+        PIXI.BaseTexture.defaultOptions.mipmap = PIXI.MIPMAP_MODES.ON; // big pictures drawn small stay smooth (and quick)
+        // At most 1.5 canvas pixels to a screen pixel: soft light needs no more, and
+        // a full-screen canvas is otherwise a lot to fill on a phone's graphics chip.
+        app = new PIXI.Application({ backgroundAlpha: 0, antialias: false, autoStart: false, sharedTicker: false,
+            resolution: Math.min(window.devicePixelRatio || 1, 1.5), autoDensity: true, resizeTo: window, powerPreference: 'low-power' });
+        app.view.id = 'sparkle';
+        document.body.appendChild(app.view);
+        // Glows and rays at the back, then confetti, dust and flying things, sparkles in front.
+        [FX.back, FX.mid, FX.front] = [0, 1, 2].map(() => app.stage.addChild(new PIXI.Container()));
+    } catch (e) {
+        return; // no sparkle layer: the game plays on without it
+    }
+    later(async () => {
+        await makeFxTextures();
+        // Then draw every picture once, unseen, so the first burst doesn't stall
+        // on sending them to the graphics chip.
+        later(() => {
+            const warm = [...Object.keys(FX.tex), ...Object.values(FX.icons)].map(t => {
+                const sprite = app.stage.addChild(new PIXI.Sprite(typeof t === 'string' ? FX.tex[t] : t));
+                sprite.alpha = 0.01;
+                sprite.blendMode = FX.added[t] ? PIXI.BLEND_MODES.ADD : PIXI.BLEND_MODES.NORMAL;
+                return sprite;
+            });
+            app.render();
+            warm.forEach(sprite => sprite.destroy());
+            app.render();
+            app.ticker.add(() => stepFx(Math.min(app.ticker.deltaMS, 50)));
+            FX.app = app;
+            setInterval(twinkleWanted, 2400);
+        });
+    });
+}
+
+// The effect pictures: ASSETS.fx's (and the coin, gem and star icons that fly),
+// loaded before the first burst; any that's missing or fails is drawn here,
+// white so each burst can tint it.
+async function makeFxTextures() {
+    const art = ASSETS.fx || {}, ui = ASSETS.ui || {};
+    const icons = ['coin', 'gem', 'star', 'gift', 'energy'].map(k => ui[k]).filter(Boolean);
+    let loaded = {};
+    try {
+        loaded = await PIXI.Assets.load([...Object.values(art).filter(Boolean), ...icons]);
+    } catch (e) { /* drawn below instead */ }
+    icons.forEach(src => { if (loaded[src]) FX.icons[src] = loaded[src]; });
+    const paint = (w, draw, h = w) => {
+        const c = document.createElement('canvas');
+        c.width = w;
+        c.height = h;
+        draw(c.getContext('2d'), w / 2);
+        return PIXI.Texture.from(c);
+    };
+    const fade = (g, stops) => { stops.forEach(([at, a]) => g.addColorStop(at, `rgba(255,255,255,${a})`)); return g; };
+    const made = {
+        glow: () => paint(128, (c, m) => {
+            c.fillStyle = fade(c.createRadialGradient(m, m, 0, m, m, m), [[0, 1], [0.2, 0.7], [0.5, 0.22], [1, 0]]);
+            c.fillRect(0, 0, 2 * m, 2 * m);
+        }),
+        // A four-pointed gold star with a white heart and an orange rim, so it
+        // shows on the cream cards and the bright map as well as on dark.
+        sparkle: () => paint(128, (c, m) => {
+            const R = m * 0.94, r = m * 0.11;
+            c.beginPath();
+            c.moveTo(m, m - R);
+            c.quadraticCurveTo(m + r, m - r, m + R, m);
+            c.quadraticCurveTo(m + r, m + r, m, m + R);
+            c.quadraticCurveTo(m - r, m + r, m - R, m);
+            c.quadraticCurveTo(m - r, m - r, m, m - R);
+            const g = c.createRadialGradient(m, m, 0, m, m, R);
+            [[0, '#ffffff'], [0.12, '#fff6c8'], [0.32, '#ffd43b'], [1, '#ff9a14']].forEach(([at, col]) => g.addColorStop(at, col));
+            c.fillStyle = g;
+            c.shadowColor = 'rgba(255, 200, 60, 0.9)';
+            c.shadowBlur = m * 0.12;
+            c.fill();
+            c.shadowBlur = 0;
+            c.lineWidth = m * 0.045;
+            c.strokeStyle = '#c96a0c';
+            c.stroke();
+        }),
+        rays: () => paint(256, (c, m) => {
+            c.filter = 'blur(3px)'; // where the browser can
+            c.fillStyle = fade(c.createRadialGradient(m, m, 0, m, m, m), [[0, 1], [0.5, 0.55], [1, 0]]);
+            for (let i = 0; i < 16; i++) {
+                const a = (i / 16) * Math.PI * 2, w = i % 2 ? 0.06 : 0.12;
+                c.beginPath();
+                c.moveTo(m, m);
+                c.lineTo(m + Math.cos(a - w) * m, m + Math.sin(a - w) * m);
+                c.lineTo(m + Math.cos(a + w) * m, m + Math.sin(a + w) * m);
+                c.closePath();
+                c.fill();
+            }
+        }),
+        ring: () => paint(128, (c, m) => {
+            c.strokeStyle = '#fff';
+            c.lineWidth = m * 0.09;
+            c.shadowColor = '#fff';
+            c.shadowBlur = m * 0.18;
+            c.beginPath();
+            c.arc(m, m, m * 0.74, 0, Math.PI * 2);
+            c.stroke();
+            c.stroke();
+        }),
+        // A long soft streak, for glints.
+        shine: () => paint(128, (c, m) => {
+            c.setTransform(1, 0, 0, 0.25, 0, 0);
+            c.fillStyle = fade(c.createRadialGradient(m, m, 0, m, m, m), [[0, 1], [0.3, 0.5], [1, 0]]);
+            c.fillRect(0, 0, 2 * m, 2 * m);
+        }, 32),
+        // A puff of dust: a few soft blobs.
+        dust: () => paint(128, (c, m) => {
+            [[0, 0, 0.62], [-0.3, 0.12, 0.42], [0.32, 0.1, 0.45], [0.05, -0.28, 0.4], [-0.12, 0.3, 0.38]].forEach(([x, y, r]) => {
+                c.fillStyle = fade(c.createRadialGradient(m + x * m, m + y * m, 0, m + x * m, m + y * m, r * m), [[0, 0.55], [0.6, 0.3], [1, 0]]);
+                c.fillRect(0, 0, 2 * m, 2 * m);
+            });
+        }),
+        // Three comet tails curling out from the middle.
+        swirl: () => paint(256, (c, m) => {
+            c.lineCap = 'round';
+            for (let k = 0; k < 3; k++) {
+                let last = null;
+                for (let t = 0; t <= 1.001; t += 0.025) {
+                    const a = k * (Math.PI * 2 / 3) + t * Math.PI * 1.3, r = m * (0.2 + t * 0.7);
+                    const p = [m + Math.cos(a) * r, m + Math.sin(a) * r];
+                    if (last) {
+                        c.strokeStyle = `rgba(255,255,255,${(1 - t) * 0.9})`;
+                        c.lineWidth = 2 + (1 - t) * 7;
+                        c.beginPath();
+                        c.moveTo(...last);
+                        c.lineTo(...p);
+                        c.stroke();
+                    }
+                    last = p;
+                }
+            }
+        }),
+        // A scatter of little gold five-pointed stars.
+        stars: () => paint(256, (c, m) => {
+            for (let k = 0; k < 34; k++) {
+                const a = k * 2.4, d = m * 0.9 * Math.sqrt((k + 0.5) / 34), x = m + Math.cos(a) * d, y = m + Math.sin(a) * d, size = m * (0.035 + (k % 4) * 0.012);
+                c.beginPath();
+                for (let i = 0; i < 10; i++) {
+                    const b = -Math.PI / 2 + (i * Math.PI) / 5, r = i % 2 ? size * 0.45 : size;
+                    c.lineTo(x + Math.cos(b) * r, y + Math.sin(b) * r);
+                }
+                c.closePath();
+                c.fillStyle = k % 3 ? '#ffd23f' : '#fff6c0';
+                c.fill();
+                c.lineWidth = 1;
+                c.strokeStyle = '#d97c10';
+                c.stroke();
+            }
+        }),
+    };
+    Object.keys(made).forEach(key => {
+        FX.art[key] = !!loaded[art[key]];
+        FX.tex[key] = loaded[art[key]] || made[key]();
+        FX.added[key] = !['dust', 'sparkle', 'stars'].includes(key); // light is added on; sparkles, stars and dust are drawn over
+    });
+    FX.tex.bit = PIXI.Texture.WHITE; // confetti and planks: tinted rectangles
+}
+
+function fxIcon(src) {
+    return FX.icons[src] || (FX.icons[src] = PIXI.Texture.from(src));
+}
+
+// One moving thing: a sprite from the pool and how it moves. Speeds are px a
+// second; s0/s1 its scale at the start and end (popping in over `pop` of its
+// life); it fades over the last `fade` of it. With a path it flies along that
+// curve instead; with a trail it sheds sparkles as it goes.
+function fxPart(key, x, y, o = {}) {
+    if (!FX.app) return null;
+    const s = FX.pool.pop() || new PIXI.Sprite();
+    s.texture = typeof key === 'string' ? FX.tex[key] : key;
+    s.anchor.set(0.5);
+    s.tint = o.tint ?? 0xffffff;
+    s.blendMode = (o.add ?? FX.added[key]) ? PIXI.BLEND_MODES.ADD : PIXI.BLEND_MODES.NORMAL;
+    s.rotation = o.rot || 0;
+    s.position.set(x, y);
+    s.visible = false;
+    (o.layer || FX.mid).addChild(s);
+    const p = { s, x, y, vx: o.vx || 0, vy: o.vy || 0, g: o.g || 0, drag: o.drag ?? 1, spin: o.spin || 0, size: o.size || 32, aspect: o.aspect || 1,
+        s0: o.s0 ?? 1, s1: o.s1 ?? 1, curve: o.curve, pop: o.pop || 0, alpha: o.alpha ?? 1, fade: o.fade ?? 0.4, fadeIn: o.fadeIn || 0,
+        life: o.life || 600, age: -(o.delay || 0), flip: o.flip || 0, sway: o.sway || 0, path: o.path, trail: o.trail, onEnd: o.onEnd };
+    FX.parts.push(p);
+    if (!FX.app.ticker.started) {
+        FX.app.view.classList.add('on');
+        FX.app.ticker.start();
+    }
+    return p;
+}
+
+function stepFx(dt) {
+    const parts = FX.parts, k = dt / 1000;
+    for (let i = parts.length - 1; i >= 0; i--) {
+        const p = parts[i], s = p.s;
+        p.age += dt;
+        if (p.age < 0) continue;
+        const t = p.age / p.life;
+        if (t >= 1) {
+            parts.splice(i, 1);
+            s.parent.removeChild(s);
+            FX.pool.push(s);
+            if (p.onEnd) p.onEnd();
+            continue;
+        }
+        if (p.path) {
+            const [ax, ay, bx, by, cx, cy] = p.path, e = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+            p.x = (1 - e) * (1 - e) * ax + 2 * (1 - e) * e * bx + e * e * cx;
+            p.y = (1 - e) * (1 - e) * ay + 2 * (1 - e) * e * by + e * e * cy;
+            if (p.trail && p.age - (p.trailAt || 0) > 45) {
+                p.trailAt = p.age;
+                fxPart('sparkle', p.x, p.y, { layer: FX.back, size: p.size * 0.45, s1: 0.1, life: 380, alpha: 0.85, spin: 3, tint: sparkleTint(p.age / 45 | 0) });
+            }
+        } else {
+            const d = p.drag ** (dt / 16.7);
+            p.vx *= d;
+            p.vy = p.vy * d + p.g * k;
+            p.x += p.vx * k + (p.sway ? Math.sin(p.age / 260 + p.size) * p.sway * k : 0);
+            p.y += p.vy * k;
+        }
+        let f;
+        if (p.curve) {
+            const c = p.curve, j = Math.max(1, c.findIndex(([at]) => at >= t));
+            const [t0, v0] = c[j - 1], [t1, v1] = c[j];
+            f = v0 + (v1 - v0) * ((t - t0) / (t1 - t0));
+        } else if (t < p.pop) {
+            const u = t / p.pop - 1;
+            f = p.s0 * (1 + 2.7 * u * u * u + 1.7 * u * u); // in with a little overshoot
+        } else {
+            const u = p.pop < 1 ? (t - p.pop) / (1 - p.pop) : 1;
+            f = p.s0 + (p.s1 - p.s0) * (p.s1 > p.s0 ? 1 - (1 - u) * (1 - u) : u * u); // grows fast, shrinks late
+        }
+        const tex = s.texture, base = (p.size / (tex.orig.width || 1)) * f;
+        s.scale.set(base * (p.flip ? Math.cos(p.age * p.flip / 1000) : 1), base * p.aspect);
+        s.rotation += p.spin * k;
+        s.position.set(p.x, p.y);
+        s.alpha = p.alpha * (p.fadeIn && t < p.fadeIn ? t / p.fadeIn : 1) * (t > 1 - p.fade ? (1 - t) / p.fade : 1);
+        s.visible = tex.valid;
+    }
+    if (!parts.length) {
+        FX.app.render();
+        FX.app.ticker.stop();
+        FX.app.view.classList.remove('on');
+    }
+}
+
+// The middle of an element, or a board square, on screen.
+function fxAt(el) {
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return r.width ? { x: r.left + r.width / 2, y: r.top + r.height / 2, size: r.width } : null;
+}
+
+function fxCell(mode, index) {
+    return fxAt(document.querySelector(`#grid-${mode} .grid-cell[data-index="${index}"]`));
+}
+
+function sparkleTint(i) {
+    return FX.art.sparkle ? FX_GOLD[i % FX_GOLD.length] : 0xffffff;
+}
+
+// Sparkles flying out from a point; with stars, a scatter of little stars opens behind them.
+function fxSparkles(x, y, n, size, o = {}) {
+    for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + Math.random() * 0.6, v = size * (o.speed || 2.4) * (0.6 + Math.random() * 0.6);
+        fxPart('sparkle', x, y, { layer: FX.front, vx: Math.cos(a) * v, vy: Math.sin(a) * v - (o.lift || 0), drag: 0.9,
+            size: size * (0.3 + Math.random() * 0.25), pop: 0.12, s1: 0.15, life: 520 + Math.random() * 300, tint: sparkleTint(i),
+            spin: (Math.random() - 0.5) * 8, delay: o.delay || 0 });
+    }
+    if (o.stars) fxPart('stars', x, y, { size: size * 2.4, s0: 0.35, s1: 1.15, life: 900, spin: 0.4, rot: Math.random() * 6, fade: 0.55, delay: o.delay || 0 });
+}
+
+function fxGlow(x, y, size, o = {}) {
+    fxPart('glow', x, y, { layer: FX.back, size, s0: o.from ?? 0.5, s1: o.to ?? 1.25, life: o.life || 450, tint: o.tint ?? 0xfff1b0, alpha: o.alpha ?? 0.9,
+        fade: 0.7, fadeIn: o.fadeIn || 0, delay: o.delay || 0 });
+}
+
+function fxRing(x, y, size, o = {}) {
+    fxPart('ring', x, y, { layer: FX.back, size, s0: 0.25, s1: o.to || 1.7, life: o.life || 480, tint: o.tint ?? 0xfff6c8, fade: 0.6, delay: o.delay || 0 });
+}
+
+// Light rays turning slowly behind something.
+function fxRays(x, y, size, o = {}) {
+    fxPart('rays', x, y, { layer: FX.back, size, s0: 0.5, s1: 1.1, life: o.life || 1200, spin: 0.5, alpha: o.alpha ?? 0.7, fadeIn: 0.2, fade: 0.45,
+        tint: o.tint ?? 0xffe27a, delay: o.delay || 0 });
+}
+
+function fxDust(x, y, size, n = 3) {
+    for (let i = 0; i < n; i++) {
+        fxPart('dust', x + (Math.random() - 0.5) * size * 0.5, y + size * (0.1 + Math.random() * 0.25), { size: size * (0.5 + Math.random() * 0.3),
+            vx: (Math.random() - 0.5) * size * 1.6, vy: -size * (0.4 + Math.random() * 0.6), drag: 0.92, s0: 0.5, s1: 1.4,
+            life: 480 + Math.random() * 220, tint: 0xf5ead2, alpha: 0.8, fade: 0.8, spin: (Math.random() - 0.5) * 2 });
+    }
+}
+
+// Confetti thrown up from a point, or (with no point) raining over the whole screen.
+function fxConfetti(n, from = null) {
+    const w = innerWidth;
+    for (let i = 0; i < n; i++) {
+        const tint = FX_CONFETTI[i % FX_CONFETTI.length], size = 8 + Math.random() * 6;
+        if (from) {
+            const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.2, v = 260 + Math.random() * 300;
+            fxPart('bit', from.x, from.y, { tint, size, aspect: 0.55, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 900, drag: 0.96,
+                life: 1100 + Math.random() * 600, fade: 0.3, flip: 9 + Math.random() * 8, spin: (Math.random() - 0.5) * 9, rot: Math.random() * 3 });
+        } else {
+            fxPart('bit', Math.random() * w, -20 - Math.random() * 160, { tint, size: size * 1.15, aspect: 0.55, vx: (Math.random() - 0.5) * 60,
+                vy: 60 + Math.random() * 90, g: 110, drag: 0.995, sway: 50, life: 2600 + Math.random() * 1000, fade: 0.2, delay: Math.random() * 400,
+                flip: 8 + Math.random() * 7, spin: (Math.random() - 0.5) * 5, rot: Math.random() * 3 });
+        }
+    }
+}
+
+// The big burst: a glow, a ring, sparkles and, for the big ones, rays.
+function fxBurst(at, big = false, o = {}) {
+    if (!at || !FX.app) return;
+    const { x, y, size } = at;
+    fxGlow(x, y, size * (big ? 2.4 : 1.6), { life: big ? 650 : 420, alpha: 0.8 });
+    fxRing(x, y, size, { to: big ? 2.4 : 1.6, life: big ? 650 : 480, tint: big ? 0xffd23f : 0xfff6c8 });
+    fxSparkles(x, y, big ? 14 : 8, size, { speed: big ? 3 : 2.2, stars: big || o.stars });
+    if (big) fxRays(x, y, size * 2.6, { life: 900 });
+}
+
+// Coins, stars or gems flying in an arc to their counter, with a glow and a
+// trail of sparkles; the counter bumps and counts up as the first one lands.
+function fxFly(src, from, toEl, count, delay, big) {
+    const to = toEl.getBoundingClientRect(), ex = to.left + to.width * 0.25, ey = to.top + to.height / 2;
+    const tex = fxIcon(src), size = big ? 46 : 30;
+    const num = toEl.querySelector('#money-val, #gems-val');
+    if (num) holdNumber(num, delay + 950);
+    for (let i = 0; i < count; i++) {
+        const sx = from.x + (Math.random() - 0.5) * 40, sy = from.y + (Math.random() - 0.5) * 24;
+        const path = [sx, sy, (sx + ex) / 2 + (Math.random() - 0.5) * 90, Math.min(sy, ey) - 60 - Math.random() * 50, ex, ey];
+        const wait = delay + i * 110, life = 950;
+        fxPart('glow', sx, sy, { layer: FX.back, path, size: size * 2, life, delay: wait, tint: 0xffe9a0, alpha: 0.55, fade: 0.25 });
+        fxPart(tex, sx, sy, { add: false, path, size, life, delay: wait, trail: true, fade: 0.05, curve: [[0, 0.4], [0.22, 1.15], [0.6, 1], [1, 0.7]],
+            onEnd: () => {
+                toEl.classList.remove('bump');
+                void toEl.offsetWidth;
+                toEl.classList.add('bump');
+                fxSparkles(ex, ey, 5, 26, { speed: 2 });
+                fxGlow(ex, ey, 54, { life: 300, alpha: 0.7 });
+            } });
+    }
+}
+
+// Level up: rays and a glow behind the level badge, and sparkles round the new level.
+function fxLevelUp() {
+    const badge = fxAt(document.getElementById('btn-level'));
+    if (!badge || !FX.app) return;
+    fxRays(badge.x, badge.y, 260, { life: 2000, alpha: 1 });
+    fxGlow(badge.x, badge.y, 150, { life: 1600, from: 0.6, to: 1.1, fadeIn: 0.15, alpha: 1 });
+    fxSparkles(badge.x, badge.y, 12, 60, { speed: 2.6, stars: true });
+    setTimeout(() => {
+        const star = fxAt(document.querySelector('#dialog:not([hidden]) .big-count'));
+        if (star) fxSparkles(star.x, star.y, 14, 80, { speed: 3.4, stars: true });
+    }, 250);
+}
+
+// Now and then a twinkle on something an order or job wants, while its board is up.
+function twinkleWanted() {
+    if (document.hidden || fixing || !dialogEl.hidden) return;
+    const items = document.querySelectorAll('.scene:not([hidden]) .item.wanted');
+    if (!items.length) return;
+    const r = items[Math.floor(Math.random() * items.length)].getBoundingClientRect();
+    if (!r.width) return;
+    const x = r.left + r.width * (0.2 + Math.random() * 0.6), y = r.top + r.height * (0.15 + Math.random() * 0.3);
+    fxPart('sparkle', x, y, { layer: FX.front, size: r.width * 0.5, pop: 0.35, s1: 0.2, life: 800, spin: 2.5, fade: 0.5, tint: sparkleTint(0) });
+    fxPart('shine', r.left + r.width / 2, r.top + r.height / 2, { layer: FX.back, size: r.width * 0.9, rot: -0.8, s0: 0.4, s1: 1, life: 450, alpha: 0.45, fadeIn: 0.3, fade: 0.6 });
+}
+
 // --- LITTLE ANIMATIONS ---
 // Board moments get a touch of life: a merge bursts with a ring and sparks
 // (more for bigger things), crates break into planks and dust, cobwebs blow
@@ -8205,6 +8646,7 @@ function fxBit(cls, at, html = '') {
 }
 
 function fxMerge(mode, index, size = 1) {
+    if (FX.app) return fxBurst(fxCell(mode, index), size >= 4);
     const at = cellCentre(mode, index);
     if (!at) return;
     const big = size >= 4;
@@ -8227,6 +8669,18 @@ function fxMerge(mode, index, size = 1) {
 
 // A crate breaks open: planks fly and fall, and a puff of dust.
 function fxCrate(mode, index) {
+    if (FX.app) {
+        const at = fxCell(mode, index);
+        if (!at) return;
+        for (let i = 0; i < 6; i++) {
+            const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.4, v = at.size * (3 + Math.random() * 3);
+            fxPart('bit', at.x, at.y, { tint: i % 2 ? 0xb87a42 : 0xd39a5c, size: at.size * 0.34, aspect: 0.3, vx: Math.cos(a) * v, vy: Math.sin(a) * v,
+                g: at.size * 22, drag: 0.97, spin: (Math.random() - 0.5) * 14, rot: Math.random() * 3, life: 650 + Math.random() * 200, fade: 0.35 });
+        }
+        fxDust(at.x, at.y, at.size, 4);
+        fxSparkles(at.x, at.y, 6, at.size, { speed: 2 });
+        return;
+    }
     const at = cellCentre(mode, index);
     if (!at) return;
     for (let i = 0; i < 5; i++) {
@@ -8260,6 +8714,10 @@ function fxWeb(mode, index) {
 function fxSpawn(mode, from, to) {
     const a = cellCentre(mode, from), b = cellCentre(mode, to);
     const item = cellItem(mode, to), maker = cellItem(mode, from);
+    if (FX.app) {
+        const at = fxCell(mode, from);
+        if (at) fxDust(at.x, at.y + at.size * 0.1, at.size * 0.7, 2);
+    }
     if (maker) maker.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.12, 0.86)', offset: 0.35 }, { transform: 'scale(0.95, 1.06)', offset: 0.7 }, { transform: 'scale(1)' }],
         { duration: 260, easing: 'ease-out' });
     if (!a || !b || !item || from === to) return;
@@ -8281,19 +8739,33 @@ function fxSpawn(mode, from, to) {
     ], { duration: 380, easing: 'ease-out' }).onfinish = () => { ghost.remove(); item.style.opacity = ''; };
 }
 
-// The coin and gem counters count up (or down) to their new value.
+// The coin and gem counters count up (or down) to their new value; while
+// coins or gems are flying to one, it waits for the first to land.
 function rollNumber(el, value) {
-    const from = +(el.dataset.value ?? value);
     el.dataset.value = value;
-    if (from === value || Math.abs(value - from) > 100000) { el.textContent = shortNumber(value); return; }
-    const start = performance.now(), len = 600;
+    const wait = (+el.dataset.holdUntil || 0) - performance.now();
+    if (wait > 0) {
+        clearTimeout(el.held);
+        el.held = setTimeout(() => rollNumber(el, +el.dataset.value), wait);
+        return;
+    }
+    const from = +(el.dataset.shown ?? value);
+    const show = v => { el.dataset.shown = v; el.textContent = shortNumber(v); };
     cancelAnimationFrame(el.rolling);
+    if (from === value || Math.abs(value - from) > 100000) return show(value);
+    const start = performance.now(), len = 600;
     const step = now => {
         const t = Math.min((now - start) / len, 1);
-        el.textContent = shortNumber(Math.round(from + (value - from) * (1 - (1 - t) ** 3)));
+        show(Math.round(from + (value - from) * (1 - (1 - t) ** 3)));
         if (t < 1) el.rolling = requestAnimationFrame(step);
     };
     el.rolling = requestAnimationFrame(step);
+}
+
+function holdNumber(el, ms) {
+    cancelAnimationFrame(el.rolling);
+    el.dataset.holdUntil = performance.now() + ms;
+    if (el.dataset.value !== undefined) rollNumber(el, +el.dataset.value);
 }
 
 // Life on the paintings: cloud shadows and birds over the farm map and the
@@ -8546,7 +9018,6 @@ function renderGrid(mode, poppedIndices = []) {
             if (!item.type && isFree(item) && wanted.has(`${chainOf(mode, item)}:${item.tier}`)) {
                 itemEl.classList.add('wanted');
                 addTag(itemEl, 'tick', '✓');
-                addTag(itemEl, 'twinkle-star', '✦'); // a glint and a twinkle: someone wants this
             }
             const timer = itemTimer(item);
             if (timer) {
@@ -8752,6 +9223,9 @@ const preloaded = [];
         preloaded.push(img);
     });
 });
+
+// The sparkle layer, once the game is up and the phone has a moment.
+setTimeout(() => (window.requestIdleCallback || (go => go()))(loadFx, { timeout: 3000 }), 1200);
 
 // Installable and playable offline (on the published site; not while developing).
 // In the Android app the game is already on the phone: no service worker,
