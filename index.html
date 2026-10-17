@@ -892,7 +892,7 @@
             opacity: 0.92;
             filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.18));
             animation: cloud-drift calc(26s + var(--i) * 5s) linear infinite;
-            animation-delay: calc(var(--i) * -6.5s);
+            animation-delay: var(--d, calc(var(--i) * -6.5s));
             transition: filter 2s ease, opacity 2s ease;
         }
         @keyframes cloud-drift { from { translate: 0 0; } to { translate: 190cqw 0; } }
@@ -1815,23 +1815,33 @@
         .place-banner small { font-size: 2.9cqw; font-weight: 700; line-height: 1.2; opacity: 0.85; }
         .place-banner small .ui-icon { width: 3cqw; height: 3cqw; vertical-align: -0.4cqw; }
         .place-banner.hot::before { content: '!'; position: absolute; right: -2cqw; top: -2cqw; display: grid; place-items: center; width: 5.5cqw; height: 5.5cqw; border-radius: 50%; background: #e53935; color: #fff; font-weight: 900; font-size: 3.4cqw; box-shadow: 0 0 0 0.6cqw #fff; }
-        .place-progress { min-width: 46cqw; padding: 1.6cqw 3cqw; }
-        .place-progress .pb-text { width: 100%; }
-        .place-progress b { font-size: 4.6cqw; text-align: center; }
-        .pb-bar { display: block; height: 3cqw; border-radius: 2cqw; background: rgba(107, 68, 34, 0.18); overflow: hidden; box-shadow: inset 0 0.4cqw 0.6cqw rgba(0, 0, 0, 0.15); }
-        .pb-bar i { display: block; height: 100%; min-width: 3cqw; border-radius: 2cqw; background: linear-gradient(#9be36a, #4caf50); }
-        .place-progress small { text-align: center; }
+        /* Sunnyvale's progress: its name on a ribbon over a green bar with how many jobs are done.
+           It stays put: no bobbing, and it stays when someone talks. */
+        .town-progress { position: absolute; z-index: 420; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; gap: 0.8cqw;
+            padding: 0; background: none; border: 0; font: inherit; color: var(--ink); cursor: pointer; }
+        .tile-ui > .town-progress { pointer-events: auto; }
+        .tp-name { padding: 0.8cqw 4cqw; border-radius: 2cqw; background: #c8352c; color: #fff; font-size: 4.4cqw; font-weight: 900; line-height: 1.2; text-shadow: 0 0.4cqw 0 rgba(110, 20, 20, 0.6); }
+        .tp-bar { position: relative; display: block; width: 46cqw; height: 6.4cqw; padding: 0.6cqw; box-sizing: border-box; border-radius: 99px;
+            background: #3e2620; border: 0.6cqw solid #2c1712; box-shadow: inset 0 0.5cqw 0.6cqw rgba(0, 0, 0, 0.45), 0 0.8cqw 1.4cqw rgba(30, 15, 5, 0.35); }
+        .tp-bar i { display: block; height: 100%; min-width: 4cqw; border-radius: 99px; background: linear-gradient(#b4f06a, #6cc63a 45%, #48a425);
+            box-shadow: inset 0 0.5cqw 0 rgba(255, 255, 255, 0.45), inset 0 -0.3cqw 0 rgba(30, 90, 10, 0.4); transition: width 0.6s ease; }
+        .tp-bar em { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-style: normal; font-weight: 900; font-size: 3.3cqw; color: #fff; white-space: nowrap;
+            text-shadow: 0 0.35cqw 0 rgba(0, 0, 0, 0.55), 0 0 0.6cqw rgba(0, 0, 0, 0.4); }
+        .tp-bar em .ui-icon { width: 3.6cqw; height: 3.6cqw; margin-right: 0.8cqw; vertical-align: -0.6cqw; }
+        .world-view.far .town-progress { display: none; }
         .place-ui.talking .place-banner { opacity: 0; scale: 0.6; pointer-events: none; }
         /* Most stalls show a small round sign (icon and name); the one nearest the middle of the screen opens into its banner. */
-        .place-banner:not(.open):not(.place-progress) { flex-direction: column; gap: 0.6cqw; max-width: 30cqw; padding: 0; background: none; border: 0; box-shadow: none; animation: none; transform: translate(-50%, -100%); }
-        .place-banner:not(.open):not(.place-progress)::after { display: none; }
-        .place-banner:not(.open):not(.place-progress) .pb-icon { width: 12cqw; height: 12cqw; border-radius: 50%; background: #fffaf0; border: 0.7cqw solid #6b4422; box-shadow: 0 0.8cqw 0 #6b4422, 0 1.5cqw 2cqw rgba(40, 25, 5, 0.3); }
-        .place-banner:not(.open):not(.place-progress) .pb-icon img, .place-banner:not(.open):not(.place-progress) .pb-icon .ui-icon { width: 74%; height: 74%; }
-        .place-banner:not(.open):not(.place-progress) .pb-text { align-items: center; }
-        .place-banner:not(.open):not(.place-progress) b { font-size: 2.8cqw; padding: 0.3cqw 1.6cqw; border-radius: 2cqw; background: rgba(60, 38, 18, 0.82); color: #fff; white-space: nowrap; }
-        .place-banner:not(.open):not(.place-progress) small { display: none; }
-        .place-banner:not(.open):not(.place-progress).hot::before { right: -0.5cqw; top: -0.5cqw; width: 4.5cqw; height: 4.5cqw; font-size: 3cqw; }
-        .place-banner.open { z-index: 450; animation: popIn 0.3s cubic-bezier(0.3, 1.6, 0.5, 1); }
+        .place-banner:not(.open) { flex-direction: column; gap: 0.6cqw; max-width: 30cqw; padding: 0; background: none; border: 0; box-shadow: none; animation: none; transform: translate(-50%, -100%); }
+        .place-banner:not(.open)::after { display: none; }
+        .place-banner:not(.open) .pb-icon { width: 12cqw; height: 12cqw; border-radius: 50%; background: #fffaf0; border: 0.7cqw solid #6b4422; box-shadow: 0 0.8cqw 0 #6b4422, 0 1.5cqw 2cqw rgba(40, 25, 5, 0.3); }
+        .place-banner:not(.open) .pb-icon img, .place-banner:not(.open) .pb-icon .ui-icon { width: 74%; height: 74%; }
+        .place-banner:not(.open) .pb-text { align-items: center; }
+        .place-banner:not(.open) b { font-size: 2.8cqw; padding: 0.3cqw 1.6cqw; border-radius: 2cqw; background: rgba(60, 38, 18, 0.82); color: #fff; white-space: nowrap; }
+        .place-banner:not(.open) small { display: none; }
+        .place-banner:not(.open).hot::before { right: -0.5cqw; top: -0.5cqw; width: 4.5cqw; height: 4.5cqw; font-size: 3cqw; }
+        /* Opening grows it by `scale`, so its centring `transform` stays (popIn would move it while it plays). */
+        .place-banner.open { z-index: 450; transform-origin: 50% 100%; animation: banner-in 0.3s cubic-bezier(0.3, 1.6, 0.5, 1), bob 2.2s ease-in-out 0.3s infinite; }
+        @keyframes banner-in { from { scale: 0.2; opacity: 0; } to { scale: 1; opacity: 1; } }
         .place-person { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; }
         .place-person img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
         .place-person .task-pin { bottom: 96%; }
@@ -1839,10 +1849,11 @@
         .place-person.posed::before { content: ''; position: absolute; left: 24%; right: 24%; bottom: -2%; height: 6%; background: radial-gradient(closest-side, rgba(40, 30, 10, 0.35), transparent); }
         .place-person.posed img { position: relative; }
         .place-person[data-pose="cheer"] img { animation: hero-hop 0.5s ease-out 2; }
-        .place-say { position: absolute; z-index: 500; transform: translate(-50%, calc(-100% - 2.6cqw)); width: max-content; max-width: 62cqw; padding: 2.2cqw 3cqw; background: #fff; border: 0.7cqw solid var(--ink);
-            border-radius: 4cqw; box-shadow: 0 1.5cqw 3cqw rgba(30, 20, 5, 0.3); font-size: 3.6cqw; font-weight: 700; line-height: 1.3; color: var(--ink); animation: popIn 0.35s cubic-bezier(0.3, 1.6, 0.5, 1); cursor: pointer; }
+        .place-say { position: absolute; z-index: 500; transform: translate(calc(-50% + var(--nudge, 0px)), calc(-100% - 2.6cqw)); transform-origin: 50% 100%; width: max-content; max-width: 62cqw; padding: 2.2cqw 3cqw; background: #fff; border: 0.7cqw solid var(--ink);
+            border-radius: 4cqw; box-shadow: 0 1.5cqw 3cqw rgba(30, 20, 5, 0.3); font-size: 3.6cqw; font-weight: 700; line-height: 1.3; color: var(--ink); animation: banner-in 0.35s cubic-bezier(0.3, 1.6, 0.5, 1); cursor: pointer; }
         .place-say b { display: block; color: #b0531c; font-size: 3.2cqw; }
-        .place-say::after { content: ''; position: absolute; left: 50%; top: 100%; translate: -50% 0; border: 2.2cqw solid transparent; border-top-color: var(--ink); border-bottom: 0; }
+        .place-say.no-tail::after { display: none; }
+        .place-say::after { content: ''; position: absolute; left: calc(50% - var(--nudge, 0px)); top: 100%; translate: -50% 0; border: 2.2cqw solid transparent; border-top-color: var(--ink); border-bottom: 0; }
         .world-view.far .place-banner, .world-view.far .place-say { display: none; }
         /* In the world a job's bubble shows just what it needs, like Merge Mansion's; tap it for the rest. */
         .world-view .pin-name { display: none; }
@@ -2138,6 +2149,14 @@
         html.kit .place-btn { border: 0; border-radius: 0; background: var(--kit-square-blue) center / 100% 100% no-repeat; box-shadow: none; }
         html.kit .place-btn:active { translate: 0 0.5cqw; }
 
+        /* Signs in the Market and Sunnyvale: blue round signs, open ones on the cream tile, the town's name on the ribbon. */
+        html.kit .tp-name { padding: 0.6cqw 9cqw 2.6cqw; background: none; border: 0 solid transparent; border-radius: 0; border-image: var(--kit-ribbon) 0 120 0 120 fill / 0 8.5cqw; }
+        html.kit .place-banner.open { background: none; border: 0 solid transparent; border-radius: 3cqw; border-image: var(--kit-slot) 56 fill / 3.4cqw; box-shadow: 0 1.5cqw 2.5cqw rgba(40, 25, 5, 0.3);
+            padding: 1.8cqw 3cqw 2.4cqw 1.8cqw; }
+        html.kit .place-banner.open::after { translate: -50% -0.4cqw; border-top-color: #5a3426; }
+        html.kit .place-banner:not(.open) .pb-icon { background: var(--kit-ring-blue) center / 100% 100% no-repeat; border: 0; box-shadow: 0 1.2cqw 1.6cqw rgba(40, 25, 5, 0.3); }
+        html.kit .place-banner:not(.open) b { background: linear-gradient(#6b4527, #4a2e18); border: 0.45cqw solid #2f1c0f; }
+
         /* Speech: white bubbles with the kit's dark outline. */
         html.kit .place-say { border-color: #5a3426; border-radius: 4cqw; box-shadow: 0 0.8cqw 0 rgba(60, 30, 20, 0.25); }
         html.kit .place-say::after { border-top-color: #5a3426; }
@@ -2181,7 +2200,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610171718"></script>
-    <script src="game.js?v=202610171718"></script>
+    <script src="assets.js?v=202610171743"></script>
+    <script src="game.js?v=202610171743"></script>
 </body>
 </html>

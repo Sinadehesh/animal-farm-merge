@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**675 assets:** 628 done ✅, 6 placeholders 🟡, 41 missing ⬜.
+**683 assets:** 636 done ✅, 6 placeholders 🟡, 41 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -87,7 +87,7 @@ opening) and **cheering** (after a fix). Who has no pose sheet yet keeps their o
 | | Character | Portrait | Waving | Standing | Cheering | Poses |
 |---|---|---|---|---|---|---|
 | ✅ | Mayor Bramble | ✅ | ✅ | ✅ | ✅ | ✅ 8 |
-| 🟡 | Hattie, the rancher | ✅ | ✅ | ✅ | ✅ | ⬜ sheet wanted |
+| ✅ | Hattie, the rancher | ✅ | ✅ | ✅ | ✅ | ✅ 8 |
 | ✅ | Ruby, the carpenter | ✅ | ✅ | ✅ | ✅ | ✅ 8 |
 | ✅ | Finn, the fisherman | ✅ | ✅ | ✅ | ✅ | ✅ 8 |
 | ✅ | Poppy, the florist | ✅ | ✅ | ✅ | ✅ | ✅ 8 |

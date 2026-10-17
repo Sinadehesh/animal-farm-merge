@@ -290,7 +290,7 @@ const ASSETS = {
     // Townsfolk (keyed by NPC id) and the market shopkeeper, standing.
     characters: {
         mayor: 'assets/characters/poses/mayor/body.webp',
-        hattie: 'assets/characters/hattie.png',
+        hattie: 'assets/characters/poses/hattie/body.webp',
         ruby: 'assets/characters/poses/ruby/body.webp',
         finn: 'assets/characters/poses/finn/body.webp',
         poppy: 'assets/characters/poses/poppy/body.webp',
@@ -301,7 +301,7 @@ const ASSETS = {
     // popups). null = frame the full-body drawing above instead.
     portraits: {
         mayor: 'assets/characters/poses/mayor/face.webp',
-        hattie: 'assets/characters/portraits/hattie.png',
+        hattie: 'assets/characters/poses/hattie/face.webp',
         ruby: 'assets/characters/poses/ruby/face.webp',
         finn: 'assets/characters/poses/finn/face.webp',
         poppy: 'assets/characters/poses/poppy/face.webp',
@@ -312,7 +312,7 @@ const ASSETS = {
     // scenes), and full body cheering (after a fix). null = the portrait instead.
     wave: {
         mayor: 'assets/characters/poses/mayor/hello.webp',
-        hattie: 'assets/characters/wave/hattie.png',
+        hattie: 'assets/characters/poses/hattie/hello.webp',
         ruby: 'assets/characters/poses/ruby/hello.webp',
         finn: 'assets/characters/poses/finn/hello.webp',
         poppy: 'assets/characters/poses/poppy/hello.webp',
@@ -320,7 +320,7 @@ const ASSETS = {
     },
     cheer: {
         mayor: 'assets/characters/poses/mayor/cheer.webp',
-        hattie: 'assets/characters/cheer/hattie.png',
+        hattie: 'assets/characters/poses/hattie/cheer.webp',
         ruby: 'assets/characters/poses/ruby/cheer.webp',
         finn: 'assets/characters/poses/finn/cheer.webp',
         poppy: 'assets/characters/poses/poppy/cheer.webp',
@@ -352,6 +352,11 @@ const ASSETS = {
             frame: [194, 272, 249, 4],
             stand: 'assets/characters/poses/poppy/stand.webp', wave: 'assets/characters/poses/poppy/wave.webp', talk: 'assets/characters/poses/poppy/talk.webp', cheer: 'assets/characters/poses/poppy/cheer.webp',
             clap: 'assets/characters/poses/poppy/clap.webp', think: 'assets/characters/poses/poppy/think.webp', point: 'assets/characters/poses/poppy/point.webp', ask: 'assets/characters/poses/poppy/ask.webp',
+        },
+        hattie: {
+            frame: [200, 240, 225, 4],
+            stand: 'assets/characters/poses/hattie/stand.webp', wave: 'assets/characters/poses/hattie/wave.webp', talk: 'assets/characters/poses/hattie/talk.webp', cheer: 'assets/characters/poses/hattie/cheer.webp',
+            clap: 'assets/characters/poses/hattie/clap.webp', think: 'assets/characters/poses/hattie/think.webp', point: 'assets/characters/poses/hattie/point.webp', ask: 'assets/characters/poses/hattie/ask.webp',
         },
         shopkeeper: {
             frame: [184, 264, 256, 4],
