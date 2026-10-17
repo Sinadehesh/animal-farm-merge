@@ -1993,6 +1993,154 @@
         .page-shine { position: absolute; inset: 0; z-index: 5; pointer-events: none; background: linear-gradient(115deg, transparent 30%, rgba(255, 246, 200, 0.75) 48%, rgba(255, 255, 255, 0.9) 50%, rgba(255, 246, 200, 0.75) 52%, transparent 70%) no-repeat; background-size: 250% 100%; animation: shine-sweep 1.4s ease-in-out forwards; }
         @keyframes shine-sweep { from { background-position: 120% 0; } to { background-position: -20% 0; } }
         .side-btn .gear { font-size: 7cqw; line-height: 1; }
+
+        /* --- THE UI KIT ---
+           The glossy buttons, bars and frames from assets/raw/ui/kit.jpg (ASSETS.kit, set as
+           --kit-<name> on <html class="kit"> at start). Stretchy pieces are 9-sliced with
+           border-image: the corners keep their shape, the middle stretches. */
+        html.kit .hud {
+            background: linear-gradient(#7a5030, #5a3a20 55%, #46301a);
+            box-shadow: inset 0 -3px 0 rgba(30, 15, 5, 0.45), inset 0 1px 0 rgba(255, 220, 170, 0.3), 0 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+        html.kit .res, html.kit .pill {
+            position: relative;
+            height: 30px;
+            padding: 0 9px 2px 5px;
+            background: none;
+            border: 0 solid transparent;
+            border-image: var(--kit-bar-plain) 50 54 fill / 15px 16px;
+            text-shadow: 0 1.5px 0 rgba(0, 0, 0, 0.55);
+        }
+        html.kit .btn-back { height: 32px; width: 32px; padding: 0 0 3px; justify-content: center; border-image: var(--kit-btn-blue) 62 66 66 66 fill / 16px; font-size: 15px; }
+        html.kit .res:active, html.kit .pill:active, html.kit .btn-back:active { background: none; transform: translateY(1px) scale(0.97); }
+        html.kit .hud .ui-icon { height: 27px; margin: -3px 0 -2px -9px; }
+        html.kit .res .plus, html.kit .pill .plus {
+            width: 22px;
+            height: 22px;
+            margin: 0 -10px 0 1px;
+            background: var(--kit-plus) center / contain no-repeat;
+            border-radius: 0;
+            font-size: 0;
+            color: transparent;
+        }
+        html.kit .res-level { padding-left: 10px; }
+        html.kit .xp-bar { height: 5px; background: #3a2018; box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.5); }
+        html.kit .xp-bar i { background: linear-gradient(#ffe98a, #f5b72c 60%, #e09415); }
+        html.kit .res-charge { border-image: var(--kit-btn-grey) 62 66 66 66 fill / 15px; }
+        html.kit .res-charge.on { background: none; border-image-source: var(--kit-btn-orange); box-shadow: none; color: #fff; }
+
+        /* Buttons: glossy pills. Green does it, blue for the rest, orange spends gems, grey can't. */
+        html.kit .btn, html.kit .sell-btn {
+            min-height: 11cqw;
+            padding: 2.2cqw 5.5cqw 3cqw;
+            background: none;
+            border: 0 solid transparent;
+            border-radius: 0;
+            border-image: var(--kit-btn-blue) 62 66 66 66 fill / 5.2cqw 5.4cqw;
+            box-shadow: none;
+            color: #fff;
+            font-size: 4.1cqw;
+            text-shadow: 0 0.45cqw 0 rgba(20, 40, 70, 0.45), 0 0 0.4cqw rgba(0, 0, 0, 0.25);
+        }
+        html.kit .btn-primary, html.kit .sell-btn { border-image-source: var(--kit-btn-green); text-shadow: 0 0.45cqw 0 rgba(20, 70, 10, 0.5), 0 0 0.4cqw rgba(0, 0, 0, 0.25); }
+        html.kit .btn-buy { border-image-source: var(--kit-btn-orange); text-shadow: 0 0.45cqw 0 rgba(120, 60, 0, 0.5), 0 0 0.4cqw rgba(0, 0, 0, 0.25); }
+        html.kit .btn:disabled { background: none; border-image-source: var(--kit-btn-grey); color: #f4f1ec; text-shadow: 0 0.4cqw 0 rgba(0, 0, 0, 0.3); }
+        html.kit .btn:active, html.kit .sell-btn:active { transform: translateY(0.5cqw) scale(0.97); box-shadow: none; }
+        html.kit .sell-btn { min-height: 9cqw; padding: 1.2cqw 3.6cqw 2cqw; border-image-width: 4.2cqw 4.4cqw; font-size: 3cqw; }
+        html.kit .fix-call .btn { min-height: 9.5cqw; padding: 1.6cqw 4cqw 2.4cqw; border-image-width: 4.6cqw 4.8cqw; font-size: 3.6cqw; }
+
+        /* Popups: the wooden panel with gold corners, the title on a red ribbon. */
+        html.kit .dialog {
+            padding: 6cqw 6.5cqw 6.5cqw;
+            background: none;
+            border: 0 solid transparent;
+            border-radius: 0;
+            border-image: var(--kit-panel) 74 80 78 80 fill / 9cqw 9.5cqw 9.5cqw;
+            box-shadow: none;
+        }
+        html.kit .dialog h2 {
+            align-self: center;
+            margin: 0 0 3cqw;
+            padding: 1.2cqw 11cqw 3.4cqw;
+            border: 0 solid transparent;
+            border-image: var(--kit-ribbon) 0 120 0 120 fill / 0 11cqw;
+            color: #fff;
+            font-size: 5cqw;
+            line-height: 1.2;
+            text-shadow: 0 0.5cqw 0 rgba(110, 20, 20, 0.6), 0 0 0.5cqw rgba(0, 0, 0, 0.25);
+        }
+        html.kit .dialog h2:empty { display: none; }
+        html.kit .dialog-backdrop.sheet .dialog { padding-top: 7cqw; }
+
+        /* Round map buttons in blue frames; the corner buttons as big glossy squares. */
+        html.kit .side-btn {
+            background: var(--kit-ring-blue) center / 100% 100% no-repeat;
+            border: 0;
+            border-radius: 50%;
+            box-shadow: none;
+        }
+        html.kit .side-btn.offer-btn { background: var(--kit-ring-blue) center / 100% 100% no-repeat; }
+        html.kit .side-btn small, html.kit .fab small {
+            bottom: -2.6cqw;
+            padding: 0.2cqw 1.6cqw 0.4cqw;
+            background: linear-gradient(#6b4527, #4a2e18);
+            border: 0.45cqw solid #2f1c0f;
+            color: #fff;
+            text-shadow: 0 0.3cqw 0 rgba(0, 0, 0, 0.5);
+        }
+        html.kit .fab {
+            border: 0;
+            border-radius: 0;
+            background: var(--kit-square-blue) center / 100% 100% no-repeat;
+            box-shadow: none;
+        }
+        html.kit .board-fab { background-image: var(--kit-square-green); box-shadow: none; }
+        html.kit .fab:active, html.kit .board-fab:active { box-shadow: none; translate: 0 0.5cqw; }
+        html.kit .fix-call-x { border: 0; background: var(--kit-btn-close) center / contain no-repeat; font-size: 0; color: transparent; width: 7cqw; height: 7cqw; }
+
+        /* Counts on buttons: glossy red. Progress: a dark groove with a glossy green fill. */
+        html.kit .badge {
+            background: radial-gradient(circle at 38% 30%, #ff9a8a 0 12%, #f0483a 40%, #c62a20 100%);
+            border: 0.6cqw solid #fff;
+            box-shadow: 0 0 0 0.35cqw #6b1d14, 0 0.6cqw 0 rgba(60, 10, 5, 0.45);
+            text-shadow: 0 0.3cqw 0 rgba(90, 10, 5, 0.6);
+        }
+        html.kit .quest-bar {
+            height: 3cqw;
+            padding: 0.45cqw;
+            background: #3e2620;
+            border: 0.5cqw solid #2c1712;
+            box-shadow: inset 0 0.5cqw 0.6cqw rgba(0, 0, 0, 0.45), 0 0.3cqw 0 rgba(255, 255, 255, 0.35);
+            box-sizing: content-box;
+        }
+        html.kit .quest-bar i {
+            border-radius: 999px;
+            background: linear-gradient(#b4f06a, #6cc63a 45%, #48a425);
+            box-shadow: inset 0 0.5cqw 0 rgba(255, 255, 255, 0.45), inset 0 -0.3cqw 0 rgba(30, 90, 10, 0.4);
+        }
+        html.kit .xp-row .quest-bar.xp i { background: linear-gradient(#ffe98a, #f5b72c 55%, #e09415); }
+
+        /* Cards and bars on the boards: the kit's cream tile, 9-sliced to any size. */
+        html.kit .order-card, html.kit .inv-btn, html.kit .info-bar, html.kit .fix-call {
+            background: none;
+            border: 0 solid transparent;
+            border-radius: 3cqw;
+            border-image: var(--kit-slot) 56 fill / 3.4cqw;
+            box-shadow: none;
+        }
+        html.kit .order-card { padding: 1.6cqw 1.4cqw 2.2cqw; }
+        html.kit .order-card.ready { box-shadow: 0 0 0 0.7cqw #6cc63a, 0 0 2.4cqw #c8f58a; }
+        html.kit .order-card.other, html.kit .order-card.more { opacity: 0.85; }
+        html.kit .info-bar { padding: 1.6cqw 2.4cqw 2.2cqw; }
+        html.kit .fix-call { padding-bottom: 3cqw; }
+        html.kit .place-btn { border: 0; border-radius: 0; background: var(--kit-square-blue) center / 100% 100% no-repeat; box-shadow: none; }
+        html.kit .place-btn:active { translate: 0 0.5cqw; }
+
+        /* Speech: white bubbles with the kit's dark outline. */
+        html.kit .place-say { border-color: #5a3426; border-radius: 4cqw; box-shadow: 0 0.8cqw 0 rgba(60, 30, 20, 0.25); }
+        html.kit .place-say::after { border-top-color: #5a3426; }
     </style>
 </head>
 <body>
@@ -2033,7 +2181,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610171713"></script>
-    <script src="game.js?v=202610171713"></script>
+    <script src="assets.js?v=202610171718"></script>
+    <script src="game.js?v=202610171718"></script>
 </body>
 </html>

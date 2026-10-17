@@ -5243,7 +5243,7 @@ function showDialog({ art, artRound = false, title, body, actions, sheet = false
     dialogActions.innerHTML = '';
     actions.forEach(action => {
         const btn = document.createElement('button');
-        btn.className = 'btn' + (action.primary ? ' btn-primary' : '') + (action.wide ? ' btn-wide' : '');
+        btn.className = 'btn' + (action.primary ? ' btn-primary' : '') + (action.wide ? ' btn-wide' : '') + (/💎/.test(action.label) ? ' btn-buy' : '');
         if (action.icon) btn.innerHTML = `${action.icon} `;
         btn.insertAdjacentHTML('beforeend', iconize(action.label));
         btn.disabled = !!action.disabled;
@@ -9147,6 +9147,12 @@ function loadGame() {
 // Over the whole screen, the top bar too, so the hand can point at its buttons.
 document.body.appendChild(tutorialEl);
 document.querySelectorAll('[data-ui]').forEach(el => { el.innerHTML = uiIcon(el.dataset.ui, el.textContent); });
+// The UI kit's pictures, for the page's CSS (var(--kit-btn-green) and so on).
+Object.entries(ASSETS.kit || {}).forEach(([name, src]) => {
+    if (!src) return;
+    document.documentElement.style.setProperty(`--kit-${name.replace(/_/g, '-')}`, `url("${src}")`);
+    document.documentElement.classList.add('kit');
+});
 ['map', 'town', 'market'].forEach(id => {
     document.getElementById(`scene-${id}`).style.backgroundImage = `url("${ASSETS.scenes[id]}")`;
 });

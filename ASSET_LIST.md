@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**660 assets:** 613 done ✅, 6 placeholders 🟡, 41 missing ⬜.
+**675 assets:** 628 done ✅, 6 placeholders 🟡, 41 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -398,17 +398,17 @@ missing shows its emoji.
 
 | | Icon | Where | File |
 |---|---|---|---|
-| ✅ | 💵 coins | top bar | `assets/ui/coin.png` |
-| ✅ | 💎 gems | top bar | `assets/ui/gem.png` |
-| ✅ | ⚡ energy | top bar | `assets/ui/energy.png` |
-| ✅ | ⭐ level | top bar | `assets/ui/star.png` |
+| ✅ | 💵 coins | top bar | `assets/ui/kit/icon_coin.webp` |
+| ✅ | 💎 gems | top bar | `assets/ui/kit/icon_gem.webp` |
+| ✅ | ⚡ energy | top bar | `assets/ui/kit/icon_energy.webp` |
+| ✅ | ⭐ level | top bar | `assets/ui/kit/icon_star.webp` |
 | ✅ | 🎁 daily gift, Daily Deals, rewards box | map, Market and board buttons | `assets/ui/gift.png` |
 | ✅ | 📋 tasks | bottom-right Tasks button | `assets/ui/jobs.png` |
 | ✅ | 🧺 merge board | bottom-left Merge button | `assets/ui/merge.png` |
 | ✅ | 🗝️ golden key | an area unlocking | `assets/ui/key.png` |
 | ✅ | 🎁 reward box | area and land rewards, task cards | `assets/ui/reward.png` |
 | ✅ | ☁️ cloud | spare: locked areas | `assets/ui/cloud.png` |
-| ✅ | ✅ check badge | spare: ready items | `assets/ui/check.png` |
+| ✅ | ✅ check badge | spare: ready items | `assets/ui/kit/badge_tick.webp` |
 | ✅ | ✨ sparkle | empty spots to build on | `assets/ui/sparkle.png` |
 | ✅ | 🎟️ Season Pass | map button | `assets/ui/pass.png` |
 | ✅ | 📅 daily goals | map button | `assets/ui/daily.png` |
@@ -423,6 +423,29 @@ missing shows its emoji.
 | ✅ | 📺 TV with a play button | "Watch an ad" buttons | `assets/ui/ad.png` |
 | ✅ | 👆 pointing glove (white cartoon glove, index finger out) | the tutorial and guides: points at what to tap | `assets/ui/hand2.png` |
 | ⬜ | 🧩 part | producer parts in reward texts | not wired yet (needs a small code change) |
+
+### The UI kit
+
+Glossy buttons, frames, bars, the popup panel and its title ribbon, cut from `assets/raw/ui/kit.jpg` (Gemini, one sheet
+on flat magenta) by `tools/cutkit.py`; listed in `kit` in `assets.js`. The page 9-slices them with CSS border-image.
+
+| | Piece | File |
+|---|---|---|
+| ✅ | btn green | `assets/ui/kit/btn_green.webp` |
+| ✅ | btn blue | `assets/ui/kit/btn_blue.webp` |
+| ✅ | btn orange | `assets/ui/kit/btn_orange.webp` |
+| ✅ | btn grey | `assets/ui/kit/btn_grey.webp` |
+| ✅ | btn close | `assets/ui/kit/btn_close.webp` |
+| ✅ | plus | `assets/ui/kit/plus.webp` |
+| ✅ | ring blue | `assets/ui/kit/ring_blue.webp` |
+| ✅ | square green | `assets/ui/kit/square_green.webp` |
+| ✅ | square blue | `assets/ui/kit/square_blue.webp` |
+| ✅ | bar plain | `assets/ui/kit/bar_plain.webp` |
+| ✅ | badge alert | `assets/ui/kit/badge_alert.webp` |
+| ✅ | panel | `assets/ui/kit/panel.webp` |
+| ✅ | ribbon | `assets/ui/kit/ribbon.webp` |
+| ✅ | bubble | `assets/ui/kit/bubble.webp` |
+| ✅ | slot | `assets/ui/kit/slot.webp` |
 
 ## 12b. Plots (the newest look)
 

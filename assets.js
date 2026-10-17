@@ -384,10 +384,10 @@ const ASSETS = {
     // and the lock on chests. Cut from assets/raw/icons_5_interface.webp.
     // null = keep the emoji.
     ui: {
-        coin: 'assets/ui/coin.png',
-        gem: 'assets/ui/gem.png',
-        energy: 'assets/ui/energy.png',
-        star: 'assets/ui/star.png',
+        coin: 'assets/ui/kit/icon_coin.webp',
+        gem: 'assets/ui/kit/icon_gem.webp',
+        energy: 'assets/ui/kit/icon_energy.webp',
+        star: 'assets/ui/kit/icon_star.webp',
         gift: 'assets/ui/gift.png',
         jobs: 'assets/ui/jobs.png',
         pass: 'assets/ui/pass.png',
@@ -400,7 +400,7 @@ const ASSETS = {
         reward: 'assets/ui/reward.png',    // an area's or land's reward
         merge: 'assets/ui/merge.png',      // the Merge button
         cloud: 'assets/ui/cloud.png',
-        check: 'assets/ui/check.png',
+        check: 'assets/ui/kit/badge_tick.webp',
         sparkle: 'assets/ui/sparkle.png',
         hammer: 'assets/ui/hammer.png',    // job tags and the fix
         sale: 'assets/ui/sale.png',        // the Flash Sale
@@ -408,6 +408,18 @@ const ASSETS = {
         trophy: 'assets/ui/trophy.png',    // the Country Fair's place and race
         ad: 'assets/ui/ad.png',            // "Watch an ad" buttons
         hand: 'assets/ui/hand2.png',       // the tutorial's pointing glove, back of the hand (fingertip at its top left)
+    },
+
+    // The glossy UI kit (cut from assets/raw/ui/kit.jpg by tools/cutkit.py): buttons,
+    // frames, bars, the panel and its title ribbon. The page's CSS uses them as
+    // --kit-<name> (set from here at start); null = the plain CSS look.
+    kit: {
+        btn_green: 'assets/ui/kit/btn_green.webp', btn_blue: 'assets/ui/kit/btn_blue.webp',
+        btn_orange: 'assets/ui/kit/btn_orange.webp', btn_grey: 'assets/ui/kit/btn_grey.webp',
+        btn_close: 'assets/ui/kit/btn_close.webp', plus: 'assets/ui/kit/plus.webp',
+        ring_blue: 'assets/ui/kit/ring_blue.webp', square_green: 'assets/ui/kit/square_green.webp', square_blue: 'assets/ui/kit/square_blue.webp',
+        bar_plain: 'assets/ui/kit/bar_plain.webp', badge_alert: 'assets/ui/kit/badge_alert.webp',
+        panel: 'assets/ui/kit/panel.webp', ribbon: 'assets/ui/kit/ribbon.webp', bubble: 'assets/ui/kit/bubble.webp', slot: 'assets/ui/kit/slot.webp',
     },
 
     // Optional background image behind each merge board (null = CSS colour).
