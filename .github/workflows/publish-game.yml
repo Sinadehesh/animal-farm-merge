@@ -28,6 +28,7 @@ jobs:
           mkdir site
           cp index.html game.js assets.js manifest.json site/
           cp -r assets site/
+          cp -r vendor site/  # PixiJS, for the sparkle layer
           touch site/.nojekyll
 
       - name: Push to gh-pages
