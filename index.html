@@ -2149,6 +2149,18 @@
         html.kit .place-btn { border: 0; border-radius: 0; background: var(--kit-square-blue) center / 100% 100% no-repeat; box-shadow: none; }
         html.kit .place-btn:active { translate: 0 0.5cqw; }
 
+        /* The story: the storybook speaks in italics, a note from "A Friend" on old paper, and the clues so far. */
+        .story-narration { margin: 1cqw 0 0; font-size: 4.3cqw; font-style: italic; line-height: 1.45; color: #5a4632; }
+        .story-note { margin: 1cqw auto 0; max-width: 62cqw; padding: 3.5cqw 4cqw; rotate: -1.5deg; background: linear-gradient(#fbf0d2, #f1dfb2);
+            border: 0.5cqw dashed #b08a50; border-radius: 2cqw; box-shadow: 0 1cqw 2cqw rgba(80, 50, 20, 0.2);
+            font-family: 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive; font-size: 4.2cqw; line-height: 1.4; color: #4a3520; }
+        .clues { margin: 2cqw 0 3cqw; padding: 2.4cqw; border-radius: 3cqw; background: rgba(255, 236, 170, 0.45); border: 0.4cqw solid rgba(176, 138, 80, 0.5); text-align: left; }
+        .clues h3 { margin: 0 0 1.5cqw; font-size: 3.9cqw; }
+        .clue { display: inline-flex; align-items: center; gap: 1cqw; margin: 0 1.2cqw 1.2cqw 0; padding: 0.6cqw 2cqw; border-radius: 99px; background: #fff8e4;
+            box-shadow: inset 0 0 0 0.3cqw rgba(107, 68, 34, 0.25); font-size: 3.1cqw; font-weight: 800; }
+        .clue .inline-item { height: 4.6cqw; }
+        .clue.hidden { background: rgba(107, 68, 34, 0.1); color: #8a6a50; }
+
         /* Signs in the Market and Sunnyvale: blue round signs, open ones on the cream tile, the town's name on the ribbon. */
         html.kit .tp-name { padding: 0.6cqw 9cqw 2.6cqw; background: none; border: 0 solid transparent; border-radius: 0; border-image: var(--kit-ribbon) 0 120 0 120 fill / 0 8.5cqw; }
         html.kit .place-banner.open { background: none; border: 0 solid transparent; border-radius: 3cqw; border-image: var(--kit-slot) 56 fill / 3.4cqw; box-shadow: 0 1.5cqw 2.5cqw rgba(40, 25, 5, 0.3);
@@ -2200,7 +2212,7 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610171743"></script>
-    <script src="game.js?v=202610171743"></script>
+    <script src="assets.js?v=202610180652"></script>
+    <script src="game.js?v=202610180652"></script>
 </body>
 </html>

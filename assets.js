@@ -380,7 +380,7 @@ const ASSETS = {
     // Things inside the market.
     props: {
         counter: 'assets/props/counter.svg',
-        deed: 'assets/props/deed.png',
+        deed: 'assets/props/deed_scroll.webp', // the green rune scroll from assets/raw/ui/books_scrolls.webp
         upgrade: 'assets/props/upgrade.png',
         crate: 'assets/props/crate.png', // the crates on a fresh board (cut from assets/raw/icons_7_misc.webp)
     },
@@ -414,6 +414,10 @@ const ASSETS = {
         ad: 'assets/ui/ad.png',            // "Watch an ad" buttons
         hand: 'assets/ui/hand2.png',       // the tutorial's pointing glove, back of the hand (fingertip at its top left)
     },
+
+    // The storybook's pictures: the narrator's book and the notes from "A Friend"
+    // (cut from assets/raw/ui/books_scrolls.webp).
+    story: { book: 'assets/story/book.webp', note: 'assets/story/note.webp' },
 
     // The glossy UI kit (cut from assets/raw/ui/kit.jpg by tools/cutkit.py): buttons,
     // frames, bars, the panel and its title ribbon. The page's CSS uses them as

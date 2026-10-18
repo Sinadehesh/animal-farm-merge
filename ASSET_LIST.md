@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**683 assets:** 636 done ✅, 6 placeholders 🟡, 41 missing ⬜.
+**685 assets:** 638 done ✅, 6 placeholders 🟡, 41 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -98,7 +98,7 @@ opening) and **cheering** (after a fix). Who has no pose sheet yet keeps their o
 | | Prop | File | What it shows |
 |---|---|---|---|
 | 🟡 | Counter | `assets/props/counter.svg` → `assets/props/counter.png` | a long wooden shop counter (front view, wide) |
-| ✅ | Deed | `assets/props/deed.png` | a rolled land deed with a wax seal |
+| ✅ | Deed | `assets/props/deed_scroll.webp` → `assets/props/deed.png` | a rolled land deed with a wax seal |
 | ✅ | Upgrade | `assets/props/upgrade.png` | the Growth Guide: a fat farming book with a sprout on the cover |
 | ✅ | Crate | `assets/props/crate.png` | a small wooden crate (the closed boxes on a new board) |
 
@@ -423,6 +423,16 @@ missing shows its emoji.
 | ✅ | 📺 TV with a play button | "Watch an ad" buttons | `assets/ui/ad.png` |
 | ✅ | 👆 pointing glove (white cartoon glove, index finger out) | the tutorial and guides: points at what to tap | `assets/ui/hand2.png` |
 | ⬜ | 🧩 part | producer parts in reward texts | not wired yet (needs a small code change) |
+
+### The storybook
+
+The narrator's book and the notes from "A Friend" in the Golden Bell mystery, cut from `assets/raw/ui/books_scrolls.webp`;
+listed in `story` in `assets.js`. The green scroll from the same sheet is the Land Deeds picture (`props.deed`).
+
+| | Picture | File |
+|---|---|---|
+| ✅ | book | `assets/story/book.webp` |
+| ✅ | note | `assets/story/note.webp` |
 
 ### The UI kit
 

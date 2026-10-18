@@ -1198,10 +1198,21 @@ function chestName(item) {
     return `${CHESTS[item.kind].name}${levelOf(item) > 1 ? ` Lv${levelOf(item)}` : ''}`;
 }
 
+// A producer part's picture (the Barn's, which every farm has) for texts that
+// don't know yet which board it goes to.
+function partIcon(level = 1) {
+    return itemIconFor('barn', { type: 'shop', level });
+}
+
+// A job's stat need: its icon (producer parts show a part).
+function statIcon(stat) {
+    return stat === 'upgrades' ? partIcon(2) : TASK_STATS[stat].emoji;
+}
+
 function rewardText(r) {
     return [
         r.money && `💵${r.money}`, r.gems && `💎${r.gems}`, r.energy && `⚡${r.energy}`,
-        r.part && (r.part >= FIRST_WORKING_LEVEL ? `🏭 Lv${r.part} producer` : `🧩 Lv${r.part} part`),
+        r.part && `${partIcon(r.part)} Lv${r.part} ${r.part >= FIRST_WORKING_LEVEL ? 'producer' : 'part'}`,
         r.timeSkip && `⏳ ${BOOSTERS.skip.values[r.timeSkip - 1]}h skip`,
         r.chest && `🧰 ${CHESTS[r.chest].name}`, r.item && itemLabel(deliveryBoard(), r.item),
         r.fairBoost && `🎪 ${r.fairBoost}m double Fair points`,
@@ -1320,8 +1331,7 @@ const TASKS = [
     // (% across, % down), `look` what stands there before and after: object
     // pictures by name (OBJECT_EMOJI until drawn), '' for nothing.
     // Barnyard (day 1): the tutorial's first fix, then two threads that join.
-    { id: 'barn1', land: 'barn', zone: 'barnyard', at: [18, 46], look: ['planks', ''], story: [['ruby', 'Hi! I fix things!']],
-      name: 'Clear the planks', who: 'mayor', xp: 1, needs: [{ stat: 'boxes', n: 1 }], line: 'Great job!' },
+    { id: 'barn1', land: 'barn', zone: 'barnyard', at: [18, 46], look: ['planks', ''], name: 'Clear the planks', who: 'mayor', xp: 1, needs: [{ stat: 'boxes', n: 1 }], line: 'Great job!' },
     { id: 'barn2', land: 'barn', zone: 'barnyard', at: [35, 61], look: ['weeds', ''], after: ['barn1'],
       name: 'Pull the weeds', who: 'hattie', xp: 1, needs: [{ item: 'barn', tier: 0, n: 2 }], line: 'Weeds gone!' },
     { id: 'barn3', land: 'barn', zone: 'barnyard', at: [22, 86], look: ['branch', ''], after: ['barn1'],
@@ -1381,7 +1391,7 @@ const TASKS = [
     { id: 'big8', land: 'barn', zone: 'bigbarn', at: [62, 92], look: ['rug_torn', 'rug'], after: ['big7', 'barn64', 'barn65'], reward: { chest: 'blue' },
       name: 'Weave a new rug', who: 'hattie', xp: 10, needs: [{ item: 'barn', tier: 6, n: 1 }, { item: 'tools', tier: 5, n: 1 }], line: 'Beautiful!' },
     // Crop Field (day 3): bought first, then its three areas.
-    { id: 'farm1', land: 'farm', story: [['hattie', 'Let\'s grow food!']], name: 'Buy the Crop Field', who: 'mayor', xp: 3, needs: [{ own: 'farm' }],
+    { id: 'farm1', land: 'farm', name: 'Buy the Crop Field', who: 'mayor', xp: 3, needs: [{ own: 'farm' }],
       line: 'Your field!' },
     { id: 'farm2', land: 'farm', zone: 'fieldgate', at: [12, 72], look: ['weeds_thorny', ''], after: ['farm1'],
       name: 'Pull the thorny weeds', who: 'hattie', xp: 3, needs: [{ item: 'garden', tier: 1, n: 1 }], line: 'Ouch! Done!' },
@@ -1449,8 +1459,7 @@ const TASKS = [
       name: 'Rake the path', who: 'hattie', xp: 6, needs: [{ item: 'garden', tier: 3, n: 1 }], line: 'Tidy path!' },
     { id: 'hay8', land: 'hay', zone: 'meadow', at: [15, 60], look: ['🚧', '🪵'], after: ['hay3'],
       name: 'Fence the vegetable beds', who: 'ruby', xp: 7, needs: [{ item: 'wood', tier: 2, n: 2 }], line: 'Keep out, bunnies!' },
-    { id: 'hay9', land: 'hay', zone: 'meadow', at: [35, 20], look: ['🐑', '🐑'], after: ['hay7'], story: [['hattie', 'The sheep are back!']],
-      name: 'Shear the sheep', who: 'hattie', xp: 7, needs: [{ item: 'garden', tier: 2, n: 1 }, { item: 'hay', tier: 1, n: 2 }], line: 'Baa!' },
+    { id: 'hay9', land: 'hay', zone: 'meadow', at: [35, 20], look: ['🐑', '🐑'], after: ['hay7'], name: 'Shear the sheep', who: 'hattie', xp: 7, needs: [{ item: 'garden', tier: 2, n: 1 }, { item: 'hay', tier: 1, n: 2 }], line: 'Baa!' },
     { id: 'hay10', land: 'hay', zone: 'meadow', at: [85, 50], look: ['🟫', '🌱'], after: ['hay8'],
       name: 'Plant the beds', who: 'hattie', xp: 8, needs: [{ item: 'garden', tier: 1, n: 2 }, { item: 'hay', tier: 0, n: 3 }], line: 'Grow!' },
     { id: 'hay11', land: 'hay', zone: 'meadow', at: [88, 84], look: ['🥀', '🧑‍🌾'], after: ['hay9', 'hay10'],
@@ -1470,15 +1479,13 @@ const TASKS = [
       name: 'Fix the stall doors', who: 'ruby', xp: 10, needs: [{ item: 'tools', tier: 3, n: 1 }, { item: 'wood', tier: 2, n: 1 }], line: 'Click!' },
     { id: 'hay17', land: 'hay', zone: 'stables', at: [60, 62], look: ['🛁', '💧'], after: ['hay15'],
       name: 'Fill the water trough', who: 'hattie', xp: 10, needs: [{ item: 'hay', tier: 4, n: 1 }], line: 'Drink up!' },
-    { id: 'hay18', land: 'hay', zone: 'stables', at: [20, 66], look: ['', '🏠'], after: ['hay16', 'hay17'], story: [['ruby', 'A new stall!']],
-      name: 'Build a second stall', who: 'ruby', xp: 11, needs: [{ item: 'wood', tier: 4, n: 1 }, { item: 'tools', tier: 4, n: 1 }], line: 'Room for two!' },
+    { id: 'hay18', land: 'hay', zone: 'stables', at: [20, 66], look: ['', '🏠'], after: ['hay16', 'hay17'], name: 'Build a second stall', who: 'ruby', xp: 11, needs: [{ item: 'wood', tier: 4, n: 1 }, { item: 'tools', tier: 4, n: 1 }], line: 'Room for two!' },
     { id: 'hay19', land: 'hay', zone: 'stables', at: [80, 78], look: ['', '🐎'], after: ['hay18'],
       name: 'Hang up the saddle', who: 'hattie', xp: 11, needs: [{ item: 'hay', tier: 5, n: 1 }], line: 'Giddy up!' },
     { id: 'hay5', land: 'hay', zone: 'stables', at: [50, 14], look: ['🏚️', '🏠'], after: ['hay19', 'hay62', 'hay63'], reward: { chest: 'blue' },
       name: 'Repair the hay loft', who: 'ruby', xp: 12, needs: [{ item: 'hay', tier: 5, n: 1 }, { item: 'wood', tier: 4, n: 1 }], line: 'Good as new!' },
     // Windmill: torn sails, a door off its hinges, sacks everywhere.
-    { id: 'hay20', land: 'hay', zone: 'windmill', at: [35, 58], look: ['🎒', ''], story: [['hattie', 'The old windmill!']],
-      name: 'Pick up the spilled sacks', who: 'hattie', xp: 10, needs: [{ item: 'hay', tier: 2, n: 3 }], line: 'All picked up!' },
+    { id: 'hay20', land: 'hay', zone: 'windmill', at: [35, 58], look: ['🎒', ''], name: 'Pick up the spilled sacks', who: 'hattie', xp: 10, needs: [{ item: 'hay', tier: 2, n: 3 }], line: 'All picked up!' },
     { id: 'hay21', land: 'hay', zone: 'windmill', at: [72, 44], look: ['🌿', ''],
       name: 'Pull the weeds by the walls', who: 'hattie', xp: 10, needs: [{ item: 'garden', tier: 1, n: 2 }], line: 'Weeds gone!' },
     { id: 'hay22', land: 'hay', zone: 'windmill', at: [40, 51], look: ['🚪', '🚪'], after: ['hay20'],
@@ -1494,7 +1501,6 @@ const TASKS = [
     { id: 'hay27', land: 'hay', zone: 'windmill', at: [80, 58], look: ['', '🪑'], after: ['hay26'],
       name: 'Build a bench', who: 'ruby', xp: 13, needs: [{ item: 'wood', tier: 5, n: 1 }], line: 'Sit a while!' },
     { id: 'hay6', land: 'hay', zone: 'windmill', at: [50, 22], look: ['🏚️', '🌬️'], after: ['hay25', 'hay27', 'hay80', 'hay81'], reward: { chest: 'blue' },
-      story: [['mayor', 'It turns again!']],
       name: 'Set the sails turning', who: 'mayor', xp: 16, needs: [{ item: 'hay', tier: 7, n: 1 }, { item: 'wood', tier: 5, n: 1 }], line: 'Whoosh!' },
     // Compost Yard (day 4)
     { id: 'fert1', land: 'fert', name: 'Buy the Compost Yard', who: 'mayor', xp: 6, needs: [{ own: 'fert' }],
@@ -1529,8 +1535,7 @@ const TASKS = [
       name: 'Fix the potting table', who: 'ruby', xp: 11, needs: [{ item: 'wood', tier: 4, n: 1 }], line: 'No more wobble!' },
     { id: 'fert17', land: 'fert', zone: 'compostbins', at: [18, 62], look: ['🛒', '🛒'], after: ['fert3'],
       name: 'Fill the wheelbarrow', who: 'hattie', xp: 11, needs: [{ item: 'fert', tier: 3, n: 2 }], line: 'Full load!' },
-    { id: 'fert4', land: 'fert', zone: 'compostbins', at: [52, 78], look: ['🍂', '🌱'], after: ['fert3'], story: [['poppy', 'It smells... rich!']],
-      name: 'Turn the compost', who: 'poppy', xp: 12, needs: [{ item: 'clean', tier: 2, n: 1 }, { item: 'fert', tier: 4, n: 1 }], line: 'Rich soil!' },
+    { id: 'fert4', land: 'fert', zone: 'compostbins', at: [52, 78], look: ['🍂', '🌱'], after: ['fert3'], name: 'Turn the compost', who: 'poppy', xp: 12, needs: [{ item: 'clean', tier: 2, n: 1 }, { item: 'fert', tier: 4, n: 1 }], line: 'Rich soil!' },
     { id: 'fert18', land: 'fert', zone: 'compostbins', at: [82, 14], look: ['', '🪵'], after: ['fert4'],
       name: 'Put lids on the bins', who: 'ruby', xp: 12, needs: [{ item: 'wood', tier: 3, n: 1 }, { item: 'tools', tier: 4, n: 1 }], line: 'Snug!' },
     { id: 'fert19', land: 'fert', zone: 'compostbins', at: [68, 36], look: ['', '🪴'], after: ['fert16', 'fert17'],
@@ -1538,8 +1543,7 @@ const TASKS = [
     { id: 'fert20', land: 'fert', zone: 'compostbins', at: [85, 64], look: ['', '🌺'], after: ['fert18', 'fert19', 'fert63', 'fert64'], reward: { chest: 'blue' },
       name: 'Plant flowers by the path', who: 'poppy', xp: 13, needs: [{ item: 'fert', tier: 5, n: 1 }], line: 'Blooming!' },
     // Mushroom Corner: a gloomy nook under the old trees, to make magical.
-    { id: 'fert21', land: 'fert', zone: 'mushrooms', at: [40, 55], look: ['🪵', ''], story: [['hattie', 'So dark in here!']],
-      name: 'Clear the rotting logs', who: 'ruby', xp: 12, needs: [{ item: 'clean', tier: 2, n: 1 }, { item: 'garden', tier: 2, n: 1 }], line: 'Out they go!' },
+    { id: 'fert21', land: 'fert', zone: 'mushrooms', at: [40, 55], look: ['🪵', ''], name: 'Clear the rotting logs', who: 'ruby', xp: 12, needs: [{ item: 'clean', tier: 2, n: 1 }, { item: 'garden', tier: 2, n: 1 }], line: 'Out they go!' },
     { id: 'fert22', land: 'fert', zone: 'mushrooms', at: [50, 40], look: ['🌿', ''],
       name: 'Untangle the roots', who: 'hattie', xp: 12, needs: [{ item: 'garden', tier: 2, n: 2 }], line: 'Free!' },
     { id: 'fert23', land: 'fert', zone: 'mushrooms', at: [30, 15], look: ['🌑', '☀️'], after: ['fert22'],
@@ -1555,10 +1559,9 @@ const TASKS = [
     { id: 'fert28', land: 'fert', zone: 'mushrooms', at: [88, 64], look: ['', '🍄'], after: ['fert26', 'fert27'],
       name: 'Grow a giant toadstool', who: 'poppy', xp: 15, needs: [{ item: 'fert', tier: 6, n: 1 }], line: 'Enormous!' },
     { id: 'fert5', land: 'fert', zone: 'mushrooms', at: [72, 46], look: ['', '💡'], after: ['fert28', 'fert81', 'fert82'], reward: { chest: 'blue' },
-      story: [['poppy', 'So magical!']],
       name: 'Hang the fairy lights', who: 'mayor', xp: 18, needs: [{ item: 'fert', tier: 7, n: 1 }, { item: 'tools', tier: 5, n: 1 }], line: 'Twinkle!' },
     // Fish Pond (day 4)
-    { id: 'aqua1', land: 'aqua', story: [['finn', 'Fish! Yay!']], name: 'Buy the Fish Pond', who: 'finn', xp: 10, needs: [{ own: 'aqua' }],
+    { id: 'aqua1', land: 'aqua', name: 'Buy the Fish Pond', who: 'finn', xp: 10, needs: [{ own: 'aqua' }],
       line: 'Your pond!' },
     // Muddy Shore: tyres, bottles and sticks in brown water.
     { id: 'aqua2', land: 'aqua', zone: 'muddyshore', at: [35, 38], look: ['🛞', ''], after: ['aqua1'],
@@ -1575,8 +1578,7 @@ const TASKS = [
       name: 'Scrub the slimy rocks', who: 'finn', xp: 12, needs: [{ item: 'clean', tier: 3, n: 1 }], line: 'No more slime!' },
     { id: 'aqua11', land: 'aqua', zone: 'muddyshore', at: [50, 76], look: ['🟫', '🪨'], after: ['aqua9', 'aqua10'],
       name: 'Rake the pebble shore', who: 'hattie', xp: 12, needs: [{ item: 'garden', tier: 3, n: 1 }, { item: 'aqua', tier: 1, n: 2 }], line: 'Smooth!' },
-    { id: 'aqua3', land: 'aqua', zone: 'muddyshore', at: [28, 67], look: ['', '🐸'], after: ['aqua11'], story: [['finn', 'Ribbit! They\'re back!']],
-      name: 'Welcome the frogs', who: 'finn', xp: 13, needs: [{ item: 'aqua', tier: 3, n: 2 }], line: 'Ribbit!' },
+    { id: 'aqua3', land: 'aqua', zone: 'muddyshore', at: [28, 67], look: ['', '🐸'], after: ['aqua11'], name: 'Welcome the frogs', who: 'finn', xp: 13, needs: [{ item: 'aqua', tier: 3, n: 2 }], line: 'Ribbit!' },
     { id: 'aqua12', land: 'aqua', zone: 'muddyshore', at: [58, 70], look: ['', '🎣'], after: ['aqua3', 'aqua45', 'aqua46'], reward: { chest: 'brown' },
       name: 'Set up a fishing spot', who: 'finn', xp: 14, needs: [{ item: 'fishing', tier: 4, n: 1 }, { item: 'wood', tier: 2, n: 1 }], line: 'Gone fishing!' },
     // Lily Pond: the willow's pond, its bridge broken and its water murky.
@@ -1599,8 +1601,7 @@ const TASKS = [
     { id: 'aqua20', land: 'aqua', zone: 'lilypond', at: [32, 74], look: ['', '🎏'], after: ['aqua4', 'aqua19', 'aqua63', 'aqua64'], reward: { chest: 'blue' },
       name: 'Welcome the koi', who: 'finn', xp: 18, needs: [{ item: 'aqua', tier: 5, n: 1 }], line: 'Beautiful!' },
     // Boat Dock: missing planks, tangled nets and a sunken rowboat.
-    { id: 'aqua21', land: 'aqua', zone: 'boatdock', at: [62, 36], look: ['🕸️', ''], story: [['finn', 'My old dock!']],
-      name: 'Untangle the fishing nets', who: 'finn', xp: 15, needs: [{ item: 'garden', tier: 2, n: 1 }, { item: 'fishing', tier: 1, n: 2 }], line: 'Untangled!' },
+    { id: 'aqua21', land: 'aqua', zone: 'boatdock', at: [62, 36], look: ['🕸️', ''], name: 'Untangle the fishing nets', who: 'finn', xp: 15, needs: [{ item: 'garden', tier: 2, n: 1 }, { item: 'fishing', tier: 1, n: 2 }], line: 'Untangled!' },
     { id: 'aqua22', land: 'aqua', zone: 'boatdock', at: [25, 15], look: ['🪧', '🪧'],
       name: 'Put the fallen sign back up', who: 'ruby', xp: 15, needs: [{ item: 'wood', tier: 2, n: 1 }, { item: 'tools', tier: 1, n: 1 }], line: 'Welcome!' },
     { id: 'aqua23', land: 'aqua', zone: 'boatdock', at: [60, 58], look: ['🕳️', '🪵'], after: ['aqua21'],
@@ -1616,10 +1617,9 @@ const TASKS = [
     { id: 'aqua28', land: 'aqua', zone: 'boatdock', at: [86, 48], look: ['', '🏮'], after: ['aqua26', 'aqua27'],
       name: 'Light the dock lanterns', who: 'ruby', xp: 18, needs: [{ item: 'tools', tier: 5, n: 1 }, { item: 'wood', tier: 5, n: 1 }], line: 'So bright!' },
     { id: 'aqua5', land: 'aqua', zone: 'boatdock', at: [35, 55], look: ['', '⛵'], after: ['aqua28', 'aqua81', 'aqua82'], reward: { chest: 'blue' },
-      story: [['finn', 'Row, row, row!']],
       name: 'Take the rowboat out', who: 'finn', xp: 22, needs: [{ item: 'aqua', tier: 7, n: 1 }, { item: 'fishing', tier: 7, n: 1 }], line: 'Ahoy!' },
     // Flower Garden (day 5)
-    { id: 'flower1', land: 'flower', story: [['poppy', 'Flowers!']], name: 'Buy the Flower Garden', who: 'poppy', xp: 15, needs: [{ own: 'flower' }],
+    { id: 'flower1', land: 'flower', name: 'Buy the Flower Garden', who: 'poppy', xp: 15, needs: [{ own: 'flower' }],
       line: 'A garden!' },
     // Garden Gate: a broken picket fence, empty beds and smashed pots.
     { id: 'flower6', land: 'flower', zone: 'gardengate', at: [47, 48], look: ['🏺', ''], after: ['flower1'],
@@ -1641,8 +1641,7 @@ const TASKS = [
     { id: 'flower12', land: 'flower', zone: 'gardengate', at: [82, 20], look: ['', '🪑'], after: ['flower2', 'flower3', 'flower11', 'flower46', 'flower47'], reward: { chest: 'brown' },
       name: 'Build a welcome bench', who: 'ruby', xp: 20, needs: [{ item: 'wood', tier: 5, n: 1 }], line: 'Come sit!' },
     // Rose Arch: a bare arch, dead thorny stems and a dry fountain.
-    { id: 'flower13', land: 'flower', zone: 'rosearch', at: [15, 62], look: ['🥀', ''], story: [['poppy', 'Poor roses!']],
-      name: 'Cut back the dead stems', who: 'poppy', xp: 19, needs: [{ item: 'garden', tier: 2, n: 2 }], line: 'Snip snip!' },
+    { id: 'flower13', land: 'flower', zone: 'rosearch', at: [15, 62], look: ['🥀', ''], name: 'Cut back the dead stems', who: 'poppy', xp: 19, needs: [{ item: 'garden', tier: 2, n: 2 }], line: 'Snip snip!' },
     { id: 'flower14', land: 'flower', zone: 'rosearch', at: [40, 88], look: ['🌵', ''],
       name: 'Clear the thorny brambles', who: 'hattie', xp: 19, needs: [{ item: 'garden', tier: 4, n: 1 }], line: 'Ouch! Done!' },
     { id: 'flower15', land: 'flower', zone: 'rosearch', at: [85, 56], look: ['⛲', '⛲'], after: ['flower14'],
@@ -1660,8 +1659,7 @@ const TASKS = [
     { id: 'flower21', land: 'flower', zone: 'rosearch', at: [45, 60], look: ['', '🌸'], after: ['flower19', 'flower20', 'flower64', 'flower65'], reward: { chest: 'blue' },
       name: 'Scatter rose petals', who: 'poppy', xp: 23, needs: [{ item: 'flower', tier: 6, n: 1 }], line: 'Romantic!' },
     // Greenhouse: broken panes, toppled tables and cracked pots.
-    { id: 'flower22', land: 'flower', zone: 'greenhouse', at: [50, 85], look: ['🔪', ''], story: [['poppy', 'Careful, glass!']],
-      name: 'Sweep up the broken glass', who: 'poppy', xp: 22, needs: [{ item: 'clean', tier: 4, n: 1 }], line: 'Safe now!' },
+    { id: 'flower22', land: 'flower', zone: 'greenhouse', at: [50, 85], look: ['🔪', ''], name: 'Sweep up the broken glass', who: 'poppy', xp: 22, needs: [{ item: 'clean', tier: 4, n: 1 }], line: 'Safe now!' },
     { id: 'flower23', land: 'flower', zone: 'greenhouse', at: [20, 60], look: ['🌿', ''],
       name: 'Pull the weeds inside', who: 'hattie', xp: 22, needs: [{ item: 'garden', tier: 2, n: 2 }], line: 'Out you go!' },
     { id: 'flower24', land: 'flower', zone: 'greenhouse', at: [50, 22], look: ['🪟', '🪟'], after: ['flower22'],
@@ -1677,7 +1675,6 @@ const TASKS = [
     { id: 'flower29', land: 'flower', zone: 'greenhouse', at: [50, 15], look: ['', '💡'], after: ['flower27'],
       name: 'String the fairy lights', who: 'ruby', xp: 26, needs: [{ item: 'decor', tier: 4, n: 1 }], line: 'Twinkle!' },
     { id: 'flower5', land: 'flower', zone: 'greenhouse', at: [50, 48], look: ['🥀', '💐'], after: ['flower28', 'flower29', 'flower82', 'flower83'], reward: { chest: 'blue' },
-      story: [['poppy', 'It\'s perfect!']],
       name: 'Plant the festival garden', who: 'poppy', xp: 30, needs: [{ item: 'flower', tier: 8, n: 1 }, { item: 'decor', tier: 5, n: 1 }], line: 'Party ready!' },
     // More for every area (about 27 each): jobs that use all three of each land's
     // producers, in two threads that open after the area's first job; each
@@ -2350,7 +2347,7 @@ const TASKS = [
       name: 'Open the flower show', who: 'ruby', xp: 30, needs: [{ item: 'honey', tier: 5, n: 1 }, { item: 'decor', tier: 5, n: 1 }], line: 'Looks great!' },
     // Sunnyvale itself (days 4 and 5): clear the fog, then rebuild each house
     // on the town square. Opens once the old farm is back (day 3).
-    { id: 'town1', land: 'town', at: [50, 50], look: ['🌫️', ''], after: ['farm28', 'hay6', 'big8'], story: [['mayor', 'The fog is gone!']], name: 'Clear the fog from the square', who: 'mayor', xp: 15,
+    { id: 'town1', land: 'town', at: [50, 50], look: ['🌫️', ''], after: ['farm28', 'hay6', 'big8'], name: 'Clear the fog from the square', who: 'mayor', xp: 15,
       needs: [{ stat: 'sold', n: 5 }], line: 'Fog gone!' },
     { id: 'town2', land: 'town', after: ['town1'], house: 'carpenter', name: 'Rebuild Ruby\'s workshop', who: 'ruby', xp: 20, reward: { chest: 'brown' },
       needs: [{ item: 'tools', tier: 5, n: 1 }, { item: 'wood', tier: 4, n: 1 }], line: 'My workshop!' },
@@ -2360,7 +2357,8 @@ const TASKS = [
       needs: [{ item: 'aqua', tier: 4, n: 1 }, { item: 'fert', tier: 4, n: 1 }], line: 'Fish for all!' },
     { id: 'town5', land: 'town', after: ['town2'], house: 'flowershop', name: 'Reopen Poppy\'s flower shop', who: 'poppy', xp: 45,
       needs: [{ item: 'flower', tier: 4, n: 2 }], line: 'Flowers!' },
-    { id: 'town6', land: 'town', after: ['town3', 'town4', 'town5'], house: 'townhall', name: 'Restore the Town Hall', who: 'mayor', xp: 80, reward: { chest: 'blue' },
+    // The Town Hall also waits for every clue of the mystery (see THE MYSTERY).
+    { id: 'town6', land: 'town', after: ['town3', 'town4', 'town5', 'hen3', 'aqua3', 'big2', 'farm5', 'aqua8', 'fert10'], house: 'townhall', name: 'Restore the Town Hall', who: 'mayor', xp: 80, reward: { chest: 'blue' },
       needs: [{ item: 'barn', tier: 6, n: 1 }, { item: 'hay', tier: 5, n: 1 }, { item: 'aqua', tier: 5, n: 1 }],
       line: 'You\'re a hero!' },
     { id: 'town7', land: 'town', at: [50, 66], look: ['🪧', '🎉'], after: ['town6'], name: 'Throw the Sunnyvale festival', who: 'hattie', xp: 100, reward: { gems: 50 },
@@ -2623,7 +2621,7 @@ function fixFace(task, fixed) {
 function needPins(task) {
     return task.needs.map(n => {
         const p = needProgress(task, n);
-        const icon = n.item ? itemIcon(n.item, n.tier) : n.stat ? TASK_STATS[n.stat].emoji : '🏡';
+        const icon = n.item ? itemIcon(n.item, n.tier) : n.stat ? statIcon(n.stat) : '🏡';
         return `<span class="pin-item${p.have >= p.of ? ' met' : ''}">${icon}${p.of > 1 ? `<small>${p.have}/${p.of}</small>` : ''}</span>`;
     }).join('');
 }
@@ -3989,14 +3987,14 @@ function refreshPlaces() {
 // Who says hello in a place, and what.
 function placeGreeting(id) {
     if (id === 'market') {
-        const line = dealsWaiting() ? 'Fresh Daily Deals on my cart today! Take a look.' : SHOPKEEPER_LINES[shopkeeperLine++ % SHOPKEEPER_LINES.length];
+        const line = shopkeeperHint() || (dealsWaiting() ? 'Fresh Daily Deals on my cart today! Take a look.' : SHOPKEEPER_LINES[shopkeeperLine++ % SHOPKEEPER_LINES.length]);
         return { id: 'shopkeeper', who: 'Shopkeeper', at: PLACE_SPOTS.market.keeper, line };
     }
     const ready = npcs.find(canFulfill);
-    if (ready) return { id: ready.id, who: ready.name, at: PLACE_SPOTS.town.homes[ready.home], line: `You have my ${itemName(ready.request.mode, ready.request.tier)}! Tap me to hand it over.` };
+    if (ready) return { id: ready.id, who: ready.name, at: PLACE_SPOTS.town.homes[ready.home], line: `You have my ${itemName(ready.request.mode, ready.request.tier)}! Tap me, and I will take it.` };
     const jobs = landTasks('town'), done = jobs.filter(taskDone).length, mayor = npcs.find(n => n.id === 'mayor');
     return { id: 'mayor', who: mayor.name, at: PLACE_SPOTS.town.homes.townhall,
-        line: done < jobs.length ? `Welcome to ${TOWN_NAME}! ${done} of ${jobs.length} jobs done. The notice board has today's missions.` : `${TOWN_NAME} is good as new, thanks to you! Check the notice board for missions.` };
+        line: done < jobs.length ? `Welcome to ${TOWN_NAME}! We fixed ${done} of ${jobs.length} things. The board has today's missions.` : `${TOWN_NAME} looks brand new, thanks to you! The board has today's missions.` };
 }
 
 // Its person speaks up (banners wait until they've had their say).
@@ -4324,7 +4322,7 @@ function openTaskCard(task) {
     const tile = (inner, met) => `<span class="tile${met ? ' met' : ''}">${inner}</span>`;
     const needs = task.needs.map((n, i) => {
         const p = needProgress(task, n);
-        const icon = n.item ? itemIcon(n.item, n.tier) : n.stat ? TASK_STATS[n.stat].emoji : '🏡';
+        const icon = n.item ? itemIcon(n.item, n.tier) : n.stat ? statIcon(n.stat) : '🏡';
         return tile(`${icon}<small>${n.own ? AREAS[n.own].name : `${p.have}/${p.of}`}</small><i class="tile-info" data-need="${i}">i</i>`, p.have >= p.of);
     }).join('');
     const pays = tile(`${uiIcon('star', '⭐')}<small>×${task.xp}</small>`) + (task.reward ? tile(`<small>${rewardText(task.reward)}</small>`) : '');
@@ -4684,33 +4682,191 @@ function jobsOf(...lands) {
 }
 
 // Each "day" is a set of jobs, with one bubble when it starts.
+// Each day's scene opens when the day before is done. A scene is a list of
+// [who, words, answer?]: a townsperson, 'shopkeeper', 'narrator' (the storybook)
+// or 'note' (a note from "A Friend"); or a function giving that list when it plays.
 const CHAPTERS = [
-    { scene: [['mayor', 'Save us!']], jobs: jobsIn('barnyard') },
-    { scene: [['ruby', 'Fix the barn!']], jobs: jobsIn('henhouse', 'bigbarn') },
-    { scene: [['hattie', 'Grow food!']],
+    { scene: [['mayor', 'Welcome to Sunnyvale!']], jobs: jobsIn('barnyard') }, // the opening tells day 1
+    { scene: [['narrator', 'Day 2. The sun comes up over the barn.'],
+        ['hattie', 'The hens ran away in the storm. Let\'s fix their home!'],
+        ['ruby', 'And keep your eyes open for more notes!', 'I will!']],
+      jobs: jobsIn('henhouse', 'bigbarn') },
+    { scene: [['narrator', 'Day 3. Past the barn are big fields, full of weeds.'],
+        ['hattie', 'Let\'s grow food again, so people can come home.'],
+        ['mayor', 'And somewhere out there is the old windmill...', 'Let\'s go!']],
       jobs: jobsOf('farm', 'hay') },
-    { scene: [['mayor', 'Fix the town!']],
+    { scene: [['narrator', 'Day 4. A thick fog sits over the town square.'],
+        ['mayor', 'My poor town! Let\'s clear away the fog.'],
+        ['mayor', 'And the note said to ask Finn about an old story.', 'Let\'s go!']],
       jobs: ['town1', 'town2', 'town3', 'town4', ...jobsOf('fert', 'aqua')] },
-    { scene: [['ruby', 'Fix the Town Hall!']], jobs: ['town5', 'town6', 'town7', ...jobsOf('flower')] },
+    { scene: () => [['narrator', 'Day 5. The big festival is almost here!'],
+        ['poppy', 'Flowers make people smile. Let\'s fill the town with them!'],
+        restoration.done.includes('town6') ? ['mayor', 'And this year, our Golden Bell will ring!', 'Hooray!']
+            : ['mayor', 'But we still need our Golden Bell...', 'We\'ll find it!']],
+      jobs: ['town5', 'town6', 'town7', ...jobsOf('flower')] },
 ];
 
-const STORY_END = [['mayor', 'You saved us!', 'Yay!']];
+const STORY_END = [['narrator', 'Every barn, field and pond is fixed.'],
+    ['mayor', 'You saved us! Sunnyvale is the happiest town again.'],
+    ['shopkeeper', 'And the Golden Bell will ring for you every day!', 'Yay!']];
 
 // A little scene when a whole land is back, played after its reward.
 const LAND_STORY = {
-    barn: [['ruby', 'The barn is like new!'], ['hattie', 'The animals love it!'], ['mayor', 'One down. On to the fields!']],
-    farm: [['hattie', 'Look at those rows!'], ['mayor', 'Sunnyvale will eat well!']],
-    hay: [['hattie', 'The windmill turns!'], ['ruby', 'Fresh hay for everyone!']],
-    fert: [['poppy', 'Fairy lights and mushrooms!'], ['hattie', 'Best soil in the valley.']],
-    aqua: [['finn', 'Fish are jumping again!'], ['finn', 'Row with me sometime?']],
-    flower: [['poppy', 'Every flower is blooming!'], ['mayor', 'Sunnyvale has never looked lovelier.']],
+    barn: [['ruby', 'The barn looks brand new!'], ['hattie', 'And the animals love it!'], ['mayor', 'The barn is done. Next, the fields!']],
+    farm: [['hattie', 'Look at all those rows of food!'], ['mayor', 'Nobody in Sunnyvale will go hungry now.']],
+    hay: [['hattie', 'The windmill turns again!'], ['ruby', 'Fresh hay and fresh bread for everyone!']],
+    fert: [['poppy', 'Lights, mushrooms and the best soil around!'], ['hattie', 'Our plants will grow so big!']],
+    aqua: [['finn', 'The fish are jumping again!'], ['finn', 'Come and row with me any time!']],
+    flower: [['poppy', 'Every flower is blooming!'], ['mayor', 'Sunnyvale has never looked so pretty.']],
 };
+
+// --- THE MYSTERY: THE LOST GOLDEN BELL ---
+// The night of the storm, the town's Golden Bell went missing. Someone who signs
+// "A Friend" leaves notes that lead from place to place; a silver key turns up in a
+// nest; four pieces of a torn map hide around the farm; Finn knows an old story of a
+// Bell Keeper. At the Town Hall the key opens the tower's little door: the bell is
+// there, and the Friend is the shopkeeper, the Bell Keeper, who hid it from the storm.
+// Each beat plays when its job is done, and makes sense in any order; the Town Hall
+// waits for the key, the map and Finn's story (its `after`).
+
+// The jobs that turn up a piece of the map (the Town Hall's `after` lists them too).
+const MAP_PIECES = ['big2', 'farm5', 'aqua8', 'fert10'];
+
+function mapPiecesFound() {
+    return MAP_PIECES.filter(id => restoration.done.includes(id)).length;
+}
+
+// A map piece's beat: how it turns up, then how many you have (the last one shows where to look).
+function mapBeat(...found) {
+    return () => {
+        const n = mapPiecesFound();
+        const after = n === 4 ? [['narrator', 'The pieces fit together. The map is whole!'],
+            ['narrator', 'A big X is drawn on the Town Hall tower.'],
+            ['mayor', 'The tower? I looked up there... but not in every corner!', 'Let\'s look again!']]
+            : n === 1 ? [['mayor', 'That is a map of Sunnyvale! Someone tore it up.'], ['mayor', 'So where are the other pieces?', 'I\'ll find them!']]
+            : [['ruby', 'It fits right next to the other piece!', 'Keep looking!']];
+        return [...found, ['narrator', `It is a torn piece of a map! You have ${n} of 4.`], ...after];
+    };
+}
+
+const STORY_BEATS = {
+    barn1: [['ruby', 'Hi! I\'m Ruby. I fix things. Nice work!'],
+        ['ruby', 'Wait... what is that under the planks?'],
+        ['narrator', 'It is a rolled-up note. The ink is still a little wet.'],
+        ['note', 'To the new farmer: I hid what was lost. Fix the farm, and look for my notes.'],
+        ['ruby', 'Who wrote this? And what did they hide?', 'Let\'s find out!']],
+    barn2: [['hattie', 'Howdy! I\'m Hattie. I take care of the animals.'],
+        ['hattie', 'Ruby told me about the note. A mystery! I love it!']],
+    barn9: [['narrator', 'That night, you see a little light out by the fence.'],
+        ['narrator', 'It bobs up and down, like someone with a lantern.'],
+        ['narrator', 'Then... it is gone.'],
+        ['hattie', 'Did you see that? Someone was out there!', 'Who was it?']],
+    barn20: [['narrator', 'In the dust, you see tiny boot prints.'],
+        ['hattie', 'Those are not my boots. My feet are way bigger!'],
+        ['ruby', 'So our night visitor has small feet. Hmm...', 'Hmm!']],
+    hen3: [['narrator', 'In the old nest, there is no egg.'],
+        ['narrator', 'There is a little silver key!'],
+        ['hattie', 'A key? My hens can\'t lay keys!'],
+        ['ruby', 'It is so tiny. What could it open?', 'I\'ll keep it safe.']],
+    hen10: [['hattie', 'Look! The hens came home!'], ['hattie', 'They feel safe here again. Thank you, partner!']],
+    big2: mapBeat(['narrator', 'One of the scrolls is not like the others...']),
+    big5: [['narrator', 'One jar has no jam in it. It has a note!'],
+        ['note', 'Well done! Next, go to the big wheel that the wind turns.'],
+        ['ruby', 'A wheel that the wind turns... is it a windmill?', 'The windmill!']],
+    farm1: [['hattie', 'Our very own field! Let\'s grow food for everyone.'], ['mayor', 'When there is food, people will come home.']],
+    farm5: mapBeat(['narrator', 'The scarecrow has something in its pocket...']),
+    farm28: [['mayor', 'A picnic! I have not had one since the storm.'], ['mayor', 'Thank you. I feel like a kid again!']],
+    farm31: [['poppy', 'Hello there! I\'m Poppy. I grow flowers.'],
+        ['poppy', 'I heard about the notes. I notice little things. I can help!']],
+    hay1: [['mayor', 'The Hay Field is ours now!'], ['mayor', 'And look over there... the old windmill!', 'The note!']],
+    hay9: [['hattie', 'The sheep are back! And they are so fluffy!']],
+    hay18: [['ruby', 'A new stall! The horses have room to rest.']],
+    hay20: [['narrator', 'The old windmill creaks in the wind.'],
+        ['hattie', 'This must be the wheel the wind turns!'],
+        ['hattie', 'Let\'s fix it up. Maybe the next note is here.']],
+    hay6: [['narrator', 'The sails turn round and round!'],
+        ['narrator', 'A note floats down from the top and lands at your feet.'],
+        ['note', 'Good job! The one who fishes knows an old story. Ask him.'],
+        ['mayor', 'The one who fishes... that is Finn!', 'Let\'s ask Finn!']],
+    hay72: [['narrator', 'From way up high, you see the little light again.'],
+        ['narrator', 'It goes down the road... and into town.'],
+        ['ruby', 'Our night visitor lives in town!', 'Who could it be?']],
+    town1: [['mayor', 'The fog is gone! I can see my town again.'],
+        ['narrator', 'Up in the Town Hall tower, the bell spot is empty.'],
+        ['mayor', 'Our Golden Bell hung right there for a hundred years...', 'We will find it.']],
+    town2: [['ruby', 'My workshop! I can build anything now.'], ['ruby', 'When we find the bell, I will make it a brand new rope!']],
+    town3: [['hattie', 'Home sweet home! Thank you, partner.']],
+    town4: [['finn', 'My shop is open! Fresh fish for everyone!']],
+    town5: [['poppy', 'My flower shop smells like spring again!']],
+    town6: [['narrator', 'You climb up the Town Hall tower.'],
+        ['narrator', 'At the top is a little door. It is locked.'],
+        ['narrator', 'You try the silver key... Click! It opens!'],
+        ['narrator', 'Inside, under a warm blanket, is the Golden Bell!'],
+        ['shopkeeper', 'You found it! I knew you would.'],
+        ['mayor', 'You? You wrote the notes?'],
+        ['shopkeeper', 'Yes! I am the Bell Keeper, like my grandma before me.'],
+        ['shopkeeper', 'The storm was so strong. I hid the bell up here to keep it safe.'],
+        ['shopkeeper', 'But I dropped the key in the hen house! And the tower was too broken to climb.'],
+        ['shopkeeper', 'So I left notes and map pieces to lead a kind helper here.'],
+        ['shopkeeper', 'And you fixed the whole town on the way. Thank you!', 'Ring the bell!']],
+    town7: [['narrator', 'Ding! Dong! The Golden Bell rings out over Sunnyvale.'],
+        ['narrator', 'Everyone who left hears it... and they all come home.'],
+        ['hattie', 'Let\'s dance! Yee-haw!'],
+        ['finn', 'This is the best festival ever!'],
+        ['mayor', 'Thank you, farmer. You are a true friend of Sunnyvale.', 'Yay!']],
+    fert1: [['poppy', 'Leaves and mud? This is where good gardens start!']],
+    fert4: [['poppy', 'Pee-yew! It smells so strong!'], ['poppy', 'But plants love it. Yum, yum!']],
+    fert10: mapBeat(['narrator', 'Under the last pile of leaves, something crinkles...']),
+    fert21: [['hattie', 'It is so dark in here!']],
+    fert5: [['poppy', 'Fairy lights! So pretty!'],
+        ['narrator', 'The lights shine on tiny boot prints in the moss... and a note on a log.'],
+        ['note', 'You are so close now. Fix the town, and you will see.'],
+        ['poppy', 'Tiny boots again! Our Friend was here.', 'So close!']],
+    aqua1: [['finn', 'Ahoy! I\'m Finn. I fish here.'],
+        ['finn', 'A note sent you to me? Then help me fix my pond, and I\'ll tell you a story.']],
+    aqua3: [['finn', 'Here is the story my grandpa told me.'],
+        ['finn', 'Long ago, the town picked a Bell Keeper.'],
+        ['finn', 'When bad times come, the Keeper keeps the bell safe.'],
+        ['narrator', 'A Bell Keeper? Could the Keeper be the one who writes the notes?', 'Hmm!']],
+    aqua8: mapBeat(['narrator', 'Inside the old tyre, there is a bottle.'], ['narrator', 'And inside the bottle, there is paper!']),
+    aqua5: [['finn', 'Row, row, row! The water is clear again.']],
+    flower1: [['poppy', 'My garden! It looks sad now... but not for long!']],
+    flower13: [['poppy', 'Poor roses. We will make you happy again.']],
+    flower22: [['poppy', 'Careful! There is glass all over.']],
+    flower5: [['poppy', 'It is perfect! The festival will be so pretty.']],
+};
+TASKS.forEach(t => { if (STORY_BEATS[t.id]) t.story = STORY_BEATS[t.id]; });
+
+// What has turned up so far, for the job list: a clue's job, its icon and what it is.
+const CLUES = [
+    { task: 'barn1', icon: 'note', text: 'A note from “A Friend”' },
+    { task: 'barn9', icon: '🏮', text: 'A light at night' },
+    { task: 'barn20', icon: '👣', text: 'Tiny boot prints' },
+    { task: 'hen3', icon: '🗝️', text: 'A little silver key' },
+    { task: 'big5', icon: 'note', text: 'Note 2: the big wheel' },
+    { task: 'hay6', icon: 'note', text: 'Note 3: ask the one who fishes' },
+    { task: 'aqua3', icon: '📖', text: 'Finn\'s story of the Bell Keeper' },
+    { task: 'fert5', icon: 'note', text: 'Note 4: you are close' },
+    { map: true, icon: '🗺️' },
+    { task: 'town6', icon: '🔔', text: 'The Golden Bell is found!' },
+];
+
+// The mystery so far: what's been found, and how much is still hidden.
+function cluesHtml() {
+    const icon = c => (c.icon === 'note' && (ASSETS.story || {}).note ? `<img class="inline-item" src="${ASSETS.story.note}" alt="📜">` : c.icon);
+    const found = CLUES.filter(c => (c.map ? mapPiecesFound() > 0 : restoration.done.includes(c.task)));
+    if (!found.length) return '';
+    const hidden = CLUES.length - found.length;
+    return `<div class="clues"><h3>🔔 The Lost Golden Bell</h3>
+        ${found.map(c => `<span class="clue">${icon(c)} ${c.map ? `Map pieces: ${mapPiecesFound()} of 4` : c.text}</span>`).join('')}
+        ${hidden ? `<span class="clue hidden">❓ ${hidden} more to find</span>` : ''}</div>`;
+}
 
 // Story beats from jobs just done, played once nothing else is showing.
 const storyQueue = [];
 
 // Which scenes have played. Saved.
-const story = { intro: false, seen: [], ended: false };
+const story = { intro: false, seen: [], ended: false, hints: [] }; // hints: the shopkeeper's words already said
 // A new game's first daily gift waits until the tutorial is over.
 let giftAfterTutorial = false;
 
@@ -4725,15 +4881,28 @@ function currentChapter() {
 
 // Plays speech bubbles one after another. The last one can carry extra HTML.
 function playScene(title, lines, extra = '', then = null) {
+    if (typeof lines === 'function') lines = lines();
     const [who, text, answer] = lines[0];
-    const npc = npcs.find(n => n.id === who);
     const last = lines.length === 1;
-    const wave = (ASSETS.wave || {})[who];
+    const story = ASSETS.story || {};
+    let art, round = false, words;
+    if (who === 'note') {
+        art = story.note;
+        words = `<p class="story-note">${text}</p><p class="hint">— A Friend</p>`;
+    } else if (who === 'shopkeeper' || npcs.some(n => n.id === who)) {
+        const npc = npcs.find(n => n.id === who), wave = (ASSETS.wave || {})[who];
+        art = wave || npcPicture(npc);
+        round = !wave;
+        words = `<p class="story-line">“${text}”</p><p class="hint">— ${npc ? npc.name : 'The Shopkeeper'}</p>`;
+    } else { // the narrator
+        art = story.book;
+        words = `<p class="story-narration">${text}</p>`;
+    }
     showDialog({
-        art: wave || npcPicture(npc),
-        artRound: !wave,
+        art,
+        artRound: round,
         title,
-        body: `<p class="story-line">“${text}”</p><p class="hint">— ${npc.name}</p>${last ? extra : ''}`,
+        body: `${words}${last ? extra : ''}`,
         actions: [{ label: answer || 'OK!', primary: true,
             onClick: () => (last ? then && then() : playScene(title, lines.slice(1), extra, then)) }],
     });
@@ -4749,9 +4918,9 @@ const NO_INTRO = new URLSearchParams(location.search).has('nointro'); // for tes
 
 const OPENING_LINES = [
     { mood: 'sun', text: 'Sunnyvale was the happiest little farm town in the valley.' },
-    { mood: 'storm', text: 'Then one night, a terrible storm swept through.' },
-    { mood: 'rain', text: 'Barns fell. Fields flooded. Most folks packed up and left…' },
-    { mood: 'friends', text: '…but a few friends stayed, hoping someone would come and help.' },
+    { mood: 'storm', text: 'Then one night, a big storm came.' },
+    { mood: 'rain', text: 'Barns broke. Fields flooded. And the Golden Bell was gone!' },
+    { mood: 'friends', text: 'Most people left. But a few good friends stayed and waited for help.' },
 ];
 
 // How far into its drift each opening cloud starts (s), so they begin scattered
@@ -4861,7 +5030,8 @@ function playOpening() {
         await ask(`<img class="op-who" src="${ASSETS.characters.mayor || npcPicture(mayor)}" alt="">
             <b class="op-name">${mayor.name}</b>
             <p>Oh! You must be the new farmer! Welcome to ${TOWN_NAME}.</p>
-            <p>The storm left our farm in ruins. Will you help us bring it back to life?</p>`, 'I\'ll help!');
+            <p>The storm broke our farm. And our Golden Bell is missing!</p>
+            <p>Will you help us fix the farm and find the bell?</p>`, 'I\'ll help!');
         if (skipped) return;
         const pic = (src, alt) => `<img src="${src}" alt="${alt}">`;
         const items = ASSETS.items.barn || [];
@@ -4869,9 +5039,9 @@ function playOpening() {
             <div class="op-how"><span>${pic(ASSETS.producers.barn[3], '🧺')}</span>
                 <p><b>Tap</b> a producer to make things.</p></div>
             <div class="op-how"><span>${pic(items[0], '🌿')}<i>+</i>${pic(items[0], '🌿')}<i>=</i>${pic(items[1], '🥚')}</span>
-                <p><b>Drag</b> two of the same together: they <b>merge</b> into something better.</p></div>
+                <p><b>Drag</b> two that match together. They <b>merge</b> into something new!</p></div>
             <div class="op-how"><span>${pic(ASSETS.ui.hammer, '🔨')}</span>
-                <p>Use what you make to finish <b>jobs</b> and fix up the farm!</p></div>`, 'Let\'s go!');
+                <p>Use what you make to do <b>jobs</b> and fix the farm!</p></div>`, 'Let\'s go!');
         finish();
     })();
 }
@@ -4981,7 +5151,7 @@ function taskReady(task) {
 function needLabel(task, need) {
     const p = needProgress(task, need);
     const what = need.own ? `🏡 ${AREAS[need.own].name}`
-        : need.stat ? `${TASK_STATS[need.stat].emoji} ${TASK_STATS[need.stat].label}`
+        : need.stat ? `${statIcon(need.stat)} ${TASK_STATS[need.stat].label}`
         : `${itemIcon(need.item, need.tier)} ${itemName(need.item, need.tier)}`;
     return `<span class="need${p.have >= p.of ? ' met' : ''}">${what} ${need.own ? (p.have ? '✓' : '') : `${p.have}/${p.of}`}</span>`;
 }
@@ -5055,7 +5225,7 @@ function completeTask(id, quiet = false) {
     if (restored || zoneFinished) celebrate();
     else sfx('taskdone');
     thump(restored || zoneFinished);
-    if (task.story) storyQueue.push(task.story);
+    if (task.story) storyQueue.push(typeof task.story === 'function' ? task.story() : task.story); // a map piece counts as it's found
     if (quiet && !restored && !zoneFinished) cheer(task, npc);
     else showDialog({
         art: npcPicture(npc),
@@ -5133,6 +5303,7 @@ function openTaskLog() {
         title: `⭐ Level ${quests.level}`,
         body: `<div class="quest xp-row"><span>⭐ XP to level ${quests.level + 1}</span><small>${quests.xp}/${need}</small>
                    <span class="quest-bar xp"><i style="width:${(100 * quests.xp) / need}%"></i></span></div>
+               ${cluesHtml()}
                ${rows || '<p>All done! 🎉</p>'}
                ${nextLand ? `<p class="hint">More jobs at level ${AREAS[nextLand].level}.</p>` : ''}`,
         actions: [{ label: 'OK' }],
@@ -5221,11 +5392,26 @@ const MARKET_LAYOUT = {
 };
 
 const SHOPKEEPER_LINES = [
-    'Welcome in! Land deeds are on the shelves. New land means new things to merge.',
-    'Townsfolk pay well for what you raise. Check the Town Square often!',
-    'That Growth Guide on the counter lets everything grow one size bigger.',
+    'Welcome in! Land deeds are on the shelf. New land means new things to grow.',
+    'People in town pay well for what you make. Visit the Town Square!',
+    'See the Growth Guide? It helps everything grow one size bigger.',
 ];
 let shopkeeperLine = 0;
+
+// The shopkeeper knows more than she says: once a clue turns up, she has a word about it (once each).
+const SHOPKEEPER_HINTS = [
+    ['town6', 'Thank you for finding my bell. Ding, dong!'],
+    ['aqua3', 'A Bell Keeper? What a lovely old story. Hee hee!'],
+    ['hen3', 'A silver key? Keep it safe, dear. Keys are important.'],
+    ['barn1', 'A note from a friend? How fun! I love a good mystery.'],
+];
+
+function shopkeeperHint() {
+    const hint = SHOPKEEPER_HINTS.find(([id]) => restoration.done.includes(id));
+    if (!hint || story.hints.includes(hint[0])) return null;
+    story.hints.push(hint[0]);
+    return hint[1];
+}
 
 // --- SCENE HELPERS ---
 
@@ -5879,6 +6065,18 @@ function renderTown() {
     scene.append(boardFab(lastBoard), tasksFab());
 }
 
+// How each townsperson asks for something (`it`: the item's picture and name).
+function npcAsk(npc, it) {
+    switch (npc.id) {
+        case 'mayor': return `I would love a ${it}. Could you bring me one?`;
+        case 'ruby': return `I need a ${it} for my next build! Can you make one?`;
+        case 'hattie': return `Howdy! My animals want a ${it}. Can you bring one?`;
+        case 'finn': return `Ahoy! I am looking for a ${it}. Can you find one for me?`;
+        case 'poppy': return `Hi! A ${it} would make my day. Can you bring one?`;
+        default: return `Could you bring me a ${it}?`;
+    }
+}
+
 function openNpc(npc) {
     markGuide('npc');
     const r = npc.request;
@@ -5890,8 +6088,8 @@ function openNpc(npc) {
         art: npcPicture(npc),
         artRound: true,
         title: `${npc.name} · Lv.${level}`,
-        body: `<p>“Could you bring me a ${itemIcon(r.mode, r.tier)} <b>${itemName(r.mode, r.tier)}</b> from your ${area.name}?”</p>
-               <p><b>Reward:</b> 💵 ${r.rewardMoney} · ⭐ ${r.rewardXp} XP${r.rewardProducer ? ` · 🎁 🧩 ${producerName(r.mode, 1)}` : ''}</p>
+        body: `<p>“${npcAsk(npc, `${itemIcon(r.mode, r.tier)} <b>${itemName(r.mode, r.tier)}</b>`)}”</p>
+               <p><b>Reward:</b> 💵 ${r.rewardMoney} · ⭐ ${r.rewardXp} XP${r.rewardProducer ? ` · 🎁 ${itemLabel(r.mode, { type: 'shop', level: 1 })}` : ''}</p>
                <p class="hint">${ready ? 'You have one ready on your board!' : `Merge one on the ${area.name} board first.`}</p>`,
         actions: ready
             ? [{ label: 'Deliver', primary: true, onClick: () => deliver(npc) }, { label: 'Later' }]
@@ -6032,7 +6230,7 @@ function renderMarket() {
     });
 
     scene.appendChild(makeSpot({ ...MARKET_LAYOUT.shopkeeper, sprite: ASSETS.characters.shopkeeper, label: 'Shopkeeper', onClick: () => {
-        toast(SHOPKEEPER_LINES[shopkeeperLine++ % SHOPKEEPER_LINES.length]);
+        toast(shopkeeperHint() || SHOPKEEPER_LINES[shopkeeperLine++ % SHOPKEEPER_LINES.length]);
     } }));
     scene.appendChild(makeSpot({ ...MARKET_LAYOUT.counter, sprite: ASSETS.props.counter, z: 80 }));
 
@@ -6068,7 +6266,7 @@ const TUTORIAL_WEB = 13;
 
 const TUTORIAL = [
     { id: 'job', scene: 'map', who: 'mayor', explain: true,
-      text: 'The storm hit our Barnyard the hardest, so we start here. Every job needs something from you. This first one: open 1 box on the merge board.',
+      text: 'The storm hit the Barnyard the most, so we start here. Each job needs something. This one: open 1 box on the merge board.',
       target: () => jobSpot(), done: () => currentScene === 'barn' || stats.merges > 0 },
     { id: 'merge', scene: 'map', who: 'mayor', text: 'Things are made on the merge board. Tap Merge to go there!',
       target: () => document.querySelector('#scene-map .fix-merge'), done: () => currentScene === 'barn' || stats.merges > 0 },
@@ -6083,10 +6281,10 @@ const TUTORIAL = [
       // Not two Feed to merge (a lucky part dropped instead): make another first.
       fallback: { text: 'Tap the Feed Bin again!', target: () => cellItem('barn', feedBin()) } },
     { id: 'egg', scene: 'barn', who: 'hattie', explain: true,
-      text: 'You made an Egg! Merging two alike always makes the next thing: Feed → Egg → Chick → Chicken…',
+      text: 'You made an Egg! Two that match always make the next thing: Feed → Egg → Chick → Chicken…',
       target: () => cellItem('barn', freeEgg()), done: () => webFreed() },
     { id: 'web', scene: 'barn', who: 'hattie', explain: true,
-      text: 'See the Egg under cobwebs? It\'s stuck, and so are the boxes. Merge a matching item onto a cobwebbed one to free it, and the boxes next to it pop open!',
+      text: 'See the Egg in cobwebs? It is stuck. Drop a matching Egg on it to set it free. Then the boxes next to it pop open!',
       target: () => webbedEgg() >= 0 && [cellItem('barn', webbedEgg()), ...getNeighbors(webbedEgg()).filter(i => grids.barn[i] && grids.barn[i].type === 'box').map(i => cellItem('barn', i))],
       done: () => webFreed() },
     { id: 'free', scene: 'barn', who: 'hattie', drag: true, text: 'Drag your Egg onto the cobwebbed Egg!',
@@ -6105,7 +6303,7 @@ const TUTORIAL = [
       target: () => jobSpot(), done: () => stats.jobs >= 1 },
     // Off you go: the next job, and how to see what any job needs.
     { id: 'onward', scene: 'map', who: 'mayor', explain: true,
-      text: 'That\'s how it\'s done! These are your next jobs. Tap one any time to see what it needs, then make it on the merge board. Drag to look around the farm!',
+      text: 'That\'s how it\'s done! These are your next jobs. Tap one to see what it needs. Then make it on the merge board. Drag to look around!',
       target: () => [...document.querySelectorAll('#scene-map .task-pin')], done: () => stats.jobs >= 2 },
 ];
 const tutorial = { step: 0, done: false, explained: [] };
@@ -7401,7 +7599,7 @@ function renderOrders(mode, el) {
         const card = document.createElement('button');
         card.className = 'order-card task-card' + (ready ? ' ready' : '');
         card.innerHTML = iconize(`
-            <span class="order-who"><span class="hammer">${uiIcon('hammer', '🔨')}</span><span class="want">${need.item ? itemIcon(need.item, need.tier) : need.stat ? TASK_STATS[need.stat].emoji : '🏡'}</span></span>
+            <span class="order-who"><span class="hammer">${uiIcon('hammer', '🔨')}</span><span class="want">${need.item ? itemIcon(need.item, need.tier) : need.stat ? statIcon(need.stat) : '🏡'}</span></span>
             <span class="order-pay">${p.have}/${p.of} · ⭐${task.xp}</span>
             ${ready ? '<span class="order-go">Do it</span>' : `<span class="order-need">${task.name}</span>`}`);
         card.addEventListener('click', () => (ready && hasSpot(task) ? goFix(task.land, task.id) : openTaskCard(task)));
@@ -8843,7 +9041,7 @@ function handleGeneratorClick(mode, index) {
     let drop;
     if (mode !== 'fair' && Math.random() < PART_DROP_CHANCE) {
         drop = { type: 'shop', level: 1 };
-        toast(`🧩 Lucky! A ${producerName(mode, 1)} part dropped.`, 'good');
+        toast(`${itemIconFor(mode, drop)} Lucky! A ${producerName(mode, 1)} part dropped.`, 'good');
     } else {
         const odds = DROP_ODDS[producerLevel(producer) - FIRST_WORKING_LEVEL];
         let roll = Math.random();
