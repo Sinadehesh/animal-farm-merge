@@ -7497,9 +7497,14 @@ function takeDeal(id) {
     goTo(currentScene);
 }
 
-// The Growth Guide for tier `next`: each one about 2.6 times the last.
+// The Growth Guide for each tier (💵): a real goal from the first one, then
+// steeper and steeper. Jobs need tier 4 around level 3, tiers 5-6 around level
+// 6 and tiers 7-9 around levels 7-8; each costs about as much as the land deed
+// of its time, or more. Tiers 10 and 11 are for the keenest (and gem buyers).
+const GUIDE_COSTS = { 4: 800, 5: 2500, 6: 6000, 7: 15000, 8: 35000, 9: 80000, 10: 250000, 11: 800000 };
+
 function guideCost(next = maxTier + 1) {
-    return Math.round((150 * 2.6 ** (next - 4)) / 50) * 50;
+    return GUIDE_COSTS[next] || GUIDE_COSTS[11];
 }
 
 function offerUpgrade() {
