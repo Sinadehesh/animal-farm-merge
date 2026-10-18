@@ -17,7 +17,7 @@ const copy = rel => {
     fs.copyFileSync(path.join(root, rel), to);
 };
 
-['index.html', 'game.js', 'assets.js', 'manifest.json', 'vendor/pixi.min.js'].forEach(copy);
+['index.html', 'game.js', 'assets.js', 'monetize.js', 'manifest.json', 'vendor/pixi.min.js'].forEach(copy);
 
 // Every path the asset list names, plus any written straight into the page or code.
 const sandbox = {};

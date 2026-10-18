@@ -596,6 +596,8 @@
         .item .bubble-art { position: absolute; inset: -4%; width: 108%; height: 108%; object-fit: contain; opacity: 0.9; pointer-events: none; }
         .item.bubble-item.has-art .bubble-inner { position: relative; z-index: 1; width: 62%; height: 62%; }
         .item.bubble-item .gen-timer { top: auto; bottom: -1.5cqw; transform: translateX(-50%); }
+        .item .bubble-ad { position: absolute; top: -4%; right: -4%; z-index: 2; width: 38%; height: 38%; display: flex; align-items: center; justify-content: center; font-size: 4cqw; filter: drop-shadow(0 0.4cqw 0 rgba(0, 0, 0, 0.3)); }
+        .item .bubble-ad img { width: 100%; height: 100%; object-fit: contain; }
         @keyframes glow { to { box-shadow: 0 0 0 3px #fff, 0 0 22px #5dff9c; } }
         .bubble .gift {
             position: absolute;
@@ -1214,6 +1216,12 @@
         .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
         .btn-primary { background: #5cc15a; color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
         .btn-wide { width: 100%; }
+        .btn-half { flex: 1 1 40%; padding-left: 2cqw; padding-right: 2cqw; line-height: 1.15; }
+        .btn small { font-size: 0.85em; }
+        /* The Season Pass: its track takes the room the buttons leave, never squeezed out. */
+        .dialog-backdrop[data-kind="pass"] .dialog { height: 100%; }
+        .dialog-backdrop[data-kind="pass"] .dialog-body { flex: 1 1 auto; max-height: none; min-height: 40cqw; }
+        .dialog-backdrop[data-kind="pass"] .dialog-actions { gap: 2cqw; margin-top: 3cqw; }
         .big-count { font-size: 8cqw; font-weight: 900; }
         .btn:disabled { background: #e2d8c8; color: #8a7a6a; text-shadow: none; cursor: not-allowed; }
         #toasts {
@@ -2059,6 +2067,7 @@
         html.kit .btn-buy { border-image-source: var(--kit-btn-orange); text-shadow: 0 0.45cqw 0 rgba(120, 60, 0, 0.5), 0 0 0.4cqw rgba(0, 0, 0, 0.25); }
         html.kit .btn:disabled { background: none; border-image-source: var(--kit-btn-grey); color: #f4f1ec; text-shadow: 0 0.4cqw 0 rgba(0, 0, 0, 0.3); }
         html.kit .btn:active, html.kit .sell-btn:active { transform: translateY(0.5cqw) scale(0.97); box-shadow: none; }
+        html.kit .btn-half { padding-left: 2.5cqw; padding-right: 2.5cqw; font-size: 3.8cqw; }
         html.kit .sell-btn { min-height: 9cqw; padding: 1.2cqw 3.6cqw 2cqw; border-image-width: 4.2cqw 4.4cqw; font-size: 3cqw; }
         html.kit .fix-call .btn { min-height: 9.5cqw; padding: 1.6cqw 4cqw 2.4cqw; border-image-width: 4.6cqw 4.8cqw; font-size: 3.6cqw; }
 
@@ -2212,7 +2221,8 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610180652"></script>
-    <script src="game.js?v=202610180652"></script>
+    <script src="assets.js?v=202610181051"></script>
+    <script src="monetize.js?v=202610181051"></script>
+    <script src="game.js?v=202610181051"></script>
 </body>
 </html>

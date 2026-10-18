@@ -26,7 +26,7 @@ jobs:
       - name: Collect the game files
         run: |
           mkdir site
-          cp index.html game.js assets.js manifest.json sw.js site/
+          cp index.html game.js assets.js monetize.js manifest.json sw.js site/
           cp -r assets site/
           cp -r vendor site/  # PixiJS, for the sparkle layer
           touch site/.nojekyll

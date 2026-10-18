@@ -324,10 +324,10 @@ function levelReward(level) {
 const COINS_PER_GEM = 25; // Merge Mansion: 🪙2500 and 💎100 cost the same
 const LEVEL_UP_GEMS = 5; // a few free gems each time a townsperson levels up
 
-// Rewarded ads, a few a day in all: a free energy top-up, an instant producer
-// recharge, or a doubled daily gift.
+// Rewarded ads, a few a day in all (how many: MONETIZE.ads.perDay in
+// monetize.js): a free energy top-up, an instant producer recharge, a doubled
+// daily gift, the gems you're short, or an Ad Bubble.
 const AD_ENERGY = 20;
-const ADS_PER_DAY = 8;
 
 // Merge Mansion's start: a full energy bar, 100 coins and 100 gems.
 const START = { money: 100, gems: 100, energy: 100 };
@@ -713,6 +713,7 @@ function tickBoards(now = Date.now()) {
                 changed = true;
             }
             if (cell.type === 'bubble' && now >= cell.until) {
+                if (cell.sale) Sales.gone(cell.sale); // an Ad Bubble nobody watched: a no
                 board[c] = { type: 'coin', level: 1 }; // an unpopped bubble leaves a coin behind
                 changed = true;
             }
@@ -755,7 +756,7 @@ function refill(mode, item) {
 function skipRecharge(mode, index) {
     const item = grids[mode][index];
     if (!item || !item.readyAt || !(item.type === 'toolbox' || isWorkingProducer(item))) return;
-    if (!spendGems(rechargePrice(mode, item))) return;
+    if (!spendGems(rechargePrice(mode, item), () => skipRecharge(mode, index))) return;
     refill(mode, item);
     sfx('sparkle');
     document.querySelectorAll('.recharge-call').forEach(el => el.remove());
@@ -927,10 +928,11 @@ function timeUntilFullEnergy() {
     return (energyAt - Date.now()) + (ENERGY_CAP - res.energy - 1) * ENERGY_REFILL_SECONDS * 1000;
 }
 
-// Takes gems if you have enough; otherwise sends you to the shop.
-function spendGems(n) {
+// Takes gems if you have enough; otherwise offers the quickest ways to get
+// them. retry: does the thing again once an ad has covered the gems.
+function spendGems(n, retry) {
     if (res.gems < n) {
-        openShop(`You need 💎 ${n - res.gems} more.`);
+        openGemShortfall(n, retry);
         return false;
     }
     res.gems -= n;
@@ -945,9 +947,9 @@ function today() {
 }
 
 function adsLeft() {
-    if (nativeApp) return 0; // no ad network in the app yet: its "Watch an ad" buttons stay hidden
+    if (!SalesAds.ready()) return 0; // no ad network in the app yet: its "Watch an ad" buttons stay hidden
     if (shop.adsDay !== today()) { shop.adsDay = today(); shop.adsWatched = 0; }
-    return ADS_PER_DAY - shop.adsWatched;
+    return Math.max(0, Sales.adCap() - shop.adsWatched);
 }
 
 // 💎5 for the first ⚡100 of the day, then 10, 20, 40 and 80 from then on.
@@ -972,10 +974,22 @@ function openEnergy(ranOut = false) {
     const timing = full
         ? 'Full! It refills again once you drop below 100.'
         : `+1 every ${formatDuration(ENERGY_REFILL_SECONDS * 1000)} · next in <span data-ready="${energyAt}">${formatDuration(energyAt - Date.now())}</span> · full in ${formatDuration(timeUntilFullEnergy())}`;
-    const actions = [{ label: `Buy ⚡ ${ENERGY_PACK} · 💎 ${energyPrice()}`, primary: true, wide: true, onClick: buyEnergy }];
-    if (ads > 0) actions.push({ icon: uiIcon('ad', '📺'), label: `Watch an ad · +⚡ ${AD_ENERGY} (${ads} left today)`, wide: true, onClick: watchAdForEnergy });
+    // Out of ⚡, the sales director puts first the way this player is likeliest to take.
+    const bundle = OFFERS.find(o => o.id === 'energy_bundle');
+    const offer = offerActive(bundle) ? bundle : !shop.offerBought ? SPECIAL_OFFER : null;
+    const ways = {
+        gems: { label: `Buy ⚡ ${ENERGY_PACK} · 💎 ${energyPrice()}`, onClick: buyEnergy, value: energyPrice() * MONETIZE.gemWorth, can: res.gems >= energyPrice() },
+        ad: ads > 0 && { icon: uiIcon('ad', '📺'), label: `Watch an ad · +⚡ ${AD_ENERGY} (${ads} left today)`, onClick: watchAdForEnergy, value: Sales.adValue(), wait: 'ad', can: true },
+        offer: ranOut && offer && { label: `🔥 ${offer.name}: ${offer.reward ? rewardText(offer.reward) : `💎 ${offer.gems} + ⚡ ${offer.energy}`} · ${offer.price}`,
+            onClick: () => (offer === SPECIAL_OFFER ? buySpecialOffer() : buyOffer(offer.id)), value: PRICE_USD[offer.id], wait: offer.id, can: true },
+    };
+    const sale = ranOut ? Sales.rank('energyOut', Object.keys(ways).filter(arm => ways[arm] && ways[arm].can).map(arm => ({ arm, value: ways[arm].value }))) : null;
+    const order = sale ? [...sale.order, ...Object.keys(ways).filter(arm => !sale.order.includes(arm))] : ['gems', 'ad', 'offer'];
+    const actions = order.filter(arm => ways[arm]).map((arm, i) => ({ ...ways[arm], primary: i === 0, wide: true,
+        sale: sale && sale.order.includes(arm) ? arm : null, waitFor: ways[arm].wait }));
     actions.push({ label: full ? 'OK' : 'Wait' });
     showDialog({
+        sale,
         title: ranOut ? 'Out of ⚡ Energy' : '⚡ Energy',
         body: `<p class="big-count">⚡ ${res.energy} / ${ENERGY_CAP}</p><p class="hint">${timing}</p>
                <p class="hint">Every producer tap costs ⚡1. The price of ⚡${ENERGY_PACK} doubles with each buy (up to 💎${ENERGY_PRICE_CAP}) and resets tomorrow.</p>`,
@@ -985,7 +999,7 @@ function openEnergy(ranOut = false) {
 
 function buyEnergy() {
     const price = energyPrice();
-    if (!spendGems(price)) return;
+    if (!spendGems(price, buyEnergy)) return;
     shop.energyBought++;
     res.energy += ENERGY_PACK;
     tickEnergy();
@@ -1001,6 +1015,49 @@ function watchAdForEnergy() {
         tickEnergy();
         updateUI();
         toast(`+⚡ ${AD_ENERGY}`, 'good');
+    });
+}
+
+// Short of 💎: the quickest ways to cover it, the one this player is likeliest
+// to take first (the sales director's pick): the Gem Jar they filled, the gem
+// pack just big enough (or one size up), or an ad for the few gems missing.
+function openGemShortfall(n, retry) {
+    const short = n - res.gems;
+    const fit = GEM_PACKS.find(p => p.gems >= short) || GEM_PACKS[GEM_PACKS.length - 1];
+    const up = GEM_PACKS[GEM_PACKS.indexOf(fit) + 1];
+    const packWay = pack => ({ label: `💎 ${withCommas(pack.gems)} for ${pack.price}`,
+        value: PRICE_USD[pack.id], wait: pack.id, onClick: () => purchase(pack.id) });
+    const ways = {
+        jar: jarReady() && shop.jar >= short && { label: `🫙 Gem Jar: 💎 ${shop.jar} for ${GEM_JAR.price}`,
+            value: PRICE_USD[GEM_JAR.id], wait: GEM_JAR.id, onClick: breakJar },
+        pack: packWay(fit),
+        pack_up: up && packWay(up),
+        ad: short <= MONETIZE.ads.gemsMax && adsLeft() > 0 && { icon: uiIcon('ad', '📺'), label: `Watch an ad · +💎 ${short}`,
+            value: Sales.adValue(), wait: 'ad', onClick: () => watchAdForGems(short, retry) },
+    };
+    const sale = Sales.rank('gemShortfall', Object.keys(ways).filter(arm => ways[arm]).map(arm => ({ arm, value: ways[arm].value })));
+    showDialog({
+        title: `💎 ${short} more needed`,
+        body: `<p class="big-count">💎 ${res.gems} / ${withCommas(n)}</p>
+               ${sale.featured === 'jar' ? `<p class="hint">Your Gem Jar holds 💎${shop.jar}, all earned by you!</p>` : ''}
+               ${billing ? '' : '<p class="hint">Test mode: no real payment is taken here.</p>'}`,
+        actions: [
+            ...sale.order.map((arm, i) => ({ ...ways[arm], primary: i === 0, buy: false, wide: true, sale: arm, waitFor: ways[arm].wait })),
+            { label: 'All gems', onClick: () => openShop() },
+            { label: 'Not now' },
+        ],
+        sale,
+    });
+}
+
+function watchAdForGems(n, retry) {
+    if (adsLeft() <= 0) return;
+    showRewardedAd(() => {
+        shop.adsWatched++;
+        res.gems += n;
+        updateUI();
+        toast(`+💎 ${n}`, 'good');
+        if (retry) retry();
     });
 }
 
@@ -1088,6 +1145,8 @@ function claimDailyBasket() {
 function products() {
     return [...GEM_PACKS, SPECIAL_OFFER, DAILY_BASKET, GEM_JAR, ...OFFERS, GOLDEN_PASS, GOLDEN_PASS_DELUXE];
 }
+// Their US prices as numbers, for the sales director (the store shows local ones later).
+const PRICE_USD = Object.fromEntries(products().map(p => [p.id, parseFloat(p.price.replace(/[^\d.]/g, ''))]));
 
 // What a product gives. Looked up by id, so a payment Google approves later
 // (the app was closed halfway) still pays out.
@@ -1135,6 +1194,7 @@ function grantPurchase(id) {
 function paidOut(id, test = false) {
     const message = grantPurchase(id);
     if (!message) return;
+    Sales.paid(id, PRICE_USD[id], test);
     sfx('buy');
     updateUI();
     saveGame();
@@ -1185,11 +1245,14 @@ document.addEventListener('deviceready', () => {
     });
 }, false);
 
-// Real ads need an ad SDK (for example AdMob) once the game is packaged; call
-// onReward() only when the ad network reports the video was watched.
+// The ad network (SalesAds in monetize.js) plays it; onReward only once it was
+// watched to the end.
 function showRewardedAd(onReward) {
-    toast('(test ad)');
-    onReward();
+    if (SalesAds.test) toast('(test ad)');
+    SalesAds.show(() => {
+        Sales.adDone();
+        onReward();
+    });
 }
 
 // --- REWARDS ---
@@ -1284,6 +1347,7 @@ function addXp(n) {
         quests.level++;
         const reward = levelReward(quests.level);
         grantReward(reward, `⭐ Level ${quests.level}!`);
+        salesPause();
         // Shown after whatever called this has redrawn the scene.
         setTimeout(() => showLevelUp(quests.level, reward), 350);
     }
@@ -3791,7 +3855,7 @@ const placeSaid = {}; // which places have said hello this visit
 
 // What each banner shows and does: its icon, name and what it does (null: not shown).
 function placeBanner(id) {
-    const ads = !nativeApp;
+    const ads = SalesAds.ready(); // an ad network to show them
     const next = firstLandForSale() || Object.keys(AREAS).find(a => !unlocks[a]);
     switch (id) {
         case 'shop': return { icon: uiIcon('offer', '🏪'), name: 'Market', what: 'Deeds, offers and more', go: () => goTo('market'), spot: 'market' };
@@ -5206,6 +5270,7 @@ function completeTask(id, quiet = false) {
     restoration.done.push(task.id);
     document.querySelectorAll(`.fix-call[data-job="${task.id}"]`).forEach(el => el.remove());
     stats.jobs++;
+    salesPause();
     addPassPoints(JOB_PASS_POINTS);
     fillJar(GEM_JAR.perJob);
     delete restoration.baselines[task.id];
@@ -5450,8 +5515,12 @@ function addTag(el, className, html) {
     return tag;
 }
 
-function showDialog({ art, artRound = false, title, body, actions, sheet = false }) {
+// sale: the sales director's trial its ways belong to; an action's `sale` is
+// its way (arm), `waitFor` what finishes it ('ad', or a product id).
+function showDialog({ art, artRound = false, title, body, actions, sheet = false, kind = '', sale = null }) {
+    Sales.closed(); // the popup this one replaces: its ways not taken count as a no
     dialogEl.classList.toggle('sheet', sheet); // a card sliding up from the bottom
+    dialogEl.dataset.kind = kind; // for a popup's own layout (the Season Pass's tall track)
     const tut = document.getElementById('tutorial');
     if (tut) tut.hidden = true;
     dialogArt.hidden = !art;
@@ -5462,21 +5531,25 @@ function showDialog({ art, artRound = false, title, body, actions, sheet = false
     dialogActions.innerHTML = '';
     actions.forEach(action => {
         const btn = document.createElement('button');
-        btn.className = 'btn' + (action.primary ? ' btn-primary' : '') + (action.wide ? ' btn-wide' : '') + (/💎/.test(action.label) ? ' btn-buy' : '');
+        const buy = action.buy ?? /💎/.test(action.label); // orange: spends gems
+        btn.className = 'btn' + (action.primary ? ' btn-primary' : '') + (action.wide ? ' btn-wide' : '') + (action.half ? ' btn-half' : '') + (buy ? ' btn-buy' : '');
         if (action.icon) btn.innerHTML = `${action.icon} `;
         btn.insertAdjacentHTML('beforeend', iconize(action.label));
         btn.disabled = !!action.disabled;
         btn.addEventListener('click', () => {
+            if (sale && action.sale) Sales.took(sale.id, action.sale, action.waitFor);
             closeDialog();
             if (action.onClick) action.onClick();
         });
         dialogActions.appendChild(btn);
     });
     dialogEl.hidden = false;
+    Sales.inDialog(sale);
 }
 
 function closeDialog() {
     dialogEl.hidden = true;
+    Sales.closed();
     setTimeout(updateTutorial, 0); // the tutorial hand comes back once the dialog is gone
 }
 
@@ -6668,10 +6741,10 @@ const GUIDES = [
       steps: [{ scene: () => onBoard(), who: 'hattie', text: 'Merge a matching item into a cobwebbed one to free it!', drag: true,
                 target: () => webPair().map(i => cellItem(onBoard(), i)),
                 done: () => stats.webs > (guide?.start.webs ?? 0) }] },
-    { id: 'bubble', when: () => boardCell(c => c.type === 'bubble') >= 0,
+    { id: 'bubble', when: () => boardCell(c => c.type === 'bubble' && !c.ad) >= 0,
       steps: [{ scene: () => onBoard(), who: 'poppy', text: 'A Double Bubble! Pop it with 💎 for a free copy, or let it float away.',
-                target: () => cellItem(onBoard(), boardCell(c => c.type === 'bubble')),
-                done: () => boardCell(c => c.type === 'bubble') < 0 || (selected && grids[selected.mode][selected.index]?.type === 'bubble') }] },
+                target: () => cellItem(onBoard(), boardCell(c => c.type === 'bubble' && !c.ad)),
+                done: () => boardCell(c => c.type === 'bubble' && !c.ad) < 0 || (selected && grids[selected.mode][selected.index]?.type === 'bubble') }] },
     { id: 'chest', when: () => boardCell(c => c.type === 'chest' || c.type === 'piggy') >= 0,
       steps: [{ scene: () => onBoard(), who: 'finn',
                 text: () => (boardCell(c => c.type === 'chest') >= 0 ? 'A chest! Tap it to see what\'s inside.' : 'A Piggy Bank! Tap it to shake out coins.'),
@@ -7050,6 +7123,61 @@ function buyOffer(id) {
     purchase(offer.id);
 }
 
+// --- SUGGESTIONS AT A NATURAL PAUSE ---
+// A job done or a level up is a happy pause: once nothing else is on screen,
+// the sales director may suggest the one thing this player would likeliest
+// want (or nothing, if it isn't the time: see MONETIZE.rules).
+let salesPauseAt = 0;
+
+function salesPause() {
+    salesPauseAt = Date.now() + 3000; // after the cheering
+}
+
+function checkSalesPause() {
+    if (!salesPauseAt || Date.now() < salesPauseAt) return;
+    if (Date.now() - salesPauseAt > 90000) { salesPauseAt = 0; return; } // the moment has passed
+    if (!dialogEl.hidden || !tutorial.done || fixing || draggedItemInfo || storyQueue.length || pendingOffers.length || Date.now() < storyHoldUntil) return;
+    salesPauseAt = 0;
+    const golden = pass.golden ? 0 : passProgress().level;
+    const offer = activeOffers()[0];
+    const ways = {
+        jar: jarReady() && { value: PRICE_USD[GEM_JAR.id], title: `🫙 ${GEM_JAR.name}`, label: `Break it open · ${GEM_JAR.price}`, wait: GEM_JAR.id, onClick: breakJar,
+            body: `Your Gem Jar holds 💎${shop.jar}, all earned by you. Break it open and keep them!` },
+        pass: golden > 0 && { value: PRICE_USD[GOLDEN_PASS.id], title: `🎟️ ${GOLDEN_PASS.name}`, label: `Unlock them · ${GOLDEN_PASS.price}`, wait: GOLDEN_PASS.id, onClick: () => buyGoldenPass(),
+            body: `${golden} golden reward${golden > 1 ? 's are' : ' is'} waiting for you on the Season Pass. Unlock ${golden > 1 ? 'them all' : 'it'}, and get 💎${GOLDEN_PASS.gemsPerDay} a day too!` },
+        basket: basketDaysLeft() <= 0 && { value: PRICE_USD[DAILY_BASKET.id], title: `🧺 ${DAILY_BASKET.name}`, label: `Get it · ${DAILY_BASKET.price}`, wait: DAILY_BASKET.id, onClick: buyDailyBasket,
+            body: `💎${DAILY_BASKET.gemsPerDay} every day for ${DAILY_BASKET.days} days: 💎${DAILY_BASKET.gemsPerDay * DAILY_BASKET.days} in all.` },
+        offer: offer && { value: PRICE_USD[offer.id], title: `🔥 ${offer.name}`, label: `Get it · ${offer.price}`, wait: offer.id, onClick: () => buyOffer(offer.id),
+            body: `${offer.note}</p><p class="offer-reward">${rewardText(offer.reward)}` },
+    };
+    const sale = Sales.suggest('nudge', Object.keys(ways).filter(arm => ways[arm]).map(arm => ({ arm, value: ways[arm].value })));
+    if (!sale) return;
+    const way = ways[sale.featured];
+    showDialog({
+        title: way.title,
+        body: `<p><b>Well done!</b> ${way.body}</p>`,
+        actions: [{ label: way.label, primary: true, wide: true, sale: sale.featured, waitFor: way.wait, onClick: way.onClick }, { label: 'Not now' }],
+        sale,
+    });
+}
+
+// ?sales: what the sales director knows about this player and has learnt.
+function openSalesReport() {
+    const r = Sales.report(), seg = r.segment;
+    const pct = x => `${Math.round(x * 1000) / 10}%`;
+    const places = Object.entries(r.places).map(([p, arms]) => `<p><b>${p}</b><br>${Object.entries(arms)
+        .map(([arm, a]) => `${arm}: ${pct(a.rate)} yes · ${a.yes}/${a.answers}`).join('<br>')}</p>`).join('');
+    showDialog({
+        title: 'Sales director',
+        body: `<div style="text-align:left;font-size:3.2cqw">
+               <p>${seg.country || '??'} · tier ${seg.tier} · ${seg.device} phone · ${seg.payer ? 'payer' : 'free'} · value ${seg.value}${seg.personal ? '' : ' · not personalized'}</p>
+               <p>Ads a day: ${r.adCap} · played ${r.playedMinutes} min · spent $${r.spent.toFixed(2)} · session ${r.session.n} (${r.session.pacing}, ${r.session.shown} shown, ${r.session.noStreak} no in a row)</p>
+               ${places}
+               <p class="hint">${r.log.map(e => `${e.event} ${e.place || ''} ${e.featured || e.arm || e.product || ''} ${e.took || ''}`).join('<br>')}</p></div>`,
+        actions: [{ label: 'Close' }],
+    });
+}
+
 // --- DAILY GOALS ---
 
 function statNow(name) {
@@ -7194,7 +7322,7 @@ function passSkipPrice() {
 
 function buyPassLevel() {
     const price = passSkipPrice();
-    if (!price || !spendGems(price)) return;
+    if (!price || !spendGems(price, buyPassLevel)) return;
     const { into, need } = passProgress();
     addPassPoints(need - into);
     updateUI();
@@ -7235,12 +7363,14 @@ function openPass() {
                <div class="pass-head"><span></span><span>Free</span><span>⭐ Golden</span></div>
                <div class="pass-track">${rows}</div>
                ${pass.golden ? `<p class="hint">Golden Pass on: 💎${GOLDEN_PASS.gemsPerDay} a day and +${GOLDEN_PASS.slots} 🎒 slots this season.</p>` : ''}`,
+        // Small buttons two to a row, so the track between the ribbon and them has the room.
         actions: [
-            pass.golden ? null : { label: `Get the ${GOLDEN_PASS.name} · ${GOLDEN_PASS.price}`, primary: true, wide: true, onClick: () => buyGoldenPass() },
-            pass.golden ? null : { label: `⭐ ${GOLDEN_PASS_DELUXE.name}: +${GOLDEN_PASS_DELUXE.points} points now · ${GOLDEN_PASS_DELUXE.price}`, primary: true, wide: true, onClick: () => buyGoldenPass(true) },
-            need ? { label: `Level ${level + 1} now · 💎${passSkipPrice()}`, wide: true, onClick: buyPassLevel } : null,
-            { label: 'Close' },
+            pass.golden ? null : { label: `${GOLDEN_PASS.name}<br><small>${GOLDEN_PASS.price}</small>`, primary: true, half: true, onClick: () => buyGoldenPass() },
+            pass.golden ? null : { label: `⭐ Deluxe +${GOLDEN_PASS_DELUXE.points}<br><small>${GOLDEN_PASS_DELUXE.price}</small>`, primary: true, half: true, onClick: () => buyGoldenPass(true) },
+            need ? { label: `Level ${level + 1} now<br><small>💎${passSkipPrice()}</small>`, half: true, onClick: buyPassLevel } : null,
+            { label: 'Close', half: true },
         ].filter(Boolean),
+        kind: 'pass',
     });
     dialogBody.querySelectorAll('.pass-cell.ready').forEach(btn => btn.addEventListener('click', () => claimPassReward(btn.dataset.track, Number(btn.dataset.level))));
     // Scroll to the first level with something left to claim, or the next one to reach.
@@ -7780,6 +7910,21 @@ function afterMerge(mode, index, made) {
             landed.push(at);
             toast(`🫧 A Double Bubble! Pop it for 💎${gems} before it's gone.`);
         }
+    } else if ((!made.type ? made.tier >= 2 : isProducer && made.level >= 2) && tutorial.done && adsLeft() > 0
+        && !grids[mode].some(c => c && c.type === 'bubble' && c.ad)) {
+        // An Ad Bubble: when the ad network has a well-paying ad ready, the sales
+        // director sometimes puts a copy in a bubble you pop by watching it.
+        const sale = Sales.adBubble();
+        if (sale) {
+            const inner = isProducer ? { type: 'shop', level: made.level } : { ...made };
+            const until = Date.now() + MONETIZE.placements.adBubble.minutes * 60000;
+            const at = spawnNear(mode, index, { type: 'bubble', inner, ad: true, sale: sale.id, until });
+            if (at === -1) Sales.forget(sale.id);
+            else {
+                landed.push(at);
+                toast(`📺 An Ad Bubble! Watch a short ad to keep the copy.`);
+            }
+        }
     }
     const star = !made.type && made.tier >= 4 ? made.tier - 3 : isProducer && made.level >= 5 ? made.level - 4 : 0;
     if (star) {
@@ -7789,10 +7934,26 @@ function afterMerge(mode, index, made) {
     return landed;
 }
 
-// Pays the bubble's gems for the copy inside it.
+// Pays the bubble's gems (or, for an Ad Bubble, a watched ad) for the copy inside it.
 function popBubble(mode, index) {
     const bubble = grids[mode][index];
-    if (!bubble || bubble.type !== 'bubble' || !spendGems(bubble.gems)) return;
+    if (!bubble || bubble.type !== 'bubble') return;
+    if (bubble.ad) {
+        if (adsLeft() <= 0) return toast('No more ads today. It will float away soon.');
+        Sales.took(bubble.sale, null, 'ad');
+        bubble.until = Math.max(bubble.until, Date.now() + 120000); // it waits while the ad plays
+        return showRewardedAd(() => {
+            shop.adsWatched++;
+            if (grids[mode][index] === bubble) releaseBubble(mode, index);
+            else sendToBoard(mode, bubble.inner); // moved or gone meanwhile: the copy goes in the 🎁
+        });
+    }
+    if (!spendGems(bubble.gems, () => popBubble(mode, index))) return;
+    releaseBubble(mode, index);
+}
+
+function releaseBubble(mode, index) {
+    const bubble = grids[mode][index];
     grids[mode][index] = bubble.inner;
     tickProducer(mode, bubble.inner);
     updateUI();
@@ -7828,7 +7989,7 @@ function unlockChest(mode, index) {
 // Opens it now for gems.
 function rushChest(mode, index) {
     const item = grids[mode][index];
-    if (!item || item.type !== 'chest' || chestReady(item) || !spendGems(chestStage(item).skip)) return;
+    if (!item || item.type !== 'chest' || chestReady(item) || !spendGems(chestStage(item).skip, () => rushChest(mode, index))) return;
     item.openAt = Date.now();
     item.opened = true;
     updateUI();
@@ -8039,8 +8200,11 @@ function renderInfoBar(mode) {
     } else if (item.type === 'box') {
         html += `<span class="info-icon">📦</span>` + text('Crate', 'Merge anything next to it to open it.');
     } else if (item.type === 'bubble') {
-        html += icon + text('Double Bubble', `A free ${boardItemName(mode, item.inner)} inside! Pop it before it's gone: ${countdown(item.until)}`)
-            + button('pop-btn', `Pop<br>💎${item.gems}`);
+        html += item.ad
+            ? icon + text('Ad Bubble', `A free ${boardItemName(mode, item.inner)} inside! Watch a short ad to pop it: ${countdown(item.until)}`)
+                + button('pop-btn', `Watch<br>${uiIcon('ad', '📺')}`)
+            : icon + text('Double Bubble', `A free ${boardItemName(mode, item.inner)} inside! Pop it before it's gone: ${countdown(item.until)}`)
+                + button('pop-btn', `Pop<br>💎${item.gems}`);
     } else if (item.type === 'toolbox') {
         const t = TOOLS[item.chain];
         html += icon + text(t.name, item.drops > 0 ? `Tap to make ${t.what} for ⚡1. ${item.drops}/${TOOL_CHARGES} taps left.`
@@ -8166,7 +8330,7 @@ function undoSale(mode) {
 
 function dustSelected(mode) {
     const item = selected && selected.mode === mode ? grids[mode][selected.index] : null;
-    if (!item || !item.web || !spendGems(dustPrice(item))) return;
+    if (!item || !item.web || !spendGems(dustPrice(item), () => dustSelected(mode))) return;
     delete item.web;
     stats.webs++;
     updateUI();
@@ -9189,8 +9353,9 @@ function itemFace(mode, item) {
             const art = !inner.type && itemSprite(chainOf(mode, inner), inner.tier);
             const bubble = ((ASSETS.special || {}).bubble || [])[0];
             return {
-                cls: ['bubble-item'].concat(bubble ? ['has-art'] : []),
-                html: `${bubble ? `<img class="bubble-art" src="${bubble}" alt="" draggable="false">` : ''}<span class="bubble-inner">${art ? sprite(art) : emoji(itemEmojiFor(mode, inner))}</span>`,
+                cls: ['bubble-item'].concat(bubble ? ['has-art'] : [], item.ad ? ['ad-bubble'] : []),
+                html: `${bubble ? `<img class="bubble-art" src="${bubble}" alt="" draggable="false">` : ''}<span class="bubble-inner">${art ? sprite(art) : emoji(itemEmojiFor(mode, inner))}</span>`
+                    + (item.ad ? `<span class="bubble-ad">${uiIcon('ad', '📺')}</span>` : ''),
             };
         }
         case 'toolbox': {
@@ -9422,6 +9587,7 @@ if (layoutMode) {
 } else if (!story.intro) setTimeout(playOpening, 150);
 else if (!tutorial.done) giftAfterTutorial = true; // back mid-tutorial: the gift still waits for its end
 else if (dailyAvailable()) setTimeout(openDailyGift, 600);
+if (Sales.debug) setTimeout(openSalesReport, 900);
 
 setInterval(() => {
     tickEnergy();
@@ -9434,6 +9600,7 @@ setInterval(() => {
     syncDailyGoals();
     syncFair();
     checkOffers();
+    checkSalesPause();
     showFairResults();
     syncStory();
     // An area that opened while a card was up plays its unlock once it's closed.
