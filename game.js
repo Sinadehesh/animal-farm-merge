@@ -4757,53 +4757,85 @@ function jobsOf(...lands) {
     return TASKS.filter(t => lands.includes(t.land)).map(t => t.id);
 }
 
-// Each "day" is a set of jobs, with one bubble when it starts.
-// Each day's scene opens when the day before is done. A scene is a list of
-// [who, words, answer?]: a townsperson, 'shopkeeper', 'narrator' (the storybook)
-// or 'note' (a note from "A Friend"); or a function giving that list when it plays.
+// --- THE STORY: THE LOST GOLDEN BELL ---
+// For a hundred years the Golden Bell rang over Sunnyvale every night to call
+// everyone home. The night of the storm it vanished, the families left, and
+// they say they'll come back when it rings again. Mr. Grimsby (Grimsby Land
+// Co., only ever seen as a grey coat, big city shoes and a black car) wants the
+// valley for a parking lot and the bell for its gold.
+// The truth, told fairly: Marigold, the shopkeeper, is the secret Bell Keeper.
+// She hid the bell in the Town Hall tower from Grimsby, dropped its key in the
+// hen house as she ran, and, watched day and night, leaves notes for the one
+// person he doesn't know: you. Her clues are all in plain sight (green wax and
+// little gold lanterns in her shop, cinnamon buns, floury boots, red hair like
+// the Keeper in Finn's story, and a slip about the "silver" key); the red
+// herrings each get cleared (Finn's lantern, Poppy's tiny feet, the Mayor's
+// nerves, Ruby's rope). You guess who the Friend is, twice; guessing right pays.
+// Each chapter opens on a cliffhanger; the end teases the Silver Bell.
+
+// Each chapter is a set of jobs, with a scene when it starts (once the one
+// before is done). A scene is a list of [who, words, answer, sign]: who is a
+// townsperson, 'shopkeeper' (Marigold), 'narrator' (the storybook), 'note' (from
+// "A Friend") or 'letter' (from Mr. Grimsby); answer is the button, or a list
+// of choices ({ label, reply: [lines], guess }); sign replaces a note's
+// signature. A scene can be a function giving that list when it plays.
 const CHAPTERS = [
-    { scene: [['mayor', 'Welcome to Sunnyvale!']], jobs: jobsIn('barnyard') }, // the opening tells day 1
-    { scene: [['narrator', 'Day 2. The sun comes up over the barn.'],
-        ['hattie', 'The hens ran away in the storm. Let\'s fix their home!'],
-        ['ruby', 'And keep your eyes open for more notes!', 'I will!']],
+    { title: 'A Note in the Planks', scene: [['mayor', 'Welcome to Sunnyvale!']], jobs: jobsIn('barnyard') }, // the opening tells chapter 1
+    { title: 'The Silver Key',
+      scene: [['narrator', 'That night, the hens wake up. Bok, bok, BOK!'],
+          ['narrator', 'You run out with a lamp. The hen house door is swinging open...'],
+          ['hattie', 'Something was in there! My hens don\'t yell for nothing.'],
+          ['ruby', 'Then let\'s fix the hen house and look around.', 'Let\'s look!']],
       jobs: jobsIn('henhouse', 'bigbarn') },
-    { scene: [['narrator', 'Day 3. Past the barn are big fields, full of weeds.'],
-        ['hattie', 'Let\'s grow food again, so people can come home.'],
-        ['mayor', 'And somewhere out there is the old windmill...', 'Let\'s go!']],
+    { title: 'The Big Wheel',
+      scene: [['narrator', 'Late at night, a long black car rolls down the road.'],
+          ['narrator', 'It stops by your barn. Then its lights go off.'],
+          ['mayor', 'That is Mr. Grimsby\'s car. He is watching us.'],
+          ['ruby', 'Let him watch. We work faster than he snoops.'],
+          ['mayor', 'To the fields! The big wheel from the note must be out there.', 'Let\'s go!']],
       jobs: jobsOf('farm', 'hay') },
-    { scene: [['narrator', 'Day 4. A thick fog sits over the town square.'],
-        ['mayor', 'My poor town! Let\'s clear away the fog.'],
-        ['mayor', 'And the note said to ask Finn about an old story.', 'Let\'s go!']],
+    { title: 'Fog Over Town',
+      scene: () => [['narrator', 'A thick fog sits over the town square.'],
+          ['mayor', 'And no new note for days. I am worried about our Friend.'],
+          ['ruby', 'That black car followed their lantern into town. We have to hurry.'],
+          guessLine('Before we go... who do you think the Friend is?'),
+          ['mayor', 'Now, let\'s clear that fog!', 'Let\'s go!']],
       jobs: ['town1', 'town2', 'town3', 'town4', ...jobsOf('fert', 'aqua')] },
-    { scene: () => [['narrator', 'Day 5. The big festival is almost here!'],
-        ['poppy', 'Flowers make people smile. Let\'s fill the town with them!'],
-        restoration.done.includes('town6') ? ['mayor', 'And this year, our Golden Bell will ring!', 'Hooray!']
-            : ['mayor', 'But we still need our Golden Bell...', 'We\'ll find it!']],
+    { title: 'The Golden Bell',
+      scene: () => [['narrator', 'The Harvest Festival is coming. A grey letter waits in the mailbox.'],
+          ['letter', 'Dear Mayor, on Festival Day I will buy the whole valley. No bell, no town. Ha!'],
+          ['mayor', 'If the bell does not ring at the festival... the families will sell.'],
+          restoration.done.includes('town6') ? ['hattie', 'But we found it! Let\'s ring it LOUD!', 'Yee-haw!']
+              : guessLine('This is it. Last chance: who is the Friend?', 'Let\'s find that bell!')],
       jobs: ['town5', 'town6', 'town7', ...jobsOf('flower')] },
 ];
 
+// "Who is the Friend?": your guess, with a word from whoever you name. The
+// reveal pays out if it's right.
+function guessLine(question, then = 'We\'ll see!') {
+    const pick = (label, guess, reply) => ({ label, guess, reply: [...reply, ['narrator', 'You write your guess in your notebook.', then]] });
+    return ['ruby', question, [
+        pick('Ruby?', 'ruby', [['ruby', 'Me?! Ha! My writing is way too messy.']]),
+        pick('Poppy?', 'poppy', [['poppy', 'Me? Oh, I would draw flowers on every note!']]),
+        pick('Finn?', 'finn', [['ruby', 'Finn? He can barely spell "fish"!']]),
+        pick('Marigold?', 'marigold', [['ruby', 'The shop lady? Hmm... she does know a lot.']]),
+    ]];
+}
+
 const STORY_END = [['narrator', 'Every barn, field and pond is fixed.'],
-    ['mayor', 'You saved us! Sunnyvale is the happiest town again.'],
-    ['shopkeeper', 'And the Golden Bell will ring for you every day!', 'Yay!']];
+    ['mayor', 'Sunnyvale is the happiest town in the valley again.'],
+    ['shopkeeper', 'And every night, the Golden Bell rings for you, dear.'],
+    ['finn', 'Now... about that Silver Bell.', 'Tell me more!']];
 
 // A little scene when a whole land is back, played after its reward.
 const LAND_STORY = {
-    barn: [['ruby', 'The barn looks brand new!'], ['hattie', 'And the animals love it!'], ['mayor', 'The barn is done. Next, the fields!']],
-    farm: [['hattie', 'Look at all those rows of food!'], ['mayor', 'Nobody in Sunnyvale will go hungry now.']],
-    hay: [['hattie', 'The windmill turns again!'], ['ruby', 'Fresh hay and fresh bread for everyone!']],
-    fert: [['poppy', 'Lights, mushrooms and the best soil around!'], ['hattie', 'Our plants will grow so big!']],
-    aqua: [['finn', 'The fish are jumping again!'], ['finn', 'Come and row with me any time!']],
+    barn: [['ruby', 'The barn looks brand new. Not bad, newbie... I mean, boss!'], ['hattie', 'And the animals love it!'], ['mayor', 'The barn is done. Next, the fields!']],
+    farm: [['hattie', 'Rows and rows of food!'], ['mayor', 'Now the families will have food when they come home.']],
+    hay: [['hattie', 'The windmill turns again!'], ['ruby', 'Fresh bread for everyone! I bet Grimsby can smell it from his car.']],
+    fert: [['poppy', 'The best soil in the whole valley!'], ['poppy', 'Our plants will grow as tall as Ruby!'], ['ruby', 'Hey!']],
+    aqua: [['finn', 'The fish are jumping again!'], ['finn', 'Come row with me any time, friend.']],
     flower: [['poppy', 'Every flower is blooming!'], ['mayor', 'Sunnyvale has never looked so pretty.']],
 };
-
-// --- THE MYSTERY: THE LOST GOLDEN BELL ---
-// The night of the storm, the town's Golden Bell went missing. Someone who signs
-// "A Friend" leaves notes that lead from place to place; a silver key turns up in a
-// nest; four pieces of a torn map hide around the farm; Finn knows an old story of a
-// Bell Keeper. At the Town Hall the key opens the tower's little door: the bell is
-// there, and the Friend is the shopkeeper, the Bell Keeper, who hid it from the storm.
-// Each beat plays when its job is done, and makes sense in any order; the Town Hall
-// waits for the key, the map and Finn's story (its `after`).
 
 // The jobs that turn up a piece of the map (the Town Hall's `after` lists them too).
 const MAP_PIECES = ['big2', 'farm5', 'aqua8', 'fert10'];
@@ -4816,133 +4848,262 @@ function mapPiecesFound() {
 function mapBeat(...found) {
     return () => {
         const n = mapPiecesFound();
-        const after = n === 4 ? [['narrator', 'The pieces fit together. The map is whole!'],
-            ['narrator', 'A big X is drawn on the Town Hall tower.'],
-            ['mayor', 'The tower? I looked up there... but not in every corner!', 'Let\'s look again!']]
-            : n === 1 ? [['mayor', 'That is a map of Sunnyvale! Someone tore it up.'], ['mayor', 'So where are the other pieces?', 'I\'ll find them!']]
+        const after = n === 4 ? [['narrator', 'The four pieces fit together. The map is whole!'],
+            ['narrator', 'A big red X is drawn... on the Town Hall tower!'],
+            ['mayor', 'The tower? But its stairs are broken!'],
+            ['ruby', 'Then we fix them. Every last one.', 'Let\'s go!']]
+            : n === 1 ? [['mayor', 'It is a map of Sunnyvale! Someone tore it into pieces.'],
+                ['ruby', 'Smart. One piece alone tells Grimsby nothing.', 'I\'ll find the rest!']]
             : [['ruby', 'It fits right next to the other piece!', 'Keep looking!']];
         return [...found, ['narrator', `It is a torn piece of a map! You have ${n} of 4.`], ...after];
     };
 }
 
 const STORY_BEATS = {
-    barn1: [['ruby', 'Hi! I\'m Ruby. I fix things. Nice work!'],
-        ['ruby', 'Wait... what is that under the planks?'],
-        ['narrator', 'It is a rolled-up note. The ink is still a little wet.'],
-        ['note', 'To the new farmer: I hid what was lost. Fix the farm, and look for my notes.'],
-        ['ruby', 'Who wrote this? And what did they hide?', 'Let\'s find out!']],
-    barn2: [['hattie', 'Howdy! I\'m Hattie. I take care of the animals.'],
-        ['hattie', 'Ruby told me about the note. A mystery! I love it!']],
-    barn9: [['narrator', 'That night, you see a little light out by the fence.'],
-        ['narrator', 'It bobs up and down, like someone with a lantern.'],
-        ['narrator', 'Then... it is gone.'],
-        ['hattie', 'Did you see that? Someone was out there!', 'Who was it?']],
-    barn20: [['narrator', 'In the dust, you see tiny boot prints.'],
-        ['hattie', 'Those are not my boots. My feet are way bigger!'],
-        ['ruby', 'So our night visitor has small feet. Hmm...', 'Hmm!']],
-    hen3: [['narrator', 'In the old nest, there is no egg.'],
-        ['narrator', 'There is a little silver key!'],
-        ['hattie', 'A key? My hens can\'t lay keys!'],
-        ['ruby', 'It is so tiny. What could it open?', 'I\'ll keep it safe.']],
-    hen10: [['hattie', 'Look! The hens came home!'], ['hattie', 'They feel safe here again. Thank you, partner!']],
-    big2: mapBeat(['narrator', 'One of the scrolls is not like the others...']),
-    big5: [['narrator', 'One jar has no jam in it. It has a note!'],
-        ['note', 'Well done! Next, go to the big wheel that the wind turns.'],
-        ['ruby', 'A wheel that the wind turns... is it a windmill?', 'The windmill!']],
-    farm1: [['hattie', 'Our very own field! Let\'s grow food for everyone.'], ['mayor', 'When there is food, people will come home.']],
-    farm5: mapBeat(['narrator', 'The scarecrow has something in its pocket...']),
-    farm28: [['mayor', 'A picnic! I have not had one since the storm.'], ['mayor', 'Thank you. I feel like a kid again!']],
-    farm31: [['poppy', 'Hello there! I\'m Poppy. I grow flowers.'],
-        ['poppy', 'I heard about the notes. I notice little things. I can help!']],
-    hay1: [['mayor', 'The Hay Field is ours now!'], ['mayor', 'And look over there... the old windmill!', 'The note!']],
-    hay9: [['hattie', 'The sheep are back! And they are so fluffy!']],
-    hay18: [['ruby', 'A new stall! The horses have room to rest.']],
-    hay20: [['narrator', 'The old windmill creaks in the wind.'],
-        ['hattie', 'This must be the wheel the wind turns!'],
-        ['hattie', 'Let\'s fix it up. Maybe the next note is here.']],
-    hay6: [['narrator', 'The sails turn round and round!'],
+    barn1: [['ruby', 'Hi! I\'m Ruby. I fix stuff. Nice work, newbie!'],
+        ['ruby', 'Hey... what\'s that under the planks?'],
+        ['narrator', 'A rolled-up note, closed with green wax. The wax is shaped like a tiny bell.'],
+        ['note', 'Welcome, farmer. The Golden Bell is safe, but hidden. Fix the farm and follow my notes.'],
+        ['ruby', 'A note about the bell?! Who wrote this?', [
+            { label: 'I\'ll find out!', reply: [['ruby', 'Ha! I like you already.']] },
+            { label: 'Spooky...', reply: [['ruby', 'Spooky? Nah. Exciting!']] }]]],
+    barn2: [['hattie', 'Howdy, partner! I\'m Hattie. I look after the animals.'],
+        ['hattie', 'My hens ran off the night of the storm. Something gave them a big scare.'],
+        ['hattie', 'Animals don\'t lie. Somebody was out here that night.', 'Who?']],
+    barn6: [['shopkeeper', 'Yoo-hoo! I\'m Marigold. I run the Market in town.'],
+        ['shopkeeper', 'I brought you cinnamon buns. Welcome to Sunnyvale, dear!'],
+        ['hattie', 'Marigold\'s buns are the best in the whole valley!'],
+        ['shopkeeper', 'Hee hee! Come see my shop. I have a bit of everything.', 'Thanks!']],
+    barn9: [['narrator', 'That night, you see a little gold light out by the fence.'],
+        ['narrator', 'It bobs up and down... then it is gone.'],
+        ['ruby', 'Someone with a lantern! Out here, at night?'],
+        ['ruby', 'Finn goes night fishing. Just saying.', 'Hmm...']],
+    barn10: [['narrator', 'Your new mailbox has its first letter. The paper is grey and stiff.'],
+        ['letter', 'Dear Farmer, Sunnyvale is finished. Sell me your farm and go home. I pay well.'],
+        ['mayor', 'Grimsby! He wants every farm in the valley.'],
+        ['mayor', 'He wants to turn our fields into one giant parking lot!'],
+        ['ruby', 'So, newbie. Are you selling?', [
+            { label: 'Never!', reply: [['ruby', 'That\'s what I like to hear!']] },
+            { label: 'How much?', reply: [['ruby', 'HOW MUCH?! ...Ha, you\'re kidding. Right?'], ['mayor', 'Oh, my poor heart!']] }]]],
+    barn20: [['narrator', 'Under the dust, you find two sets of footprints.'],
+        ['narrator', 'Small boots with flour on them. And big, shiny city shoes.'],
+        ['ruby', 'Nobody in Sunnyvale wears city shoes.'],
+        ['mayor', 'Ahem! Nobody at all. Ha... ha.'],
+        ['hattie', 'Mayor, why are you sweating?', 'Hmm!']],
+    hen3: [['narrator', 'In the nest, there is no egg. There is a little silver key!'],
+        ['narrator', 'A tiny bell is carved on the top.'],
+        ['hattie', 'My hens can\'t lay keys!'],
+        ['ruby', 'Somebody dropped this in a hurry. The night of the storm, I bet.', 'I\'ll keep it safe.']],
+    hen10: [['hattie', 'The hens came home! All of them!'],
+        ['hattie', 'They still hide when a car goes by, though. Poor babies.'],
+        ['hattie', 'Thank you, partner. You\'re family now.', 'Aww!']],
+    big2: mapBeat(['narrator', 'One scroll is not like the others. It is torn...']),
+    big5: [['narrator', 'One jar has no jam. It has a note, with the same green wax!'],
+        ['note', 'Well done. Next, find the big wheel the wind turns. And watch out for the man in the grey coat.'],
+        ['ruby', 'Grey coat... big city shoes... That\'s Grimsby!'],
+        ['ruby', 'And a big wheel the wind turns? The old windmill!', 'To the windmill!']],
+    big8: [['letter', 'Dear Farmer, I will pay you TWICE as much. You could buy a castle!'],
+        ['hattie', 'A castle? We have a barn. Barns are better.'],
+        ['ruby', 'He\'s scared. You\'re fixing things too fast for him.', 'Ha!']],
+    farm1: [['mayor', 'Our very own field! Splendid!'],
+        ['mayor', 'The families can\'t come home to empty fields. Let\'s grow food!']],
+    farm5: mapBeat(['narrator', 'The scarecrow\'s pocket crinkles. There is paper inside!']),
+    farm31: [['poppy', 'Hello! I\'m Poppy. The daisies said you were coming.'],
+        ['poppy', 'Can I smell your note? ...Mmm. Cinnamon!'],
+        ['hattie', 'Poppy, you have the tiniest feet in town. Were you out at night?'],
+        ['poppy', 'Only to sing to the moonflowers. They open at midnight!', [
+            { label: 'I believe you.', reply: [['poppy', 'Thank you! You have a kind face.']] },
+            { label: 'Hmm, really?', reply: [['poppy', 'Really! Come at midnight and I\'ll sing you a song.']] }]]],
+    farm28: [['mayor', 'A picnic, like the old days! But first, I must tell you something.'],
+        ['mayor', 'The night of the storm, a man in a grey coat came to my door.'],
+        ['mayor', 'He said, "I love old bells! May I see yours?" So I let him into the tower.'],
+        ['mayor', 'Then the storm came... and the bell was gone. It\'s all my fault!', [
+            { label: 'It\'s not your fault.', reply: [['mayor', 'Thank you, my friend. I will make this right.']] },
+            { label: 'Oh, Mayor!', reply: [['mayor', 'I know, I know! I was a silly old fool.'], ['mayor', 'But I will make this right.']] }]]],
+    hay1: [['mayor', 'The Hay Field is ours!'],
+        ['mayor', 'And look over there... the old windmill. The big wheel the wind turns!', 'The note!']],
+    hay9: [['hattie', 'The sheep are back! They\'re SO fluffy. I could nap on one.']],
+    hay18: [['ruby', 'Two stalls, built in one go. Boom!'], ['hattie', 'The horses say thank you. Well, they say "neigh". Same thing!']],
+    hay20: [['narrator', 'The old windmill creaks in the wind. Its sails are broken.'],
+        ['hattie', 'This is it! The big wheel the wind turns!'],
+        ['ruby', 'Let\'s fix those sails. The next note must be up there.', 'Let\'s fix it!']],
+    hay64: [['letter', 'Dear Farmer, I hear you are fixing that old windmill. STOP. Or else!'],
+        ['ruby', 'Or else WHAT? Ha! He\'s worried.'],
+        ['mayor', 'That means we are close. Keep going!', 'Keep going!']],
+    hay6: [['narrator', 'The sails turn round and round. Whoosh!'],
         ['narrator', 'A note floats down from the top and lands at your feet.'],
-        ['note', 'Good job! The one who fishes knows an old story. Ask him.'],
-        ['mayor', 'The one who fishes... that is Finn!', 'Let\'s ask Finn!']],
-    hay72: [['narrator', 'From way up high, you see the little light again.'],
-        ['narrator', 'It goes down the road... and into town.'],
-        ['ruby', 'Our night visitor lives in town!', 'Who could it be?']],
-    town1: [['mayor', 'The fog is gone! I can see my town again.'],
+        ['note', 'Good work! The one who fishes knows the old Bell Keeper story. Ask him. Quietly!'],
+        ['mayor', 'The one who fishes... that\'s Finn! Is Finn in on this?', 'Let\'s ask Finn!']],
+    hay72: [['narrator', 'From the top of the windmill, you can see the whole valley.'],
+        ['narrator', 'A little gold light hurries down the road into town...'],
+        ['narrator', '...and a long black car follows it, with its lights off.'],
+        ['ruby', 'Grimsby is following our Friend! We have to hurry!', 'Hurry!']],
+    town1: [['mayor', 'The fog is lifting! I can see my town again!'],
         ['narrator', 'Up in the Town Hall tower, the bell spot is empty.'],
-        ['mayor', 'Our Golden Bell hung right there for a hundred years...', 'We will find it.']],
-    town2: [['ruby', 'My workshop! I can build anything now.'], ['ruby', 'When we find the bell, I will make it a brand new rope!']],
-    town3: [['hattie', 'Home sweet home! Thank you, partner.']],
-    town4: [['finn', 'My shop is open! Fresh fish for everyone!']],
-    town5: [['poppy', 'My flower shop smells like spring again!']],
-    town6: [['narrator', 'You climb up the Town Hall tower.'],
-        ['narrator', 'At the top is a little door. It is locked.'],
-        ['narrator', 'You try the silver key... Click! It opens!'],
-        ['narrator', 'Inside, under a warm blanket, is the Golden Bell!'],
-        ['shopkeeper', 'You found it! I knew you would.'],
-        ['mayor', 'You? You wrote the notes?'],
-        ['shopkeeper', 'Yes! I am the Bell Keeper, like my grandma before me.'],
-        ['shopkeeper', 'The storm was so strong. I hid the bell up here to keep it safe.'],
-        ['shopkeeper', 'But I dropped the key in the hen house! And the tower was too broken to climb.'],
-        ['shopkeeper', 'So I left notes and map pieces to lead a kind helper here.'],
-        ['shopkeeper', 'And you fixed the whole town on the way. Thank you!', 'Ring the bell!']],
-    town7: [['narrator', 'Ding! Dong! The Golden Bell rings out over Sunnyvale.'],
-        ['narrator', 'Everyone who left hears it... and they all come home.'],
-        ['hattie', 'Let\'s dance! Yee-haw!'],
-        ['finn', 'This is the best festival ever!'],
-        ['mayor', 'Thank you, farmer. You are a true friend of Sunnyvale.', 'Yay!']],
-    fert1: [['poppy', 'Leaves and mud? This is where good gardens start!']],
-    fert4: [['poppy', 'Pee-yew! It smells so strong!'], ['poppy', 'But plants love it. Yum, yum!']],
-    fert10: mapBeat(['narrator', 'Under the last pile of leaves, something crinkles...']),
-    fert21: [['hattie', 'It is so dark in here!']],
+        ['narrator', 'On the tower steps: big city shoe prints. They stop at a broken stair.'],
+        ['ruby', 'Grimsby tried to climb up. But nobody can get past those stairs.'],
+        ['mayor', 'Then we will fix my Town Hall. Every last stair!', 'Let\'s do it!']],
+    town2: [['ruby', 'My workshop! I can build anything now!'],
+        ['hattie', 'Ruby... why is the bell\'s old rope in your shed?'],
+        ['ruby', 'Don\'t look at me like that! I found it in the river after the storm.'],
+        ['ruby', 'I\'m fixing it. For when we find the bell!', [
+            { label: 'I believe you.', reply: [['ruby', 'Thanks, boss. That means a lot.']] },
+            { label: 'Hmm...', reply: [['ruby', 'Hmm yourself! I\'m a fixer, not a hider.']] }]]],
+    town3: [['hattie', 'Home sweet home! Thank you, partner!'],
+        ['hattie', 'Hey... city shoe prints by my gate. Grimsby is snooping everywhere!']],
+    town4: [['finn', 'My shop is open! Fresh fish for everyone.'],
+        ['finn', 'And yes, I saw the grey coat man the night of the storm.'],
+        ['finn', 'He ran past my dock with a big empty sack. Mad as a wet cat.'],
+        ['ruby', 'Empty! So he never got the bell!', 'Phew!']],
+    town5: [['poppy', 'My shop smells like spring again!'],
+        ['poppy', 'And look, my boots have little flowers on the bottom. No flour!'],
+        ['hattie', 'So those small floury boots weren\'t yours. Sorry, Poppy!', 'Sorry, Poppy!']],
+    town6: () => {
+        const right = story.guess === 'marigold';
+        if (right && !story.guessPaid) { story.guessPaid = true; grantReward({ gems: 25 }, '🔍 Mystery solved:'); }
+        return [['narrator', 'You climb the brand new stairs, all the way up the tower.'],
+            ['narrator', 'At the top is a tiny door with a bell carved on it. You try the silver key... Click!'],
+            ['narrator', 'Inside, wrapped in a warm blanket, is the Golden Bell!'],
+            ['shopkeeper', 'You found it! I knew you would.'],
+            ['mayor', 'Marigold?! YOU are the Friend?'],
+            ['shopkeeper', 'Yes. And the Bell Keeper, like my grandma before me.'],
+            ['finn', 'The red-haired Keeper in Grandpa\'s story... was your grandma!'],
+            ['shopkeeper', 'The night of the storm, Grimsby came to steal the bell. He wanted its gold.'],
+            ['shopkeeper', 'So I hid it up here. But I dropped my key in the hen house as I ran!'],
+            ['shopkeeper', 'He watched my shop day and night. So I wrote to the one person he didn\'t know: you.'],
+            ['poppy', 'The cinnamon! The notes smelled like your buns!'],
+            ['ruby', 'And you knew the key was silver before anyone told you!'],
+            ['shopkeeper', 'Hee hee. I did slip a little, didn\'t I?'],
+            right ? ['ruby', 'And you guessed it was Marigold! Sharp as a nail, boss. Here\'s 💎25.'] : ['ruby', 'Bet you didn\'t see that coming, boss!'],
+            ['shopkeeper', 'Now, let\'s put this bell back where it belongs!', 'Ring the bell!']];
+    },
+    town7: [['narrator', 'Festival Day. The whole valley goes quiet...'],
+        ['narrator', 'DING! DONG! The Golden Bell rings out over the hills!'],
+        ['narrator', 'Far away, the families hear it. One by one, they come home.'],
+        ['letter', 'Fine. Keep your silly bell. I\'m leaving. But I\'ll be back!'],
+        ['hattie', 'He\'s gone! Yee-haw! Let\'s dance!'],
+        ['mayor', 'Thank you, farmer. You saved Sunnyvale. You are one of us now.'],
+        ['narrator', 'Later, Ruby polishes the bell. Inside, words are carved in the gold:'],
+        ['note', 'When the gold bell rings again, look for the silver one.', null, ''],
+        ['finn', 'The Silver Bell! Grandpa said that was the second part of the story...', 'To be continued!']],
+    fert1: [['poppy', 'Leaves and mud! This is where good gardens begin.']],
+    fert4: [['poppy', 'Pee-yew! It smells SO strong.'], ['poppy', 'But the plants love it. Yum, yum!']],
+    fert10: mapBeat(['narrator', 'Under the last big leaf pile, something crinkles...']),
+    fert21: [['hattie', 'It\'s so dark in here!'], ['ruby', 'Scared of the dark, cowgirl?'], ['hattie', 'Me? Never! ...Hold my hand, though.']],
     fert5: [['poppy', 'Fairy lights! So pretty!'],
-        ['narrator', 'The lights shine on tiny boot prints in the moss... and a note on a log.'],
-        ['note', 'You are so close now. Fix the town, and you will see.'],
-        ['poppy', 'Tiny boots again! Our Friend was here.', 'So close!']],
-    aqua1: [['finn', 'Ahoy! I\'m Finn. I fish here.'],
-        ['finn', 'A note sent you to me? Then help me fix my pond, and I\'ll tell you a story.']],
+        ['narrator', 'The lights shine on a note, tucked in a mossy log.'],
+        ['note', 'You are so close. Fix the town and climb the tower. Bring the silver key.'],
+        ['poppy', 'Cinnamon again... Where have I smelled that before?', 'Hmm!']],
+    aqua1: [['finn', 'Ahoy! Finn\'s the name. Fish are my game.'],
+        ['finn', 'A night lantern? Sure, I fish at night. But my lantern is big and green.'],
+        ['finn', 'A little gold one? Not mine, friend.'],
+        ['finn', 'Help me fix my pond, and I\'ll tell you the Bell Keeper story.', 'Deal!']],
     aqua3: [['finn', 'Here is the story my grandpa told me.'],
-        ['finn', 'Long ago, the town picked a Bell Keeper.'],
-        ['finn', 'When bad times come, the Keeper keeps the bell safe.'],
-        ['narrator', 'A Bell Keeper? Could the Keeper be the one who writes the notes?', 'Hmm!']],
-    aqua8: mapBeat(['narrator', 'Inside the old tyre, there is a bottle.'], ['narrator', 'And inside the bottle, there is paper!']),
-    aqua5: [['finn', 'Row, row, row! The water is clear again.']],
+        ['finn', 'Long ago, the town picked a secret Bell Keeper.'],
+        ['finn', 'In bad times, the Keeper hides the bell. Nobody knows who it is. Not even the Mayor!'],
+        ['finn', 'The last Keeper Grandpa knew was a lady with bright red hair.'],
+        ['narrator', 'A secret Keeper... could that be our Friend?', 'Hmm!']],
+    aqua8: mapBeat(['narrator', 'Inside the old tyre is a bottle. Inside the bottle is paper!']),
+    aqua5: [['finn', 'Row, row, row! The water is clear again.'],
+        ['finn', 'Look, a little gold lantern, stuck in the reeds.'],
+        ['ruby', 'The Friend\'s lantern! They were here. Where do people even buy those?', 'Hmm...']],
     flower1: [['poppy', 'My garden! It looks sad now... but not for long!']],
-    flower13: [['poppy', 'Poor roses. We will make you happy again.']],
-    flower22: [['poppy', 'Careful! There is glass all over.']],
-    flower5: [['poppy', 'It is perfect! The festival will be so pretty.']],
+    flower13: [['poppy', 'Poor roses. Don\'t worry, we\'ll make you happy again.']],
+    flower22: [['poppy', 'Careful! Broken glass everywhere.'], ['ruby', 'Leave it to me. I\'ll make it shine.']],
+    flower5: [['poppy', 'It\'s perfect! The festival will be the prettiest ever.'], ['mayor', 'Splendid! Simply splendid!']],
 };
 TASKS.forEach(t => { if (STORY_BEATS[t.id]) t.story = STORY_BEATS[t.id]; });
 
-// What has turned up so far, for the job list: a clue's job, its icon and what it is.
+// The case so far, for the job list: each clue's job, its icon, what it is,
+// a line for "the story so far", and a hint of where the next one hides.
 const CLUES = [
-    { task: 'barn1', icon: 'note', text: 'A note from “A Friend”' },
-    { task: 'barn9', icon: '🏮', text: 'A light at night' },
-    { task: 'barn20', icon: '👣', text: 'Tiny boot prints' },
-    { task: 'hen3', icon: '🗝️', text: 'A little silver key' },
-    { task: 'big5', icon: 'note', text: 'Note 2: the big wheel' },
-    { task: 'hay6', icon: 'note', text: 'Note 3: ask the one who fishes' },
-    { task: 'aqua3', icon: '📖', text: 'Finn\'s story of the Bell Keeper' },
-    { task: 'fert5', icon: 'note', text: 'Note 4: you are close' },
+    { task: 'barn1', icon: 'note', text: 'Note 1, sealed with green wax', recap: 'A Friend left you a note: the bell is safe, but hidden.', next: 'Something is hiding under the planks in the Barnyard.' },
+    { task: 'barn9', icon: '🏮', text: 'A little gold lantern at night', recap: 'Someone walks the farm at night with a little gold lantern.', next: 'Put up a lantern in the Barnyard, and watch the fence.' },
+    { task: 'barn20', icon: '👣', text: 'Small floury boots, big city shoes', recap: 'You found two sets of footprints: small floury boots, and big city shoes.', next: 'Sweep the cobbles in the Barnyard.' },
+    { task: 'hen3', icon: '🗝️', text: 'A silver key with a tiny bell', recap: 'You found a little silver key in a nest.', next: 'Fix the nest in the Hen House.' },
+    { task: 'big5', icon: 'note', text: 'Note 2: the big wheel, and the grey coat', recap: 'Note 2 sent you to the big wheel the wind turns.', next: 'One jar in the Barn Storeroom has no jam...' },
+    { task: 'farm28', icon: '🎩', text: 'The Mayor let a stranger into the tower', recap: 'The Mayor let a man in a grey coat into the bell tower.', next: 'Lay out a picnic in the Orchard. The Mayor wants to talk.' },
+    { task: 'hay6', icon: 'note', text: 'Note 3: ask the one who fishes', recap: 'Note 3 said Finn knows the old Bell Keeper story.', next: 'Get the windmill\'s sails turning.' },
+    { task: 'aqua3', icon: '📖', text: 'The secret Keeper had red hair', recap: 'Finn says a secret Bell Keeper guards the bell. The last one had red hair.', next: 'Fix up the Fish Pond. Finn has a story for you.' },
+    { task: 'fert5', icon: 'note', text: 'Note 4: climb the tower (it smells of cinnamon)', recap: 'Note 4 said: fix the town and climb the tower.', next: 'Hang the fairy lights in the Mushroom Corner.' },
     { map: true, icon: '🗺️' },
-    { task: 'town6', icon: '🔔', text: 'The Golden Bell is found!' },
+    { task: 'town6', icon: '🔔', text: 'The Golden Bell is found!', recap: 'You found the Golden Bell! Marigold was the Friend.', next: 'Restore the Town Hall and climb the tower.' },
 ];
 
-// The mystery so far: what's been found, and how much is still hidden.
+// Who might the Friend be? Each shows from its job, with a note that changes
+// when they're cleared (Marigold's stays a question until the bell is found).
+const SUSPECTS = [
+    { who: 'shopkeeper', name: 'Marigold', from: 'barn6', note: 'Sells a bit of everything. Bakes cinnamon buns.', end: 'town6', endNote: 'The Friend, and the Bell Keeper! 🔔' },
+    { who: 'finn', name: 'Finn', from: 'barn9', note: 'Fishes at night with a lantern...', end: 'aqua1', endNote: 'His lantern is big and green. ✓' },
+    { who: 'mayor', name: 'Mayor Bramble', from: 'barn20', note: 'Why was he sweating?', end: 'farm28', endNote: 'He let the stranger in. Sorry, not sneaky. ✓' },
+    { who: 'poppy', name: 'Poppy', from: 'farm31', note: 'Tiny feet. Out at midnight...', end: 'town5', endNote: 'Her boots have flowers, not flour. ✓' },
+    { who: 'ruby', name: 'Ruby', from: 'town2', note: 'Had the bell\'s rope in her shed!', end: 'town6', endNote: 'She really was fixing it. ✓' },
+];
+
+// The mystery so far: what's been found, who's who, and where the next clue hides.
 function cluesHtml() {
     const icon = c => (c.icon === 'note' && (ASSETS.story || {}).note ? `<img class="inline-item" src="${ASSETS.story.note}" alt="📜">` : c.icon);
-    const found = CLUES.filter(c => (c.map ? mapPiecesFound() > 0 : restoration.done.includes(c.task)));
+    const found = CLUES.filter(clueFound);
     if (!found.length) return '';
-    const hidden = CLUES.length - found.length;
+    const done = id => restoration.done.includes(id);
+    const people = SUSPECTS.filter(s => done(s.from)).map(s => {
+        const npc = npcs.find(n => n.id === s.who), pic = s.who === 'shopkeeper' ? (ASSETS.wave || {}).shopkeeper : npcPicture(npc);
+        return `<span class="suspect${done(s.end) ? ' cleared' : ''}"><img src="${pic}" alt=""><b>${s.name}</b><small>${done(s.end) ? s.endNote : s.note}</small></span>`;
+    }).join('');
+    const next = nextClue();
+    const guess = story.guess && !done('town6') ? ` · Your guess: <b>${SUSPECTS.find(s => (s.who === 'shopkeeper' ? 'marigold' : s.who) === story.guess)?.name || '?'}</b>` : '';
     return `<div class="clues"><h3>🔔 The Lost Golden Bell</h3>
         ${found.map(c => `<span class="clue">${icon(c)} ${c.map ? `Map pieces: ${mapPiecesFound()} of 4` : c.text}</span>`).join('')}
-        ${hidden ? `<span class="clue hidden">❓ ${hidden} more to find</span>` : ''}</div>`;
+        ${people ? `<h4>Who is the Friend?${guess}</h4><div class="suspects">${people}</div>` : ''}
+        ${next ? `<p class="clue-next">🔍 Next clue: ${next.next}</p>` : ''}</div>`;
+}
+
+function clueFound(c) {
+    return c.map ? mapPiecesFound() > 0 : restoration.done.includes(c.task);
+}
+
+// The next clue still to find, on land you own.
+function nextClue() {
+    return CLUES.find(c => !c.map && !clueFound(c) && (unlocks[TASKS.find(t => t.id === c.task).land] || TASKS.find(t => t.id === c.task).land === 'town'));
+}
+
+// Back after a while: the story so far, in a few lines, and where to look next.
+function storyRecap() {
+    const found = CLUES.filter(c => !c.map && clueFound(c));
+    if (!found.length || restoration.done.includes('town7')) return null;
+    const next = nextClue();
+    return [['narrator', 'The story so far...'],
+        ...found.slice(-2).map(c => ['narrator', c.recap]),
+        ...(next ? [['narrator', `Next: ${next.next}`]] : []),
+        ['narrator', 'Who is the Friend? Let\'s find out!', 'Let\'s go!']];
+}
+
+// A line of town talk on the daily gift card, from the chapter you're in.
+const GOSSIP = [
+    [['hattie', 'My hens are still hiding. Something scared them silly.'], ['ruby', 'If you find a nail on the road, it\'s mine. Probably.'], ['mayor', 'I practise my festival speech every morning. Splendid, isn\'t it?']],
+    [['shopkeeper', 'Fresh cinnamon buns today, dear! Hee hee.'], ['ruby', 'Saw that black car again last night. Creepy.'], ['hattie', 'A key in a nest! Hens are full of surprises.']],
+    [['poppy', 'The moonflowers told me a secret. They won\'t say what it is.'], ['mayor', 'I can\'t sleep. That grey coat man is out there somewhere.'], ['finn', 'Caught a fish as big as a boot today. It WAS a boot.']],
+    [['finn', 'The fog is so thick, I said hello to a lamp post.'], ['ruby', 'I\'m fixing the bell rope. For when we find it. WHEN.'], ['shopkeeper', 'Little gold lanterns, two for a coin! Hee hee.']],
+    [['mayor', 'The festival is so close! Will our bell ring?'], ['poppy', 'I\'m making flower crowns for everyone. Even Grimsby. Maybe.'], ['hattie', 'My hens laid golden eggs! ...Okay, yellow ones.']],
+    [['finn', 'The Silver Bell... Grandpa said it sings over the sea.'], ['shopkeeper', 'Ding, dong! Hear that? That\'s our bell, dear.'], ['ruby', 'Grimsby said he\'ll be back. Let him try.']],
+];
+
+function gossipHtml() {
+    const ch = currentChapter();
+    const list = GOSSIP[ch === -1 ? GOSSIP.length - 1 : ch];
+    const [who, text] = list[((today() % list.length) + list.length) % list.length];
+    const npc = npcs.find(n => n.id === who);
+    const pic = who === 'shopkeeper' ? (ASSETS.wave || {}).shopkeeper : npcPicture(npc);
+    return `<div class="gossip"><img src="${pic}" alt=""><p>“${text}”<small>${npc ? npc.name : KEEPER_NAME}</small></p></div>`;
 }
 
 // Story beats from jobs just done, played once nothing else is showing.
 const storyQueue = [];
 
 // Which scenes have played. Saved.
-const story = { intro: false, seen: [], ended: false, hints: [] }; // hints: the shopkeeper's words already said
+const story = { intro: false, seen: [], ended: false, hints: [], guess: null, guessPaid: false }; // hints: Marigold's words already said; guess: who you think the Friend is
+// The shopkeeper's name.
+const KEEPER_NAME = 'Marigold';
 // A new game's first daily gift waits until the tutorial is over.
 let giftAfterTutorial = false;
 
@@ -4958,29 +5119,36 @@ function currentChapter() {
 // Plays speech bubbles one after another. The last one can carry extra HTML.
 function playScene(title, lines, extra = '', then = null) {
     if (typeof lines === 'function') lines = lines();
-    const [who, text, answer] = lines[0];
+    const [who, text, answer, sign] = lines[0];
     const last = lines.length === 1;
-    const story = ASSETS.story || {};
+    const book = ASSETS.story || {};
     let art, round = false, words;
-    if (who === 'note') {
-        art = story.note;
-        words = `<p class="story-note">${text}</p><p class="hint">— A Friend</p>`;
+    if (who === 'note' || who === 'letter') {
+        art = book.note;
+        const by = sign ?? (who === 'note' ? '— A Friend' : '— R. Grimsby, Grimsby Land Co.');
+        words = `<p class="story-note${who === 'letter' ? ' story-letter' : ''}">${text}</p>${by ? `<p class="hint">${by}</p>` : ''}`;
     } else if (who === 'shopkeeper' || npcs.some(n => n.id === who)) {
         const npc = npcs.find(n => n.id === who), wave = (ASSETS.wave || {})[who];
         art = wave || npcPicture(npc);
         round = !wave;
-        words = `<p class="story-line">“${text}”</p><p class="hint">— ${npc ? npc.name : 'The Shopkeeper'}</p>`;
+        words = `<p class="story-line">“${text}”</p><p class="hint">— ${npc ? npc.name : KEEPER_NAME}</p>`;
     } else { // the narrator
-        art = story.book;
+        art = book.book;
         words = `<p class="story-narration">${text}</p>`;
     }
+    const rest = lines.slice(1);
+    const next = more => (more.length ? playScene(title, more, extra, then) : then && then());
+    // A choice: each answer has its own reply, then the scene goes on.
+    const actions = Array.isArray(answer)
+        ? answer.map((c, i) => ({ label: c.label, primary: i === 0, half: answer.length > 2,
+            onClick: () => { if (c.guess) story.guess = c.guess; next([...(c.reply || []), ...rest]); } }))
+        : [{ label: answer || 'OK!', primary: true, onClick: () => next(rest) }];
     showDialog({
         art,
         artRound: round,
         title,
         body: `${words}${last ? extra : ''}`,
-        actions: [{ label: answer || 'OK!', primary: true,
-            onClick: () => (last ? then && then() : playScene(title, lines.slice(1), extra, then)) }],
+        actions,
     });
 }
 
@@ -4993,10 +5161,10 @@ let openingOn = false;
 const NO_INTRO = new URLSearchParams(location.search).has('nointro'); // for testing
 
 const OPENING_LINES = [
-    { mood: 'sun', text: 'Sunnyvale was the happiest little farm town in the valley.' },
-    { mood: 'storm', text: 'Then one night, a big storm came.' },
-    { mood: 'rain', text: 'Barns broke. Fields flooded. And the Golden Bell was gone!' },
-    { mood: 'friends', text: 'Most people left. But a few good friends stayed and waited for help.' },
+    { mood: 'sun', text: 'For a hundred years, the Golden Bell rang over Sunnyvale every night.' },
+    { mood: 'storm', text: 'Then one night, a wild storm came.' },
+    { mood: 'rain', text: 'Barns broke. Fields flooded. In the morning, the bell was gone!' },
+    { mood: 'friends', text: 'The families left. Only a few good friends stayed... and waited for help.' },
 ];
 
 // How far into its drift each opening cloud starts (s), so they begin scattered
@@ -5105,9 +5273,9 @@ function playOpening() {
         const mayor = npcs.find(n => n.id === 'mayor');
         await ask(`<img class="op-who" src="${ASSETS.characters.mayor || npcPicture(mayor)}" alt="">
             <b class="op-name">${mayor.name}</b>
-            <p>Oh! You must be the new farmer! Welcome to ${TOWN_NAME}.</p>
-            <p>The storm broke our farm. And our Golden Bell is missing!</p>
-            <p>Will you help us fix the farm and find the bell?</p>`, 'I\'ll help!');
+            <p>You came! You must be the new farmer. Welcome to ${TOWN_NAME}!</p>
+            <p>Our Golden Bell is gone. The families say they will come home when it rings again.</p>
+            <p>Will you help us fix the farm... and find the bell?</p>`, 'I\'ll help!');
         if (skipped) return;
         const pic = (src, alt) => `<img src="${src}" alt="${alt}">`;
         const items = ASSETS.items.barn || [];
@@ -5143,7 +5311,7 @@ function stopRain() {
 function playChapter(i) {
     const first = openTasks().find(t => CHAPTERS[i].jobs.includes(t.id));
     const extra = first ? `<div class="needs">${first.needs.map(n => needLabel(first, n)).join('')}</div>` : '';
-    playScene(`📖 Day ${i + 1}`, CHAPTERS[i].scene, extra);
+    playScene(`📖 Chapter ${i + 1}: ${CHAPTERS[i].title}`, CHAPTERS[i].scene, extra);
 }
 
 // Every second: the first daily gift after the tutorial, then (on the map, with
@@ -5365,12 +5533,12 @@ function openTaskLog() {
         const ready = taskReady(task);
         const done = landTasks(task.land).filter(taskDone).length;
         const ch = chapterOf(task.id);
-        const heading = ch !== chapter ? `<h3 class="chapter-h">📖 Day ${ch + 1}</h3>` : '';
+        const heading = ch !== chapter ? `<h3 class="chapter-h">📖 Chapter ${ch + 1}: ${CHAPTERS[ch].title}</h3>` : '';
         chapter = ch;
         return `${heading}<div class="task-row${ready ? ' ready' : ''}">
                     <img class="face" src="${npcPicture(npcs.find(n => n.id === task.who))}" alt="">
                     <div class="task-body">
-                        <b>${task.name}${task.story ? ' 📖' : ''}</b> <small>${landName(task.land)} ${done}/${landTasks(task.land).length}</small>
+                        <b>${task.name}${CLUES.some(c => c.task === task.id) || MAP_PIECES.includes(task.id) ? ' 🔍' : task.story ? ' 📖' : ''}</b> <small>${landName(task.land)} ${done}/${landTasks(task.land).length}</small>
                         <div class="needs">${task.needs.map(n => needLabel(task, n)).join('')}</div>
                     </div>
                     <button class="task-go" data-id="${task.id}" data-can="${ready ? 1 : ''}">${ready ? (hasSpot(task) ? 'Go fix' : 'Do it') : hasSpot(task) ? 'Show' : 'Go'}<br>+⭐${task.xp}</button>
@@ -5420,7 +5588,7 @@ function openDailyGift() {
     }).join('');
     showDialog({
         title: '🎁 Daily gift',
-        body: `<div class="gift-track">${track}</div><p class="hint">A new gift every day. Miss a day and the track starts over.</p>`,
+        body: `${gossipHtml()}<div class="gift-track">${track}</div><p class="hint">A new gift every day. Miss a day and the track starts over.</p>`,
         actions: available
             ? [
                 { label: `Claim day ${day}: ${rewardText(DAILY_GIFTS[day - 1])}`, primary: true, wide: true, onClick: () => claimDailyGift() },
@@ -5469,18 +5637,22 @@ const MARKET_LAYOUT = {
 };
 
 const SHOPKEEPER_LINES = [
-    'Welcome in! Land deeds are on the shelf. New land means new things to grow.',
-    'People in town pay well for what you make. Visit the Town Square!',
-    'See the Growth Guide? It helps everything grow one size bigger.',
+    'Welcome in, dear! Land deeds are on the shelf. New land, new things to grow.',
+    'Mmm, smell that? Cinnamon buns, fresh today!',
+    'Candles, green wax and string. I have a bit of everything! Hee hee.',
+    'Little gold lanterns, two for a coin!',
+    'The Growth Guide helps everything grow one size bigger.',
+    'The Workshop Manual is for bigger tools, dear.',
 ];
 let shopkeeperLine = 0;
 
-// The shopkeeper knows more than she says: once a clue turns up, she has a word about it (once each).
+// Marigold knows more than she says: once a clue turns up, she has a word about
+// it (once each). Nobody told her the key was silver...
 const SHOPKEEPER_HINTS = [
-    ['town6', 'Thank you for finding my bell. Ding, dong!'],
-    ['aqua3', 'A Bell Keeper? What a lovely old story. Hee hee!'],
-    ['hen3', 'A silver key? Keep it safe, dear. Keys are important.'],
-    ['barn1', 'A note from a friend? How fun! I love a good mystery.'],
+    ['town6', 'Thank you for finding my bell, dear. Ding, dong!'],
+    ['aqua3', 'A red-haired Bell Keeper? What a lovely old story. Hee hee.'],
+    ['hen3', 'Keep that silver key safe, dear. Keys are important.'],
+    ['barn1', 'A note from a friend? How fun! I do love a good mystery.'],
 ];
 
 function shopkeeperHint() {
@@ -6156,11 +6328,11 @@ function renderTown() {
 // How each townsperson asks for something (`it`: the item's picture and name).
 function npcAsk(npc, it) {
     switch (npc.id) {
-        case 'mayor': return `I would love a ${it}. Could you bring me one?`;
-        case 'ruby': return `I need a ${it} for my next build! Can you make one?`;
-        case 'hattie': return `Howdy! My animals want a ${it}. Can you bring one?`;
-        case 'finn': return `Ahoy! I am looking for a ${it}. Can you find one for me?`;
-        case 'poppy': return `Hi! A ${it} would make my day. Can you bring one?`;
+        case 'mayor': return `My dear farmer! Might you bring me a ${it}? Splendid!`;
+        case 'ruby': return `Need a ${it} for my next build. Can you make one, boss?`;
+        case 'hattie': return `Howdy, partner! My critters want a ${it}. Bring one by?`;
+        case 'finn': return `Ahoy! I'm after a ${it}. Can you reel one in for me?`;
+        case 'poppy': return `Oh! A ${it} would make my whole day bloom. Bring one?`;
         default: return `Could you bring me a ${it}?`;
     }
 }
@@ -6220,7 +6392,13 @@ function deliver(npc) {
 
 // A delivery: the customer pops up over their order to say thanks, and the
 // coins and stars fly from it to their counters at the top.
-const THANKS = ['Thank you!', 'Just what I needed!', 'Perfect, thanks!', 'Oh, lovely!', 'You\'re a star!', 'Wonderful, thank you!'];
+const THANKS = {
+    mayor: ['Splendid!', 'Simply splendid!', 'Thank you, my friend!'],
+    ruby: ['Boom! Thanks, boss.', 'Perfect fit!', 'Nice work!'],
+    hattie: ['Yee-haw! Thanks, partner!', 'My critters love it!', 'You\'re a peach!'],
+    finn: ['Fin-tastic!', 'Thanks, friend!', 'That\'s a keeper!'],
+    poppy: ['Oh, how lovely!', 'You made my day bloom!', 'Thank you, sunshine!'],
+};
 
 function thankYou(npc, r, from, levelUp) {
     const stage = stageEl.getBoundingClientRect();
@@ -6228,7 +6406,7 @@ function thankYou(npc, r, from, levelUp) {
     const el = document.createElement('div');
     el.className = 'thanks';
     el.innerHTML = iconize(`<img class="face" src="${npcPicture(npc)}" alt="">
-        <span><b>${npc.name}</b><i>${THANKS[Math.floor(Math.random() * THANKS.length)]}</i>
+        <span><b>${npc.name}</b><i>${(list => list[Math.floor(Math.random() * list.length)])(THANKS[npc.id] || THANKS.mayor)}</i>
         <small>+💵${r.rewardMoney} &nbsp;+⭐${r.rewardXp}${levelUp ? ` &nbsp;· Lv.${npc.deliveries / 5 + 1}! +💎${LEVEL_UP_GEMS}` : ''}</small></span>`);
     stageEl.appendChild(el);
     const x = Math.min(Math.max((at.left + at.right) / 2 - stage.left, stage.width * 0.3), stage.width * 0.7);
@@ -9514,6 +9692,8 @@ function renderGrid(mode, poppedIndices = []) {
 // and each producer's next charge arrive, so they keep coming while the game
 // is closed. Open the game with ?reset at the end of the link to start over.
 const SAVE_KEY = 'merge-farmstead-save-v1';
+let awayFor = 0; // how long the game was closed, from the save
+const RECAP_AFTER_MS = 8 * 3600000; // back after this long: the story so far
 // 2: one ⚡ Energy bar instead of five essentials, and producers with parts.
 // 3: XP levels, inventory, chests and boosters.
 // 4: restoration jobs instead of level quests.
@@ -9587,7 +9767,7 @@ function loadGame() {
         if (save.settings && save.settings.tips === false) settings.tips = false;
         if (save.guides) Object.assign(guides, save.guides);
         if (save.lastBoard && AREAS[save.lastBoard]) lastBoard = save.lastBoard;
-        if (save.tickedAt) lastTickAt = save.tickedAt;
+        if (save.tickedAt) { lastTickAt = save.tickedAt; awayFor = Date.now() - save.tickedAt; }
         Object.assign(unlocks, save.unlocks);
         maxTier = save.maxTier;
         // Saves from before the Workshop Manual keep the tools they've already made.
@@ -9666,6 +9846,11 @@ if (layoutMode) {
 } else if (!story.intro) setTimeout(playOpening, 150);
 else if (!tutorial.done) giftAfterTutorial = true; // back mid-tutorial: the gift still waits for its end
 else if (dailyAvailable()) setTimeout(openDailyGift, 600);
+// Back after a while: the story so far, once you're on the map (after the gift).
+if (!layoutMode && story.intro && tutorial.done && awayFor > RECAP_AFTER_MS) {
+    const recap = storyRecap();
+    if (recap) storyQueue.push(recap);
+}
 if (Sales.debug) setTimeout(openSalesReport, 900);
 
 setInterval(() => {

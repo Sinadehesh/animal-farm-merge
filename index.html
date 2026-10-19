@@ -2169,6 +2169,25 @@
             box-shadow: inset 0 0 0 0.3cqw rgba(107, 68, 34, 0.25); font-size: 3.1cqw; font-weight: 800; }
         .clue .inline-item { height: 4.6cqw; }
         .clue.hidden { background: rgba(107, 68, 34, 0.1); color: #8a6a50; }
+        /* Mr. Grimsby's letters: stiff grey paper, typed. */
+        .story-note.story-letter { rotate: 1deg; background: linear-gradient(#eceef0, #d9dde1); border: 0.5cqw solid #8a9198; border-radius: 0.6cqw;
+            font-family: 'Courier New', Courier, monospace; font-size: 3.9cqw; color: #2f3439; }
+        /* Who is the Friend? Each suspect with their note, faded once cleared. */
+        .clues h4 { margin: 1.2cqw 0 1cqw; font-size: 3.4cqw; }
+        .suspects { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2cqw; }
+        .suspect { display: grid; grid-template-columns: 9cqw 1fr; grid-template-rows: auto auto; column-gap: 1.4cqw; align-items: center; padding: 1cqw;
+            border-radius: 2cqw; background: #fff8e4; box-shadow: inset 0 0 0 0.3cqw rgba(107, 68, 34, 0.25); }
+        .suspect img { grid-row: span 2; width: 9cqw; height: 9cqw; object-fit: cover; object-position: top; border-radius: 50%; background: #fff; }
+        .suspect b { font-size: 3cqw; }
+        .suspect small { font-size: 2.6cqw; line-height: 1.25; color: #6b4a2c; }
+        .suspect.cleared { opacity: 0.6; }
+        .clue-next { margin: 1.5cqw 0 0; font-size: 3.2cqw; font-weight: 800; color: #7a4a10; }
+        /* Town talk on the daily gift card. */
+        .gossip { display: flex; align-items: center; gap: 2.4cqw; margin: 0 0 2.4cqw; padding: 1.6cqw 2.4cqw; border-radius: 3cqw; background: #fff8e4; text-align: left;
+            box-shadow: inset 0 0 0 0.3cqw rgba(107, 68, 34, 0.2); }
+        .gossip img { flex: 0 0 auto; width: 11cqw; height: 11cqw; object-fit: cover; object-position: top; border-radius: 50%; background: #fff; }
+        .gossip p { margin: 0; font-size: 3.5cqw; font-weight: 800; line-height: 1.3; }
+        .gossip small { display: block; margin-top: 0.4cqw; font-size: 2.8cqw; font-weight: 700; color: #8a6a50; }
 
         /* Signs in the Market and Sunnyvale: blue round signs, open ones on the cream tile, the town's name on the ribbon. */
         html.kit .tp-name { padding: 0.6cqw 9cqw 2.6cqw; background: none; border: 0 solid transparent; border-radius: 0; border-image: var(--kit-ribbon) 0 120 0 120 fill / 0 8.5cqw; }
@@ -2221,8 +2240,8 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610191036"></script>
-    <script src="monetize.js?v=202610191036"></script>
-    <script src="game.js?v=202610191036"></script>
+    <script src="assets.js?v=202610191143"></script>
+    <script src="monetize.js?v=202610191143"></script>
+    <script src="game.js?v=202610191143"></script>
 </body>
 </html>
