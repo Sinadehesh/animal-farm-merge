@@ -382,6 +382,7 @@ const ASSETS = {
         counter: 'assets/props/counter.svg',
         deed: 'assets/props/deed_scroll.webp', // the green rune scroll from assets/raw/ui/books_scrolls.webp
         upgrade: 'assets/props/upgrade.png',
+        manual: 'assets/props/manual_red_book.webp', // the Workshop Manual: the red book from assets/raw/ui/books_scrolls.webp
         crate: 'assets/props/crate.png', // the crates on a fresh board (cut from assets/raw/icons_7_misc.webp)
     },
 

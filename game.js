@@ -528,6 +528,13 @@ const TOOLS = {
 };
 Object.keys(TOOLS).forEach(chain => { NAMES[chain] = TOOLS[chain].names; });
 const TOOL_CHARGES = 8;                    // taps before a tool producer recharges
+// The Workshop Manual: the Growth Guide for everything the tool producers make.
+// Their merges stop at its tier; each chapter (💵) lets them go one step
+// further. Jobs need tier 3 from the start, 4-5 around level 3 and 6-7 around level 6.
+const TOOL_TIER_START = 3;
+const MANUAL_COSTS = { 4: 250, 5: 750, 6: 3000, 7: 9000 };
+// The highest tier the tool producers' things merge to now (saved with the game).
+let toolTier = TOOL_TIER_START;
 const TOOL_DROP_ODDS = [0.75, 0.22, 0.03]; // the tier a tap drops
 
 // The chain a plain item belongs to: its own (a tool), else its board's.
@@ -570,10 +577,10 @@ function boardTitle(mode) {
     return mode === 'fair' ? `${fairTheme().emoji} ${fairTheme().name}` : AREAS[mode].name;
 }
 
-// The highest tier you can merge to: the Growth Guide's on the lands, the whole
-// chain at the Fair.
+// The highest tier you can merge to: the Growth Guide's on the lands, the
+// Workshop Manual's for tools, the whole chain at the Fair.
 function tierCap(mode) {
-    if (TOOLS[mode]) return NAMES[mode].length - 1;
+    if (TOOLS[mode]) return Math.min(NAMES[mode].length - 1, toolTier);
     return mode === 'fair' ? NAMES.fair.length - 1 : maxTier;
 }
 
@@ -3836,7 +3843,7 @@ function cheerHero() {
 const PLACE_SPOTS = {
     market: {
         keeper: [48, 31],
-        banners: { shop: [50, 8], deeds: [19, 14], guide: [80, 17], energy: [19, 40], treasure: [84, 39], deals: [67, 60], well: [34, 66] },
+        banners: { shop: [50, 8], deeds: [19, 14], guide: [80, 17], manual: [80, 28], energy: [19, 40], treasure: [84, 39], deals: [67, 60], well: [34, 66] },
     },
     town: {
         progress: [36, 3],
@@ -3864,6 +3871,8 @@ function placeBanner(id) {
             go: () => (next ? offerDeed(next) : toast('All the land is yours!')), hot: !!firstLandForSale() };
         case 'guide': return maxTier < NAMES.barn.length - 1 && { icon: `<img src="${ASSETS.props.upgrade}" alt="📘">`, name: 'Growth Guide',
             what: `Everything grows one size bigger · 💵 ${shortNumber(guideCost())}`, go: offerUpgrade };
+        case 'manual': return !!manualCost() && { icon: `<img src="${ASSETS.props.manual}" alt="📕">`, name: 'Workshop Manual',
+            what: `Tools merge one step further · 💵 ${shortNumber(manualCost())}`, go: offerManual };
         case 'energy': return { icon: uiIcon('energy', '⚡'), name: 'Energy', what: 'Refill your ⚡ and keep merging', go: () => openEnergy() };
         case 'treasure': return { icon: uiIcon('gem', '💎'), name: 'Gems & Chests', what: 'Gem packs and treasure chests', go: () => openShop() };
         case 'deals': return { icon: uiIcon('sale', '🏷️'), name: 'Daily Deals', what: 'New bargains every day', go: openDailyDeals, hot: dealsWaiting() };
@@ -4438,14 +4447,17 @@ function openItemSource(task, need) {
     const step = t => `<span class="src-step${t === need.tier ? ' goal' : ''}">${itemIcon(chain, t)}<small>${itemName(chain, t)}</small></span>`;
     const path = Array.from({ length: need.tier + 1 }, (_, t) => step(t)).join('<b class="src-arrow">×2 →</b>');
     const owned = unlocks[board];
+    const locked = need.tier > tierCap(chain);
     showDialog({
         art: itemSprite(chain, need.tier) || undefined,
         title: itemName(chain, need.tier),
         body: `<div class="src-maker">${makerIcon}<p>Made by the <b>${maker}</b> on your <b>${AREAS[board].name}</b> board.${need.tier ? ' Tap it, then merge two of the same to go up a step:' : ' Tap it to make one.'}</p></div>
                ${need.tier ? `<div class="src-path">${path}</div>` : ''}
                <p class="hint">${tool ? 'Brown and Blue chests sometimes drop these too.' : 'Orders and chests sometimes give them too.'}${owned ? '' : ` You'll get this board with the ${AREAS[board].name} land (level ${AREAS[board].level}).`}</p>`,
-        actions: [owned ? { label: `Go to the ${AREAS[board].name} board`, primary: true, wide: true, onClick: () => goTo(board) } : null, back].filter(Boolean),
+        actions: [locked ? { label: `${tool ? 'Workshop Manual' : 'Growth Guide'} · Market`, primary: true, wide: true, onClick: () => goTo('market') }
+            : owned ? { label: `Go to the ${AREAS[board].name} board`, primary: true, wide: true, onClick: () => goTo(board) } : null, back].filter(Boolean),
     });
+    if (locked) dialogBody.insertAdjacentHTML('beforeend', iconize(`<p class="hint"><b>Tier ${need.tier} needs the ${tool ? 'Workshop Manual' : 'Growth Guide'}</b> from the Market first: merges stop at tier ${tierCap(chain)} for now.</p>`));
 }
 
 // Stuck on a tool (its toolbox resting, or that size not made yet): the job's
@@ -5768,7 +5780,10 @@ function buyAction(cost, onBuy, label = `Buy for 💵 ${withCommas(cost)}`) {
 // --- NAVIGATION ---
 
 function goTo(scene) {
-    if (scene === 'map' && currentScene !== 'map') Object.keys(placeShown).forEach(id => delete placeShown[id]); // back on the map: its people wave again
+    if (scene === 'map' && currentScene !== 'map') {
+        Object.keys(placeShown).forEach(id => delete placeShown[id]); // back on the map: its people wave again
+        mapSince = Date.now();
+    }
     currentScene = scene;
     document.querySelectorAll('.fix-banner').forEach(el => el.remove());
     closeDialog();
@@ -6281,6 +6296,7 @@ function addMarketLabels(scene) {
     const deals = tile('deals', uiIcon('gift', '🎁'), 'Daily Deals', openDailyDeals);
     if (dealsWaiting()) addTag(deals, 'badge', '!');
     if (maxTier < NAMES['barn'].length - 1) addTag(tile('guide', '📖', 'Growth Guide', offerUpgrade), 'price-tag', `💵${shortNumber(guideCost())}`);
+    if (manualCost()) addTag(tile('manual', `<img src="${ASSETS.props.manual}" alt="📕">`, 'Workshop Manual', offerManual), 'price-tag', `💵${shortNumber(manualCost())}`);
     Object.keys(AREAS).filter(id => !unlocks[id]).forEach(id => {
         const deed = tile(`deed-${id}`, MAP_LABELS[id].icon, AREAS[id].name, () => offerDeed(id));
         deed.dataset.id = id;
@@ -6603,6 +6619,7 @@ const guides = { done: [], marks: [], snoozed: {} };
 // few minutes, and after a second time it's put away for good.
 const GUIDE_SHOW_MS = 12000;
 const GUIDE_SNOOZE_MS = 4 * 60000;
+const GUIDE_REST_MS = 60000; // at least a minute of play between two guides
 let guide = null;          // the guide on screen: { def, step, start }
 let guideRestUntil = 0;    // a pause between guides, so they never pile up
 
@@ -6725,6 +6742,10 @@ const GUIDES = [
           && Object.keys(AREAS).some(m => unlocks[m] && grids[m].filter(c => isFree(c) && !c.type && !c.chain && c.tier === maxTier).length >= 2),
       steps: [{ scene: 'market', who: 'hattie', lead: 'Want bigger animals?', text: 'Want bigger animals? The Growth Guide lets merges go one size up!',
                 target: () => q('#scene-market #btn-guide'), done: () => marked('upgrade') }] },
+    // Bigger tools: a job needs tools past the Workshop Manual's tier.
+    { id: 'manual', when: () => manualCost() && openTasks().some(t => t.needs.some(n => n.item && TOOLS[n.item] && n.tier > toolTier)),
+      steps: [{ scene: 'market', who: 'ruby', lead: 'Jobs need bigger tools!', text: 'Jobs need bigger tools! The Workshop Manual lets them merge one step further.',
+                target: () => q('#scene-market #btn-manual'), done: () => marked('manual') }] },
     // Levelling up: XP stars on the board.
     { id: 'xp', when: () => boardCell(c => c.type === 'xp') >= 0,
       steps: [{ scene: () => onBoard(), who: 'mayor', text: 'Tap the ⭐ to collect XP. Levels open new land!',
@@ -6801,13 +6822,15 @@ function updateGuides() {
             return snoozeGuide();
         }
     } else if (dialogEl.hidden && Date.now() >= guideRestUntil) {
-        const def = GUIDES.find(g => !guides.done.includes(g.id) && g.when());
+        const def = GUIDES.find(g => !guides.done.includes(g.id) && g.when() && (!isBoard(currentScene) || !wayTo(guideScene(g.steps[0]))));
         if (def) guide = { def, step: 0, shown: 0, start: { collected: stats.collected, upgrades: stats.upgrades, webs: stats.webs } };
     }
     if (!guide) { tutorialEl.hidden = true; return; }
     const step = guide.def.steps[guide.step];
-    const scene = typeof step.scene === 'function' ? step.scene() : step.scene;
+    const scene = guideScene(step);
     const way = scene ? wayTo(scene) : null;
+    // Never "back to the map first!" while merging: it waits until you're there.
+    if (way && isBoard(currentScene)) { tutorialEl.hidden = true; guide.seenAt = 0; return; }
     const target = way ? way.target : step.target();
     const val = v => (typeof v === 'function' ? v() : v);
     const text = way ? [val(step.lead), way.text].filter(Boolean).join(' ') : val(step.text); // on the way: why, then where
@@ -6824,6 +6847,10 @@ function updateGuides() {
     guide.seenAt = tutorialEl.hidden ? 0 : now;
 }
 
+function guideScene(step) {
+    return typeof step.scene === 'function' ? step.scene() : step.scene;
+}
+
 // Not followed in time: out of the way for a while, and for good the second time.
 function snoozeGuide() {
     const id = guide.def.id;
@@ -6837,7 +6864,7 @@ function snoozeGuide() {
 function finishGuide() {
     if (guide && !guides.done.includes(guide.def.id)) guides.done.push(guide.def.id);
     guide = null;
-    guideRestUntil = Date.now() + 20000;
+    guideRestUntil = Date.now() + GUIDE_REST_MS;
     tutorialEl.hidden = true;
 }
 
@@ -6970,7 +6997,7 @@ function finishFair() {
 }
 
 function showFairResults() {
-    if (!pendingFairResults || !dialogEl.hidden || draggedItemInfo) return;
+    if (!pendingFairResults || !quietOnMap()) return;
     const r = pendingFairResults;
     pendingFairResults = null;
     showDialog({
@@ -7087,7 +7114,7 @@ function checkOffers() {
         Object.assign(s, { until: now + offer.hours * 3600000, bought: false, base: stats.outOfEnergy });
         pendingOffers.push(offer.id);
     });
-    if (pendingOffers.length && dialogEl.hidden && !draggedItemInfo) openOffer(pendingOffers.shift());
+    if (pendingOffers.length && quietOnMap()) openOffer(pendingOffers.shift());
 }
 
 function openOffer(id) {
@@ -7128,6 +7155,14 @@ function buyOffer(id) {
 // the sales director may suggest the one thing this player would likeliest
 // want (or nothing, if it isn't the time: see MONETIZE.rules).
 let salesPauseAt = 0;
+let mapSince = 0; // when you last came to the map
+
+// Pop-ups nobody asked for (offers, suggestions, Fair results) only open on the
+// map with nothing else up: never over a board while you're merging.
+function quietOnMap() {
+    return currentScene === 'map' && Date.now() - mapSince > 2500 && Date.now() >= storyHoldUntil // settled there, and not on the way to a job
+        && dialogEl.hidden && tutorial.done && !fixing && !draggedItemInfo && !openingOn;
+}
 
 function salesPause() {
     salesPauseAt = Date.now() + 3000; // after the cheering
@@ -7135,8 +7170,8 @@ function salesPause() {
 
 function checkSalesPause() {
     if (!salesPauseAt || Date.now() < salesPauseAt) return;
-    if (Date.now() - salesPauseAt > 90000) { salesPauseAt = 0; return; } // the moment has passed
-    if (!dialogEl.hidden || !tutorial.done || fixing || draggedItemInfo || storyQueue.length || pendingOffers.length || Date.now() < storyHoldUntil) return;
+    if (Date.now() - salesPauseAt > 5 * 60000) { salesPauseAt = 0; return; } // the moment has passed
+    if (!quietOnMap() || storyQueue.length || pendingOffers.length || Date.now() < storyHoldUntil) return;
     salesPauseAt = 0;
     const golden = pass.golden ? 0 : passProgress().level;
     const offer = activeOffers()[0];
@@ -7517,6 +7552,37 @@ function offerUpgrade() {
                <p class="hint">Townsfolk will start asking for bigger things too.</p>`,
         actions: [buyAction(guideCost(next), buyUpgrade), { label: 'Not now' }],
     });
+}
+
+// The Workshop Manual's next chapter: tools, wood, wool and all the tool
+// producers' things merge one step further.
+function manualCost(next = toolTier + 1) {
+    return MANUAL_COSTS[next] || 0;
+}
+
+function offerManual() {
+    markGuide('manual');
+    const next = toolTier + 1;
+    if (!manualCost(next)) return toast('You have the whole Workshop Manual!');
+    const chapter = next - TOOL_TIER_START;
+    showDialog({
+        art: ASSETS.props.manual,
+        title: `Workshop Manual · Chapter ${chapter}`,
+        body: `<p>Tools, wood, wool and everything the other producers make merge one step further, like ${itemIcon('tools', next)} <b>${itemName('tools', next)}</b> from the Toolbox.</p>
+               <p class="hint">Jobs need these bigger things later on.</p>`,
+        actions: [buyAction(manualCost(next), buyManual), { label: 'Not now' }],
+    });
+}
+
+function buyManual() {
+    const cost = manualCost();
+    if (!cost || res.money < cost) return;
+    res.money -= cost;
+    sfx('buy');
+    toolTier++;
+    updateUI();
+    toast(`Tools and the rest now merge up to tier ${toolTier}!`, 'good');
+    goTo(currentScene);
 }
 
 function buyUpgrade() {
@@ -8260,11 +8326,12 @@ function renderInfoBar(mode) {
         const merge = item.drops === undefined && levelOf(item) < PIGGY.levels.length ? ' Merge two unused ones for a bigger one.' : '';
         html += icon + text(boardItemName(mode, item), `Tap it for coins and gems, ⚡1 each: ${left} left.${merge}`);
     } else {
-        const last = NAMES[mode].length - 1;
+        const chain = chainOf(mode, item);
+        const last = NAMES[chain].length - 1;
         const tip = item.tier >= last ? 'The best there is!'
-            : item.tier >= tierCap(mode) ? 'Max tier for now: buy the Growth Guide at the Market.'
-            : `Merge two to make ${itemIcon(mode, item.tier + 1)} ${itemName(mode, item.tier + 1)}.`;
-        html += icon + text(`${itemName(mode, item.tier)} · tier ${item.tier}`, tip) + chainBtn + button('sell-item-btn', `Sell<br>💵${sellPrice(mode, item)}`);
+            : item.tier >= tierCap(chain) ? `Max tier for now: buy the ${TOOLS[chain] ? 'Workshop Manual' : 'Growth Guide'} at the Market.`
+            : `Merge two to make ${itemIcon(chain, item.tier + 1)} ${itemName(chain, item.tier + 1)}.`;
+        html += icon + text(`${itemName(chain, item.tier)} · tier ${item.tier}`, tip) + chainBtn + button('sell-item-btn', `Sell<br>💵${sellPrice(mode, item)}`);
     }
 
     el.innerHTML = iconize(html);
@@ -8364,7 +8431,8 @@ function openChain(mode, highlightTier) {
     if (tool) return showDialog({
         title: `${tool.emoji} ${tool.what[0].toUpperCase()}${tool.what.slice(1)}`,
         body: `<div class="chain-grid">${tiles}</div>
-               <p class="hint">Made by tapping the ${tool.emoji} ${tool.name} on the ${AREAS[tool.board].name} board. Jobs ask for these.</p>`,
+               <p class="hint">Made by tapping the ${tool.emoji} ${tool.name} on the ${AREAS[tool.board].name} board. Jobs ask for these.
+               ${toolTier < NAMES[mode].length - 1 ? ' Dimmed tiers need the Workshop Manual from the Market.' : ''}</p>`,
         actions: [{ label: 'OK' }],
     });
     showDialog({
@@ -8568,8 +8636,10 @@ function handleDragEnd(e) {
                 made = sourceItem.chain ? { tier: sourceItem.tier + 1, chain: sourceItem.chain } : { tier: sourceItem.tier + 1 };
                 stats.made[`${chain}:${made.tier}`] = madeCount(chain, made.tier) + 1;
                 stats.merges++;
-            } else if (sameKind && TOOLS[chain]) {
+            } else if (sameKind && TOOLS[chain] && sourceItem.tier >= NAMES[chain].length - 1) {
                 toast(`That's already a ${boardItemName(mode, sourceItem)}, the best there is!`);
+            } else if (sameKind && TOOLS[chain]) {
+                toast(`Tier ${tierCap(chain)} is the max for tools for now. Get the Workshop Manual at the Market!`);
             } else if (sameKind) {
                 toast(`Tier ${tierCap(mode)} is the max for now. Buy the Growth Guide at the Market!`);
             } else if (sameLevel) {
@@ -9455,7 +9525,7 @@ function saveGame() {
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
             version: SAVE_VERSION,
-            res, energyAt, shop, crates, inventory, stats, quests, restoration, pass, dailyGoals, tutorial, guides, story, fair, daily, settings, unlocks, maxTier, grids, lastBoard,
+            res, energyAt, shop, crates, inventory, stats, quests, restoration, pass, dailyGoals, tutorial, guides, story, fair, daily, settings, unlocks, maxTier, toolTier, grids, lastBoard,
             tickedAt: lastTickAt,
             npcs: npcs.map(({ id, deliveries, request }) => ({ id, deliveries, request })),
         }));
@@ -9520,6 +9590,10 @@ function loadGame() {
         if (save.tickedAt) lastTickAt = save.tickedAt;
         Object.assign(unlocks, save.unlocks);
         maxTier = save.maxTier;
+        // Saves from before the Workshop Manual keep the tools they've already made.
+        const owned = [...Object.values(save.grids || {}).flat(), ...Object.values(save.crates || {}).flat(), ...(save.inventory?.items || []).map(e => e.item)]
+            .filter(c => c && c.chain && TOOLS[c.chain] && !c.type).map(c => c.tier);
+        toolTier = typeof save.toolTier === 'number' ? save.toolTier : Math.min(7, Math.max(TOOL_TIER_START, ...owned));
         Object.keys(grids).forEach(mode => {
             if (save.grids[mode] && save.grids[mode].length === NUM_CELLS) grids[mode] = save.grids[mode];
         });

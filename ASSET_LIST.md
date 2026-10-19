@@ -100,6 +100,7 @@ opening) and **cheering** (after a fix). Who has no pose sheet yet keeps their o
 | 🟡 | Counter | `assets/props/counter.svg` → `assets/props/counter.png` | a long wooden shop counter (front view, wide) |
 | ✅ | Deed | `assets/props/deed_scroll.webp` → `assets/props/deed.png` | a rolled land deed with a wax seal |
 | ✅ | Upgrade | `assets/props/upgrade.png` | the Growth Guide: a fat farming book with a sprout on the cover |
+| ✅ | Manual | `assets/props/manual_red_book.webp` | the Workshop Manual (caps the tool producers' chains): the red book with a gold swirl, cut from `assets/raw/ui/books_scrolls.webp` |
 | ✅ | Crate | `assets/props/crate.png` | a small wooden crate (the closed boxes on a new board) |
 
 ## 6. Board backgrounds (6, optional)
