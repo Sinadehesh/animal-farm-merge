@@ -1047,7 +1047,7 @@ function openGemShortfall(n, retry) {
         title: `💎 ${short} more needed`,
         body: `<p class="big-count">💎 ${res.gems} / ${withCommas(n)}</p>
                ${sale.featured === 'jar' ? `<p class="hint">Your Gem Jar holds 💎${shop.jar}, all earned by you!</p>` : ''}
-               ${billing ? '' : '<p class="hint">Test mode: no real payment is taken here.</p>'}`,
+               ${billing || nativeApp ? '' : '<p class="hint">Test mode: no real payment is taken here.</p>'}`,
         actions: [
             ...sale.order.map((arm, i) => ({ ...ways[arm], primary: i === 0, buy: false, wide: true, sale: arm, waitFor: ways[arm].wait })),
             { label: 'All gems', onClick: () => openShop() },
@@ -1096,7 +1096,7 @@ function openShop(note = '') {
         title: 'Shop',
         body: `${note ? `<p><b>${note}</b></p>` : ''}
                <p>💎 Gems buy ⚡ energy, recharge producers instantly and cover any 💵 you're short.</p>
-               ${billing ? '' : '<p class="hint">Test mode: no real payment is taken here.</p>'}`,
+               ${billing || nativeApp ? '' : '<p class="hint">Test mode: no real payment is taken here.</p>'}`,
         actions,
     });
 }
@@ -1214,6 +1214,8 @@ let billing = null;
 
 function purchase(productId) {
     if (billing) return billing.order(productId);
+    // In the app, nothing is ever given without Google's payment (the store may still be loading).
+    if (nativeApp) return toast('The store isn\'t ready yet. Please try again in a moment.');
     paidOut(productId, true);
 }
 
