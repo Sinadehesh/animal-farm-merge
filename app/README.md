@@ -82,6 +82,9 @@ Install a test build on a phone with USB debugging on: `~/android-sdk/platform-t
 
 ## 4. Play Console
 
+**Done (as of 2026-10-20):** the developer account is paid ($25), the ID check is passed and the payments profile is
+set up. Don't ask for these again; start from step 1 below.
+
 1. **Create app**: name, default language, *Game*, *Free* (it has in-app purchases), accept the declarations.
 2. **Testing → Internal testing → Create new release**: upload `app-release.aab`. Accept Play App Signing when
    asked. Add yourself (and testers) under *Testers* by email, then roll out.

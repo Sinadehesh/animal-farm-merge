@@ -16,3 +16,5 @@
   check the pink previews (where the farmer may stand), and paste the printed `PLOT_WALK` table into `game.js`.
 - Every map picture (plots, plot props, scenery, the ground) goes through `tools/brighten.py` once, as cut, so the
   map keeps one bright look and no pink fringe from the cut-out background. They live in `assets/map/`.
+- Google Play: the developer account ($25), ID check and payments profile are done. Don't list them as to-dos again;
+  the release steps that remain are in `app/README.md` (section 4).
