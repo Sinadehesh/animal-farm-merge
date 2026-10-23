@@ -68,6 +68,13 @@ chmod 600 ~/animal-farm-merge/app/android/keystore.properties
 
 ## 3. Build
 
+**On GitHub (no key on your computer needed):** Actions → *Build Android app bundle* → *Run workflow*. It signs with
+the upload key kept in the repository's secrets and gives `app-release.aab` under the run's *Artifacts*. It sets
+`versionCode` to the run number, so each upload is accepted (the secret names it reads are at the top of
+`.github/workflows/build-aab.yml`).
+
+**On your computer:**
+
 ```bash
 cd ~/animal-farm-merge && git pull && cd app
 npm run apk    # test build: android/app/build/outputs/apk/debug/app-debug.apk
