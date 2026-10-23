@@ -3,7 +3,8 @@ name: Build Android app bundle
 # Builds the signed store version (app-release.aab) for Google Play, with the
 # upload key kept in the repository's secrets (Settings -> Secrets and variables
 # -> Actions). Run it from the Actions tab ("Run workflow"); the .aab is under
-# the run's Artifacts. Each run raises versionCode by one (the run number), so
+# the run's Artifacts, and on the Releases page as a draft release (only you
+# see drafts; that download works when the artifact server is busy). Each run raises versionCode by one (the run number), so
 # every upload is accepted, unless you give one yourself.
 #
 # Secrets it reads (any of these names works):
@@ -24,7 +25,7 @@ on:
         required: false
 
 permissions:
-  contents: read
+  contents: write # for the draft release
 
 jobs:
   aab:
@@ -34,6 +35,8 @@ jobs:
       STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || secrets.KEYSTORE_PASSWORD || secrets.STORE_PASSWORD }}
       KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || secrets.KEY_ALIAS || 'upload' }}
       KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.KEY_PASSWORD || secrets.ANDROID_KEYSTORE_PASSWORD || secrets.KEYSTORE_PASSWORD || secrets.STORE_PASSWORD }}
+      CODE: ${{ inputs.version_code || github.run_number }}
+      NAME: ${{ inputs.version_name || format('1.0.{0}', github.run_number) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -79,9 +82,6 @@ jobs:
           EOF
 
       - name: Version
-        env:
-          CODE: ${{ inputs.version_code || github.run_number }}
-          NAME: ${{ inputs.version_name || format('1.0.{0}', github.run_number) }}
         run: |
           sed -i -E "s/versionCode [0-9]+/versionCode $CODE/; s/versionName \"[^\"]*\"/versionName \"$NAME\"/" app/android/app/build.gradle
           grep -E "versionCode|versionName" app/android/app/build.gradle
@@ -102,6 +102,15 @@ jobs:
           name: merge-farmstead-aab-${{ inputs.version_code || github.run_number }}
           path: app/android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
+
+      - name: Draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          FILE="MergeFarmstead-$NAME-versionCode$CODE.aab"
+          cp app/android/app/build/outputs/bundle/release/app-release.aab "$FILE"
+          gh release create "v$NAME" "$FILE" --draft --target "$GITHUB_SHA" --title "Merge Farmstead $NAME (versionCode $CODE)" \
+            --notes "Signed with the upload key, ready for Play Console. Built from $GITHUB_SHA."
 
       - name: Remove the key
         if: always()
