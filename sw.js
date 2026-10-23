@@ -3,7 +3,7 @@
 // when offline. Pictures: the saved copy first, fetched and saved when new.
 const CACHE = 'farmstead-v2'; // a new name clears the old cache when this one takes over
 // Code is cached under its ?v= version as pages ask for it, not unversioned here.
-const CORE = ['./', 'index.html', 'manifest.json', 'assets/ui/app-icon-192.png',
+const CORE = ['./', 'index.html', 'manifest.json', 'assets/ui/app-icon-rose-192.png',
     'assets/stages/map/0@2x.jpg', 'assets/stages/barnyard/0@2x.jpg'];
 
 self.addEventListener('install', event => {

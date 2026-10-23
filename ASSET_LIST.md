@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**685 assets:** 638 done ✅, 6 placeholders 🟡, 41 missing ⬜.
+**690 assets:** 642 done ✅, 6 placeholders 🟡, 42 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -727,16 +727,22 @@ column is the Epidemic Sound pick to swap in once that account can download soun
 
 | ✅ | Background loop | `assets/sounds/music_hush_hamlet.mp3` | "Hush Hamlet" by Zane Little Music (CC0), see `assets/sounds/LICENSE-music.txt` |
 
-## App icons
+## App icons and store graphics
 
-The icon on a phone's home screen and in the browser tab, made from the Chick on a sunny field. Listed in
-`manifest.json` and `index.html`.
+The icon on a phone's home screen, in the browser tab and on Google Play: the farm girl in the roses with her eyes
+scratched out, cut from `assets/raw/icon_rose_girl.jpg` by `tools/make_icons.py`. Listed in `manifest.json` and
+`index.html`; the Android icons are in `app/android/app/src/main/res/mipmap-*/`.
 
 | | Icon | File |
 |---|---|---|
-| ✅ | App icon, 192×192 | `assets/ui/app-icon-192.png` |
-| ✅ | App icon, 512×512 | `assets/ui/app-icon-512.png` |
-| ✅ | iPhone home screen, 180×180 | `assets/ui/apple-touch-icon.png` |
+| ✅ | App icon, 192×192 | `assets/ui/app-icon-rose-192.png` |
+| ✅ | App icon, 512×512 | `assets/ui/app-icon-rose-512.png` |
+| ✅ | App icon with room for a round mask, 512×512 | `assets/ui/app-icon-rose-maskable-512.png` |
+| ✅ | iPhone home screen, 180×180 | `assets/ui/apple-touch-icon-rose.png` |
+| ✅ | Android launcher icons (round, square, adaptive layer) | `app/android/app/src/main/res/mipmap-*/ic_launcher*.png` |
+| ✅ | Google Play icon, 512×512 | `app/store/play-icon-512.png` |
+| ✅ | Google Play feature graphic, 1024×500 (`tools/make_store_graphic.py`) | `app/store/feature-graphic-1024x500.png` |
+| ⬜ | Google Play phone screenshots (2–8) | |
 
 ## Not used by the game
 

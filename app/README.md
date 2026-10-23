@@ -101,11 +101,12 @@ set up. Don't ask for these again; start from step 1 below.
 4. **Setup → License testing**: add your Google account so your test purchases are free.
 5. Install the app from the internal-testing link on your phone (the Play Store version, not a sideloaded APK —
    billing only works for apps installed from Play) and try a purchase.
-6. **App content** (all required before release): privacy policy URL, ads (*No, my app does not contain ads*),
+6. **App content** (all required before release): privacy policy URL
+   (https://www.sinadehesh.com/mergefarmstead/privacy/), ads (*No, my app does not contain ads*),
    app access, content rating questionnaire, target audience, data safety (*no data collected or shared*;
    purchases are processed by Google Play), government apps / financial features (*no*).
-7. **Main store listing**: short and full description, 512×512 icon (`assets/ui/app-icon-512.png`),
-   1024×500 feature graphic, at least 2 phone screenshots.
+7. **Main store listing**: short and full description, 512×512 icon (`app/store/play-icon-512.png`),
+   1024×500 feature graphic (`app/store/feature-graphic-1024x500.png`), at least 2 phone screenshots.
 8. When internal testing looks good: **Production → Create new release** (new accounts may first need a
    closed test with testers for 14 days — Play Console says if so).
 
