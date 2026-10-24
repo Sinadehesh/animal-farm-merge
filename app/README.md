@@ -77,8 +77,8 @@ the upload key kept in the repository's secrets and gives `app-release.aab` unde
 
 ```bash
 cd ~/animal-farm-merge && git pull && cd app
-npm run apk    # test build: android/app/build/outputs/apk/debug/app-debug.apk
-               # (if it comes out much bigger than ~22 MB, run `cd android && ./gradlew clean` and build again)
+npm run apk    # test build: android/app/build/outputs/apk/debug/app-debug.apk, with Google's test ads
+               # (if it comes out much bigger than ~32 MB, run `cd android && ./gradlew clean` and build again)
 npm run aab    # store build, signed with your upload key: android/app/build/outputs/bundle/release/app-release.aab
 ```
 
@@ -88,6 +88,12 @@ Before every new upload, raise `versionCode` (1, 2, 3…) and `versionName` ("1.
 Install a test build on a phone with USB debugging on: `~/android-sdk/platform-tools/adb install -r android/app/build/outputs/apk/debug/app-debug.apk`
 
 ## 4. Play Console
+
+**Ads (AdMob):** app ID `ca-app-pub-1454905177805714~1236207307` (in `android/app/src/main/res/values/strings.xml`),
+rewarded ad unit `ca-app-pub-1454905177805714/6296962299` (in `monetize.js`, `MONETIZE.ads.rewarded`), used by every
+"Watch an ad" button and the ad bubble. Test builds (`npm run apk`) show Google's test ads, so never tap real ads on
+your own phone; the store build shows real ones. In AdMob, publish a GDPR consent message (Privacy & messaging) so
+players in Europe get the consent form, and link the app to Google Play once it is public.
 
 **Done (as of 2026-10-20):** the developer account is paid ($25), the ID check is passed and the payments profile is
 set up. Don't ask for these again; start from step 1 below.
@@ -102,9 +108,12 @@ set up. Don't ask for these again; start from step 1 below.
 5. Install the app from the internal-testing link on your phone (the Play Store version, not a sideloaded APK —
    billing only works for apps installed from Play) and try a purchase.
 6. **App content** (all required before release): privacy policy URL
-   (https://www.sinadehesh.com/mergefarmstead/privacy/), ads (*No, my app does not contain ads*),
-   app access, content rating questionnaire, target audience, data safety (*no data collected or shared*;
-   purchases are processed by Google Play), government apps / financial features (*no*).
+   (https://www.sinadehesh.com/mergefarmstead/privacy/), ads (*Yes, my app contains ads*), advertising ID
+   (*Yes: Advertising or marketing, Analytics, Fraud prevention*), app access (*no restrictions*), content rating
+   questionnaire, target audience (*13+*), government apps / financial features (*no*), and data safety:
+   collected and shared by the AdMob SDK, encrypted in transit, for advertising, analytics and fraud prevention:
+   *Approximate location* (from the IP address), *App interactions*, *Diagnostics*, *Device or other IDs*.
+   Purchases are processed by Google Play; the game itself sends nothing to us.
 7. **Main store listing**: short and full description, 512×512 icon (`app/store/play-icon-512.png`),
    1024×500 feature graphic (`app/store/feature-graphic-1024x500.png`), phone screenshots
    (`app/store/screenshots/`, in order).

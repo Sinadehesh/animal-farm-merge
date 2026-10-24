@@ -38,6 +38,9 @@ const MONETIZE = {
         ecpm: { 1: 18, 2: 8, 3: 3 },    // US$ per 1,000 rewarded views by country tier, until the ad network reports its own
         worth: 4,                        // an ad view counts as this many times its pay: players who get what they need keep playing
         gemsMax: 10,                     // an ad can cover a 💎 shortfall up to this many
+        // AdMob, in the app. Its app ID (ca-app-pub-1454905177805714~1236207307) is in the Android app's strings.xml.
+        rewarded: 'ca-app-pub-1454905177805714/6296962299', // the rewarded ad unit, for every "Watch an ad"
+        maxRating: 'Teen',                                   // no ads rated for grown-ups only
     },
     gemWorth: 0.01,               // US$ a 💎 spent is worth to the game (packs sell them at 1-2.5¢)
     // Countries by what ads and purchases earn there. Others are tier 3; unknown is tier 2.
@@ -391,29 +394,93 @@ const Sales = (() => {
 
 // The ad network, behind one small surface so AdMob or AppLovin MAX plugs in:
 //   ready()  a rewarded ad is loaded and ads are allowed
-//   ecpm()   what the loaded ad should pay, US$ per 1,000 views
-//            (AppLovin MAX: ad.revenue × 1000 when it loads; AdMob reports value
-//            only after a view, so use the average of its recent onPaidEvent values)
-//   show(onReward)  plays it; onReward only once it was watched to the end
-// On the website this test stand-in "plays" at once and pays about the going
-// rate of the player's country. The app has no ad network yet, so no ads there.
-const SalesAds = {
-    test: true,
-    personalized: !MONETIZE.childDirected,
-    loaded: null,
-    ready() {
-        return !(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-    },
-    ecpm() {
-        // A new ad loads about once a minute, some paying more than others.
-        if (!this.loaded || Date.now() - this.loaded.at > 60000) {
-            const spread = Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
-            this.loaded = { at: Date.now(), ecpm: MONETIZE.ads.ecpm[Sales.segment.tier] * Math.exp(0.5 * spread) };
-        }
-        return this.loaded.ecpm;
-    },
-    show(onReward) {
-        this.loaded = null;
-        onReward();
-    },
-};
+//   ecpm()   what the loaded ad should pay, US$ per 1,000 views (AdMob tells
+//            what an ad paid only after it played: the average of the last few)
+//   show(onReward, onDone)  plays it; onReward only once it was watched to the
+//            end, onDone when it has closed, either way
+//   playing  an ad is on screen (the music waits)
+// In the app it is AdMob, after Google's consent form where the law asks for
+// one; debug builds (npm run apk) get Google's test ads. On the website a test
+// stand-in "plays" at once and pays about the going rate of the player's country.
+const SalesAds = (() => {
+    const cfg = MONETIZE.ads;
+    const going = () => cfg.ecpm[Sales.segment.tier];
+    const native = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    const AdMob = native && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob;
+    const ads = { test: !native, playing: false, privacyOptions: false };
+
+    if (!native) {
+        let loaded = null;
+        ads.ready = () => true;
+        ads.ecpm = () => {
+            // A new ad loads about once a minute, some paying more than others.
+            if (!loaded || Date.now() - loaded.at > 60000) {
+                const spread = Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
+                loaded = { at: Date.now(), ecpm: going() * Math.exp(0.5 * spread) };
+            }
+            return loaded.ecpm;
+        };
+        ads.show = (onReward, onDone) => {
+            loaded = null;
+            onReward();
+            if (onDone) onDone();
+        };
+        ads.showPrivacyOptions = () => {};
+        return ads;
+    }
+
+    let allowed = false, loaded = false, loading = false, wait = 30000;
+    let current = null; // { onReward, onDone, rewarded } while one plays
+    const paid = [];    // US$ per 1,000 views of the last few ads, from AdMob
+    function load() {
+        if (!AdMob || !allowed || loaded || loading) return;
+        loading = true;
+        AdMob.prepareRewardVideoAd({ adId: cfg.rewarded, isTesting: !!window.ADMOB_TEST, npa: MONETIZE.childDirected })
+            .then(() => { loaded = true; wait = 30000; })
+            .catch(() => { setTimeout(load, wait); wait = Math.min(wait * 2, 15 * 60000); })
+            .finally(() => { loading = false; });
+    }
+    function finish() {
+        const ad = current;
+        current = null;
+        ads.playing = false;
+        if (ad && ad.rewarded) ad.onReward();
+        if (ad && ad.onDone) ad.onDone();
+        load();
+    }
+    async function start() {
+        if (!AdMob) return;
+        try {
+            let info = await AdMob.requestConsentInfo();
+            if (info.isConsentFormAvailable && info.status === 'REQUIRED') info = await AdMob.showConsentForm();
+            ads.privacyOptions = info.privacyOptionsRequirementStatus === 'REQUIRED';
+            if (!info.canRequestAds) return;
+            await AdMob.initialize({ tagForChildDirectedTreatment: MONETIZE.childDirected, maxAdContentRating: cfg.maxRating });
+            AdMob.addListener('onRewardedVideoAdReward', () => { if (current) current.rewarded = true; });
+            AdMob.addListener('onRewardedVideoAdDismissed', finish);
+            AdMob.addListener('onRewardedVideoAdFailedToShow', finish);
+            AdMob.addListener('onRewardedVideoAdImpression', v => {
+                if (v && v.currencyCode === 'USD' && v.valueMicros > 0) {
+                    paid.push(v.valueMicros / 1000); // micros per view -> US$ per 1,000 views
+                    if (paid.length > 10) paid.shift();
+                }
+            });
+            allowed = true;
+            load();
+        } catch (e) { /* no ads this time */ }
+    }
+    setTimeout(start, 1500);
+
+    ads.ready = () => allowed && loaded;
+    ads.ecpm = () => (paid.length ? paid.reduce((a, b) => a + b, 0) / paid.length : going());
+    ads.show = (onReward, onDone) => {
+        if (!ads.ready() || current) { if (onDone) onDone(); return; }
+        loaded = false;
+        current = { onReward, onDone, rewarded: false };
+        ads.playing = true;
+        AdMob.showRewardVideoAd().catch(finish);
+    };
+    // Where the law asks for it (Europe), players can change their ad choices from ⚙️ Settings.
+    ads.showPrivacyOptions = () => { if (AdMob) AdMob.showPrivacyOptionsForm().catch(() => {}); };
+    return ads;
+})();

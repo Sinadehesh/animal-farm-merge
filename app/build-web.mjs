@@ -19,6 +19,14 @@ const copy = rel => {
 
 ['index.html', 'game.js', 'assets.js', 'monetize.js', 'manifest.json', 'vendor/pixi.min.js'].forEach(copy);
 
+// Test builds (npm run apk) get Google's test ads, so tapping them during testing is safe;
+// the store build (npm run aab) gets real ones.
+if (process.argv.includes('--test-ads')) {
+    const page = path.join(out, 'index.html');
+    fs.writeFileSync(page, fs.readFileSync(page, 'utf8').replace('<script src="monetize.js', '<script>window.ADMOB_TEST = true;</script>\n    <script src="monetize.js'));
+    console.log('www: test ads');
+}
+
 // Every path the asset list names, plus any written straight into the page or code.
 const sandbox = {};
 vm.runInNewContext(fs.readFileSync(path.join(root, 'assets.js'), 'utf8') + '\nthis.ASSETS = ASSETS;', sandbox);

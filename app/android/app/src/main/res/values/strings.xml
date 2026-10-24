@@ -4,4 +4,5 @@
     <string name="title_activity_main">Merge Farmstead</string>
     <string name="package_name">com.sinadehesh.mergefarmstead</string>
     <string name="custom_url_scheme">com.sinadehesh.mergefarmstead</string>
+    <string name="admob_app_id">ca-app-pub-1454905177805714~1236207307</string>
 </resources>

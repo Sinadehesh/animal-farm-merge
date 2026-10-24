@@ -954,7 +954,7 @@ function today() {
 }
 
 function adsLeft() {
-    if (!SalesAds.ready()) return 0; // no ad network in the app yet: its "Watch an ad" buttons stay hidden
+    if (!SalesAds.ready()) return 0; // no ad loaded (or none allowed): its "Watch an ad" buttons stay hidden
     if (shop.adsDay !== today()) { shop.adsDay = today(); shop.adsWatched = 0; }
     return Math.max(0, Sales.adCap() - shop.adsWatched);
 }
@@ -1261,7 +1261,8 @@ function showRewardedAd(onReward) {
     SalesAds.show(() => {
         Sales.adDone();
         onReward();
-    });
+    }, syncMusic);
+    syncMusic(); // the music waits while the ad plays
 }
 
 // --- REWARDS ---
@@ -5875,7 +5876,7 @@ let musicEl = null;
 
 function syncMusic() {
     if (!ASSETS.music) return;
-    const on = settings.music && document.visibilityState !== 'hidden' && audioUnlocked;
+    const on = settings.music && document.visibilityState !== 'hidden' && audioUnlocked && !SalesAds.playing;
     if (on && !musicEl) {
         musicEl = new Audio(ASSETS.music);
         musicEl.loop = true;
@@ -6149,7 +6150,9 @@ function openSettings() {
     showDialog({
         title: '⚙️ Settings',
         body: '<p class="hint">Music, little sounds as you play, a buzz on phones, and tips that show you around.</p>',
-        actions: [row('music', '🎵 Music'), row('sound', '🔊 Sound'), row('vibrate', '📳 Vibration'), row('tips', '💡 Tips'), { label: 'Done' }],
+        actions: [row('music', '🎵 Music'), row('sound', '🔊 Sound'), row('vibrate', '📳 Vibration'), row('tips', '💡 Tips'),
+            SalesAds.privacyOptions && { label: '🛡️ Ad privacy choices', wide: true, onClick: () => { closeDialog(); SalesAds.showPrivacyOptions(); } },
+            { label: 'Done' }].filter(Boolean),
     });
 }
 

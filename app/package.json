@@ -5,10 +5,11 @@
   "scripts": {
     "web": "node build-web.mjs",
     "sync": "node build-web.mjs && npx cap sync android",
-    "apk": "node build-web.mjs && npx cap sync android && cd android && ./gradlew assembleDebug",
+    "apk": "node build-web.mjs --test-ads && npx cap sync android && cd android && ./gradlew assembleDebug",
     "aab": "node build-web.mjs && npx cap sync android && cd android && ./gradlew bundleRelease"
   },
   "dependencies": {
+    "@capacitor-community/admob": "^8.2.1",
     "@capacitor/android": "^8.5.3",
     "@capacitor/app": "^8.1.2",
     "@capacitor/core": "^8.5.3",
