@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**690 assets:** 642 done ✅, 6 placeholders 🟡, 42 missing ⬜.
+**690 assets:** 643 done ✅, 6 placeholders 🟡, 41 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -742,7 +742,7 @@ scratched out, cut from `assets/raw/icon_rose_girl.jpg` by `tools/make_icons.py`
 | ✅ | Android launcher icons (round, square, adaptive layer) | `app/android/app/src/main/res/mipmap-*/ic_launcher*.png` |
 | ✅ | Google Play icon, 512×512 | `app/store/play-icon-512.png` |
 | ✅ | Google Play feature graphic, 1024×500 (`tools/make_store_graphic.py`) | `app/store/feature-graphic-1024x500.png` |
-| ⬜ | Google Play phone screenshots (2–8) | |
+| ✅ | Google Play phone screenshots, 6 at 1080×1920 (`tools/store_screenshots.mjs`, `tools/make_store_screens.py`) | `app/store/screenshots/` |
 
 ## Not used by the game
 

@@ -106,7 +106,8 @@ set up. Don't ask for these again; start from step 1 below.
    app access, content rating questionnaire, target audience, data safety (*no data collected or shared*;
    purchases are processed by Google Play), government apps / financial features (*no*).
 7. **Main store listing**: short and full description, 512×512 icon (`app/store/play-icon-512.png`),
-   1024×500 feature graphic (`app/store/feature-graphic-1024x500.png`), at least 2 phone screenshots.
+   1024×500 feature graphic (`app/store/feature-graphic-1024x500.png`), phone screenshots
+   (`app/store/screenshots/`, in order).
 8. When internal testing looks good: **Production → Create new release** (new accounts may first need a
    closed test with testers for 14 days — Play Console says if so).
 
