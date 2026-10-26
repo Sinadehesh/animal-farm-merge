@@ -104,7 +104,13 @@ set up. Don't ask for these again; start from step 1 below.
 3. **Monetize → Products → In-app products**: purchases can only be created after an AAB with the billing
    permission has been uploaded (step 2). Create each product below as a one-time product with **exactly this
    product ID**, a name, a description and a price, then **Activate** it.
-4. **Setup → License testing**: add your Google account so your test purchases are free.
+4. **License testing, so testers buy for free** (Play Console's main page, not the app's: **Settings → License
+   testing**): choose **the same email list as the test track's testers** (or add their Gmail addresses), set the
+   license response to *RESPOND_NORMALLY* and save. Everyone on it then pays with Google's *Test card, always
+   approves*: nothing is charged, and the purchase dialog says it's a test. Anyone in the test who is **not** on this
+   list pays real money, so add each new tester to the list (or use one Google Group for both). The game finishes
+   (acknowledges) every purchase as soon as Google approves it, so test purchases aren't refunded after 3 minutes
+   and can be bought again. The products in step 3 must be **Active**, or the shop says they aren't available.
 5. Install the app from the internal-testing link on your phone (the Play Store version, not a sideloaded APK —
    billing only works for apps installed from Play) and try a purchase.
 6. **App content** (all required before release): privacy policy URL

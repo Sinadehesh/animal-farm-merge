@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**680 assets:** 633 done ✅, 8 placeholders 🟡, 39 missing ⬜.
+**619 assets:** 591 done ✅, 2 placeholders 🟡, 26 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -34,47 +34,6 @@ Same camera angle for all: front view, slightly from above, whole building with 
 | ✅ | Fish Pond | `assets/buildings/aqua.png` | a fish pond with lily pads |
 | ✅ | Flower Garden | `assets/buildings/flower.png` | a flower garden with an arch |
 
-### Stages from ruin to luxury
-
-Shown as a building's jobs get done (the Market follows all jobs). They replace the faded look and the
-restored version. Listed under `buildingStages` in `assets.js`, files `assets/buildings/stages/<name>_<n>.png`.
-
-| | Building | Stages |
-|---|---|---|
-| ✅ | Sunnyvale | 8 |
-| ✅ | Market | 8 |
-| ✅ | Barn | 8 |
-| ✅ | Crop Field | 8 |
-| ✅ | Hay Field | 10 |
-| ⬜ | Compost Yard | 8 (not made yet) |
-| ⬜ | Fish Pond | 8 (not made yet) |
-| ⬜ | Flower Garden | 8 (not made yet) |
-
-### Restored versions (6, optional)
-
-Each land shows faded and worn on the map until its restoration jobs are done, then in full colour. A
-second picture of the fixed-up building (fresh paint, flowers, a little sparkle) makes that moment better.
-List them under `buildingsRestored` in `assets.js`.
-
-| | Land | File |
-|---|---|---|
-| ⬜ | Barn restored | `assets/buildings/barn_restored.png` |
-| ⬜ | Crop Field restored | `assets/buildings/farm_restored.png` |
-| ⬜ | Hay Field restored | `assets/buildings/hay_restored.png` |
-| ⬜ | Compost Yard restored | `assets/buildings/fert_restored.png` |
-| ⬜ | Fish Pond restored | `assets/buildings/aqua_restored.png` |
-| ⬜ | Flower Garden restored | `assets/buildings/flower_restored.png` |
-
-## 3. Town houses (5)
-
-| | House | File | What it shows |
-|---|---|---|---|
-| 🟡 | Townhall | `assets/town/townhall.svg` → `assets/town/townhall.png` | the Mayor's town hall with columns |
-| 🟡 | Carpenter | `assets/town/carpenter.svg` → `assets/town/carpenter.png` | Ellis's log cabin carpenter shop |
-| 🟡 | Ranch | `assets/town/ranch.svg` → `assets/town/ranch.png` | Bram's ranch house with a fence |
-| 🟡 | Fishshop | `assets/town/fishshop.svg` → `assets/town/fishshop.png` | Mira's fish shop by the water |
-| 🟡 | Flowershop | `assets/town/flowershop.svg` → `assets/town/flowershop.png` | Mae's flower shop |
-
 ## 4. Characters (7 people)
 
 The cast walks about the world (Clara wherever you tap, the townsfolk round their doors and out to their part of
@@ -95,13 +54,13 @@ cut from the small walk for now; re-upload them as smaller PNG/WebP (or the refe
 | ✅ | Ellis Spokewell, the carpenter (`ruby`) | ✅ | ✅ | ✅ | ✅ from the bigger figures |
 | ✅ | Mira Quayle, the fisher (`finn`) | ✅ | ✅ | ✅ | ✅ from the bigger figures |
 | 🟡 | Mae Bloombarrow, the florist (`poppy`) | ✅ | 🟡 | 🟡 | 🟡 |
+| ⬜ | Marigold in the new style: a character reference and an 8-direction walk like the others' (prompts in ASSETS.md), so she walks about the Market too | | | | |
 | ✅ | the Market shopkeeper, Marigold: one pose sheet (`assets/raw/characters/shopkeeper_poses.jpg`, 4 × 2 poses on magenta), cut by `tools/cutposes.py` into her 8 poses in the market (`assets/characters/poses/shopkeeper/`), portrait, waving, standing and cheering | | | | |
 
-## 5. Props (4)
+## 5. Props (3)
 
 | | Prop | File | What it shows |
 |---|---|---|---|
-| 🟡 | Counter | `assets/props/counter.svg` → `assets/props/counter.png` | a long wooden shop counter (front view, wide) |
 | ✅ | Deed | `assets/props/deed_scroll.webp` → `assets/props/deed.png` | a rolled land deed with a wax seal |
 | ✅ | Upgrade | `assets/props/upgrade.png` | the Growth Guide: a fat farming book with a sprout on the cover |
 | ✅ | Manual | `assets/props/manual_red_book.webp` | the Workshop Manual (caps the tool producers' chains): the red book with a gold swirl, cut from `assets/raw/ui/books_scrolls.webp` |
@@ -497,6 +456,24 @@ The soil edge under each plot is cut off with `tools/decliff.py` so plots sit fl
 (plots, props, scenery, the ground, the road dirt) is then brightened once with `tools/brighten.py`, which also cleans
 the pink fringe left by the magenta background. They all live in `assets/map/`.
 
+### Plot props still to make (for the new plots)
+
+Ten more sheets of 8 on flat magenta, two per land: its mess and broken things (they puff away when a job is
+done) and the new things that pop up. Prompts in ASSETS.md; cut by name into `assets/map/props/`.
+
+| | Sheet | Props |
+|---|---|---|
+| ⬜ | Crop Field mess | bed_bare, berries_wilted, barrel_broken, netting_tangled, molehole, apples_rotten, wall_rubble, beehive_broken |
+| ⬜ | Crop Field more | stand_broken, swing_broken, baskets_tipped, sapling, picnic, berry_cart, bird_box, juice_crate |
+| ⬜ | Hay Field mess | horseshoes_old, mud_hole, stall_door_broken, sail_broken, flour_spill, wall_cracked, hay_loose, sheep_woolly |
+| ⬜ | Hay Field new | bales_stack, saddle_stand, sheep_shorn, flower_box, weather_vane, hay_rack, mounting_block, name_board |
+| ⬜ | Compost Yard mess | leaf_heap, rakes_broken, tools_scattered, logs_rotten, roots_tangled, bin_broken, barrow_leaves, pots_broken |
+| ⬜ | Compost Yard new | leaf_cage, bug_hotel, potting_bench, toadstool_giant, mushroom_log, fairy_door, wind_chimes, hedgehog_house |
+| ⬜ | Fish Pond mess | cans_bottles, sticks_floating, algae, lilypads_dead, net_tangled, rowboat_sunken, sign_fallen, planks_missing |
+| ⬜ | Fish Pond new | frogs_log, fishing_spot, lotus, koi, lanterns_red, life_ring, rowboat, duck_house |
+| ⬜ | Flower Garden mess | roses_dead, fountain_cracked, glass_broken, arch_broken, bed_withered, trellis_fallen, cans_tipped, planter_cracked |
+| ⬜ | Flower Garden new | beehive_white, bird_bath, hanging_basket, herb_pots, sunflower_giant, lemon_tree, orchid_pots, love_seat |
+
 ### The world around the areas
 
 A repeating meadow under the whole map (`assets/raw/world/ground.jpg`, made seamless with `tools/seamless.py`) and
@@ -618,30 +595,14 @@ swaps to the next painting as its jobs get done. Raw sheets are kept in `assets/
 
 ## 12. Areas (Merge Mansion style places)
 
-Each land is a column of square areas you scroll through. Each area needs one **restored, tidy picture**
-(1:1, open ground, no small props) in `assets/areas/`; the game fades it and brings the colour back as jobs
-are fixed. Until it comes, the land's board texture is used. Listed in `areas` in `assets.js`.
+Superseded: each area is a painted page (12a) and, on the map, a plot (12b). The three area pictures that exist
+are only the backdrop behind the Barn board; the others aren't needed.
 
 | | Area | Land | File |
 |---|---|---|---|
 | ✅ | Barnyard | Barn | `assets/areas/barnyard.jpg` |
 | ✅ | Hen House | Barn | `assets/areas/henhouse.jpg` |
 | ✅ | Barn Storeroom | Barn | `assets/areas/bigbarn.jpg` |
-| ⬜ | Field Gate | Crop Field | `assets/areas/fieldgate.jpg` |
-| ⬜ | Strawberry Rows | Crop Field | `assets/areas/berryrows.jpg` |
-| ⬜ | Orchard | Crop Field | `assets/areas/orchard.jpg` |
-| ⬜ | Meadow | Hay Field | `assets/areas/meadow.jpg` |
-| ⬜ | Stables | Hay Field | `assets/areas/stables.jpg` |
-| ⬜ | Windmill | Hay Field | `assets/areas/windmill.jpg` |
-| ⬜ | Leaf Piles | Compost Yard | `assets/areas/leafpiles.jpg` |
-| ⬜ | Compost Bins | Compost Yard | `assets/areas/compostbins.jpg` |
-| ⬜ | Mushroom Corner | Compost Yard | `assets/areas/mushrooms.jpg` |
-| ⬜ | Muddy Shore | Fish Pond | `assets/areas/muddyshore.jpg` |
-| ⬜ | Lily Pond | Fish Pond | `assets/areas/lilypond.jpg` |
-| ⬜ | Boat Dock | Fish Pond | `assets/areas/boatdock.jpg` |
-| ⬜ | Garden Gate | Flower Garden | `assets/areas/gardengate.jpg` |
-| ⬜ | Rose Arch | Flower Garden | `assets/areas/rosearch.jpg` |
-| ⬜ | Greenhouse | Flower Garden | `assets/areas/greenhouse.jpg` |
 
 ### Objects in the areas
 
@@ -734,6 +695,10 @@ scratched out, cut from `assets/raw/icon_rose_girl.jpg` by `tools/make_icons.py`
 | ✅ | Google Play phone screenshots, 6 at 1080×1920 (`tools/store_screenshots.mjs`, `tools/make_store_screens.py`) | `app/store/screenshots/` |
 
 ## Not used by the game
+
+From before the painted map, not shown any more: the map buildings' stages from ruin to luxury
+(`assets/buildings/stages/`, under `buildingStages` in `assets.js`), the restored map buildings, the town houses
+(`assets/town/*.svg`) and the shop counter (`assets/props/counter.svg`).
 
 Older drafts you can delete or keep as references: `assets/ghibli/`, `assets/v2/`, `assets/tier*_*.jpg`,
 `assets/items/barn/09_bear.png`, `10_elephant.png`, `11_whale.png`. `assets/raw/` holds the source sheets the

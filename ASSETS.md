@@ -161,3 +161,152 @@ sit on the clearings.
 3. Town characters, buildings and background.
 4. Market background, counter, deed and guide book.
 5. The other five chains, each when its area is ready to play.
+
+## 7. Prompts for what's still missing
+
+The plots and their props use a different look from the board items above: painted, isometric, on flat
+magenta. Generate each one with the reference images listed, check it against them, then save it in
+`assets/raw/plots/` (plots) or as a sheet for the props, and run the steps in ASSET_LIST.md (12b).
+
+### Plots (14)
+
+Attach `assets/raw/plots/barnyard.webp` and `assets/raw/plots/fieldgate.webp`. Start every prompt with:
+
+> Isometric diorama game tile in exactly the same style, camera angle and scale as the attached plots: one
+> square plot of land seen corner-on from above (2:1 isometric), filling the width of the picture, with a thin
+> grass-and-soil edge. Cozy hand-painted farm-game look, soft daylight from the top left, warm saturated colours,
+> crisp detail. Everything on it clean, tidy and fully restored. Wide open dirt or stone paths a person can walk
+> along, entering at the left corner and leaving at the right corner, and a few open patches of bare ground with
+> nothing on them. Nothing tall along the two front edges. No people. Flat solid magenta background (#F509F1)
+> all round, no shadow on the background, no text, no border. Wide picture, about 1344 × 816.
+
+Then add the plot's own line:
+
+- **Strawberry Rows** (`berryrows`): raised wooden beds in neat rows full of strawberry plants with ripe red
+  berries, golden straw between the plants and along the paths, a white berry stand with a red-and-white striped
+  awning and baskets of strawberries, a blue water barrel on a stand, green netting on hoops over two beds, a small
+  glass cold frame, a low hedge along the back. Strawberry red, fresh green and straw gold (not the Field Gate's
+  brown soil rows).
+- **Orchard** (`orchard`): a grassy orchard with five round apple trees full of red apples and one pear tree with
+  yellow pears, a low dry-stone wall along the back with a small wooden gate, a big tree with a rope-and-plank
+  swing, three white wooden beehives on a stand, wooden crates of apples, a tree-stump table with two log stools,
+  a ladder leaning on a tree, a patch of short grass for a picnic. Apple red, leaf green, warm grey stone.
+- **Meadow** (`meadow`): an open hay meadow of tall golden-green grass with wildflowers and a mown path through it,
+  a small wooden pen with four fluffy white sheep, a cheerful scarecrow in a blue shirt, two small vegetable beds
+  behind a low rail fence, a wooden hay rack full of hay, a stone water trough, a bench by the path, a hedgerow
+  with a wooden meadow gate. Gold and pale green.
+- **Stables** (`stables`): a long red-brown timber stable with three stall half-doors (two brown horses and a grey
+  pony looking out) and a hay-loft door above, a paddock with a white rail fence and soft sand, a stone mounting
+  block, a wooden tack rack with two saddles, a water trough with a green hand pump, hay nets on the wall, a shade
+  tree, a cobbled yard in front. Barn red-brown, white fence, sand.
+- **Windmill** (`windmill`): a tall round windmill of white-washed stone with a dark wooden cap and four big lattice
+  sails with cream cloth, standing at the back so the sails don't cover the plot; a small bakery lean-to with a
+  striped awning, a packed-dirt cart track with a wooden cart of white flour sacks, lavender along the path, red
+  flower boxes under the windows, a rooster weather vane on top, a bench by the door. White stone, cream, lavender.
+- **Leaf Piles** (`leafpiles`): an autumn woodland corner under orange, red and yellow trees, leaf heaps raked into
+  round wire leaf cages, a bark path with flat stepping stones, a wooden potting bench with clay pots, a clean green
+  wheelbarrow, ferns under the trees, a bug hotel, wind chimes on a branch, autumn flowers in planters. Pumpkin
+  orange, rust red, golden yellow.
+- **Compost Bins** (`compostbins`): a tidy compost yard with three wooden slatted compost bays with lids and dark
+  compost, a small tool shed with a wall of neatly hung garden tools, a potting table with seedling trays, a worm
+  tower, a soil sieve, stacked terracotta pots, full sacks of compost, a herb garden in raised pots, gravel paths.
+  Rich dark brown, herb green, terracotta.
+- **Mushroom Corner** (`mushrooms`): a shady mossy forest glade with tall dark-green trees and low branches, mossy
+  logs covered in brown and orange mushrooms, one giant red-and-white spotted toadstool, ferns and bluebells, a
+  little stream with mossy stepping stones, a woven willow arch, a round wooden hedgehog house, a tiny fairy door in
+  a tree root, warm lanterns and fairy lights in the branches. Deep green, bluebell purple, warm glow.
+- **Muddy Shore** (`muddyshore`): the pond's wild edge; the back third of the plot is calm pond water, with a
+  pebbly shore, clumps of reeds and cattails, mossy rocks, a short wooden jetty, an upturned green canoe, a fishing
+  stool with a rod and a bucket, two frogs on a floating log, a small wooden bird hide, a red-and-white life ring on
+  a post, a wooden fishing sign. Muddy green-brown, reed gold, blue water.
+- **Lily Pond** (`lilypond`): an ornamental pond filling the middle of the plot, clear blue water with pink lotus
+  flowers and lily pads, orange-and-white koi and goldfish, neat stone edges, an arched grey stone bridge with red
+  paper lanterns, a weeping willow with a swing, a stepping-stone path over the grass, a little white duck house on
+  the water, a small stone fountain, a bench, purple irises. Clear blue, lotus pink, lantern red (cleaner and
+  brighter than the Muddy Shore).
+- **Boat Dock** (`boatdock`): the back half is open water; a long wooden plank dock with lamp posts runs into it, a
+  blue-grey boathouse on stilts with a white door, a small blue rowboat and a white sailboat tied up, a rack with
+  two canoes, coiled ropes and an anchor on the dock, a flag pole with bright pennants, a tall harbour lamp at the
+  end. Sea blue, grey-blue wood, white sails.
+- **Garden Gate** (`gardengate`): a front garden behind a white picket fence with an open arched wooden gate, a
+  gravel path, flower beds of daisies and red and yellow tulips, a white beehive, a stone bird bath, a trellis of
+  pink sweet peas, a welcome bench, a red letterbox, a green watering can, pots of herbs, trimmed hedges. White
+  fence, tulip red and yellow, fresh green.
+- **Rose Arch** (`rosearch`): a formal rose garden with red-brick paths, a big wooden arch covered in climbing red
+  and pink roses, a round stone fountain with water in the middle on a mosaic of coloured tiles, rose bushes in red,
+  pink and white, low box hedges in a small maze, a white love-seat bench, white lilies. Rose pink, brick orange,
+  dark hedge green.
+- **Greenhouse** (`greenhouse`): a large Victorian glasshouse with a white frame and open double doors, potting
+  tables of orchids, seedlings and ferns and hanging flower baskets inside; outside, raised beds, a lemon tree in a
+  big pot, a group of cacti, a giant sunflower, a green water butt, shelves of pots. Glass blue-white, orchid
+  purple, lemon yellow.
+
+### Plot props (10 sheets of 8)
+
+Attach `assets/raw/plots/props_outdoor_mess.webp` and `assets/raw/plots/props_broken1.webp`. Start every prompt with:
+
+> A sheet of 8 separate game props in exactly the same style as the attached prop sheets: 4 across and 2 down,
+> well spaced, none touching, each seen from the same isometric three-quarter view from above, cozy hand-painted
+> farm-game look, soft light from the top left, each with its own colours and outline so no two look alike. Flat
+> solid magenta background (#F509F1), no ground shadows, no text, no people. In this order:
+
+Then the sheet's eight, left to right, top row first:
+
+1. **Crop Field mess**: an empty dug-over soil bed in a wooden frame; drooping brown-yellow wilted strawberry
+   plants; a split wooden water barrel with its hoops fallen off; a knotted heap of green garden netting; a fresh
+   molehill of dark soil with a hole; a scatter of brown rotten apples; tumbled grey stones from a dry-stone wall;
+   a tipped-over white beehive with its lid off.
+2. **Crop Field more**: a collapsed wooden berry stand with a torn red-and-white awning; a fallen wooden swing seat
+   with a snapped rope; two tipped-over empty wicker baskets; a young apple tree tied to a stake; a red-and-white
+   checked picnic blanket with a wicker hamper; a little red cart full of strawberry punnets; a blue bird box on a
+   pole; a wooden crate of apple-juice bottles.
+3. **Hay Field mess**: a pile of rusty old horseshoes; a deep brown mud hole; a stable half-door off its hinges
+   lying flat; a broken windmill sail frame with torn cloth; burst white flour sacks with flour spilled; chunks of
+   white-washed stone fallen from a wall; a messy heap of old grey hay; a very overgrown round shaggy sheep.
+4. **Hay Field new**: a neat stack of square golden hay bales; a brown leather saddle on a wooden stand; a freshly
+   shorn slim happy sheep; a window box of red geraniums; a rooster weather vane on a pole; a wooden V-shaped hay
+   rack full of hay; three stone mounting steps; a little wooden name board on a post.
+5. **Compost Yard mess**: a big messy heap of orange, red and yellow leaves; a pile of snapped wooden rakes; a
+   trowel, a fork and shears lying in the dirt; a heap of mossy rotting logs; a knot of thick tangled roots; a
+   collapsed compost bin of loose slats; a tipped wheelbarrow spilling soggy leaves; a pile of cracked terracotta pots.
+6. **Compost Yard new**: a round wire cage full of leaves; a small wooden bug hotel of bamboo tubes and pinecones;
+   a potting bench with clay pots; a giant red-and-white spotted toadstool; a log covered in brown and orange
+   mushrooms; a tiny round green fairy door in a stump; silver wind chimes on a hooked pole; a round wooden
+   hedgehog house with a little doorway.
+7. **Fish Pond mess** (on a small patch of water where it floats): a pile of old bottles and rusty cans; a clump of
+   floating driftwood sticks; a slimy bright-green algae patch; brown dead lily pads; a tangled brown fishing net
+   with red floats; a half-sunken wooden rowboat, only its bow above the water; a wooden dock sign fallen face down;
+   a gap of broken dock planks.
+8. **Fish Pond new**: two green frogs on a floating log; a little stool with a fishing rod and a tin bucket; pink
+   lotus flowers on lily pads; three orange-and-white koi just under the water; two red paper lanterns on a wooden
+   post; a red-and-white life ring on a post; a small blue wooden rowboat with oars; a little white floating duck house.
+9. **Flower Garden mess**: bare brown dead rose stems; a cracked, dry stone fountain basin; a pile of broken
+   greenhouse glass panes; a snapped wooden rose arch lying on the ground; a bed of dried-out brown flowers; a
+   fallen wooden trellis panel; two tipped-over green watering cans; a split wooden planter spilling soil.
+10. **Flower Garden new**: a white wooden beehive with a few bees; a stone bird bath with a bluebird; a hanging
+    basket of pink flowers on an iron stand; three clay pots of herbs; a giant sunflower taller than a person; a
+    small lemon tree in a big blue pot; two pots of purple orchids; a white curly metal love-seat bench.
+
+The props' names, in the same order, are in ASSET_LIST.md (12b, Plot props still to make).
+
+### Marigold in the new style
+
+Attach `Clara_Everhart_Character_Reference.png` and `Clara_Everhart_8_Direction_Walk_Cycle.png` from the Drive
+folder "characters for merge keeper", and keep each file under 6 MB (WebP, or a compressed PNG) so the game's Drive
+connection can download it. Name them `Marigold_Character_Reference` and `Marigold_8_Direction_Walk_Cycle`.
+
+Who she is (start both prompts with this):
+
+> Marigold, the cheerful shopkeeper of a cozy farm-valley market, in exactly the same art style, proportions and
+> level of detail as the attached Clara Everhart sheets: a short, round, kind woman in her fifties with curly
+> copper-red hair in a loose bun tied with a green ribbon, freckles and rosy cheeks, a long moss-green dress with
+> rolled sleeves, a cream apron dusted with flour, and small brown lace-up boots with white flour on the toes.
+
+1. **Character reference**: "A character reference sheet on a plain cream background, laid out like the attached
+   one: a big full-body figure on the left holding a basket of cinnamon buns; front, three-quarter, side and back
+   views across the top right; a large head-and-shoulders portrait at the bottom middle; her things at the bottom
+   right: the basket of buns, a green wax candle, a ball of string and a small gold lantern. Square, 2048 × 2048."
+2. **8-direction walk**: "A sprite sheet laid out exactly like the attached walk sheet, 2048 × 4096 on a
+   transparent background: 8 rows of 4 walk frames in 512 × 512 cells, the whole figure in every cell at the same
+   size, feet on the same line, seen from slightly above. Rows from the top: walking towards the viewer, down-left,
+   left, up-left, away from the viewer, up-right, right, down-right."
