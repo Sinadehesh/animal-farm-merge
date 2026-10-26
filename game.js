@@ -1820,7 +1820,7 @@ const TASKS = [
     { id: 'barn43', land: 'barn', zone: 'henhouse', at: [70, 54], look: ['🔨', '✨'], after: ['barn41'],
       name: 'Plant a shady bush', who: 'hattie', xp: 4, needs: [{ item: 'barn', tier: 4, n: 1 }], line: 'Lovely!' },
     { id: 'barn44', land: 'barn', zone: 'henhouse', at: [42, 74], look: ['🔨', '✨'], after: ['barn42'],
-      name: 'Knit a tea cosy for Hattie', who: 'mayor', xp: 4, needs: [{ item: 'tools', tier: 3, n: 1 }, { item: 'wool', tier: 2, n: 2 }], line: 'Perfect!' },
+      name: 'Knit a tea cosy for Bram', who: 'mayor', xp: 4, needs: [{ item: 'tools', tier: 3, n: 1 }, { item: 'wool', tier: 2, n: 2 }], line: 'Perfect!' },
     { id: 'barn45', land: 'barn', zone: 'henhouse', at: [56, 89], look: ['🔨', '✨'], after: ['barn43'],
       name: 'Make a chick nursery', who: 'ruby', xp: 4, needs: [{ item: 'wool', tier: 4, n: 1 }, { item: 'barn', tier: 3, n: 1 }], line: 'So cozy!' },
     { id: 'barn46', land: 'barn', zone: 'henhouse', at: [84, 89], look: ['🔨', '✨'], after: ['barn44'],
@@ -2423,13 +2423,13 @@ const TASKS = [
     // on the town square. Opens once the old farm is back (day 3).
     { id: 'town1', land: 'town', at: [50, 50], look: ['🌫️', ''], after: ['farm28', 'hay6', 'big8'], name: 'Clear the fog from the square', who: 'mayor', xp: 15,
       needs: [{ stat: 'sold', n: 5 }], line: 'Fog gone!' },
-    { id: 'town2', land: 'town', after: ['town1'], house: 'carpenter', name: 'Rebuild Ruby\'s workshop', who: 'ruby', xp: 20, reward: { chest: 'brown' },
+    { id: 'town2', land: 'town', after: ['town1'], house: 'carpenter', name: 'Rebuild Ellis\'s workshop', who: 'ruby', xp: 20, reward: { chest: 'brown' },
       needs: [{ item: 'tools', tier: 5, n: 1 }, { item: 'wood', tier: 4, n: 1 }], line: 'My workshop!' },
-    { id: 'town3', land: 'town', after: ['town1'], house: 'ranch', name: 'Fix up Hattie\'s ranch', who: 'hattie', xp: 25,
+    { id: 'town3', land: 'town', after: ['town1'], house: 'ranch', name: 'Fix up Bram\'s ranch', who: 'hattie', xp: 25,
       needs: [{ item: 'barn', tier: 5, n: 1 }, { item: 'farm', tier: 4, n: 2 }], line: 'Home sweet home!' },
-    { id: 'town4', land: 'town', after: ['town1'], house: 'fishshop', name: 'Reopen Finn\'s fish shop', who: 'finn', xp: 35, reward: { chest: 'blue' },
+    { id: 'town4', land: 'town', after: ['town1'], house: 'fishshop', name: 'Reopen Mira\'s fish shop', who: 'finn', xp: 35, reward: { chest: 'blue' },
       needs: [{ item: 'aqua', tier: 4, n: 1 }, { item: 'fert', tier: 4, n: 1 }], line: 'Fish for all!' },
-    { id: 'town5', land: 'town', after: ['town2'], house: 'flowershop', name: 'Reopen Poppy\'s flower shop', who: 'poppy', xp: 45,
+    { id: 'town5', land: 'town', after: ['town2'], house: 'flowershop', name: 'Reopen Mae\'s flower shop', who: 'poppy', xp: 45,
       needs: [{ item: 'flower', tier: 4, n: 2 }], line: 'Flowers!' },
     // The Town Hall also waits for every clue of the mystery (see THE MYSTERY).
     { id: 'town6', land: 'town', after: ['town3', 'town4', 'town5', 'hen3', 'aqua3', 'big2', 'farm5', 'aqua8', 'fert10'], house: 'townhall', name: 'Restore the Town Hall', who: 'mayor', xp: 80, reward: { chest: 'blue' },
@@ -3438,6 +3438,13 @@ function renderWorld(scene) {
     ui.querySelectorAll('.fix-spot').forEach(spot => { spot.style.zIndex = 200 + parseInt(spot.style.zIndex, 10); });
     const view = wrap.querySelector('.world-view');
     addHero(ui);
+    addTownsfolk(ui);
+    // A tap on the ground (not on a job, sign, person or anything else you can tap): Clara walks there.
+    view.addEventListener('click', e => {
+        if (e.target.closest('button, a, .spot, .fix-spot, .place-say, .plot-prop.layout') || view.classList.contains('far')) return;
+        const r = stage.getBoundingClientRect(), { x0, y0, w, h } = WORLD_BOX;
+        heroGoTo(x0 + ((e.clientX - r.left) / r.width) * w, y0 + ((e.clientY - r.top) / r.height) * h);
+    });
     panZoom(view, stage, worldView, WORLD_ZOOM, () => {
         // First time: the first job to do in the world, or the Barnyard.
         const task = openTasks().find(t => t.zone && inWorld(ZONE[t.zone]));
@@ -3454,14 +3461,14 @@ function renderWorld(scene) {
     Object.keys(AREAS).filter(id => unlocks[id]).forEach(id => unlockNewZones(id, stage));
 }
 
-// The farmer: she stands on the farm's paths and grass, never on water, a
-// building or a mess, and walks there along the paths to each job you tap or
-// fix (her walk mirrored when she heads left), with a hop when it's done. Drag
+// Clara, the farmer: she stands on the farm's paths and grass, never on water,
+// a building or a mess, and walks there along the paths to each job you tap or
+// fix, and anywhere you tap on open ground, with a hop when a job's done. Drag
 // to another part of the farm and she pops up there, on a path near the middle.
-const hero = { x: null, y: null };
-const HERO_HEIGHT = 88;  // world units (a barn is about 250)
-const HERO_SPEED = 160;  // world units a second
-const HERO_WALK = 3.5;   // longest walk, in seconds: further, she pops up near the job first
+const HERO_SPEED = 160;   // world units a second
+const HERO_WALK = 3.5;    // longest walk to a job, in seconds: further, she pops up near it first
+const HERO_TAP_WALK = 8;  // longest walk to where you tap
+const hero = { who: 'hero', x: null, y: null, row: 0, speed: HERO_SPEED };
 
 // Where she can stand on each plot (made by tools/walkmask.py): 100 x 100 cells
 // over its picture, 0 blocked, 1 grass, 2 path or floor, 3 not the picture.
@@ -3470,7 +3477,7 @@ const PLOT_WALK = {
     henhouse: '///////////////////////////////////////////////////////////////////////////////////D///////////////////////////////8AP///////////////////////////////ADDw/////////////////////////////wAw8P//////////////////////////D8MAADD//////////////////////////wMAAAAw//////////////////////////wAAwAAMP/////////////////////////wAAAAADD/////////////////////////8AAAAAAw//////////////////////////wAADAAMP/////////////////////////8AAADwDD//////////////////////////AAAAAAw//////////////////////////AAAAAAMP/////////////////////////wAAAAAAD/////////////////////////wAAAAAAAAP////////////////////////AAAAAAAAA//////////////////////P/8DwAAAAAAD/////////////////////A/AAAAAAAAAAP////////////////////AAAAAAAAAAAAA////////////////////wAAAAAAAAAAAAD///////////////////8AAAAAAAAAAAAAP///////////////////wAAAAAAAAAAAAA///////////////////wAAAAAAAAAAAAAD//////////////////wAAAAAAAAAAAAAAA/////////////////wAAAAAAAAAAAAAAAP////////////////AAAAAAAAAAAAAAAAD////////////////AAAAAAAAAAAAAAAAAP///////////////AAAAAAAAAAAAAAAAAAP//////////////AAAAAAAAAAAAAAAAAAA//////////////8AAAAAAAAAAAAAAAAAAD//////////////AAAAAAAAAAAAAAAAAAAP///////////8wAAAAAAAAAAAAAAAAAAAA////////////AAAAAAAAAAAAAAAAAAAAADz//////////wAAAAAAAAAAAAAAAAAAAAAA//////////AAAAAAAAAAAAAAAAAAAAAAAP/////////wAAAAAAAAAAAAAAAAAAAAAAD/////////wAAAAAAAAAAAAAAAAAAAAAAAP/////////AAAAAAAAAAAAAAAAAAAAAAAA/////////AAAAAAAAAAAAAAAAAAAAAAAAD////////AAAAAAAAAAAAAAAAAAAAAAAAAP///////wAAAAAAAAAAAAAAAAAAAAAAAAA///////8AAAAAAAAAAAAAAAAAAAAAAAAAD//////wAAAAAAAAAABAAAAAAAAAAAAAAAP/////8AAAAAAAAAARUAAAAAAAAAAAAAAA/////8AAAAAAAAABVVQAAAAAAAAAAAAAAA////8BQAAAAAAABVVVQAAAAAAAAAAAAAAD///8CVAAAAAAABVVVVAAAAAAAAAAAAAAAP//8KpUAaAAAABVVVVVAAAAAAAAAAAAAAA//wKqpRYAAAABVVVVVUAAAAAAAAAAAAAAD/wCqqVaAAAABVVVVVVUAAAAAAAAAAAAAA/AFqqqaoAAEAVVVVVVVQAAAAAAAAAAAAADwFVqqqqgAFQFVVVVVVVQAAAAAAAAAAAADwFVaqqqqAFVFVVVVVVVVUAAAAAAAAAABA8AVVaqqqpVVVVVVVVVVVVUAAAAAAAAAFA/8BVVqqqoVVVVVVVVVVVVVVAAAAAAAAVA//ABVVqqqFVVVVVVVVVVVVVVAAAAAABVA//8AFVaqqlVVVVVVVVVVVVVVUFYAAAFVA///wAVVqqqlVVVVVVVVVVVVVVFaqqpVVA////wBVVqqpVVVVVVVVVVVVVVVaqqlVUA/////AFVWqqpVVVVVVVVVVVVVVaqqVVUA/////8AVVaqqlVVVVVVVVVVVVVaqqlVUA//////wAVVaqqVVVVVVVVVVVVVqqqVVUA///////ABVWqqpVVVVVVVVVVVQqqqVVQD////////AFVWqqpVVVVVVVVVVUKqqVVQD////////wAVVaqqlVVVVVVVVVVKqqVVQD/////////ABVWqqqVVVVVVVVVVqqqVVQD//////////ABVVqqpVVVVVVVVVqqqVVQD//////////8AFVaqqVVVVVVVVWqqqVVAD///////////wAVVqqqlVVVVVVWqqlVVAD////////////ABVVqqpVVVVVVWqqpVVAD////////////8ABVVqqpVVVVVWqqpVVAP/////////////wAFVaqqlVVVVWqqlVUAP//////////////wAVVqqqVVVVWqqVVUAP///////////////ABVWqqpVVVWqqlVUAP///////////////8AFVaqqlVVWqqpVUAP////////////////wAVVqqqVVaqqlVUAP/////////////////AAVWqqqRWqqpVUAP/////////////////8ABVaqqgKqqpVQAP//////////////////wAFVqqqKqqpVQAP///////////////////AAVVqqqqqlVQA////////////////////8AAVWqqqqVVQA/////////////////////wABVaqqqlVQA//////////////////////AAFWqqqpVQA///////////////////////AAVqqqqBAA///////////////////////8AAqqqqoAA////////////////////////wAKqqqqAA/////////////////////////AAKqqqAA/////////////////////////8wAqmoAP///////////////////////////AClYAP///////////////////////////wAFUAP////////////////////////////AAUAP/////////////////////////////AAAP/////////////////////////////wAAD//////////////////////////////AAD///////////////////////////////AD///////////////////////////////8D//////////////////////////////////////////////////////////////////////////////////w==',
     bigbarn: '///////////////////////////////////////////////////////////////////////////////////A///////////////////////////////8AD//////////////////////////////wAAD/////////////////////////////wAAAP////////////////////////////AAAAAP///////////////////////////AAAAAA//////////////////////////8AAAAAAA/////////////////////////wAAAAAAAA////////////////////////wAAAAAAAAD///////////////////////AAAAAAAAAAD//////////////////////AAAAAAAAAAAP////////////////////8AAAAAAAAAAAAP///////////////////8AAAAAAAAAAAAAP//////////////////wAAAAAAAAAAAAAA//////////////////wAAAAAAAAAAAAAAD/////////////////AAAAAAAAAAAAAAAAD///////////////8AAAAAAAAAAAAAAAAAD//////////////8AAAAAAAAAAAAAAAAAAP/////////////wAAAAAAAAAAAAAAAAAAAP////////////AAAAAAAAAAAAAAAAAAAAAP///////////AAAAAAAAAAAAAAAAAAAAAA//////////8AAAAAAAAAAAAAAAAAAAAAAD/////////8AAAAAAAAAAAAAAAAAAAAAAAD////////wAAAAAAAAAAAAAAAAAAAAAAAAD///////wAAAAAAAAAAAAAAAAAAAAAAAAAP//////AAAAAAAAAAAAAAAAAAAAAAAAAAAP/////AAAAAAAAAAAAAAAAAAAAAAAAAAAA////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAA///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAqAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAKoAAAAAACAAAAAAA8AAAAAAAAAAAAABAACqgAAAAAAgAAAAAAPAAAAAAAAAAAAAKggCqqCgAAAAgAAAAAADwAAAAAAAAAAAACqqqqqgoAAAAIAAAAAAA8AAAAAAAAAAAAiqqqqqoqAAAAKAAAAAAAPAAAAAAAAAAACqqqqqqqqgAAACgAAAAAADwAAAAAAAAAAKqqqqqqqCoAAAAoAAAAAAA8AAAAAAAAAAKqqqqqqqgKAAAAAAAAAAAAPAAAAAAAAAAqqqqqoCCqKgAAoAAAAAAAADwAAAAAAAACqqqqGqigCqoAAKCAAAAAAAA8AAAAAAAAKqqqoCqqqqqqAACgoCAAAAAAPAAAAAAAACqqqgqqqqqqggAAoKAqAAAAADwCgAACgqAKqqAqqqqqqqgAAKCgqgAAAAA8CpAAAoKqKqqiqqqqqqqoAACAoKoAAAAAPACYAAKqqqqqgqqqqqqqqgAAgICAAAAAADwAIACACqqqqgqqqqqqqqqAAoKAoAAAAAA8AAAAAAKqqqoKqqqqqqqqgAICgqAAAAAAPAAAAgACqqqqKqqqqqqqqoACAoKgAAAAADwAAAAAAqqqqiqqqqqqqqqCKoKCqAAAAAA/AAACAAKqqqoqqqqqqqqqgqpKAqqAAAAA/8AAAAACqqgAAAAAAAKqoACqCgKqoAAAD//8AAAAAqqgAAAAAAAAqoAAKgoKoIAAAD///8AAAAKqoAAAAAAAAKqAACoKCqoAAAP////wAAACqqAAAAAAAACqgAAqCgqqAAAP/////wAAAqqgAAAAAAAAAAAAKqgqoAAA///////AAAKqoAAAAAAAAAAAACqoKoAAA////////AAAKqAAAAAAAAAAAAAqqCoAAD////////8AAAqgAAAAAAAAAAAAKqqgAAD/////////8AACoAAAAAAAAAAAACqqgAAP//////////wAACAAAAAAAAAAAAAqqAAA////////////wAAAAAAAAAAAAAAAKqAAA/////////////wAAAAAAAAAAAAAACoAAD//////////////AAAAAAAAAAAAAAAoAAD///////////////AAAAAAAAAAAAAAoAAP///////////////8AAAAAAAAAAAACgAAP////////////////8AAAAAAAAAAAKgAA//////////////////AAAAAAAAAAACAAD//////////////////wAAAAAAAAAAAAAD//////////////////8AAAAAAAAAAAAAP///////////////////AAAAAAAAAAAAAP///////////////////wAAAAAAAAAAAA////////////////////8AAAAAAAAAAAA/////////////////////AAAAAAAAAAAD/////////////////////wAAAAAAAAAAD/////////////////////8AAAAAAAAAAP//////////////////////AAAAAAAAAAP//////////////////////wAAAAAAAAA////////////////////////AAAAAAAAD////////////////////////wAAAAAAAA///////////////////////////////8P//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////w==',
     fieldgate: '////////////////P////////////////////////////////A////////////////////////////////AD///////////////////////////////wAP//////////////////////////////wAA//////////////////////////////8AAD/////////////////////////////wAAAP////////////////////////////wAAAA////////////////////////////8AAAAD///////////////////////////wAAAAAP//////////////////////////wAAAAAA//////////////////////////wAAAAAAA/////////////////////////wAAAAAAAD////////////////////////wAAAAAAAAP///////////////////////AAAAAAAAAA///////////////////////AAAAAAAAAAD/P////////////////////AAAAAAAAAAADD////////////////AP//wAAAAAAAAAAAAP///////////////AAP/AAAAAABpAAAAAD///////////////AAD/AAAAAABqUAAAAA//////////////8AAAPAAAAAQAqqUAAAAD/////////////8AAADAAAAAVBKqpQAAAAP/////////////AAAAAAAAABVqqqlAAAAD/////////////AAAAAAAAAAVqoaqUAAAAP///////////8AAAAAAAAAAFqgAWpQAAAAP///////////AAAAAAAAAAAqQABqlAAAAA///////////AAAAAAAAAAAqgAAKqUAAAAD//////////AAAAAAAAAAAKQAAAqpQAAAAP/////////wAAAAAAAAAAKQAAAAqlVAAAA/////////wAAAAAAAAAACQAAAACqVQAAAD////////8AAAAAAAAAACQAAAAAKqUAAAAP///////8AAAAAAAAAACQAAAAAAapQAAAA8///////wAAAAAAAAAKAAAAAAABqlAAAAAD//////8AAAAAAAAFqQAAAAAAAaqUAAAAA///////AAAAAAAAGqQAAAAAAABqpQAAAAD//////wAAAAAAAGqAAAAAAAAAaqlAAAAAP/////8AAAAAAAWqAAAAAAAAAGqqlAAAAD//////AAAAAAACqAAAAAAAAABqqqUAAAAP/////wAAAAAAAKAAAAAAAAABqqqpQAAAA/////wAAAAAAABAAAAAAAAAAqgGqlAAAAD////8AAAAAAAAAAAAAAAAACqQAKqUAAAAP////AAAAAAAAAAAAAAAAACqQAAqpQAAAA////wAAAAAAAAAAAAAAAACqQAACqpAAAAA///8AAAAAAAAAAAAAAAACqgAAAKqkAAAAD///AAAAAAAAAAAAAAAACqgAAAAqqQAAAAP//AAAAAAAAAAAAAAAACqAAAAACqpAAAAD/8AAAAAAAAAAAAAAAACpAAAAAAGqlAAAA/8AAAAAAAAAAAAAAAACqQAAAAAAaqUAAAP8ABAAAAAAAAAAAAAAGqAAAAAAABqpQAAD8AFUAAAAoAAAAAAAAGqAAAAAAAAGqlAAAPAFVUAAKqAAAAAAAAKqAAAAAAAAAaoEAAD8BVVAAKCgAAAAAAAKqAAAAAAAAAGpAAAD/wFVVAAAAAAAAAAAKqAAAAAAAAAAZQAAD//AVVUAIAAQAAAAAKpAAAAAAAAAAFQAAD//8BVVACAAJAAAAAKqAAAAAAAAAABUAAD///8FVVAAAAkAAAACqAAAAAAAAAABVAAD////wVVQAoACAAAAAoAAAAAAAAAABUAAP/////BVVAKAAJAAAKoAAAAAAAAAABUAAP/////8FVVAgAAkAAKqAAAAAAAAAABUAAP//////wVVUIAACQAKqAAAAAAAAAABQAAP///////BVVYAAAJAKqAAAAAAAAAABUAAP///////8BVWAAAAqoqAAAAAAAAAABAAAP////////wFVgAAACoCAAAAAAAAAABAAAP/////////AVWAAAAAAQAAAAAAAAACQAAP//////////BVQAAAAAEAAAAAAAAAFAAAP//////////8FUAAAAABAAAAAAAAABAAAP///////////wVQAAAgAUAAAAAAAABAAAP////////////BWoAAIAJAAAAAAAABAAAP////////////8KqgAAAClAAAAAAAFQAA//////////////wqqAAAAqkAAAAAABQAA///////////////CqoAAACqQAAAAAAAAA///////////////8KqgCAAKpAAAAAAAAA////////////////wKqggAAqkAAAAAAAA/////////////////AqpIAAKqQAAAAAAA/////////////////8CpWAAACpAAAEAAA//////////////////8JVQAAAqgAAFAAA///////////////////wVUAAAIoAAFAAA////////////////////BVAAACCJAEAAD////////////////////8FVUAAgqpVAAD/////////////////////wVVUAEIqVAAD//////////////////////AVVUACCVAAD//////////////////////8BVVQAQVAAD///////////////////////wFVUAEAAAD////////////////////////AVVUAAAAD////////////////////////8BVVAAAAD/////////////////////////8FVUAAAD//////////////////////////wVVVAAD///////////////////////////BVVQAP///////////////////////////8FVVAP////////////////////////////wVVUP/////////////////////////////BVUP/////////////////////////////8BUP//////////////////////////////wUP///////////////////////////////AP///////////////////////////////8P//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////w==',
-    town: '///////////w////////////////////////////////8P/wAAAP/////////////////////////8A/wAAAA///////////////////////8AAAAAAAAAP//////////////////////8AAAAAAAAAA///////////////////////AAAAAAAAAAP//////////////////////AAAAAAAAAAD//////////////////////wAAAAAAAAAA//////////////////////8AAAAAAAAAAP//////////////////////AAAAAAAAAAD//////////////////////wAAAAAAAAAA//////////////////////8AAAAAAAAAAP//////////////////////AAAAAAAAAAAAP////////////////////wAAAAAAAAAAAA////////////////////8AAAAAAAAAAAAP////////////////////AAAAAAAAAAAAA////////////////////wAAAAAAAAAAAAP///////////////////8AAAAAAAAAAAAD////////////////////AAAAAAAAAAAAA////////////////////wAAAAAAAAAAAAP//////////////8AAAAAAAAAAAAAAAAAD/AAAAAAAP/////8AAAAAAAAAAAAAAAAAA/AAAAAAAD//////AAAAAAAAAAAAAAAAAAPAAAAAAAAP/////AAAAAAAAAAAAAAAAAAAwAAAAAAAD/////wAAAAAAAAAAAAAAAAAAgAAAAAAAA/////8AAAAAAAAAAAAAAAAAAKAAAAAAAAP/////AAAAAAAAAAAAAAAAAACoAAAAAAAD/////wAAAAAAAAAAAAAAAAAAqAAAAAAAA/////8AAAAAAAAAAAAAoAAAAKgAAAAAAAP/////AAAAAAAAAAAAAKAAAACoAAAAAAAD/////wAAAAAAAAAAAACgAAAAqAAAAAAAA/////8AAAAAAAAAAAAAoAAAAqgAAAAAAAP/////AAAAAAAAAAAAAIAAAAKoAAAAAAAD/////wAAAAAAAAAAAACAAAACAAAAAAAAA8AA//8AAAAAAAAAAAAAgAAAAgAAAAAAAAMAADAAAAAAAAAAAAAAAIAAAAIAAAAAAAADAAAAAAAAAAAAAAAAAACAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAACAAAAAAAAAAAAAAAAAAAAAAqAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACqoACQAAAAAAAAAAAAAAAAAAAAAAAAAAAAqqoAYAAAAAAAAAAAAAAAAAAAAAAAAAAAAKqqAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACqqgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKACgAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAqgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKoAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAACqAAAAAP8AAAAAAAAAAAAAAAAAAAAAAAACqgAAAAP/wACQAAAAAAAAAAAAAAAAAAAAAqoAAAD///AAkAAAAAAAAAAAAAAAAAAAAAKqAAAD////AAACqAAAAAAAAAAAAAAAAAACqgAAD////8AAAqgAAAAAAAAAKgAAAAAAAqoAAD/////wAAqoAAAAAAIAACoAAAAAAAKqAAD//////ACqqAAAAAACAAAqAAAAAAACqgAP//////8AKqgAAAAAAgAAKgAAAAAAAqgAD///////wAqoAAAAAAIAACoAAAAAAAKgAP////////wCgAAAAAAAKgAqAAAAAAACgD//////////AIAAAAAAACqAqAAAAAAAAgD//////////8AAAAAAAAAqqqgAAAAAAAAD///////////wAAAAAAAAKqqoAAAAAAAAD////////////AAAAAAAACqqqAAAAAAAAD////////////8AAAAAAAAqqqgAAAAAAAD/////////////AAAAAAAAKqqoAAAAAAAA/////////////wAAAAAAAAKqqAAAAAAAAP////////////8AAAAAAAAAqqgAAAAAAAD/////////////AAAAAAAAAAAAAAAAAAAA/////////////wAAAAAAAAAAAAAAAAAAAP////////////8AAAAAAAAAAAAAAAAAAAD/////////////AAAAAAAAAAAACgAAAAAA/////////////wAAAAAAAAAAAAqAAAAAA//////////////AAAAAAAAAAAAKgAAAAA//////////////wAAAAAAAAAAACoAAAA////////////////AAAAAAAAAAAAqqAAAP////////////////AAAAAAAAAAAKqAAAP/////////////////wAAAAAAAAACqA/////////////////////wAAAAAAAAAqA//////////////////////8AAAAAAAAGD///////////////////////wAAAAAAABD////////////////////////AAAAAAAAD////////////////////////8AAAAAAAD/////////////////////////wAAAAAAA/////////////////////////8APAAAAAP/////////////////////////8/wAAAAD///////////////////////////8AAAAA////////////////////////////wAAAA////////////////////////////8AAAAP////////////////////////////wAAAP////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////w==',
+    town: '///////////////////////////////////////////////wAAAP////////////////////////////wAAAA///////////////////////8AAAAAAAAAP//////////////////////8AAAAAAAAAA///////////////////////AAAAAAAAAAP//////////////////////AAAAAAAAAAD//////////////////////wAAAAAAAAAA//////////////////////8AAAAAAAAAAP//////////////////////AAAAAAAAAAD//////////////////////wAAAAAAAAAA//////////////////////8AAAAAAAAAAP//////////////////////AAAAAAAAAAAAP////////////////////wAAAAAAAAAAAA////////////////////8AAAAAAAAAAAAP////////////////////AAAAAAAAAAAAA////////////////////wAAAAAAAAAAAAP///////////////////8AAAAAAAAAAAAD////////////////////AAAAAAAAAAAAA///+v///////////////wAAAAAAAAAAAAP//+q//////////8AAAAAAAAAAAAAAAAAD/ACqgAAAP/////8AAAAAAAAAAAAAAAAAA/ACqgAAAD//////AAAAAAAAAAAAAAAAAAPACqoAAAAP/////AAAAAAAAAAAAAAAAAAAwKqoAAAAD/////wAAAAAAAAAAAAAAAAAAAKqoAAAAA/////8AAAAAAAAAAAAAAAAAAAqqoAAAAAP/////AAAAAAAAAAAAAAAAAAAKqgAAAAAD/////wAAAAAAAAAAAAAAAAAAKqgAAAAAA/////8AAAAAAAAAAAAAAAAAAqqAAAAAAAP/////AAAAAAAAAAAAAAAAACqqAAAAAAAD/////wAAAAAAAAAAAAAAAAKqqAAAAAAAA/////8AAAAAAAAAAAAAAAKqqoAAAAAAAAP/////AAAAAAAAAAAAACqqqqoAAAAAAAAD/////wAAAAAAAAAAAAKqqqqqAAAAAAAAA8AA//8AAAAAAAAAAAAqqqqqioAAAAAAAAMAADAAAAAAAAAAAAAAKqqqgAqAAAAAAAADAAAAAAAAAAAAAAAAAKqoAAACgAAAAAAAAAAAAAAAAAAAAAAAACqqgAAAAoAAAAAAAAAAAAAAAAAAAAAAAACqqgAAAAKAAAAAAAAAAAAAAAAAAAAAAAACqqAAAAACoAAAAAAAAAAAAAAAAAAAAAAACqqAAAAAAqAAAAAAAAAAAAAAAAAAAAAAAKqqAAAAAAKgAAAAAAAAAAAAAAAAAAAAAAKqqgAAAAACoAAAAAAAAAAAAAAAAAAAAAAKqqgAAAAAAqAAAAAAAAAAAAAAAAAAAAAAKqqAAAAAAAKgAAAAAAAAAAAAAAAAAAAAAqqqAAAAAAACoAAAAAAAAAAAAAAAAAAAAAqqqAAAAAAAAKAAAAAAAAAAAAAAAAAAAAAqqqAAAAAAAACgAAAAAAAAAAAAAAAAAAAAKqoAAAAAAAAAqgKAAAAAAAAAAAAAAAAAAKqoAAAAAAAAAqqCoAAAAAAAACgAAAAAAAKqoAAAAAAAAAKqqqAAAAAAAAAqAAAAAAAKqoAAAAAAAAACqqqgAAAAAAAAKqAAAAAAKqoAAAAAAAAAAqqqoAAAAAAAACqoAAAAACqoAAAAAAAAAAqqqqoAAAAAAAAqqgAAAACqoAAAAAAAAAAKgqqqqoAAAAAAKqqAAAACqoAAAAAAAAAAKgAqqqqgAAAAAOqqqAAAKqqAAAAAAAAAAKoAAqqqqAAAAD/+qqoAAKqqAAAAAAAAAAKoAACqqqqAAAD//6qqqKqqqAAAAAAAAAAqqAAAAqqqoAAD///6qqqqqqAAAAAAAAAAqqAAAAAKqqgAD////qqqqqqAAAAAKAAAAKqAAAAAACqqAD/////qqqqoAAAAACqgAAKoAAAAAAAKqoP/////+qqqqAAAAACqqqACoAAAAAAAAKqv//////6qqqAAAAAAqqqqioAAAAAAAAAqq///////6oAAAAAAACqqqqqAAAAAAAAACqr////////AAAAAAAAqqqqqAAAAAAAAADqqv///////8AAAAAAAAKqqqgAAAAAAAAD+qq////////wAAAAAAAAKqqqAAAAAAAAD/6qr////////AAAAAAAAKgCqoAAAAAAAD//qq////////8AAAAAAACoACqAAAAAAAD//+qv////////AAAAAAAAqAAqgAAAAAAA///6r////////wAAAAAAACAAKoAAAAAAAP///r////////8AAAAAAAAAAAqAAAAAAAD/////////////AAAAAAAAAAAKgAAAAAAA/////////////wAAAAAAAAAACoAAAAAAAP////////////8AAAAAAAAAAAqgAAAAAAD/////////////AAAAAAAAAAAKoAAAAAAA/////////////wAAAAAAAAAACqAAAAAAA//////////////AAAAAAAAAAAKgAAAAAA//////////////wAAAAAAAAAACqAAAAA////////////////AAAAAAAAAAAqgAAAAP////////////////AAAAAAAAAAKqAAAAP/////////////////wAAAAAAAAAqgA/////////////////////wAAAAAAAAKoA//////////////////////8AAAAAAAAqj///////////////////////8AAAAAAAKr/////////////////////////AAAAAAAqv/////////////////////////AAAAAAKr//////////////////////////AAAAACqv//////////////////////////AAAAAKr//////////////////////////wAAAACq//////////////////////////8AAAAAqv//////////////////////////wAAAA+v//////////////////////////8AAAAP////////////////////////////wAAAP////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////w==',
     market: '///////////wAAAAAAAAAA//////////////////////8AAAAAAAAAAP//////////////////////AAAAAAAAAAD//////////////////////wAAAAAAAAAA//////////////////////8AAAAAAAAAAP//////////////////////AAAAAAAAAAD//////////////////////wAAAAAAAAAA//////////////////////8AAAAAAAAAAD//////////////////////AAAAAAAAAAA//////////////////////AAAAAAAAAAAP/////////////////////wAAAAAAAAAAD/////////////////////8AAAAAAAAAAAP////////////wAP//////AAAAAAAAAAAD////////////wAAAAAP//wAAAAAAAAAAAA///////////8AAAAAAAA8AAAAAAAAAAAAAA//////////wAAAAAAADAAAAAAAAAAAAAAAA////////8AAAAAAAAwAAAAAAAAAAAAAAAAAP//////AAAAAAAAAAAAAAAAAAAAAAAAAAAA/////wAAAAAAAAAAAAAAAAAAAAAAAAAAAD////8AAAAAAAAAAAAAAAAAAAAAAAAAAAA/////AAAAAAAAAAAAAAAAAAAAAAAAAAAAP////wAAAAAAAAAAAAAAAAAAAAAAAAAAAD////8AAAAAAAAIAAAAAAAAAAAAAAAAAAA/////AAAAAAAAAAAAAAAAAAAAAAAAAAAAP////wAAAAAAAAAAAAAAAAAAAAAAAAAAAD////8AAAAAAAAAAAAAAAAAAAAAAAAAAAA/////AAAAAAAAAAAgAAAAAAKqgAAAAAAAP////wAAAAAAAAAAKAAAAAKqqoAAAAAAAD////8AAAAAAAAAACqqqqqqqqoAAAAAAAAP////AAAAAAAAAAAqqqqqqqqqAAAAAAAAD////wAAAAAAAAAACqqqqqqqqgAAAAAAAA///8CAAAAAAAAAACqqqqqqqqqAAAAAAAAAP/wKqAAAAAAAAAAqqqqqqqqqoAAAAAAAAAP8KqogAAAAAAAAKqqqqqqqqqgAAAAAAAAA/AAKqAAAAACqqqqqACqqqqqoAAAAAAAAA//AAIKgAACqqqqqgAAAqqqqqoAAAAAAAA//wACqqAAqqqqqgAAAAAqqqqqqgAAAqoD//8AACqqqqqqqoAAAAAAAqqqqqqAACqoP///AAACqqqqqqAAAAAAAAAKqqqqqqCqg////wAAAKqqqqoAAAAAAAAAAKqqqqoACA////wAAAAoqqqqAAAAAAAAAAACgAAgAAAP///wAAAAAAAAqgAAAAAAAAAAAIAAAAAAAP//8AAAAAAAAAIAAAAAAAAAAACAAAAAAAAAP/8AAAAAAAACAAAAAAAAAAAAgAAAAAAAAAP/AAAAAAAAAgAAAAAAAAAAAIAAAAAAAAAD/wAAAAAAAAIAAAAAAAAAAACAAAAAAAAAA/8AAAAAAAACAAAAAAAAAAAAgAAAAAAAAAP/AAAAAAAAAgAAAAAAAAAAAAAAAAAAAAA//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//8AAAAAAAACoAAAAAAAAAoAAAAAAAAAA///8AAAAAAAAqqAAAAAAAKqAAAAAAAAAA////wAAAAAAAqqqgAAAAAqqoAAAAAAAAP/////wAAAAKqqqqqgAAAKqqqqqqgAAAAP//////AAAKqqqqqqqoACAAAACqqqgCgAD//////wKqqqqqqqqqqqqgAAAAACqqKgAA//////8AqqqqqqqqqqqqoAAAAAAAAAAAAP/////8AAqqgAAqqqqqqqAAAAAAAAAAAAA/////8AAqqoAAAAAqqqqgAAAAAAAAAAAAD////AACqqqAAAAAAqqqoAAAAAAAAAAAAA///8KAKqqqAAAAAACqqqAAAAAAAAAAAAAD//wqgKqqqgAAAAAAqqqgAAAAAAAAAAAAAD/ygqqqqqoAAAAAAKqqoAAAAAAAAAAAAAAP8AqqqqqqAAAAAACqqqAAAAAAAAAAAAAAD/CqqqqqqgAAAAAAqqqgAAAAAAAAAAAAAD//KqqqqqoAAAAAAKqqoAAAAAAAAAAoAAD///KqqqqqAAAAAACqqqAAAAAAAAAAAAAP///8KqqqqgAAAAAAqqqgAAAAAAAAAAAAP////8KqqqIAAAAAAKqqoAAAAAAAAAAAA//////8KqoAAAAAAAAqqqAAAAAAAAAAAD///////8KqAAAAAAAAAqqgAAAAAAAAAAP////////8qgAAAAAAAAAAIAAAAAAAAAAP/////////wAAAAAAAAAAAAgAAAAAAAAAD//////////wAAAAAAAAAAAAqAAAAAAAAA///////////wAAAAAAAAAAACqgAAAAAAA////////////wAAAAAAAAAAAKqoAAAA///////////////AAAAAAAAAAACqqoIoD///////////////wAAAAAAAAAAAKoAAAD///////////////8AAAAAAAAAAACqgAAP////////////////wAAAAAAAAAAAoAAA////////////////////AAAAAAAAAAAAD/////////////////////AAAAAAAAAAAP/////////////////////8AAAAAAAAAAP//////////////////////8AAAAAAAAA////////////////////////8AAAAAAAD/////////////////////////8AAAAAAP//////////////////////////8AAAAA////////////////////////////wVVQA/////////////////////////////wFVD//////////////////////////////wAP///////////////////////////////w////////////////////////////////////////////////////////////////////////////////////////////////////////////////////w==',
 };
 const plotWalk = {};
@@ -3581,7 +3588,7 @@ function buildWalkMap() {
         sizes.push(n);
     }
     for (let i = 0; i < cells.length; i++) if (cells[i] && sizes[part[i]] < WALK_PATCH) cells[i] = 0;
-    return { cells, cols, rows };
+    return { cells, cols, rows, part }; // part: which patch each cell is in (a way only joins cells in one)
 }
 
 // Made again only when an area opens or a job is done.
@@ -3622,9 +3629,9 @@ function standNear(x, y, path = false, reach = 400) {
 
 // The way from one place to another over ground she can stand on, preferring
 // paths (A*, then straightened); null when there's none.
-function heroRoute(from, to) {
-    const { cells, cols } = walkGrid(), a = walkCell(...from), b = walkCell(...to);
-    if (!cells[a] || !cells[b]) return null;
+function heroRoute(from, to, most = 30000) {
+    const { cells, cols, part } = walkGrid(), a = walkCell(...from), b = walkCell(...to);
+    if (!cells[a] || !cells[b] || part[a] !== part[b]) return null;
     const cost = new Float64Array(cells.length).fill(Infinity), back = new Int32Array(cells.length).fill(-1);
     const heap = [[0, a]], [bc, br] = [b % cols, Math.floor(b / cols)];
     const guess = i => Math.hypot((i % cols) - bc, Math.floor(i / cols) - br) * 0.8;
@@ -3644,7 +3651,7 @@ function heroRoute(from, to) {
         return top;
     };
     cost[a] = 0;
-    let budget = 30000; // a walk on screen needs far fewer: past that, there's no way (she pops up instead)
+    let budget = most; // a walk on screen needs far fewer: past that, there's no way (she pops up instead)
     while (heap.length) {
         const [, i] = pop();
         if (i === b) break;
@@ -3695,50 +3702,50 @@ function heroEl() {
     return document.querySelector('#scene-map .hero');
 }
 
-function placeHero(el) {
-    const w = HERO_HEIGHT * ASSETS.hero.aspect;
-    worldPlace(el, hero.x - w / 2, hero.y - HERO_HEIGHT, w, HERO_HEIGHT);
-}
-
 function addHero(ui) {
-    if (!ASSETS.hero) return;
+    if (!(ASSETS.people || {}).hero) return;
     const firstPlace = () => {
         const task = openTasks().find(t => jobWorldXY(t));
         [hero.x, hero.y] = jobWorldXY(task) || standNear(...cellXY('barnyard'), true) || cellXY('barnyard');
     };
     if (hero.x === null) firstPlace();
-    const el = document.createElement('div');
-    el.className = 'hero';
-    el.innerHTML = `<i class="hero-shadow"></i><i class="hero-sprite" style="background-image:url('${ASSETS.hero.walk}')"></i>`
-        + ((ASSETS.hero.poses || {}).stand ? `<img class="hero-stand" src="${ASSETS.hero.poses.stand}" alt="" draggable="false">` : '');
-    placeHero(el);
-    ui.appendChild(el);
+    const el = addWalker(ui, hero, 'hero');
     // A moment later: if a prop now stands where she was, she steps off it.
     setTimeout(() => {
-        if (!el.isConnected || el.classList.contains('walking') || [1, 2].includes(walkGrid().cells[walkCell(hero.x, hero.y)])) return;
+        if (!el.isConnected || hero.way || [1, 2].includes(walkGrid().cells[walkCell(hero.x, hero.y)])) return;
         const at = standNear(hero.x, hero.y, false, 300);
         if (at) popHero(el, at);
-        else { firstPlace(); placeHero(el); }
+        else { firstPlace(); placeWalker(el, hero); }
     }, 400);
 }
 
 // She pops up at a place (a little puff, no walk).
 function popHero(el, at) {
+    stopWalker(hero);
     [hero.x, hero.y] = at;
-    placeHero(el);
+    placeWalker(el, hero);
     el.classList.remove('popping', 'cheer');
     void el.offsetWidth;
     el.classList.add('popping');
 }
 
-let heroWalk = 0;
-
-// Walks her to a job (`then` once she's there); a long way, she pops up near
-// it first. `most`: the most milliseconds the walk may take.
+// Walks her to a job (`then` once she's there, facing it); a long way, she
+// pops up near it first. `most`: the most milliseconds the walk may take.
 function walkHeroTo(task, then, most = HERO_WALK * 1000) {
     const el = heroEl(), to = jobWorldXY(task);
-    cancelAnimationFrame(heroWalk);
     if (!el || !to) return then && then();
+    heroWalk(el, to, most, () => {
+        const job = plotJob(task), [bx, by, bw, bh] = plotBox(ZONE[task.zone]);
+        turnTo(hero, [bx + (job[1] / 100) * bw, by + (job[2] / 100) * bh]);
+        placeWalker(el, hero);
+        if (then) then();
+    });
+}
+
+// Walks her to a place she can stand (world units); a long way, she pops up a
+// short walk from it first.
+function heroWalk(el, to, most, then) {
+    stopWalker(hero);
     let way = heroRoute([hero.x, hero.y], to);
     const length = pts => pts.reduce((sum, p, k) => sum + Math.hypot(p[0] - (k ? pts[k - 1] : [hero.x, hero.y])[0], p[1] - (k ? pts[k - 1] : [hero.x, hero.y])[1]), 0);
     if (!way || length(way) / HERO_SPEED > most / 1000) {
@@ -3748,45 +3755,40 @@ function walkHeroTo(task, then, most = HERO_WALK * 1000) {
         way = heroRoute([hero.x, hero.y], to) || [to];
         if (length(way) / HERO_SPEED > most / 1000) { popHero(el, to); way = [to]; }
     }
-    if (!way.length) way = [to]; // already there
     heroPose('stand');
     el.classList.remove('cheer');
-    el.classList.add('walking');
-    let t0 = performance.now(), k = 0;
-    const face = () => { const dx = way[k][0] - hero.x; if (Math.abs(dx) > 3) el.classList.toggle('left', dx < 0); };
-    face();
-    const step = t => {
-        let go = (HERO_SPEED * (t - t0)) / 1000;
-        t0 = t;
-        while (go > 0 && k < way.length) {
-            const [x, y] = way[k], d = Math.hypot(x - hero.x, y - hero.y);
-            if (d <= go) { [hero.x, hero.y] = [x, y]; go -= d; k++; if (k < way.length) face(); }
-            else { hero.x += ((x - hero.x) / d) * go; hero.y += ((y - hero.y) / d) * go; go = 0; }
-        }
-        placeHero(el);
-        if (k < way.length) heroWalk = requestAnimationFrame(step);
-        else {
-            el.classList.remove('walking');
-            // Facing her job.
-            const job = plotJob(task), [bx, , bw] = plotBox(ZONE[task.zone]), jx = bx + (job[1] / 100) * bw;
-            if (Math.abs(jx - hero.x) > 10) el.classList.toggle('left', jx < hero.x);
-            if (then) then();
-        }
-    };
-    heroWalk = requestAnimationFrame(step);
+    walkAlong(hero, way, then);
+}
+
+// A tap on the ground: she walks to the nearest place there she can stand (a
+// ring shows where), or a red ring says there's nowhere to stand near it.
+function heroGoTo(x, y, then) {
+    const el = heroEl();
+    if (!el || fixing) return;
+    const to = standNear(x, y, false, 180);
+    markWalk(el.parentElement, to || [x, y], !!to);
+    if (to) heroWalk(el, to, HERO_TAP_WALK * 1000, then);
+}
+
+function markWalk(ui, [x, y], ok) {
+    const mark = document.createElement('i');
+    mark.className = 'walk-mark' + (ok ? '' : ' no');
+    worldPlace(mark, x - 34, y - 17, 68, 34);
+    ui.appendChild(mark);
+    setTimeout(() => mark.remove(), 800);
 }
 
 // Once a drag stops: if she's out of sight, she pops up on a path near the
 // middle of the screen (or on grass, if there's no path).
 function heroFollow(view, stage) {
     const el = heroEl();
-    if (!el || el.classList.contains('walking') || fixing || view.classList.contains('far')) return;
+    if (!el || hero.way || fixing || view.classList.contains('far')) return;
     const { x0, y0, w, h } = WORLD_BOX;
     const cx = x0 + worldView.fx * w, cy = y0 + worldView.fy * h;
     const hw = (view.clientWidth / stage.offsetWidth) * w / 2, hh = (view.clientHeight / stage.offsetHeight) * h / 2;
-    if (Math.abs(hero.x - cx) < hw * 0.85 && hero.y - HERO_HEIGHT > cy - hh * 0.9 && hero.y < cy + hh * 0.8) return;
+    if (Math.abs(hero.x - cx) < hw * 0.85 && hero.y - PERSON_TALL > cy - hh * 0.9 && hero.y < cy + hh * 0.8) return;
     const at = placeStand(cx, cy, hw, hh) || standNear(cx, cy + hh * 0.2, true, Math.min(hw, hh) * 0.7);
-    if (at) { popHero(el, at); heroPose('wave', 1800); }
+    if (at) { popHero(el, at); hero.row = 0; heroPose('wave', 1800); }
 }
 
 // Looking at a place with set spots for her (PLACE_SPOTS[id].stand): the one in view
@@ -3799,7 +3801,7 @@ function placeStand(cx, cy, hw, hh) {
         if (cx < bx || cx > bx + bw || cy < by || cy > by + bh) return;
         spots.stand.forEach(([sx, sy]) => {
             const x = bx + (sx / 100) * bw, y = by + (sy / 100) * bh;
-            if (Math.abs(x - cx) > hw * 0.8 || y - HERO_HEIGHT < cy - hh * 0.85 || y > cy + hh * 0.75) return;
+            if (Math.abs(x - cx) > hw * 0.8 || y - PERSON_TALL < cy - hh * 0.85 || y > cy + hh * 0.75) return;
             const d = Math.hypot(x - cx, y - (cy + hh * 0.2));
             if (d < far) { far = d; best = [x, y]; }
         });
@@ -3807,32 +3809,365 @@ function placeStand(cx, cy, hw, hh) {
     return best;
 }
 
-// Her poses, by their height on the sheet (all drawn at one scale), so each
-// shows at its right size next to the standing one.
-const HERO_POSE_HEIGHT = { stand: 362, hammer: 337, jump: 371, clap: 385, wave: 382, think: 379, point: 375, carry: 377 };
+// What she does when she isn't walking: hammers away at a job (a swing), or
+// shows what she's thinking in a little bubble over her head.
+const HERO_EMOTE = { hammer: '🔨', think: '💭', point: '❗', wave: '👋', clap: '👏', carry: '📦' };
 let heroPoseTimer = 0;
 
 // She strikes a pose (back to standing after `ms`, if given).
 function heroPose(name, ms) {
-    const el = heroEl(), img = el && el.querySelector('.hero-stand'), poses = ASSETS.hero.poses || {};
-    if (!img) return;
-    const pose = poses[name] ? name : 'stand';
-    img.src = poses[pose];
-    img.style.height = (95 * HERO_POSE_HEIGHT[pose]) / HERO_POSE_HEIGHT.stand + '%';
-    el.dataset.pose = pose;
+    const el = heroEl();
+    if (!el) return;
     clearTimeout(heroPoseTimer);
-    if (ms && pose !== 'stand') heroPoseTimer = setTimeout(() => heroPose('stand'), ms);
+    el.dataset.pose = name;
+    if (name === 'stand') return el.querySelector('.emote')?.remove();
+    if (HERO_EMOTE[name]) emote(hero, HERO_EMOTE[name], ms || 1800);
+    if (ms) heroPoseTimer = setTimeout(() => heroPose('stand'), ms);
 }
 
-// A job done: she jumps for joy, then claps.
+// A job done: she turns to you and jumps for joy, then claps.
 function cheerHero() {
     const el = heroEl();
     if (!el) return;
+    hero.row = 0;
+    placeWalker(el, hero);
     heroPose('jump');
+    emote(hero, '🎉', 800);
     el.classList.remove('cheer');
     void el.offsetWidth; // restart the hop
     el.classList.add('cheer');
     heroPoseTimer = setTimeout(() => heroPose('clap', 1300), 700);
+}
+
+// --- PEOPLE WALKING ABOUT ---
+// Clara and the townsfolk each have a walk (ASSETS.people): 8 rows of 4 frames,
+// a row for each way they can face, the first frame of each the one they stand
+// in. Each has a state in `walkers`: where they are (world units, at their
+// feet), the row they face, how fast they walk, and the way they're walking,
+// if they are. One loop moves everyone walking while the map shows; the
+// nearer the bottom of the screen, the more in front.
+const PERSON_TALL = 96; // a walk frame's height, in world units (a barn is about 250)
+const walkers = { hero };
+let walkLoop = 0, walkLast = 0;
+
+// The row for facing along (dx, dy): 0 S, 1 SW, 2 W, 3 NW, 4 N, 5 NE, 6 E, 7 SE.
+function facingRow(dx, dy) {
+    const k = Math.round(-Math.atan2(dx, dy) / (Math.PI / 4));
+    return ((k % 8) + 8) % 8;
+}
+
+function turnTo(w, [x, y]) {
+    if (Math.hypot(x - w.x, y - w.y) > 3) w.row = facingRow(x - w.x, y - w.y);
+}
+
+function walkerEl(w) {
+    if (!w.el || !w.el.isConnected) w.el = document.querySelector(`#scene-map .walker[data-who="${w.who}"]`);
+    return w.el;
+}
+
+// Moved by `translate` (in its own widths and heights, so it keeps up with the
+// zoom), not left and top: nothing else on the map has to be laid out again.
+function placeWalker(el, w) {
+    const p = ASSETS.people[w.who], tall = PERSON_TALL * (p.scale || 1), wide = tall * p.aspect, { x0, y0, w: bw, h: bh } = WORLD_BOX;
+    if (!el.style.width) {
+        el.style.width = (wide / bw) * 100 + '%';
+        el.style.height = (tall / bh) * 100 + '%';
+    }
+    el.style.translate = `${((w.x - wide / 2 - x0) / wide) * 100}% ${((w.y - tall - y0) / tall) * 100}%`;
+    if (el.dataset.row !== String(w.row)) {
+        el.dataset.row = w.row;
+        el.style.setProperty('--row', w.row);
+    }
+}
+
+// Draws someone in the world (a button, if a tap does something).
+function addWalker(ui, w, cls, onClick) {
+    const el = document.createElement(onClick ? 'button' : 'div');
+    el.className = `walker ${cls}` + (w.way ? ' walking' : '');
+    el.dataset.who = w.who;
+    el.style.setProperty('--step', `${(0.5 + 18 / w.speed).toFixed(2)}s`); // slower walkers, slower steps
+    el.innerHTML = `<i class="walker-shadow"></i><i class="walker-sprite" style="background-image:url('${ASSETS.people[w.who].walk}')"></i>`;
+    if (onClick) el.addEventListener('click', onClick);
+    placeWalker(el, w);
+    ui.appendChild(el);
+    w.el = el;
+    if (w.way) keepWalking();
+    stackWalkers();
+    return el;
+}
+
+// Sends someone along a way (points, world units), then `then` once there.
+function walkAlong(w, way, then) {
+    w.way = way.length ? way : null;
+    w.k = 0;
+    w.then = then;
+    const el = walkerEl(w);
+    if (!w.way) {
+        el?.classList.remove('walking');
+        return then && then();
+    }
+    el?.classList.add('walking');
+    turnTo(w, way[0]);
+    keepWalking();
+}
+
+function stopWalker(w) {
+    w.way = w.then = null;
+    walkerEl(w)?.classList.remove('walking');
+}
+
+function keepWalking() {
+    if (walkLoop || currentScene !== 'map') return;
+    walkLast = performance.now();
+    walkLoop = requestAnimationFrame(walkStep);
+}
+
+function walkStep(t) {
+    const dt = Math.min(100, t - walkLast) / 1000;
+    walkLast = t;
+    let moving = false;
+    Object.values(walkers).forEach(w => {
+        if (!w.way) return;
+        let go = w.speed * dt;
+        while (go > 0 && w.k < w.way.length) {
+            const [x, y] = w.way[w.k], d = Math.hypot(x - w.x, y - w.y);
+            if (d <= go) { w.x = x; w.y = y; go -= d; w.k++; if (w.k < w.way.length) turnTo(w, w.way[w.k]); }
+            else { w.x += ((x - w.x) / d) * go; w.y += ((y - w.y) / d) * go; go = 0; }
+        }
+        const el = walkerEl(w);
+        if (el) placeWalker(el, w);
+        if (w.k < w.way.length) { moving = true; return; }
+        const then = w.then;
+        stopWalker(w);
+        if (then) then();
+        if (w.way) moving = true; // `then` set them off again
+    });
+    stackWalkers();
+    walkLoop = moving && currentScene === 'map' ? requestAnimationFrame(walkStep) : 0;
+}
+
+// The nearer the bottom, the more in front (under the job bubbles, over the scenery).
+function stackWalkers() {
+    Object.values(walkers).sort((a, b) => a.y - b.y).forEach((w, i) => {
+        const el = walkerEl(w);
+        if (el && el.style.zIndex !== String(140 + i)) el.style.zIndex = 140 + i;
+    });
+}
+
+// A little bubble over someone's head for a moment.
+function emote(w, what, ms = 1800) {
+    const el = walkerEl(w);
+    if (!el) return;
+    el.querySelector('.emote')?.remove();
+    const bubble = document.createElement('i');
+    bubble.className = 'emote';
+    bubble.innerHTML = iconize(what);
+    el.appendChild(bubble);
+    setTimeout(() => bubble.remove(), ms);
+}
+
+// --- THE TOWNSFOLK, OUT AND ABOUT ---
+// Each of the townsfolk lives at their door on the town square and potters
+// about near it. Now and then they go off to their own part of the farm once
+// it's yours (Bram to the barn, Ellis to the hay field, Mira to the pond, Mae
+// to the garden; the Mayor to the Market), spend a while there and come home:
+// walking, where the ground joins up, else they step out and turn up there.
+// Whoever you have an order for heads home and waits by their door. Tap one to
+// talk: Clara walks over.
+const TOWNSFOLK = {
+    mayor:  { trips: ['market'], emote: '☕', speed: 55 },
+    hattie: { trips: ['barnyard', 'henhouse', 'bigbarn'], emote: '🐔', speed: 60 },      // Bram, the rancher
+    ruby:   { trips: ['meadow', 'stables', 'windmill'], emote: '🔧', speed: 72 },        // Ellis, the carpenter
+    finn:   { trips: ['muddyshore', 'lilypond', 'boatdock'], emote: '🐟', speed: 64 },   // Mira, the fisher
+    poppy:  { trips: ['gardengate', 'rosearch', 'greenhouse'], emote: '🌸', speed: 58 }, // Mae, the florist
+};
+const TOWN_ROAM = 160;          // how far from their door they potter about, in world units
+const TRIP_TIME = [45, 100];    // seconds out on the farm
+const TRIP_EVERY = 60;          // at least this many seconds at home between trips
+
+// Their door, in world units.
+function homeXY(npc) {
+    const at = PLACE_SPOTS.town.homes[npc.home], [bx, by, bw, bh] = plotBox('town');
+    return [bx + (at[0] / 100) * bw, by + (at[1] / 100) * bh];
+}
+
+// Somewhere to stand within r of a point, at random (they may stop by a door, where Clara
+// doesn't, and on the town's narrow lanes), or null; `nearest`: the nearest one instead.
+function roamSpot(x, y, r, nearest = false) {
+    const { cells, cols, rows } = walkGrid(), { x0, y0 } = WORLD_BOX, n = Math.ceil(r / WALK_CELL);
+    const c0 = Math.floor((x - x0) / WALK_CELL), r0 = Math.floor((y - y0) / WALK_CELL);
+    let pick = null, seen = 0, far = Infinity;
+    for (let row = Math.max(0, r0 - n); row <= Math.min(rows - 2, r0 + n); row++) {
+        for (let c = Math.max(0, c0 - n); c <= Math.min(cols - 1, c0 + n); c++) {
+            const i = row * cols + c, d = Math.hypot(c - c0, (row - r0) / 0.6);
+            if (d > n || !cells[i] || !cells[i + cols]) continue;
+            if (nearest ? d < far : Math.random() * ++seen < 1) { pick = i; far = d; }
+        }
+    }
+    return pick === null ? null : cellMiddle(pick);
+}
+
+// The middle of a trip's place: its plot (or patch), or the Market.
+function tripMiddle(id) {
+    const zone = ZONE[id];
+    if (zone && !zoneOpen(zone)) return null;
+    if ((ASSETS.plots || {})[id] && (!zone || inWorld(zone))) {
+        const [bx, by, bw, bh] = plotBox(id);
+        return [bx + bw / 2, by + bh * 0.55];
+    }
+    return zone ? cellXY(id) : null;
+}
+
+function townsfolkIn() {
+    return (ASSETS.plots || {}).town && ASSETS.people ? npcs.filter(n => ASSETS.people[n.id] && TOWNSFOLK[n.id] && PLACE_SPOTS.town.homes[n.home]) : [];
+}
+
+// The townsfolk in the world, each where they are (the first time: by their door, about to set off).
+function addTownsfolk(ui) {
+    townsfolkIn().forEach(npc => {
+        let w = walkers[npc.id];
+        if (!w) {
+            const home = homeXY(npc);
+            w = walkers[npc.id] = { who: npc.id, row: 0, speed: TOWNSFOLK[npc.id].speed, back: Date.now() - Math.random() * TRIP_EVERY * 1000 };
+            [w.x, w.y] = roamSpot(...home, 200, true) || home;
+            w.timer = setTimeout(() => townLife(npc), 800 + Math.random() * 2500);
+        }
+        addWalker(ui, w, 'npc', () => talkTo(npc));
+    });
+    dressTownsfolk();
+}
+
+// Their order over their head, as at their door.
+function dressTownsfolk() {
+    townsfolkIn().forEach(npc => {
+        const el = walkerEl(walkers[npc.id] || {});
+        if (!el) return;
+        el.querySelector('.task-pin')?.remove();
+        el.setAttribute('aria-label', npc.name);
+        const r = npc.request, ready = canFulfill(npc);
+        if (r) addTag(el, 'task-pin' + (ready ? ' ready' : ''), `<span class="pin-item${ready ? ' met' : ''}">${itemIcon(r.mode, r.tier)}</span>`);
+    });
+}
+
+// Tapped: their order (or a chat), while Clara walks over to them.
+function talkTo(npc) {
+    const w = walkers[npc.id];
+    openNpc(npc);
+    holdWalker(npc.id, 4000);
+    if (w && heroEl()) heroGoTo(w.x + (hero.x < w.x ? -55 : 55), w.y + 12, () => {
+        turnTo(hero, [w.x, w.y]);
+        placeWalker(heroEl(), hero);
+        turnTo(w, [hero.x, hero.y]);
+        const el = walkerEl(w);
+        if (el) placeWalker(el, w);
+        emote(w, '👋', 1400);
+    });
+}
+
+// What they do next: off on a trip, on to the next spot on one, home, or
+// pottering about near their door.
+function townLife(npc) {
+    const w = walkers[npc.id], life = TOWNSFOLK[npc.id], now = Date.now();
+    clearTimeout(w.timer);
+    if (w.held > now) return (w.timer = setTimeout(() => townLife(npc), w.held - now));
+    if (openingOn || !tutorial.done) return (w.timer = setTimeout(() => townLife(npc), 2000)); // they wait for the opening film and the first lesson to end
+    const ready = canFulfill(npc), home = homeXY(npc);
+    const go = (to, most) => {
+        const way = to && heroRoute([w.x, w.y], to, most);
+        if (way) walkAlong(w, way, () => rest(npc));
+        return !!way;
+    };
+    const retry = () => { w.timer = setTimeout(() => townLife(npc), 3000); };
+    if (w.trip && (ready || now > w.trip.until)) { w.trip = null; w.back = now; }
+    if (w.trip) return go(roamSpot(...w.trip.at, 300)) || retry();
+    if (Math.hypot(w.x - home[0], w.y - home[1]) > TOWN_ROAM * 1.6) {
+        // Home again (they turn up at their door if there's no way back).
+        const to = roamSpot(...home, 40) || roamSpot(...home, 200, true) || home;
+        if (!go(to, 80000)) { popWalker(w, to); rest(npc); }
+        return;
+    }
+    // Off to their part of the farm, now and then.
+    const trips = life.trips.map(tripMiddle).filter(Boolean);
+    if (!ready && trips.length && now - w.back > TRIP_EVERY * 1000 && Math.random() < 0.4) {
+        const at = trips[Math.floor(Math.random() * trips.length)], to = roamSpot(...at, 260);
+        if (to) {
+            w.trip = { at, until: now + (TRIP_TIME[0] + Math.random() * (TRIP_TIME[1] - TRIP_TIME[0])) * 1000 };
+            if (!go(to, 80000)) { popWalker(w, to); rest(npc); }
+            return;
+        }
+    }
+    // Pottering about (right by their door, while they wait for you).
+    return go(roamSpot(...home, ready ? 50 : TOWN_ROAM)) || retry();
+}
+
+// They turn up somewhere (a little puff, no walk).
+function popWalker(w, at) {
+    stopWalker(w);
+    [w.x, w.y] = at;
+    const el = walkerEl(w);
+    if (!el) return;
+    placeWalker(el, w);
+    el.classList.remove('popping');
+    void el.offsetWidth;
+    el.classList.add('popping');
+    stackWalkers();
+}
+
+// A pause where they are: they turn about, and now and then show what's on
+// their mind; next to a neighbour standing about, the two turn to each other
+// for a chat.
+function rest(npc) {
+    const w = walkers[npc.id], el = walkerEl(w);
+    const friend = Object.values(walkers).find(o => o !== w && TOWNSFOLK[o.who] && !o.way && !(o.held > Date.now()) && Math.hypot(o.x - w.x, o.y - w.y) < 90);
+    if (friend && Math.random() < 0.7) {
+        turnTo(w, [friend.x, friend.y]);
+        turnTo(friend, [w.x, w.y]);
+        const fel = walkerEl(friend);
+        if (fel) placeWalker(fel, friend);
+        emote(w, '💬', 2400);
+        setTimeout(() => emote(friend, ['😄', '💬', '❗'][Math.floor(Math.random() * 3)], 2000), 1300);
+        clearTimeout(friend.timer);
+        friend.timer = setTimeout(() => townLife(npcs.find(n => n.id === friend.who)), 5000);
+    } else {
+        if (Math.random() < 0.6) w.row = [0, 0, 1, 7, 2, 6][Math.floor(Math.random() * 6)];
+        if (Math.random() < 0.3) emote(w, TOWNSFOLK[npc.id].emote, 2200);
+    }
+    if (el) placeWalker(el, w);
+    w.timer = setTimeout(() => townLife(npc), (friend ? 5 : 3 + Math.random() * 6) * 1000);
+}
+
+// They stop where they are and turn to you for a while (talking, cheering).
+function holdWalker(who, ms) {
+    const w = walkers[who], npc = npcs.find(n => n.id === who);
+    if (!w || !npc || !TOWNSFOLK[who]) return;
+    stopWalker(w);
+    w.row = 0;
+    w.held = Date.now() + ms;
+    const el = walkerEl(w);
+    if (el) placeWalker(el, w);
+    clearTimeout(w.timer);
+    w.timer = setTimeout(() => townLife(npc), ms);
+}
+
+// An order handed over or a job done: a hop for joy.
+function cheerWalker(who) {
+    const w = walkers[who], el = walkerEl(w || {});
+    if (!el) return;
+    holdWalker(who, 1800);
+    emote(w, '🎉', 1600);
+    el.classList.remove('cheer');
+    void el.offsetWidth;
+    el.classList.add('cheer');
+}
+
+// Where someone is on a place's picture (% across, % down, at their feet):
+// whoever walks, where they are now (null when they're out of it); anyone
+// else, their spot.
+function personAt(who, place, spot) {
+    const w = walkers[who];
+    if (!w || who === 'hero' || !(ASSETS.people || {})[who] || !TOWNSFOLK[who]) return spot;
+    const [bx, by, bw, bh] = plotBox(place), x = ((w.x - bx) / bw) * 100, y = ((w.y - by) / bh) * 100;
+    return x > 6 && x < 94 && y > 12 && y < 97 ? [x, y] : null;
 }
 
 // --- THE MARKET AND THE TOWN SQUARE, IN THE WORLD ---
@@ -3967,13 +4302,17 @@ function personPlace(who) {
 // An order handed over or a job done: they cheer and clap, now if their
 // place is on screen, otherwise when it next is.
 function cheerPerson(who) {
-    if (currentScene === 'map' && placeShown[personPlace(who)]) posePerson(who, ['cheer', 1000], ['clap', 1500]);
+    if (currentScene === 'map' && placeShown[personPlace(who)]) (TOWNSFOLK[who] && walkers[who] ? cheerWalker(who) : posePerson(who, ['cheer', 1000], ['clap', 1500]));
     else cheerLater.add(who);
 }
 
 // A place comes into view: its people wave (or cheer, if you did something
 // for them while away), each a moment apart.
 function greetPlace(id) {
+    if (id === 'town') townsfolkIn().filter(npc => personAt(npc.id, 'town')).forEach((npc, i) => setTimeout(() => {
+        if (cheerLater.delete(npc.id)) cheerWalker(npc.id);
+        else if (!walkers[npc.id].way) emote(walkers[npc.id], '👋', 1400);
+    }, 150 + i * 220));
     document.querySelectorAll(`#scene-map .place-ui[data-place="${id}"] .place-person.posed`).forEach((el, i) => {
         const who = el.dataset.who;
         setTimeout(() => {
@@ -4047,7 +4386,7 @@ function fillPlace(id, twin) {
     addJobChips(jobs, twin, task => spots.jobs[task.house || task.id] || [50, 50]);
     npcs.forEach(npc => {
         const at = spots.homes[npc.home];
-        if (!at) return;
+        if (!at || townsfolkIn().includes(npc)) return; // they walk about instead (THE TOWNSFOLK, OUT AND ABOUT)
         const person = addPlacePerson(twin, id, at, npc.id, npc.name, () => openNpc(npc));
         person.dataset.npc = npc.id;
         const r = npc.request;
@@ -4057,6 +4396,7 @@ function fillPlace(id, twin) {
 
 function refreshPlaces() {
     document.querySelectorAll('#scene-map .place-ui').forEach(twin => fillPlace(twin.dataset.place, twin));
+    dressTownsfolk();
     openNearestBanner();
 }
 
@@ -4066,10 +4406,12 @@ function placeGreeting(id) {
         const line = shopkeeperHint() || (dealsWaiting() ? 'Fresh Daily Deals on my cart today! Take a look.' : SHOPKEEPER_LINES[shopkeeperLine++ % SHOPKEEPER_LINES.length]);
         return { id: 'shopkeeper', who: 'Shopkeeper', at: PLACE_SPOTS.market.keeper, line };
     }
-    const ready = npcs.find(canFulfill);
-    if (ready) return { id: ready.id, who: ready.name, at: PLACE_SPOTS.town.homes[ready.home], line: `You have my ${itemName(ready.request.mode, ready.request.tier)}! Tap me, and I will take it.` };
+    const here = npc => personAt(npc.id, 'town', PLACE_SPOTS.town.homes[npc.home]);
+    const ready = npcs.find(n => canFulfill(n) && here(n));
+    if (ready) return { id: ready.id, who: ready.name, at: here(ready), line: `You have my ${itemName(ready.request.mode, ready.request.tier)}! Tap me, and I will take it.` };
     const jobs = landTasks('town'), done = jobs.filter(taskDone).length, mayor = npcs.find(n => n.id === 'mayor');
-    return { id: 'mayor', who: mayor.name, at: PLACE_SPOTS.town.homes.townhall,
+    if (!here(mayor)) return null; // out at the Market
+    return { id: 'mayor', who: mayor.name, at: here(mayor),
         line: done < jobs.length ? `Welcome to ${TOWN_NAME}! We fixed ${done} of ${jobs.length} things. The board has today's missions.` : `${TOWN_NAME} looks brand new, thanks to you! The board has today's missions.` };
 }
 
@@ -4077,13 +4419,16 @@ function placeGreeting(id) {
 function placeSay(id, again = false) {
     const twin = document.querySelector(`#scene-map .place-ui[data-place="${id}"]`);
     if (!twin || (placeSaid[id] && !again)) return;
+    const greeting = placeGreeting(id);
+    if (!greeting) return;
     placeSaid[id] = true;
     twin.querySelectorAll('.place-say').forEach(el => el.remove());
-    const { id: speaker, who, at, line } = placeGreeting(id), [, , , bh] = plotBox(id);
+    const { id: speaker, who, at, line } = greeting, [, , , bh] = plotBox(id);
+    const walks = !!walkers[speaker] && !!TOWNSFOLK[speaker], tall = walks ? PERSON_TALL * ASSETS.people[speaker].scale * 0.9 : PERSON_HEIGHT * 0.95;
     const say = document.createElement('div');
     say.className = 'place-say';
     say.style.left = at[0] + '%';
-    say.style.top = at[1] - (PERSON_HEIGHT / bh) * 100 * 0.95 + '%';
+    say.style.top = at[1] - (tall / bh) * 100 + '%';
     say.innerHTML = `<b>${who}</b>${line}`;
     twin.appendChild(say);
     // Kept on screen: nudged sideways if it would run off an edge, its tail still at the speaker.
@@ -4095,7 +4440,8 @@ function placeSay(id, again = false) {
         say.classList.toggle('no-tail', Math.abs(shift) > half - 18); // the speaker is off the screen
     });
     twin.classList.add('talking');
-    posePerson(speaker, ...(again ? [] : [['wave', 1100]]), ['talk', again ? 4500 : 3400]);
+    if (walks) holdWalker(speaker, 4500); // they stop and turn to you while they talk
+    else posePerson(speaker, ...(again ? [] : [['wave', 1100]]), ['talk', again ? 4500 : 3400]);
     const hush = () => {
         say.remove();
         twin.classList.remove('talking');
@@ -4771,9 +5117,9 @@ function jobsOf(...lands) {
 // hen house as she ran, and, watched day and night, leaves notes for the one
 // person he doesn't know: you. Her clues are all in plain sight (green wax and
 // little gold lanterns in her shop, cinnamon buns, floury boots, red hair like
-// the Keeper in Finn's story, and a slip about the "silver" key); the red
-// herrings each get cleared (Finn's lantern, Poppy's tiny feet, the Mayor's
-// nerves, Ruby's rope). You guess who the Friend is, twice; guessing right pays.
+// the Keeper in Mira's story, and a slip about the "silver" key); the red
+// herrings each get cleared (Mira's lantern, Mae's tiny feet, the Mayor's
+// nerves, Ellis's rope). You guess who the Friend is, twice; guessing right pays.
 // Each chapter opens on a cliffhanger; the end teases the Silver Bell.
 
 // Each chapter is a set of jobs, with a scene when it starts (once the one
@@ -4818,9 +5164,9 @@ const CHAPTERS = [
 function guessLine(question, then = 'We\'ll see!') {
     const pick = (label, guess, reply) => ({ label, guess, reply: [...reply, ['narrator', 'You write your guess in your notebook.', then]] });
     return ['ruby', question, [
-        pick('Ruby?', 'ruby', [['ruby', 'Me?! Ha! My writing is way too messy.']]),
-        pick('Poppy?', 'poppy', [['poppy', 'Me? Oh, I would draw flowers on every note!']]),
-        pick('Finn?', 'finn', [['ruby', 'Finn? He can barely spell "fish"!']]),
+        pick('Ellis?', 'ruby', [['ruby', 'Me?! Ha! My writing is way too messy.']]),
+        pick('Mae?', 'poppy', [['poppy', 'Me? Oh, I would draw flowers on every note!']]),
+        pick('Mira?', 'finn', [['ruby', 'Mira? She can barely spell "fish"!']]),
         pick('Marigold?', 'marigold', [['ruby', 'The shop lady? Hmm... she does know a lot.']]),
     ]];
 }
@@ -4835,7 +5181,7 @@ const LAND_STORY = {
     barn: [['ruby', 'The barn looks brand new. Not bad, newbie... I mean, boss!'], ['hattie', 'And the animals love it!'], ['mayor', 'The barn is done. Next, the fields!']],
     farm: [['hattie', 'Rows and rows of food!'], ['mayor', 'Now the families will have food when they come home.']],
     hay: [['hattie', 'The windmill turns again!'], ['ruby', 'Fresh bread for everyone! I bet Grimsby can smell it from his car.']],
-    fert: [['poppy', 'The best soil in the whole valley!'], ['poppy', 'Our plants will grow as tall as Ruby!'], ['ruby', 'Hey!']],
+    fert: [['poppy', 'The best soil in the whole valley!'], ['poppy', 'Our plants will grow as tall as Bram!'], ['hattie', 'Ha! Good luck with that.']],
     aqua: [['finn', 'The fish are jumping again!'], ['finn', 'Come row with me any time, friend.']],
     flower: [['poppy', 'Every flower is blooming!'], ['mayor', 'Sunnyvale has never looked so pretty.']],
 };
@@ -4863,14 +5209,14 @@ function mapBeat(...found) {
 }
 
 const STORY_BEATS = {
-    barn1: [['ruby', 'Hi! I\'m Ruby. I fix stuff. Nice work, newbie!'],
+    barn1: [['ruby', 'Hi! I\'m Ellis. I fix stuff. Nice work, newbie!'],
         ['ruby', 'Hey... what\'s that under the planks?'],
         ['narrator', 'A rolled-up note, closed with green wax. The wax is shaped like a tiny bell.'],
         ['note', 'Welcome, farmer. The Golden Bell is safe, but hidden. Fix the farm and follow my notes.'],
         ['ruby', 'A note about the bell?! Who wrote this?', [
             { label: 'I\'ll find out!', reply: [['ruby', 'Ha! I like you already.']] },
             { label: 'Spooky...', reply: [['ruby', 'Spooky? Nah. Exciting!']] }]]],
-    barn2: [['hattie', 'Howdy, partner! I\'m Hattie. I look after the animals.'],
+    barn2: [['hattie', 'Howdy, partner! I\'m Bram. I look after the animals.'],
         ['hattie', 'My hens ran off the night of the storm. Something gave them a big scare.'],
         ['hattie', 'Animals don\'t lie. Somebody was out here that night.', 'Who?']],
     barn6: [['shopkeeper', 'Yoo-hoo! I\'m Marigold. I run the Market in town.'],
@@ -4880,7 +5226,7 @@ const STORY_BEATS = {
     barn9: [['narrator', 'That night, you see a little gold light out by the fence.'],
         ['narrator', 'It bobs up and down... then it is gone.'],
         ['ruby', 'Someone with a lantern! Out here, at night?'],
-        ['ruby', 'Finn goes night fishing. Just saying.', 'Hmm...']],
+        ['ruby', 'Mira goes night fishing. Just saying.', 'Hmm...']],
     barn10: [['narrator', 'Your new mailbox has its first letter. The paper is grey and stiff.'],
         ['letter', 'Dear Farmer, Sunnyvale is finished. Sell me your farm and go home. I pay well.'],
         ['mayor', 'Grimsby! He wants every farm in the valley.'],
@@ -4911,9 +5257,9 @@ const STORY_BEATS = {
     farm1: [['mayor', 'Our very own field! Splendid!'],
         ['mayor', 'The families can\'t come home to empty fields. Let\'s grow food!']],
     farm5: mapBeat(['narrator', 'The scarecrow\'s pocket crinkles. There is paper inside!']),
-    farm31: [['poppy', 'Hello! I\'m Poppy. The daisies said you were coming.'],
+    farm31: [['poppy', 'Hello! I\'m Mae. The daisies said you were coming.'],
         ['poppy', 'Can I smell your note? ...Mmm. Cinnamon!'],
-        ['hattie', 'Poppy, you have the tiniest feet in town. Were you out at night?'],
+        ['hattie', 'Mae, you have the tiniest feet in town. Were you out at night?'],
         ['poppy', 'Only to sing to the moonflowers. They open at midnight!', [
             { label: 'I believe you.', reply: [['poppy', 'Thank you! You have a kind face.']] },
             { label: 'Hmm, really?', reply: [['poppy', 'Really! Come at midnight and I\'ll sing you a song.']] }]]],
@@ -4936,7 +5282,7 @@ const STORY_BEATS = {
     hay6: [['narrator', 'The sails turn round and round. Whoosh!'],
         ['narrator', 'A note floats down from the top and lands at your feet.'],
         ['note', 'Good work! The one who fishes knows the old Bell Keeper story. Ask him. Quietly!'],
-        ['mayor', 'The one who fishes... that\'s Finn! Is Finn in on this?', 'Let\'s ask Finn!']],
+        ['mayor', 'The one who fishes... that\'s Mira! Is Mira in on this?', 'Let\'s ask Mira!']],
     hay72: [['narrator', 'From the top of the windmill, you can see the whole valley.'],
         ['narrator', 'A little gold light hurries down the road into town...'],
         ['narrator', '...and a long black car follows it, with its lights off.'],
@@ -4947,7 +5293,7 @@ const STORY_BEATS = {
         ['ruby', 'Grimsby tried to climb up. But nobody can get past those stairs.'],
         ['mayor', 'Then we will fix my Town Hall. Every last stair!', 'Let\'s do it!']],
     town2: [['ruby', 'My workshop! I can build anything now!'],
-        ['hattie', 'Ruby... why is the bell\'s old rope in your shed?'],
+        ['hattie', 'Ellis... why is the bell\'s old rope in your shed?'],
         ['ruby', 'Don\'t look at me like that! I found it in the river after the storm.'],
         ['ruby', 'I\'m fixing it. For when we find the bell!', [
             { label: 'I believe you.', reply: [['ruby', 'Thanks, boss. That means a lot.']] },
@@ -4960,7 +5306,7 @@ const STORY_BEATS = {
         ['ruby', 'Empty! So he never got the bell!', 'Phew!']],
     town5: [['poppy', 'My shop smells like spring again!'],
         ['poppy', 'And look, my boots have little flowers on the bottom. No flour!'],
-        ['hattie', 'So those small floury boots weren\'t yours. Sorry, Poppy!', 'Sorry, Poppy!']],
+        ['hattie', 'So those small floury boots weren\'t yours. Sorry, Mae!', 'Sorry, Mae!']],
     town6: () => {
         const right = story.guess === 'marigold';
         if (right && !story.guessPaid) { story.guessPaid = true; grantReward({ gems: 25 }, '🔍 Mystery solved:'); }
@@ -4986,7 +5332,7 @@ const STORY_BEATS = {
         ['letter', 'Fine. Keep your silly bell. I\'m leaving. But I\'ll be back!'],
         ['hattie', 'He\'s gone! Yee-haw! Let\'s dance!'],
         ['mayor', 'Thank you, farmer. You saved Sunnyvale. You are one of us now.'],
-        ['narrator', 'Later, Ruby polishes the bell. Inside, words are carved in the gold:'],
+        ['narrator', 'Later, Ellis polishes the bell. Inside, words are carved in the gold:'],
         ['note', 'When the gold bell rings again, look for the silver one.', null, ''],
         ['finn', 'The Silver Bell! Grandpa said that was the second part of the story...', 'To be continued!']],
     fert1: [['poppy', 'Leaves and mud! This is where good gardens begin.']],
@@ -4997,7 +5343,7 @@ const STORY_BEATS = {
         ['narrator', 'The lights shine on a note, tucked in a mossy log.'],
         ['note', 'You are so close. Fix the town and climb the tower. Bring the silver key.'],
         ['poppy', 'Cinnamon again... Where have I smelled that before?', 'Hmm!']],
-    aqua1: [['finn', 'Ahoy! Finn\'s the name. Fish are my game.'],
+    aqua1: [['finn', 'Ahoy! Mira\'s the name. Fish are my game.'],
         ['finn', 'A night lantern? Sure, I fish at night. But my lantern is big and green.'],
         ['finn', 'A little gold one? Not mine, friend.'],
         ['finn', 'Help me fix my pond, and I\'ll tell you the Bell Keeper story.', 'Deal!']],
@@ -5026,8 +5372,8 @@ const CLUES = [
     { task: 'hen3', icon: '🗝️', text: 'A silver key with a tiny bell', recap: 'You found a little silver key in a nest.', next: 'Fix the nest in the Hen House.' },
     { task: 'big5', icon: 'note', text: 'Note 2: the big wheel, and the grey coat', recap: 'Note 2 sent you to the big wheel the wind turns.', next: 'One jar in the Barn Storeroom has no jam...' },
     { task: 'farm28', icon: '🎩', text: 'The Mayor let a stranger into the tower', recap: 'The Mayor let a man in a grey coat into the bell tower.', next: 'Lay out a picnic in the Orchard. The Mayor wants to talk.' },
-    { task: 'hay6', icon: 'note', text: 'Note 3: ask the one who fishes', recap: 'Note 3 said Finn knows the old Bell Keeper story.', next: 'Get the windmill\'s sails turning.' },
-    { task: 'aqua3', icon: '📖', text: 'The secret Keeper had red hair', recap: 'Finn says a secret Bell Keeper guards the bell. The last one had red hair.', next: 'Fix up the Fish Pond. Finn has a story for you.' },
+    { task: 'hay6', icon: 'note', text: 'Note 3: ask the one who fishes', recap: 'Note 3 said Mira knows the old Bell Keeper story.', next: 'Get the windmill\'s sails turning.' },
+    { task: 'aqua3', icon: '📖', text: 'The secret Keeper had red hair', recap: 'Mira says a secret Bell Keeper guards the bell. The last one had red hair.', next: 'Fix up the Fish Pond. Mira has a story for you.' },
     { task: 'fert5', icon: 'note', text: 'Note 4: climb the tower (it smells of cinnamon)', recap: 'Note 4 said: fix the town and climb the tower.', next: 'Hang the fairy lights in the Mushroom Corner.' },
     { map: true, icon: '🗺️' },
     { task: 'town6', icon: '🔔', text: 'The Golden Bell is found!', recap: 'You found the Golden Bell! Marigold was the Friend.', next: 'Restore the Town Hall and climb the tower.' },
@@ -5037,10 +5383,10 @@ const CLUES = [
 // when they're cleared (Marigold's stays a question until the bell is found).
 const SUSPECTS = [
     { who: 'shopkeeper', name: 'Marigold', from: 'barn6', note: 'Sells a bit of everything. Bakes cinnamon buns.', end: 'town6', endNote: 'The Friend, and the Bell Keeper! 🔔' },
-    { who: 'finn', name: 'Finn', from: 'barn9', note: 'Fishes at night with a lantern...', end: 'aqua1', endNote: 'His lantern is big and green. ✓' },
+    { who: 'finn', name: 'Mira', from: 'barn9', note: 'Fishes at night with a lantern...', end: 'aqua1', endNote: 'Her lantern is big and green. ✓' },
     { who: 'mayor', name: 'Mayor Bramble', from: 'barn20', note: 'Why was he sweating?', end: 'farm28', endNote: 'He let the stranger in. Sorry, not sneaky. ✓' },
-    { who: 'poppy', name: 'Poppy', from: 'farm31', note: 'Tiny feet. Out at midnight...', end: 'town5', endNote: 'Her boots have flowers, not flour. ✓' },
-    { who: 'ruby', name: 'Ruby', from: 'town2', note: 'Had the bell\'s rope in her shed!', end: 'town6', endNote: 'She really was fixing it. ✓' },
+    { who: 'poppy', name: 'Mae', from: 'farm31', note: 'Tiny feet. Out at midnight...', end: 'town5', endNote: 'Her boots have flowers, not flour. ✓' },
+    { who: 'ruby', name: 'Ellis', from: 'town2', note: 'Had the bell\'s rope in his shed!', end: 'town6', endNote: 'He really was fixing it. ✓' },
 ];
 
 // The mystery so far: what's been found, who's who, and where the next clue hides.
@@ -5276,7 +5622,7 @@ function playOpening() {
         const mayor = npcs.find(n => n.id === 'mayor');
         await ask(`<img class="op-who" src="${ASSETS.characters.mayor || npcPicture(mayor)}" alt="">
             <b class="op-name">${mayor.name}</b>
-            <p>You came! You must be the new farmer. Welcome to ${TOWN_NAME}!</p>
+            <p>You came! You must be Clara, the new farmer. Welcome to ${TOWN_NAME}!</p>
             <p>Our Golden Bell is gone. The families say they will come home when it rings again.</p>
             <p>Will you help us fix the farm... and find the bell?</p>`, 'I\'ll help!');
         if (skipped) return;
@@ -6192,17 +6538,19 @@ function buyDeed(id) {
 }
 
 // --- TOWNSFOLK SYSTEM ---
-// Each NPC lives in a building on the town square and stands in front of it.
+// Each NPC lives in a building on the town square. Their ids are from the first cast (the
+// saves and the story use them): ruby is Ellis Spokewell, the carpenter; hattie is Bram
+// Goodbarrel, the rancher; finn is Mira Quayle, the fisher; poppy is Mae Bloombarrow, the florist.
 const npcs = [
     { id: 'mayor',  name: 'Mayor Bramble', pref: ['farm', 'fert'], deliveries: 0, request: null,
       home: 'townhall',   building: { x: 27, y: 2,  w: 46 }, spot: { x: 41, y: 28, w: 18 } },
-    { id: 'ruby',  name: 'Ruby',         pref: ['hay'],          deliveries: 0, request: null,
+    { id: 'ruby',  name: 'Ellis',        pref: ['hay'],          deliveries: 0, request: null,
       home: 'carpenter',  building: { x: 1,  y: 21, w: 34 }, spot: { x: 8,  y: 42, w: 17 } },
-    { id: 'hattie', name: 'Hattie',        pref: ['barn'],         deliveries: 0, request: null,
+    { id: 'hattie', name: 'Bram',          pref: ['barn'],         deliveries: 0, request: null,
       home: 'ranch',      building: { x: 65, y: 21, w: 34 }, spot: { x: 75, y: 42, w: 17 } },
-    { id: 'finn',  name: 'Finn',         pref: ['aqua'],         deliveries: 0, request: null,
+    { id: 'finn',  name: 'Mira',         pref: ['aqua'],         deliveries: 0, request: null,
       home: 'fishshop',   building: { x: 1,  y: 58, w: 36 }, spot: { x: 11, y: 79, w: 17 } },
-    { id: 'poppy',  name: 'Poppy',         pref: ['flower'],       deliveries: 0, request: null,
+    { id: 'poppy',  name: 'Mae',           pref: ['flower'],       deliveries: 0, request: null,
       home: 'flowershop', building: { x: 63, y: 58, w: 36 }, spot: { x: 72, y: 79, w: 17 } },
 ];
 
@@ -6232,7 +6580,7 @@ function generateRequestFor(npc) {
 
 function initTown(newGame = false) {
     npcs.forEach(npc => generateRequestFor(npc));
-    // A new game's first order is an easy one with a producer part in it: Hattie
+    // A new game's first order is an easy one with a producer part in it: Bram
     // wants an Egg, which the tutorial walks you through.
     if (newGame) {
         const hattie = npcs.find(npc => npc.id === 'hattie');
@@ -9887,7 +10235,7 @@ addEventListener('pagehide', saveGame);
 const preloaded = [];
 (window.requestIdleCallback || (go => setTimeout(go, 1500)))(() => {
     const A = ASSETS, srcs = [...Object.values(A.plots || {}), (A.world || {}).ground, ...Object.values((A.world || {}).scenery || {}),
-        ...Object.values((A.hero || {}).poses || {}), (A.hero || {}).walk, ...Object.values(A.characters || {})].filter(Boolean);
+        ...Object.values(A.people || {}).map(p => p.walk), ...Object.values(A.characters || {})].filter(Boolean);
     srcs.forEach(src => {
         const img = new Image();
         img.decoding = 'async';

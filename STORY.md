@@ -19,37 +19,41 @@ person Grimsby didn't know: the new farmer.
 
 ## The cast and their voices
 
+Their art is in the Drive folder "characters for merge keeper" (see ASSET_LIST.md, 4). In the code the townsfolk
+keep the first cast's ids (saves and story lines use them): `ruby` is Ellis, `hattie` Bram, `finn` Mira, `poppy` Mae.
+
 | Who | Look | Voice | Wants / arc |
 |---|---|---|---|
-| Mayor Bramble | silver hair, navy suit | grand, a bit vain: "Splendid!", "My dear farmer" | hides his guilt (he let Grimsby in), confesses, makes it right |
-| Ruby (carpenter) | biker goggles, work boots | blunt, quick, teasing: "Boom!", calls you "newbie", later "boss" | trusts nobody at first, learns to trust |
-| Hattie (rancher) | blue braids, goggles, leather jacket | loud and warm: "Howdy, partner!", "Yee-haw!" | reads her animals like clues |
-| Finn (fisherman) | bucket hat, beard | calm, jokey, fish puns, tells old stories | the keeper of the legend |
-| Poppy (florist) | flower crown | dreamy, kind, notices small things (smells cinnamon) | talks to plants |
+| Clara Everhart (you, the new farmer) | blonde braid with a red bow, red vest, green trousers, toolbox, blueprints, an old key | (you don't speak) | fixes the farm, follows the notes |
+| Mayor Bramble | dark curly hair, green vest, red tie, pocket watch, a pile of letters, always a cup of tea | grand, a bit vain: "Splendid!", "My dear farmer" | hides his guilt (he let Grimsby in), confesses, makes it right |
+| Ellis Spokewell (carpenter) | brown hair, blue shirt, leather apron full of tools | blunt, quick, teasing: "Boom!", calls you "newbie", later "boss" | trusts nobody at first, learns to trust |
+| Bram Goodbarrel (rancher) | big and bearded, red plaid shirt, braces, hammer on his belt | loud and warm: "Howdy, partner!", "Yee-haw!" | reads his animals like clues |
+| Mira Quayle (fisher) | long black hair, striped shirt, mustard vest, a compass and a coil of rope | calm, jokey, fish puns, tells old stories | the keeper of the legend |
+| Mae Bloombarrow (florist) | small, red curls, pink headscarf, flowery apron, watering can, rain boots | dreamy, kind, notices small things (smells cinnamon) | talks to plants |
 | Marigold (shopkeeper) | red hair, green dress, apron | sweet, chatty, "dear", "Hee hee!" | the Friend; slips once ("silver" key) |
 | Mr. Grimsby | never seen: grey coat, city shoes, black car | grey typed letters, cold and pushy | wants the land and the gold; leaves, "But I'll be back!" |
 
 ## Fair-play clues (all point to Marigold)
 
 Green wax seals (she sells "candles, green wax and string"), little gold lanterns ("two for a coin" at her shop),
-cinnamon on the notes (her cinnamon buns), small boots with flour, the red-haired Keeper in Finn's story, and her slip
+cinnamon on the notes (her cinnamon buns), small boots with flour, the red-haired Keeper in Mira's story, and her slip
 at the Market after the key turns up: "Keep that silver key safe" (nobody told her it was silver).
 
 ## Red herrings, each cleared
 
 | Suspect | Why | Cleared |
 |---|---|---|
-| Finn | a lantern by the fence at night | his lantern is big and green (aqua1) |
+| Mira | a lantern by the fence at night | her lantern is big and green (aqua1) |
 | Mayor | sweats about the footprints | confesses he let Grimsby in (farm28) |
-| Poppy | tiniest feet, out at midnight | her boots have flowers, not flour (town5) |
-| Ruby | the bell's rope is in her shed | she found it in the river, to fix it (town6) |
+| Mae | tiniest feet, out at midnight | her boots have flowers, not flour (town5) |
+| Ellis | the bell's rope is in his shed | he found it in the river, to fix it (town6) |
 
 ## Chapters (each opens on a cliffhanger)
 
 1. **A Note in the Planks** (Barnyard): the first note, the night lantern, two sets of footprints, Grimsby's first letter.
 2. **The Silver Key** (Hen House, Storeroom): the hens scream at night; the key in the nest; map piece; note 2 warns of the grey coat.
-3. **The Big Wheel** (fields, Hay Field): Grimsby's car watches; Poppy smells cinnamon; the Mayor confesses; the windmill's note sends you to Finn; the car follows the Friend's lantern into town.
-4. **Fog Over Town** (town, Compost Yard, Fish Pond): first guess; Ruby's rope; Finn's legend and alibi; note 4; the map shows an X on the tower.
+3. **The Big Wheel** (fields, Hay Field): Grimsby's car watches; Mae smells cinnamon; the Mayor confesses; the windmill's note sends you to Mira; the car follows the Friend's lantern into town.
+4. **Fog Over Town** (town, Compost Yard, Fish Pond): first guess; Ellis's rope; Mira's legend and alibi; note 4; the map shows an X on the tower.
 5. **The Golden Bell** (town, Flower Garden): Grimsby's deadline; last guess; the reveal in the tower; the bell rings and the families come home; the carving inside the bell teases **the Silver Bell** (season 2).
 
 ## What keeps players coming back

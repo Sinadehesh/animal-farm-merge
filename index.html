@@ -1868,22 +1868,30 @@
         .world-view .fix-spot.chip { width: 7cqw; height: 7cqw; }
         .world-view .fix-spot.chip .task-pin { gap: 1cqw; padding: 1.2cqw; }
         .world-view .fix-spot.chip .pin-item { width: 8.5cqw; height: 8.5cqw; }
-        /* The farmer walking about the farm (walkHeroTo). */
-        .hero { position: absolute; z-index: 150; pointer-events: none; }
-        .hero-sprite { position: absolute; inset: 0; background-size: 1400% 100%; background-repeat: no-repeat; background-position: 0 0; }
-        .hero.left .hero-sprite { transform: scaleX(-1); }
-        .hero.walking .hero-sprite { animation: hero-walk 0.85s steps(14, jump-none) infinite; }
-        .hero.popping { animation: hero-pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1); transform-origin: 50% 100%; }
+        /* People walking about the world (PEOPLE WALKING ABOUT): Clara and the townsfolk. */
+        .walker { position: absolute; left: 0; top: 0; z-index: 150; padding: 0; border: 0; background: none; pointer-events: none; will-change: translate; } /* its own layer: moving it repaints nothing under it */
+        .world-ui > button.walker { pointer-events: auto; cursor: pointer; }
+        .walker-sprite { position: absolute; inset: 0; background-size: 400% 800%; background-repeat: no-repeat; background-position: 0 calc(var(--row, 0) * 100% / 7); transform-origin: 50% 100%; }
+        .walker.walking .walker-sprite { animation: walk-cycle var(--step, 0.6s) steps(4) infinite; }
+        .walker:not(.walking) .walker-sprite { animation: breathe 2.8s ease-in-out infinite; }
+        .walker.cheer .walker-sprite { animation: hero-hop 0.42s ease-out 3; }
+        .walker[data-pose="hammer"]:not(.walking) .walker-sprite { animation: hero-hammer 0.32s ease-in-out infinite; }
+        .walker.popping { animation: hero-pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1); transform-origin: 50% 100%; }
+        @keyframes walk-cycle { from { background-position-x: 0%; } to { background-position-x: 133.333%; } }
+        @keyframes breathe { 0%, 100% { scale: 1 1; } 50% { scale: 1.006 1.014; } }
         @keyframes hero-pop { from { opacity: 0; scale: 0.3; } }
-        .hero.cheer .hero-sprite, .hero.cheer .hero-stand { animation: hero-hop 0.42s ease-out 3; }
-        /* Standing still she stands (her own picture); the walk cycle only while she walks. */
-        .hero-stand { position: absolute; left: 50%; bottom: 3%; height: 95%; transform: translateX(-50%); pointer-events: none; } /* the hop moves it by translate */
-        .hero:has(.hero-stand):not(.walking) .hero-sprite, .hero.walking .hero-stand { visibility: hidden; }
-        .hero.left .hero-stand { scale: -1 1; }
-        .hero[data-pose="hammer"] .hero-stand { animation: hero-hammer 0.32s ease-in-out infinite; transform-origin: 50% 100%; }
         @keyframes hero-hammer { 0%, 100% { rotate: 0deg; } 45% { rotate: -5deg; } 60% { rotate: 3deg; } }
-        .hero-shadow { position: absolute; left: 18%; right: 18%; bottom: -4%; height: 9%; background: radial-gradient(closest-side, rgba(40, 30, 10, 0.38), transparent); }
-        @keyframes hero-walk { from { background-position: 0 0; } to { background-position: 100% 0; } }
+        .walker-shadow { position: absolute; left: 20%; right: 20%; bottom: -3%; height: 8%; background: radial-gradient(closest-side, rgba(40, 30, 10, 0.4), transparent); }
+        .walker .task-pin { bottom: 97%; }
+        /* A thought over someone's head: what they're doing or thinking about. */
+        .walker .emote { position: absolute; left: 50%; bottom: 100%; translate: -50% -8%; display: grid; place-items: center; width: 8.5cqw; height: 8.5cqw; border-radius: 50%;
+            background: #fff; border: 0.5cqw solid var(--ink); box-shadow: 0 0.8cqw 1.6cqw rgba(30, 20, 5, 0.25); font-style: normal; font-size: 4.6cqw; line-height: 1; animation: banner-in 0.3s cubic-bezier(0.3, 1.6, 0.5, 1); }
+        .walker .emote img, .walker .emote .ui-icon { width: 76%; height: 76%; }
+        .walker:has(.task-pin) .emote { bottom: calc(100% + 10cqw); }
+        /* Where a tap sends Clara: a ring on the ground (red: nowhere to stand there). */
+        .walk-mark { position: absolute; z-index: 139; border: 0.6cqw solid rgba(255, 255, 255, 0.95); border-radius: 50%; box-shadow: 0 0 1cqw rgba(0, 0, 0, 0.25); pointer-events: none; animation: walk-mark 0.8s ease-out forwards; }
+        .walk-mark.no { border-color: rgba(214, 64, 52, 0.95); }
+        @keyframes walk-mark { from { scale: 0.3; opacity: 1; } to { scale: 1.15; opacity: 0; } }
         @keyframes hero-hop { 0%, 100% { translate: 0 0; } 40% { translate: 0 -16%; } 70% { translate: 0 -4%; } }
         /* ?layout */
         .plot-prop.layout, .plot-dot.layout { pointer-events: auto; cursor: move; touch-action: none; }
@@ -2240,8 +2248,8 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610241007"></script>
-    <script src="monetize.js?v=202610241007"></script>
-    <script src="game.js?v=202610241007"></script>
+    <script src="assets.js?v=202610261349"></script>
+    <script src="monetize.js?v=202610261349"></script>
+    <script src="game.js?v=202610261349"></script>
 </body>
 </html>

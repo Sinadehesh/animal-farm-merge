@@ -118,15 +118,20 @@ const ASSETS = {
         market: 'assets/map/plots/market.webp', town: 'assets/map/plots/town.webp',
     },
     // Plot props, by name: transparent pictures cut from the sheets in assets/raw/plots/.
-    // The farmer: a walk cycle (14 frames in a row, cut from assets/raw/hero/walk_towards.mp4),
-    // and her poses when she isn't walking (cut from assets/raw/hero/poses.jpg, all at one scale).
-    hero: {
-        walk: 'assets/hero/walk.webp', frames: 14, aspect: 204 / 360,
-        poses: {
-            stand: 'assets/hero/poses/stand.webp', hammer: 'assets/hero/poses/hammer.webp', jump: 'assets/hero/poses/jump.webp',
-            clap: 'assets/hero/poses/clap.webp', wave: 'assets/hero/poses/wave.webp', think: 'assets/hero/poses/think.webp',
-            point: 'assets/hero/poses/point.webp', carry: 'assets/hero/poses/carry.webp',
-        },
+
+    // Everyone who walks about the world: Clara (the player, `hero`) and the townsfolk, keyed
+    // by NPC id. Cut by tools/cutwalk.py from the art sheets in the Drive folder "characters
+    // for merge keeper": walk is 8 rows of 4 frames (facing S, SW, W, NW, N, NE, E, SE; the
+    // first of each row is the one they stand in), aspect a frame's width over its height,
+    // scale how tall they stand next to Clara. body (standing, facing you), side (three
+    // quarters, for dialogs) and face (head and shoulders) are used below.
+    people: {
+        hero:   { name: 'Clara Everhart',  walk: 'assets/people/clara/walk.webp', aspect: 151 / 256, scale: 1 },
+        mayor:  { name: 'Village Mayor',   walk: 'assets/people/mayor/walk.webp', aspect: 140 / 256, scale: 1 },
+        hattie: { name: 'Bram Goodbarrel', walk: 'assets/people/bram/walk.webp',  aspect: 158 / 256, scale: 1.06 },
+        ruby:   { name: 'Ellis Spokewell', walk: 'assets/people/ellis/walk.webp', aspect: 145 / 256, scale: 1 },
+        finn:   { name: 'Mira Quayle',     walk: 'assets/people/mira/walk.webp',  aspect: 144 / 256, scale: 0.98 },
+        poppy:  { name: 'Mae Bloombarrow', walk: 'assets/people/mae/walk.webp',   aspect: 151 / 256, scale: 0.8 },
     },
 
     // The sparkle layer's pictures (see THE SPARKLE LAYER in game.js), cut from
@@ -287,77 +292,50 @@ const ASSETS = {
         flowershop: 'assets/town/flowershop.svg',
     },
 
-    // Townsfolk (keyed by NPC id) and the market shopkeeper, standing.
+    // Townsfolk (keyed by NPC id) and the market shopkeeper, standing. The townsfolk's are
+    // the new cast (see people above): Bram runs the ranch, Ellis the carpenter's, Mira the
+    // fish shop and Mae the flower shop.
     characters: {
-        mayor: 'assets/characters/poses/mayor/body.webp',
-        hattie: 'assets/characters/poses/hattie/body.webp',
-        ruby: 'assets/characters/poses/ruby/body.webp',
-        finn: 'assets/characters/poses/finn/body.webp',
-        poppy: 'assets/characters/poses/poppy/body.webp',
+        mayor: 'assets/people/mayor/body.webp',
+        hattie: 'assets/people/bram/body.webp',
+        ruby: 'assets/people/ellis/body.webp',
+        finn: 'assets/people/mira/body.webp',
+        poppy: 'assets/people/mae/body.webp',
         shopkeeper: 'assets/characters/poses/shopkeeper/body.webp',
     },
 
     // Head-and-shoulders portraits, shown in a round frame (cards, the town,
     // popups). null = frame the full-body drawing above instead.
     portraits: {
-        mayor: 'assets/characters/poses/mayor/face.webp',
-        hattie: 'assets/characters/poses/hattie/face.webp',
-        ruby: 'assets/characters/poses/ruby/face.webp',
-        finn: 'assets/characters/poses/finn/face.webp',
-        poppy: 'assets/characters/poses/poppy/face.webp',
+        mayor: 'assets/people/mayor/face.webp',
+        hattie: 'assets/people/bram/face.webp',
+        ruby: 'assets/people/ellis/face.webp',
+        finn: 'assets/people/mira/face.webp',
+        poppy: 'assets/people/mae/face.webp',
         shopkeeper: 'assets/characters/poses/shopkeeper/face.webp',
     },
 
     // The same people from the waist up, waving (calling you over, story
-    // scenes), and full body cheering (after a fix). null = the portrait instead.
+    // scenes; the new cast: walking towards you), and full body cheering (after a
+    // fix). null or missing = the portrait instead.
     wave: {
-        mayor: 'assets/characters/poses/mayor/hello.webp',
-        hattie: 'assets/characters/poses/hattie/hello.webp',
-        ruby: 'assets/characters/poses/ruby/hello.webp',
-        finn: 'assets/characters/poses/finn/hello.webp',
-        poppy: 'assets/characters/poses/poppy/hello.webp',
+        mayor: 'assets/people/mayor/side.webp',
+        hattie: 'assets/people/bram/side.webp',
+        ruby: 'assets/people/ellis/side.webp',
+        finn: 'assets/people/mira/side.webp',
+        poppy: 'assets/people/mae/side.webp',
         shopkeeper: 'assets/characters/poses/shopkeeper/hello.webp',
     },
     cheer: {
-        mayor: 'assets/characters/poses/mayor/cheer.webp',
-        hattie: 'assets/characters/poses/hattie/cheer.webp',
-        ruby: 'assets/characters/poses/ruby/cheer.webp',
-        finn: 'assets/characters/poses/finn/cheer.webp',
-        poppy: 'assets/characters/poses/poppy/cheer.webp',
         shopkeeper: 'assets/characters/poses/shopkeeper/cheer.webp',
     },
 
-    // Each person's poses in the town and the market, cut from
+    // The shopkeeper's poses in the market (the townsfolk walk instead), cut from
     // assets/raw/characters/<id>_poses.jpg with tools/cutposes.py (which also
     // makes the body, face and hello pictures above). All are drawn on one
     // frame: [width, height, the standing figure's height, the feet's height
     // above the bottom], in px. Who has none stands in one picture.
     poses: {
-        mayor: {
-            frame: [186, 263, 253, 4],
-            stand: 'assets/characters/poses/mayor/stand.webp', wave: 'assets/characters/poses/mayor/wave.webp', talk: 'assets/characters/poses/mayor/talk.webp', cheer: 'assets/characters/poses/mayor/cheer.webp',
-            clap: 'assets/characters/poses/mayor/clap.webp', think: 'assets/characters/poses/mayor/think.webp', point: 'assets/characters/poses/mayor/point.webp', ask: 'assets/characters/poses/mayor/ask.webp',
-        },
-        ruby: {
-            frame: [172, 262, 244, 4],
-            stand: 'assets/characters/poses/ruby/stand.webp', wave: 'assets/characters/poses/ruby/wave.webp', talk: 'assets/characters/poses/ruby/talk.webp', cheer: 'assets/characters/poses/ruby/cheer.webp',
-            clap: 'assets/characters/poses/ruby/clap.webp', think: 'assets/characters/poses/ruby/think.webp', point: 'assets/characters/poses/ruby/point.webp', ask: 'assets/characters/poses/ruby/ask.webp',
-        },
-        finn: {
-            frame: [202, 267, 256, 4],
-            stand: 'assets/characters/poses/finn/stand.webp', wave: 'assets/characters/poses/finn/wave.webp', talk: 'assets/characters/poses/finn/talk.webp', cheer: 'assets/characters/poses/finn/cheer.webp',
-            clap: 'assets/characters/poses/finn/clap.webp', think: 'assets/characters/poses/finn/think.webp', point: 'assets/characters/poses/finn/point.webp', ask: 'assets/characters/poses/finn/ask.webp',
-        },
-        poppy: {
-            frame: [194, 272, 249, 4],
-            stand: 'assets/characters/poses/poppy/stand.webp', wave: 'assets/characters/poses/poppy/wave.webp', talk: 'assets/characters/poses/poppy/talk.webp', cheer: 'assets/characters/poses/poppy/cheer.webp',
-            clap: 'assets/characters/poses/poppy/clap.webp', think: 'assets/characters/poses/poppy/think.webp', point: 'assets/characters/poses/poppy/point.webp', ask: 'assets/characters/poses/poppy/ask.webp',
-        },
-        hattie: {
-            frame: [200, 240, 225, 4],
-            stand: 'assets/characters/poses/hattie/stand.webp', wave: 'assets/characters/poses/hattie/wave.webp', talk: 'assets/characters/poses/hattie/talk.webp', cheer: 'assets/characters/poses/hattie/cheer.webp',
-            clap: 'assets/characters/poses/hattie/clap.webp', think: 'assets/characters/poses/hattie/think.webp', point: 'assets/characters/poses/hattie/point.webp', ask: 'assets/characters/poses/hattie/ask.webp',
-        },
         shopkeeper: {
             frame: [184, 264, 256, 4],
             stand: 'assets/characters/poses/shopkeeper/stand.webp', wave: 'assets/characters/poses/shopkeeper/wave.webp', talk: 'assets/characters/poses/shopkeeper/talk.webp', cheer: 'assets/characters/poses/shopkeeper/cheer.webp',

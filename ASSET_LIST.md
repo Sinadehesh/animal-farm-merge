@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**690 assets:** 643 done ✅, 6 placeholders 🟡, 41 missing ⬜.
+**680 assets:** 633 done ✅, 8 placeholders 🟡, 39 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -70,28 +70,32 @@ List them under `buildingsRestored` in `assets.js`.
 | | House | File | What it shows |
 |---|---|---|---|
 | 🟡 | Townhall | `assets/town/townhall.svg` → `assets/town/townhall.png` | the Mayor's town hall with columns |
-| 🟡 | Carpenter | `assets/town/carpenter.svg` → `assets/town/carpenter.png` | Ruby's log cabin carpenter shop |
-| 🟡 | Ranch | `assets/town/ranch.svg` → `assets/town/ranch.png` | Hattie's ranch house with a fence |
-| 🟡 | Fishshop | `assets/town/fishshop.svg` → `assets/town/fishshop.png` | Finn's fish shop by the water |
-| 🟡 | Flowershop | `assets/town/flowershop.svg` → `assets/town/flowershop.png` | Poppy's flower shop |
+| 🟡 | Carpenter | `assets/town/carpenter.svg` → `assets/town/carpenter.png` | Ellis's log cabin carpenter shop |
+| 🟡 | Ranch | `assets/town/ranch.svg` → `assets/town/ranch.png` | Bram's ranch house with a fence |
+| 🟡 | Fishshop | `assets/town/fishshop.svg` → `assets/town/fishshop.png` | Mira's fish shop by the water |
+| 🟡 | Flowershop | `assets/town/flowershop.svg` → `assets/town/flowershop.png` | Mae's flower shop |
 
-## 4. Characters (6 people)
+## 4. Characters (7 people)
 
-One pose sheet per person (`assets/raw/characters/<id>_poses.jpg`: 4 × 2 full-body poses on flat magenta, in the
-order stand, wave, talk, cheer / clap, think, point, ask), cut by `tools/cutposes.py` into the 8 **poses** they
-strike in the town and the market (`assets/characters/poses/<id>/`), plus a head-and-shoulders **portrait** (round
-frames), **waving** from the waist up (calling you over, story scenes), **standing** in a square (the areas, the
-opening) and **cheering** (after a fix). Who has no pose sheet yet keeps their older 2x2 sheet
-(`assets/raw/character_<id>.webp`) and stands still.
+The cast walks about the world (Clara wherever you tap, the townsfolk round their doors and out to their part of
+the farm). Their art is in the Drive folder "characters for merge keeper": per person an **8-direction walk**
+(8 rows of 4 frames), the same walk as bigger figures in two sheets (**cardinal** and **diagonal**, not on a grid)
+and a **character reference**. `tools/cutwalk.py` cuts them into `assets/people/<name>/`: `walk.webp` (the walk,
+every frame on one box so the feet stay put), `body.webp` (standing, facing you: the areas, the opening),
+`side.webp` (three quarters: dialogs and story scenes) and `face.webp` (the round portraits, from the reference's
+big portrait when there is one). They're listed in `people`, `characters`, `wave` and `portraits` in `assets.js`.
+🟡: the bigger sheets and the reference were over the Drive download limit (6 MB), so standing, side and face are
+cut from the small walk for now; re-upload them as smaller PNG/WebP (or the references as JPG) and run the tool again.
 
-| | Character | Portrait | Waving | Standing | Cheering | Poses |
-|---|---|---|---|---|---|---|
-| ✅ | Mayor Bramble | ✅ | ✅ | ✅ | ✅ | ✅ 8 |
-| ✅ | Hattie, the rancher | ✅ | ✅ | ✅ | ✅ | ✅ 8 |
-| ✅ | Ruby, the carpenter | ✅ | ✅ | ✅ | ✅ | ✅ 8 |
-| ✅ | Finn, the fisherman | ✅ | ✅ | ✅ | ✅ | ✅ 8 |
-| ✅ | Poppy, the florist | ✅ | ✅ | ✅ | ✅ | ✅ 8 |
-| ✅ | the Market shopkeeper | ✅ | ✅ | ✅ | ✅ | ✅ 8 |
+| | Character | Walk | Standing | Side | Portrait |
+|---|---|---|---|---|---|
+| ✅ | Clara Everhart, the player (`hero`) | ✅ | ✅ | ✅ | ✅ reference |
+| ✅ | the Village Mayor, Mayor Bramble (`mayor`) | ✅ | ✅ | ✅ | ✅ reference |
+| 🟡 | Bram Goodbarrel, the rancher (`hattie`) | ✅ | 🟡 | 🟡 | 🟡 |
+| ✅ | Ellis Spokewell, the carpenter (`ruby`) | ✅ | ✅ | ✅ | ✅ from the bigger figures |
+| ✅ | Mira Quayle, the fisher (`finn`) | ✅ | ✅ | ✅ | ✅ from the bigger figures |
+| 🟡 | Mae Bloombarrow, the florist (`poppy`) | ✅ | 🟡 | 🟡 | 🟡 |
+| ✅ | the Market shopkeeper, Marigold: one pose sheet (`assets/raw/characters/shopkeeper_poses.jpg`, 4 × 2 poses on magenta), cut by `tools/cutposes.py` into her 8 poses in the market (`assets/characters/poses/shopkeeper/`), portrait, waving, standing and cheering | | | | |
 
 ## 5. Props (4)
 
@@ -562,22 +566,7 @@ Sheets of 8 on flat magenta, cut by name into `assets/map/props/`. Shared by eve
 
 ### The farmer
 
-She walks about the farm to each job. Walk cycles cut from short videos on flat magenta (Gemini), kept in
-`assets/raw/hero/`; listed in `hero` in `assets.js`. Still to come: walking away from the camera, and a jump-and-clap.
-
-| | Clip | File |
-|---|---|---|
-| ✅ | Walking towards the camera (14 frames) | `assets/hero/walk.webp` |
-| ✅ | Pose: stand (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/stand.webp` |
-| ✅ | Pose: hammer (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/hammer.webp` |
-| ✅ | Pose: jump (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/jump.webp` |
-| ✅ | Pose: clap (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/clap.webp` |
-| ✅ | Pose: wave (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/wave.webp` |
-| ✅ | Pose: think (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/think.webp` |
-| ✅ | Pose: point (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/point.webp` |
-| ✅ | Pose: carry (from the pose sheet `assets/raw/hero/poses.jpg`) | `assets/hero/poses/carry.webp` |
-| ⬜ | Walking away from the camera | `assets/hero/walk_away.webp` |
-| ⬜ | Jump and clap | `assets/hero/cheer.webp` |
+Clara: see 4. Characters.
 
 ### Effects (the sparkle layer)
 

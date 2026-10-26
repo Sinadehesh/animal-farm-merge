@@ -72,6 +72,22 @@ BLOCK = {
         [[6, 46], [13, 46], [13, 55], [6, 55]], [[59, 23], [62, 23], [62, 30], [59, 30]], [[51, 15], [61, 15], [61, 33], [51, 33]],  # logs, a pot, the stage's step
     ],
 }
+# The town's square is too crowded (benches, lamps, barrels, a fountain) for the colours: there,
+# only these lanes over its cobbles count, each [width, points] in % of the picture. The lanes
+# run out past the picture's edge, onto the meadow, so the townsfolk can walk round between them.
+LANES = {
+    'town': [
+        [4, [(0.5, 53), (5, 56), (13, 61.5), (20, 60), (25, 55.5), (31, 48), (36, 44), (41, 40)]],  # the west road, past the carpenter's
+        [3, [(41, 40), (45, 36.5), (49, 34), (55, 33), (61, 31.5), (66, 27.5), (72, 23), (75, 20)]],  # under the town hall and the stage, out north-east
+        [3.5, [(41, 63), (47, 64.5), (53, 66), (55, 70), (55.5, 74), (56.5, 79), (58.5, 84), (61, 90)]],  # the south road, past the flower shop
+        [3, [(47, 64.5), (45.5, 69)]],  # the fish shop's door
+        [3.5, [(64, 50), (66, 51), (72, 54.5), (79, 57), (84, 60.5), (88, 65), (92, 69)]],  # the east road, under the ranch
+        [3, [(72, 54.5), (71, 50)]],  # the ranch's door
+        # (at first the meadow round the square is fog, so the roads join up on it: they brush a lamp and a flower barrel)
+        [2.5, [(61, 31.5), (63, 37), (63.5, 44), (64, 50)]],  # past the ranch's fence, from the north lane to the east road
+        [2.5, [(53, 66), (56.5, 60.5), (60.5, 57.5), (64, 50)]],  # past the flower shop's corner, from the south road to the east road
+    ],
+}
 W = 400  # the size the colours are judged at
 
 
@@ -137,7 +153,8 @@ def plot_mask(name):
     if name in NO_DIAMOND:
         ground = np.ones_like(ground)
     stand = (np.ones_like(grass) if name in ALL_GROUND else grass | path) & (alpha > 0.9) & ground
-    wet = grow((h > 165) & (h < 235) & (s > 0.12) & (v > 0.35), 8) if name not in INDOORS else np.zeros_like(grass)
+    # (the town's pale cobbles read as water: its canal is in BLOCK instead)
+    wet = grow((h > 165) & (h < 235) & (s > 0.12) & (v > 0.35), 8) if name not in INDOORS | ALL_GROUND else np.zeros_like(grass)
     stand &= ~wet  # never in water (pale water reads as path), nor at its very edge
     stand = big_parts(shrink(grow(stand), 3), 150)
     no = Image.new('L', (W, hgt), 0)
@@ -145,9 +162,18 @@ def plot_mask(name):
         ImageDraw.Draw(no).polygon([(x / 100 * W, y / 100 * hgt) for x, y in poly], fill=1)
     no = grow(np.asarray(no, bool), 2)  # with a little room round each
     stand = big_parts(stand & ~no, 30)
+    if name in LANES:
+        lanes = Image.new('L', (W, hgt), 0)
+        for width, pts in LANES[name]:
+            ImageDraw.Draw(lanes).line([(x / 100 * W, y / 100 * hgt) for x, y in pts], fill=1, width=round(width / 100 * W), joint='curve')
+            for x, y in pts:  # round ends
+                r = width / 200 * W
+                ImageDraw.Draw(lanes).ellipse((x / 100 * W - r, y / 100 * hgt - r, x / 100 * W + r, y / 100 * hgt + r), fill=1)
+        stand = np.asarray(lanes, bool)
+        path = path | stand
     # Off the picture is meadow (3), except right by water or something in the way at its edge,
     # where standing would put her in the water or the thing.
-    meadow = (alpha < 0.1) & ~grow(wet | no, 4)
+    meadow = (alpha < 0.1) & ~grow(wet | no, 4) & ~stand
     cells = np.where(stand & path, 2, np.where(stand, 1, np.where(meadow, 3, 0))).astype(np.uint8)
     return rgb, stand, cells
 
