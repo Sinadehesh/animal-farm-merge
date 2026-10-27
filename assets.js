@@ -119,20 +119,11 @@ const ASSETS = {
     },
     // Plot props, by name: transparent pictures cut from the sheets in assets/raw/plots/.
 
-    // Everyone who walks about the world: Clara (the player, `hero`) and the townsfolk, keyed
-    // by NPC id. Cut by tools/cutwalk.py from the art sheets in the Drive folder "characters
-    // for merge keeper": walk is 8 rows of 4 frames (facing S, SW, W, NW, N, NE, E, SE; the
-    // first of each row is the one they stand in), aspect a frame's width over its height,
-    // scale how tall they stand next to Clara. body (standing, facing you), side (three
-    // quarters, for dialogs) and face (head and shoulders) are used below.
-    people: {
-        hero:   { name: 'Clara Everhart',  walk: 'assets/people/clara/walk.webp', aspect: 151 / 256, scale: 1 },
-        mayor:  { name: 'Village Mayor',   walk: 'assets/people/mayor/walk.webp', aspect: 140 / 256, scale: 1 },
-        hattie: { name: 'Bram Goodbarrel', walk: 'assets/people/bram/walk.webp',  aspect: 158 / 256, scale: 1.06 },
-        ruby:   { name: 'Ellis Spokewell', walk: 'assets/people/ellis/walk.webp', aspect: 145 / 256, scale: 1 },
-        finn:   { name: 'Mira Quayle',     walk: 'assets/people/mira/walk.webp',  aspect: 144 / 256, scale: 0.98 },
-        poppy:  { name: 'Mae Bloombarrow', walk: 'assets/people/mae/walk.webp',   aspect: 151 / 256, scale: 0.8 },
-    },
+    // Clara, the player, standing, facing you (on the map, where she's working); aspect is the
+    // picture's width over its height. The cast's pictures (here and below: stand, bust and
+    // face) are cut by tools/cutpeople.py from the art in the Drive folder "characters for
+    // merge keeper".
+    hero: { name: 'Clara Everhart', stand: 'assets/people/clara/stand.webp', aspect: 127 / 420 },
 
     // The sparkle layer's pictures (see THE SPARKLE LAYER in game.js), cut from
     // assets/raw/fx/sheet.jpg (light on black) by tools/cutfx.py, which turns the black
@@ -292,15 +283,16 @@ const ASSETS = {
         flowershop: 'assets/town/flowershop.svg',
     },
 
-    // Townsfolk (keyed by NPC id) and the market shopkeeper, standing. The townsfolk's are
-    // the new cast (see people above): Bram runs the ranch, Ellis the carpenter's, Mira the
-    // fish shop and Mae the flower shop.
+    // Townsfolk (keyed by NPC id) and the market shopkeeper, standing, facing you. The
+    // townsfolk are the new cast (see hero above): Bram runs the ranch, Ellis the carpenter's,
+    // Mira the fish shop and Mae the flower shop. Theirs with -walk are stand-ins, a frame of
+    // their walk, until their reference sheets are cut.
     characters: {
-        mayor: 'assets/people/mayor/body.webp',
-        hattie: 'assets/people/bram/body.webp',
-        ruby: 'assets/people/ellis/body.webp',
-        finn: 'assets/people/mira/body.webp',
-        poppy: 'assets/people/mae/body.webp',
+        mayor: 'assets/people/mayor/stand.webp',
+        hattie: 'assets/people/bram/stand-walk.webp',
+        ruby: 'assets/people/ellis/stand-walk.webp',
+        finn: 'assets/people/mira/stand-walk.webp',
+        poppy: 'assets/people/mae/stand-walk.webp',
         shopkeeper: 'assets/characters/poses/shopkeeper/body.webp',
     },
 
@@ -315,22 +307,21 @@ const ASSETS = {
         shopkeeper: 'assets/characters/poses/shopkeeper/face.webp',
     },
 
-    // The same people from the waist up, waving (calling you over, story
-    // scenes; the new cast: walking towards you), and full body cheering (after a
-    // fix). null or missing = the portrait instead.
-    wave: {
-        mayor: 'assets/people/mayor/side.webp',
-        hattie: 'assets/people/bram/side.webp',
-        ruby: 'assets/people/ellis/side.webp',
-        finn: 'assets/people/mira/side.webp',
-        poppy: 'assets/people/mae/side.webp',
+    // The same people from the waist up (dialogs and story scenes; the shopkeeper waving),
+    // and full body cheering (after a fix). null or missing = the portrait instead.
+    bust: {
+        mayor: 'assets/people/mayor/bust.webp',
+        hattie: 'assets/people/bram/bust-walk.webp',
+        ruby: 'assets/people/ellis/bust-walk.webp',
+        finn: 'assets/people/mira/bust-walk.webp',
+        poppy: 'assets/people/mae/bust-walk.webp',
         shopkeeper: 'assets/characters/poses/shopkeeper/hello.webp',
     },
     cheer: {
         shopkeeper: 'assets/characters/poses/shopkeeper/cheer.webp',
     },
 
-    // The shopkeeper's poses in the market (the townsfolk walk instead), cut from
+    // The shopkeeper's poses in the market, cut from
     // assets/raw/characters/<id>_poses.jpg with tools/cutposes.py (which also
     // makes the body, face and hello pictures above). All are drawn on one
     // frame: [width, height, the standing figure's height, the feet's height

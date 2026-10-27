@@ -3438,13 +3438,6 @@ function renderWorld(scene) {
     ui.querySelectorAll('.fix-spot').forEach(spot => { spot.style.zIndex = 200 + parseInt(spot.style.zIndex, 10); });
     const view = wrap.querySelector('.world-view');
     addHero(ui);
-    addTownsfolk(ui);
-    // A tap on the ground (not on a job, sign, person or anything else you can tap): Clara walks there.
-    view.addEventListener('click', e => {
-        if (e.target.closest('button, a, .spot, .fix-spot, .place-say, .plot-prop.layout') || view.classList.contains('far')) return;
-        const r = stage.getBoundingClientRect(), { x0, y0, w, h } = WORLD_BOX;
-        heroGoTo(x0 + ((e.clientX - r.left) / r.width) * w, y0 + ((e.clientY - r.top) / r.height) * h);
-    });
     panZoom(view, stage, worldView, WORLD_ZOOM, () => {
         // First time: the first job to do in the world, or the Barnyard.
         const task = openTasks().find(t => t.zone && inWorld(ZONE[t.zone]));
@@ -3462,13 +3455,11 @@ function renderWorld(scene) {
 }
 
 // Clara, the farmer: she stands on the farm's paths and grass, never on water,
-// a building or a mess, and walks there along the paths to each job you tap or
-// fix, and anywhere you tap on open ground, with a hop when a job's done. Drag
-// to another part of the farm and she pops up there, on a path near the middle.
-const HERO_SPEED = 160;   // world units a second
-const HERO_WALK = 3.5;    // longest walk to a job, in seconds: further, she pops up near it first
-const HERO_TAP_WALK = 8;  // longest walk to where you tap
-const hero = { who: 'hero', x: null, y: null, row: 0, speed: HERO_SPEED };
+// a building or a mess. She turns up at each job you tap or fix, with a hop when
+// it's done. Drag to another part of the farm and she turns up there, on a path
+// near the middle.
+const HERO_TALL = 90; // her height, in world units (a barn is about 250)
+const hero = { x: null, y: null };
 
 // Where she can stand on each plot (made by tools/walkmask.py): 100 x 100 cells
 // over its picture, 0 blocked, 1 grass, 2 path or floor, 3 not the picture.
@@ -3495,7 +3486,7 @@ function plotWalkCells(id) {
 }
 
 // The whole world as a grid of WALK_CELL squares: 0 blocked, 1 grass, 2 path,
-// 4 under a prop (she walks past, but doesn't stop there).
+// 4 under a prop or by a person (she doesn't stand there).
 const WALK_CELL = 15;
 const WALK_PATCH = 50;  // the fewest cells a patch of ground needs to count
 let walkMap = null;
@@ -3539,8 +3530,8 @@ function buildWalkMap() {
             const v = grid[Math.min(99, Math.floor(((py - by) / bh) * 100)) * 100 + Math.min(99, Math.floor(((px - bx) / bw) * 100))];
             return v === 3 ? undefined : v;
         });
-        // Where its people stand, with their bubbles above them: she may walk
-        // past, but never stops in front of, on or behind one of them.
+        // Where its people stand, with their bubbles above them: she never
+        // stands in front of, on or behind one of them.
         const spots = PLACE_SPOTS[id], people = id === 'market' ? [spots.keeper] : Object.values(spots.homes);
         people.forEach(([ax, ay]) => {
             const fx = bx + (ax / 100) * bw, fy = by + (ay / 100) * bh;
@@ -3556,8 +3547,8 @@ function buildWalkMap() {
             const v = grid[Math.min(99, Math.floor(((py - by) / bh) * 100)) * 100 + Math.min(99, Math.floor(((px - bx) / bw) * 100))];
             return v === 3 ? undefined : v;
         });
-        // Where a prop stands (a mess, or the thing that's fixed) she may walk
-        // past, but never stops.
+        // Where a prop stands (a mess, or the thing that's fixed) she never
+        // stands.
         zoneTasks(zone.id).forEach(task => {
             if (!plotProp(task, taskDone(task))) return;
             propPlaces(task).forEach(([px, py, pw]) => {
@@ -3569,7 +3560,7 @@ function buildWalkMap() {
             });
         });
     });
-    // Patches of ground cut off from the rest, too small to walk about, don't count.
+    // Patches of ground cut off from the rest, too small to stand about on, don't count.
     const part = new Int32Array(cells.length), sizes = [0];
     for (let i = 0; i < cells.length; i++) {
         if (!cells[i] || part[i]) continue;
@@ -3588,7 +3579,7 @@ function buildWalkMap() {
         sizes.push(n);
     }
     for (let i = 0; i < cells.length; i++) if (cells[i] && sizes[part[i]] < WALK_PATCH) cells[i] = 0;
-    return { cells, cols, rows, part }; // part: which patch each cell is in (a way only joins cells in one)
+    return { cells, cols, rows };
 }
 
 // Made again only when an area opens or a job is done.
@@ -3627,67 +3618,6 @@ function standNear(x, y, path = false, reach = 400) {
     return path ? standNear(x, y, false, reach) : null;
 }
 
-// The way from one place to another over ground she can stand on, preferring
-// paths (A*, then straightened); null when there's none.
-function heroRoute(from, to, most = 30000) {
-    const { cells, cols, part } = walkGrid(), a = walkCell(...from), b = walkCell(...to);
-    if (!cells[a] || !cells[b] || part[a] !== part[b]) return null;
-    const cost = new Float64Array(cells.length).fill(Infinity), back = new Int32Array(cells.length).fill(-1);
-    const heap = [[0, a]], [bc, br] = [b % cols, Math.floor(b / cols)];
-    const guess = i => Math.hypot((i % cols) - bc, Math.floor(i / cols) - br) * 0.8;
-    const push = n => { heap.push(n); let k = heap.length - 1; while (k && heap[(k - 1) >> 1][0] > heap[k][0]) { [heap[k], heap[(k - 1) >> 1]] = [heap[(k - 1) >> 1], heap[k]]; k = (k - 1) >> 1; } };
-    const pop = () => {
-        const top = heap[0], last = heap.pop();
-        if (heap.length) {
-            heap[0] = last;
-            for (let k = 0; ;) {
-                let m = k;
-                [2 * k + 1, 2 * k + 2].forEach(c => { if (c < heap.length && heap[c][0] < heap[m][0]) m = c; });
-                if (m === k) break;
-                [heap[k], heap[m]] = [heap[m], heap[k]];
-                k = m;
-            }
-        }
-        return top;
-    };
-    cost[a] = 0;
-    let budget = most; // a walk on screen needs far fewer: past that, there's no way (she pops up instead)
-    while (heap.length) {
-        const [, i] = pop();
-        if (i === b) break;
-        if (--budget < 0) return null;
-        const c = i % cols;
-        for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
-            if ((dc === 1 && c === cols - 1) || (dc === -1 && c === 0)) continue;
-            const j = i + dr * cols + dc;
-            if (j < 0 || j >= cells.length || !cells[j]) continue;
-            const step = (dc && dr ? 1.414 : 1) * [0, 1, 0.8, 0, 3][cells[j]], n = cost[i] + step;
-            if (n < cost[j]) { cost[j] = n; back[j] = i; push([n + guess(j), j]); }
-        }
-    }
-    if (back[b] < 0 && a !== b) return null;
-    const way = [];
-    for (let i = b; i !== a; i = back[i]) way.unshift(i);
-    // Straighten it: skip every corner she can see past.
-    const clear = (p, q) => {
-        const n = Math.ceil(Math.hypot(q[0] - p[0], q[1] - p[1]) / (WALK_CELL / 2));
-        for (let k = 1; k < n; k++) if (!cells[walkCell(p[0] + ((q[0] - p[0]) * k) / n, p[1] + ((q[1] - p[1]) * k) / n)]) return false;
-        return true;
-    };
-    const pts = way.map(cellMiddle);
-    pts[pts.length - 1] = to;
-    const out = [];
-    let at = from;
-    for (let k = 0; k < pts.length;) {
-        let far = k;
-        while (far + 1 < pts.length && clear(at, pts[far + 1])) far++;
-        out.push(pts[far]);
-        at = pts[far];
-        k = far + 1;
-    }
-    return out;
-}
-
 // Where she stands to work on a job: on open ground just in front of its
 // prop, or null when the job isn't on a plot in the world.
 function jobWorldXY(task) {
@@ -3703,92 +3633,62 @@ function heroEl() {
 }
 
 function addHero(ui) {
-    if (!(ASSETS.people || {}).hero) return;
+    if (!ASSETS.hero) return;
     const firstPlace = () => {
         const task = openTasks().find(t => jobWorldXY(t));
         [hero.x, hero.y] = jobWorldXY(task) || standNear(...cellXY('barnyard'), true) || cellXY('barnyard');
     };
     if (hero.x === null) firstPlace();
-    const el = addWalker(ui, hero, 'hero');
+    const el = document.createElement('div');
+    el.className = 'hero';
+    el.innerHTML = `<i class="hero-shadow"></i><img class="hero-art" src="${ASSETS.hero.stand}" alt="" draggable="false">`;
+    ui.appendChild(el);
+    placeHero(el);
     // A moment later: if a prop now stands where she was, she steps off it.
     setTimeout(() => {
-        if (!el.isConnected || hero.way || [1, 2].includes(walkGrid().cells[walkCell(hero.x, hero.y)])) return;
+        if (!el.isConnected || [1, 2].includes(walkGrid().cells[walkCell(hero.x, hero.y)])) return;
         const at = standNear(hero.x, hero.y, false, 300);
         if (at) popHero(el, at);
-        else { firstPlace(); placeWalker(el, hero); }
+        else { firstPlace(); placeHero(el); }
     }, 400);
 }
 
-// She pops up at a place (a little puff, no walk).
+// Where she stands, at her feet. Moved by `translate` (in her own width and
+// height, so it keeps up with the zoom), not left and top: nothing else on the
+// map has to be laid out again.
+function placeHero(el) {
+    const wide = HERO_TALL * ASSETS.hero.aspect, { x0, y0, w, h } = WORLD_BOX;
+    el.style.width = (wide / w) * 100 + '%';
+    el.style.height = (HERO_TALL / h) * 100 + '%';
+    el.style.translate = `${((hero.x - wide / 2 - x0) / wide) * 100}% ${((hero.y - HERO_TALL - y0) / HERO_TALL) * 100}%`;
+}
+
+// She turns up at a place (a little puff).
 function popHero(el, at) {
-    stopWalker(hero);
     [hero.x, hero.y] = at;
-    placeWalker(el, hero);
+    placeHero(el);
     el.classList.remove('popping', 'cheer');
     void el.offsetWidth;
     el.classList.add('popping');
 }
 
-// Walks her to a job (`then` once she's there, facing it); a long way, she
-// pops up near it first. `most`: the most milliseconds the walk may take.
-function walkHeroTo(task, then, most = HERO_WALK * 1000) {
+// She turns up at a job, to work on it (if she isn't there already).
+function heroToJob(task) {
     const el = heroEl(), to = jobWorldXY(task);
-    if (!el || !to) return then && then();
-    heroWalk(el, to, most, () => {
-        const job = plotJob(task), [bx, by, bw, bh] = plotBox(ZONE[task.zone]);
-        turnTo(hero, [bx + (job[1] / 100) * bw, by + (job[2] / 100) * bh]);
-        placeWalker(el, hero);
-        if (then) then();
-    });
-}
-
-// Walks her to a place she can stand (world units); a long way, she pops up a
-// short walk from it first.
-function heroWalk(el, to, most, then) {
-    stopWalker(hero);
-    let way = heroRoute([hero.x, hero.y], to);
-    const length = pts => pts.reduce((sum, p, k) => sum + Math.hypot(p[0] - (k ? pts[k - 1] : [hero.x, hero.y])[0], p[1] - (k ? pts[k - 1] : [hero.x, hero.y])[1]), 0);
-    if (!way || length(way) / HERO_SPEED > most / 1000) {
-        // Too far (or no way there): she pops up a short walk from it.
-        const near = standNear(to[0] + (hero.x < to[0] ? -120 : 120), to[1] + 60, true, 200);
-        popHero(el, near && heroRoute(near, to) ? near : to);
-        way = heroRoute([hero.x, hero.y], to) || [to];
-        if (length(way) / HERO_SPEED > most / 1000) { popHero(el, to); way = [to]; }
-    }
-    heroPose('stand');
-    el.classList.remove('cheer');
-    walkAlong(hero, way, then);
-}
-
-// A tap on the ground: she walks to the nearest place there she can stand (a
-// ring shows where), or a red ring says there's nowhere to stand near it.
-function heroGoTo(x, y, then) {
-    const el = heroEl();
-    if (!el || fixing) return;
-    const to = standNear(x, y, false, 180);
-    markWalk(el.parentElement, to || [x, y], !!to);
-    if (to) heroWalk(el, to, HERO_TAP_WALK * 1000, then);
-}
-
-function markWalk(ui, [x, y], ok) {
-    const mark = document.createElement('i');
-    mark.className = 'walk-mark' + (ok ? '' : ' no');
-    worldPlace(mark, x - 34, y - 17, 68, 34);
-    ui.appendChild(mark);
-    setTimeout(() => mark.remove(), 800);
+    if (el && to && Math.hypot(to[0] - hero.x, to[1] - hero.y) > 5) popHero(el, to);
 }
 
 // Once a drag stops: if she's out of sight, she pops up on a path near the
 // middle of the screen (or on grass, if there's no path).
 function heroFollow(view, stage) {
     const el = heroEl();
-    if (!el || hero.way || fixing || view.classList.contains('far')) return;
+    if (!el || fixing || view.classList.contains('far')) return;
     const { x0, y0, w, h } = WORLD_BOX;
     const cx = x0 + worldView.fx * w, cy = y0 + worldView.fy * h;
     const hw = (view.clientWidth / stage.offsetWidth) * w / 2, hh = (view.clientHeight / stage.offsetHeight) * h / 2;
-    if (Math.abs(hero.x - cx) < hw * 0.85 && hero.y - PERSON_TALL > cy - hh * 0.9 && hero.y < cy + hh * 0.8) return;
+    if (Math.abs(hero.x - cx) < hw * 0.85 && hero.y - HERO_TALL > cy - hh * 0.9 && hero.y < cy + hh * 0.8) return;
     const at = placeStand(cx, cy, hw, hh) || standNear(cx, cy + hh * 0.2, true, Math.min(hw, hh) * 0.7);
-    if (at) { popHero(el, at); hero.row = 0; heroPose('wave', 1800); }
+    if (at) { popHero(el, at); heroPose('wave', 1800); }
 }
 
 // Looking at a place with set spots for her (PLACE_SPOTS[id].stand): the one in view
@@ -3801,7 +3701,7 @@ function placeStand(cx, cy, hw, hh) {
         if (cx < bx || cx > bx + bw || cy < by || cy > by + bh) return;
         spots.stand.forEach(([sx, sy]) => {
             const x = bx + (sx / 100) * bw, y = by + (sy / 100) * bh;
-            if (Math.abs(x - cx) > hw * 0.8 || y - PERSON_TALL < cy - hh * 0.85 || y > cy + hh * 0.75) return;
+            if (Math.abs(x - cx) > hw * 0.8 || y - HERO_TALL < cy - hh * 0.85 || y > cy + hh * 0.75) return;
             const d = Math.hypot(x - cx, y - (cy + hh * 0.2));
             if (d < far) { far = d; best = [x, y]; }
         });
@@ -3809,8 +3709,8 @@ function placeStand(cx, cy, hw, hh) {
     return best;
 }
 
-// What she does when she isn't walking: hammers away at a job (a swing), or
-// shows what she's thinking in a little bubble over her head.
+// What she's doing: hammering away at a job (a swing), or what she's thinking,
+// in a little bubble over her head.
 const HERO_EMOTE = { hammer: '🔨', think: '💭', point: '❗', wave: '👋', clap: '👏', carry: '📦' };
 let heroPoseTimer = 0;
 
@@ -3821,142 +3721,13 @@ function heroPose(name, ms) {
     clearTimeout(heroPoseTimer);
     el.dataset.pose = name;
     if (name === 'stand') return el.querySelector('.emote')?.remove();
-    if (HERO_EMOTE[name]) emote(hero, HERO_EMOTE[name], ms || 1800);
+    if (HERO_EMOTE[name]) emote(HERO_EMOTE[name], ms || 1800);
     if (ms) heroPoseTimer = setTimeout(() => heroPose('stand'), ms);
 }
 
-// A job done: she turns to you and jumps for joy, then claps.
-function cheerHero() {
+// A little bubble over her head for a moment.
+function emote(what, ms = 1800) {
     const el = heroEl();
-    if (!el) return;
-    hero.row = 0;
-    placeWalker(el, hero);
-    heroPose('jump');
-    emote(hero, '🎉', 800);
-    el.classList.remove('cheer');
-    void el.offsetWidth; // restart the hop
-    el.classList.add('cheer');
-    heroPoseTimer = setTimeout(() => heroPose('clap', 1300), 700);
-}
-
-// --- PEOPLE WALKING ABOUT ---
-// Clara and the townsfolk each have a walk (ASSETS.people): 8 rows of 4 frames,
-// a row for each way they can face, the first frame of each the one they stand
-// in. Each has a state in `walkers`: where they are (world units, at their
-// feet), the row they face, how fast they walk, and the way they're walking,
-// if they are. One loop moves everyone walking while the map shows; the
-// nearer the bottom of the screen, the more in front.
-const PERSON_TALL = 96; // a walk frame's height, in world units (a barn is about 250)
-const walkers = { hero };
-let walkLoop = 0, walkLast = 0;
-
-// The row for facing along (dx, dy): 0 S, 1 SW, 2 W, 3 NW, 4 N, 5 NE, 6 E, 7 SE.
-function facingRow(dx, dy) {
-    const k = Math.round(-Math.atan2(dx, dy) / (Math.PI / 4));
-    return ((k % 8) + 8) % 8;
-}
-
-function turnTo(w, [x, y]) {
-    if (Math.hypot(x - w.x, y - w.y) > 3) w.row = facingRow(x - w.x, y - w.y);
-}
-
-function walkerEl(w) {
-    if (!w.el || !w.el.isConnected) w.el = document.querySelector(`#scene-map .walker[data-who="${w.who}"]`);
-    return w.el;
-}
-
-// Moved by `translate` (in its own widths and heights, so it keeps up with the
-// zoom), not left and top: nothing else on the map has to be laid out again.
-function placeWalker(el, w) {
-    const p = ASSETS.people[w.who], tall = PERSON_TALL * (p.scale || 1), wide = tall * p.aspect, { x0, y0, w: bw, h: bh } = WORLD_BOX;
-    if (!el.style.width) {
-        el.style.width = (wide / bw) * 100 + '%';
-        el.style.height = (tall / bh) * 100 + '%';
-    }
-    el.style.translate = `${((w.x - wide / 2 - x0) / wide) * 100}% ${((w.y - tall - y0) / tall) * 100}%`;
-    if (el.dataset.row !== String(w.row)) {
-        el.dataset.row = w.row;
-        el.style.setProperty('--row', w.row);
-    }
-}
-
-// Draws someone in the world (a button, if a tap does something).
-function addWalker(ui, w, cls, onClick) {
-    const el = document.createElement(onClick ? 'button' : 'div');
-    el.className = `walker ${cls}` + (w.way ? ' walking' : '');
-    el.dataset.who = w.who;
-    el.style.setProperty('--step', `${(0.5 + 18 / w.speed).toFixed(2)}s`); // slower walkers, slower steps
-    el.innerHTML = `<i class="walker-shadow"></i><i class="walker-sprite" style="background-image:url('${ASSETS.people[w.who].walk}')"></i>`;
-    if (onClick) el.addEventListener('click', onClick);
-    placeWalker(el, w);
-    ui.appendChild(el);
-    w.el = el;
-    if (w.way) keepWalking();
-    stackWalkers();
-    return el;
-}
-
-// Sends someone along a way (points, world units), then `then` once there.
-function walkAlong(w, way, then) {
-    w.way = way.length ? way : null;
-    w.k = 0;
-    w.then = then;
-    const el = walkerEl(w);
-    if (!w.way) {
-        el?.classList.remove('walking');
-        return then && then();
-    }
-    el?.classList.add('walking');
-    turnTo(w, way[0]);
-    keepWalking();
-}
-
-function stopWalker(w) {
-    w.way = w.then = null;
-    walkerEl(w)?.classList.remove('walking');
-}
-
-function keepWalking() {
-    if (walkLoop || currentScene !== 'map') return;
-    walkLast = performance.now();
-    walkLoop = requestAnimationFrame(walkStep);
-}
-
-function walkStep(t) {
-    const dt = Math.min(100, t - walkLast) / 1000;
-    walkLast = t;
-    let moving = false;
-    Object.values(walkers).forEach(w => {
-        if (!w.way) return;
-        let go = w.speed * dt;
-        while (go > 0 && w.k < w.way.length) {
-            const [x, y] = w.way[w.k], d = Math.hypot(x - w.x, y - w.y);
-            if (d <= go) { w.x = x; w.y = y; go -= d; w.k++; if (w.k < w.way.length) turnTo(w, w.way[w.k]); }
-            else { w.x += ((x - w.x) / d) * go; w.y += ((y - w.y) / d) * go; go = 0; }
-        }
-        const el = walkerEl(w);
-        if (el) placeWalker(el, w);
-        if (w.k < w.way.length) { moving = true; return; }
-        const then = w.then;
-        stopWalker(w);
-        if (then) then();
-        if (w.way) moving = true; // `then` set them off again
-    });
-    stackWalkers();
-    walkLoop = moving && currentScene === 'map' ? requestAnimationFrame(walkStep) : 0;
-}
-
-// The nearer the bottom, the more in front (under the job bubbles, over the scenery).
-function stackWalkers() {
-    Object.values(walkers).sort((a, b) => a.y - b.y).forEach((w, i) => {
-        const el = walkerEl(w);
-        if (el && el.style.zIndex !== String(140 + i)) el.style.zIndex = 140 + i;
-    });
-}
-
-// A little bubble over someone's head for a moment.
-function emote(w, what, ms = 1800) {
-    const el = walkerEl(w);
     if (!el) return;
     el.querySelector('.emote')?.remove();
     const bubble = document.createElement('i');
@@ -3966,208 +3737,16 @@ function emote(w, what, ms = 1800) {
     setTimeout(() => bubble.remove(), ms);
 }
 
-// --- THE TOWNSFOLK, OUT AND ABOUT ---
-// Each of the townsfolk lives at their door on the town square and potters
-// about near it. Now and then they go off to their own part of the farm once
-// it's yours (Bram to the barn, Ellis to the hay field, Mira to the pond, Mae
-// to the garden; the Mayor to the Market), spend a while there and come home:
-// walking, where the ground joins up, else they step out and turn up there.
-// Whoever you have an order for heads home and waits by their door. Tap one to
-// talk: Clara walks over.
-const TOWNSFOLK = {
-    mayor:  { trips: ['market'], emote: '☕', speed: 55 },
-    hattie: { trips: ['barnyard', 'henhouse', 'bigbarn'], emote: '🐔', speed: 60 },      // Bram, the rancher
-    ruby:   { trips: ['meadow', 'stables', 'windmill'], emote: '🔧', speed: 72 },        // Ellis, the carpenter
-    finn:   { trips: ['muddyshore', 'lilypond', 'boatdock'], emote: '🐟', speed: 64 },   // Mira, the fisher
-    poppy:  { trips: ['gardengate', 'rosearch', 'greenhouse'], emote: '🌸', speed: 58 }, // Mae, the florist
-};
-const TOWN_ROAM = 160;          // how far from their door they potter about, in world units
-const TRIP_TIME = [45, 100];    // seconds out on the farm
-const TRIP_EVERY = 60;          // at least this many seconds at home between trips
-
-// Their door, in world units.
-function homeXY(npc) {
-    const at = PLACE_SPOTS.town.homes[npc.home], [bx, by, bw, bh] = plotBox('town');
-    return [bx + (at[0] / 100) * bw, by + (at[1] / 100) * bh];
-}
-
-// Somewhere to stand within r of a point, at random (they may stop by a door, where Clara
-// doesn't, and on the town's narrow lanes), or null; `nearest`: the nearest one instead.
-function roamSpot(x, y, r, nearest = false) {
-    const { cells, cols, rows } = walkGrid(), { x0, y0 } = WORLD_BOX, n = Math.ceil(r / WALK_CELL);
-    const c0 = Math.floor((x - x0) / WALK_CELL), r0 = Math.floor((y - y0) / WALK_CELL);
-    let pick = null, seen = 0, far = Infinity;
-    for (let row = Math.max(0, r0 - n); row <= Math.min(rows - 2, r0 + n); row++) {
-        for (let c = Math.max(0, c0 - n); c <= Math.min(cols - 1, c0 + n); c++) {
-            const i = row * cols + c, d = Math.hypot(c - c0, (row - r0) / 0.6);
-            if (d > n || !cells[i] || !cells[i + cols]) continue;
-            if (nearest ? d < far : Math.random() * ++seen < 1) { pick = i; far = d; }
-        }
-    }
-    return pick === null ? null : cellMiddle(pick);
-}
-
-// The middle of a trip's place: its plot (or patch), or the Market.
-function tripMiddle(id) {
-    const zone = ZONE[id];
-    if (zone && !zoneOpen(zone)) return null;
-    if ((ASSETS.plots || {})[id] && (!zone || inWorld(zone))) {
-        const [bx, by, bw, bh] = plotBox(id);
-        return [bx + bw / 2, by + bh * 0.55];
-    }
-    return zone ? cellXY(id) : null;
-}
-
-function townsfolkIn() {
-    return (ASSETS.plots || {}).town && ASSETS.people ? npcs.filter(n => ASSETS.people[n.id] && TOWNSFOLK[n.id] && PLACE_SPOTS.town.homes[n.home]) : [];
-}
-
-// The townsfolk in the world, each where they are (the first time: by their door, about to set off).
-function addTownsfolk(ui) {
-    townsfolkIn().forEach(npc => {
-        let w = walkers[npc.id];
-        if (!w) {
-            const home = homeXY(npc);
-            w = walkers[npc.id] = { who: npc.id, row: 0, speed: TOWNSFOLK[npc.id].speed, back: Date.now() - Math.random() * TRIP_EVERY * 1000 };
-            [w.x, w.y] = roamSpot(...home, 200, true) || home;
-            w.timer = setTimeout(() => townLife(npc), 800 + Math.random() * 2500);
-        }
-        addWalker(ui, w, 'npc', () => talkTo(npc));
-    });
-    dressTownsfolk();
-}
-
-// Their order over their head, as at their door.
-function dressTownsfolk() {
-    townsfolkIn().forEach(npc => {
-        const el = walkerEl(walkers[npc.id] || {});
-        if (!el) return;
-        el.querySelector('.task-pin')?.remove();
-        el.setAttribute('aria-label', npc.name);
-        const r = npc.request, ready = canFulfill(npc);
-        if (r) addTag(el, 'task-pin' + (ready ? ' ready' : ''), `<span class="pin-item${ready ? ' met' : ''}">${itemIcon(r.mode, r.tier)}</span>`);
-    });
-}
-
-// Tapped: their order (or a chat), while Clara walks over to them.
-function talkTo(npc) {
-    const w = walkers[npc.id];
-    openNpc(npc);
-    holdWalker(npc.id, 4000);
-    if (w && heroEl()) heroGoTo(w.x + (hero.x < w.x ? -55 : 55), w.y + 12, () => {
-        turnTo(hero, [w.x, w.y]);
-        placeWalker(heroEl(), hero);
-        turnTo(w, [hero.x, hero.y]);
-        const el = walkerEl(w);
-        if (el) placeWalker(el, w);
-        emote(w, '👋', 1400);
-    });
-}
-
-// What they do next: off on a trip, on to the next spot on one, home, or
-// pottering about near their door.
-function townLife(npc) {
-    const w = walkers[npc.id], life = TOWNSFOLK[npc.id], now = Date.now();
-    clearTimeout(w.timer);
-    if (w.held > now) return (w.timer = setTimeout(() => townLife(npc), w.held - now));
-    if (openingOn || !tutorial.done) return (w.timer = setTimeout(() => townLife(npc), 2000)); // they wait for the opening film and the first lesson to end
-    const ready = canFulfill(npc), home = homeXY(npc);
-    const go = (to, most) => {
-        const way = to && heroRoute([w.x, w.y], to, most);
-        if (way) walkAlong(w, way, () => rest(npc));
-        return !!way;
-    };
-    const retry = () => { w.timer = setTimeout(() => townLife(npc), 3000); };
-    if (w.trip && (ready || now > w.trip.until)) { w.trip = null; w.back = now; }
-    if (w.trip) return go(roamSpot(...w.trip.at, 300)) || retry();
-    if (Math.hypot(w.x - home[0], w.y - home[1]) > TOWN_ROAM * 1.6) {
-        // Home again (they turn up at their door if there's no way back).
-        const to = roamSpot(...home, 40) || roamSpot(...home, 200, true) || home;
-        if (!go(to, 80000)) { popWalker(w, to); rest(npc); }
-        return;
-    }
-    // Off to their part of the farm, now and then.
-    const trips = life.trips.map(tripMiddle).filter(Boolean);
-    if (!ready && trips.length && now - w.back > TRIP_EVERY * 1000 && Math.random() < 0.4) {
-        const at = trips[Math.floor(Math.random() * trips.length)], to = roamSpot(...at, 260);
-        if (to) {
-            w.trip = { at, until: now + (TRIP_TIME[0] + Math.random() * (TRIP_TIME[1] - TRIP_TIME[0])) * 1000 };
-            if (!go(to, 80000)) { popWalker(w, to); rest(npc); }
-            return;
-        }
-    }
-    // Pottering about (right by their door, while they wait for you).
-    return go(roamSpot(...home, ready ? 50 : TOWN_ROAM)) || retry();
-}
-
-// They turn up somewhere (a little puff, no walk).
-function popWalker(w, at) {
-    stopWalker(w);
-    [w.x, w.y] = at;
-    const el = walkerEl(w);
+// A job done: she jumps for joy, then claps.
+function cheerHero() {
+    const el = heroEl();
     if (!el) return;
-    placeWalker(el, w);
-    el.classList.remove('popping');
-    void el.offsetWidth;
-    el.classList.add('popping');
-    stackWalkers();
-}
-
-// A pause where they are: they turn about, and now and then show what's on
-// their mind; next to a neighbour standing about, the two turn to each other
-// for a chat.
-function rest(npc) {
-    const w = walkers[npc.id], el = walkerEl(w);
-    const friend = Object.values(walkers).find(o => o !== w && TOWNSFOLK[o.who] && !o.way && !(o.held > Date.now()) && Math.hypot(o.x - w.x, o.y - w.y) < 90);
-    if (friend && Math.random() < 0.7) {
-        turnTo(w, [friend.x, friend.y]);
-        turnTo(friend, [w.x, w.y]);
-        const fel = walkerEl(friend);
-        if (fel) placeWalker(fel, friend);
-        emote(w, '💬', 2400);
-        setTimeout(() => emote(friend, ['😄', '💬', '❗'][Math.floor(Math.random() * 3)], 2000), 1300);
-        clearTimeout(friend.timer);
-        friend.timer = setTimeout(() => townLife(npcs.find(n => n.id === friend.who)), 5000);
-    } else {
-        if (Math.random() < 0.6) w.row = [0, 0, 1, 7, 2, 6][Math.floor(Math.random() * 6)];
-        if (Math.random() < 0.3) emote(w, TOWNSFOLK[npc.id].emote, 2200);
-    }
-    if (el) placeWalker(el, w);
-    w.timer = setTimeout(() => townLife(npc), (friend ? 5 : 3 + Math.random() * 6) * 1000);
-}
-
-// They stop where they are and turn to you for a while (talking, cheering).
-function holdWalker(who, ms) {
-    const w = walkers[who], npc = npcs.find(n => n.id === who);
-    if (!w || !npc || !TOWNSFOLK[who]) return;
-    stopWalker(w);
-    w.row = 0;
-    w.held = Date.now() + ms;
-    const el = walkerEl(w);
-    if (el) placeWalker(el, w);
-    clearTimeout(w.timer);
-    w.timer = setTimeout(() => townLife(npc), ms);
-}
-
-// An order handed over or a job done: a hop for joy.
-function cheerWalker(who) {
-    const w = walkers[who], el = walkerEl(w || {});
-    if (!el) return;
-    holdWalker(who, 1800);
-    emote(w, '🎉', 1600);
+    heroPose('jump');
+    emote('🎉', 800);
     el.classList.remove('cheer');
-    void el.offsetWidth;
+    void el.offsetWidth; // restart the hop
     el.classList.add('cheer');
-}
-
-// Where someone is on a place's picture (% across, % down, at their feet):
-// whoever walks, where they are now (null when they're out of it); anyone
-// else, their spot.
-function personAt(who, place, spot) {
-    const w = walkers[who];
-    if (!w || who === 'hero' || !(ASSETS.people || {})[who] || !TOWNSFOLK[who]) return spot;
-    const [bx, by, bw, bh] = plotBox(place), x = ((w.x - bx) / bw) * 100, y = ((w.y - by) / bh) * 100;
-    return x > 6 && x < 94 && y > 12 && y < 97 ? [x, y] : null;
+    heroPoseTimer = setTimeout(() => heroPose('clap', 1300), 700);
 }
 
 // --- THE MARKET AND THE TOWN SQUARE, IN THE WORLD ---
@@ -4193,7 +3772,8 @@ const PLACE_SPOTS = {
         stand: [[31, 48], [33, 44], [20, 66], [53, 71], [62, 84], [64, 30], [66, 50], [82, 56], [80, 64]],
     },
 };
-const PERSON_HEIGHT = 100; // a person's picture, in world units (they stand about as tall as the farmer)
+const PERSON_HEIGHT = 92; // how tall someone in one picture stands, in world units (as tall as the farmer)
+const PERSON_SCALE = { hattie: 1.06, finn: 0.98, poppy: 0.8 }; // taller or shorter than that
 const PERSON_STAND = 84; // how tall someone with poses stands, in world units (as tall as the farmer)
 const WELL_GIFTS = [{ money: 150 }, { energy: 15 }, { gems: 3 }];
 const placeSaid = {}; // which places have said hello this visit
@@ -4245,7 +3825,7 @@ function addPlacePerson(twin, id, at, who, name, onClick) {
         el.style.cssText = `left:${at[0] - w / 2}%;top:${at[1] - h + ((feet * k) / bh) * 100}%;width:${w}%;height:${h}%;z-index:${Math.round(at[1]) + 30}`;
         el.innerHTML = `<img src="${set[pose]}" alt="${name}" draggable="false">`;
     } else {
-        const w = (PERSON_HEIGHT / bw) * 100, h = (PERSON_HEIGHT / bh) * 100;
+        const tall = PERSON_HEIGHT * (PERSON_SCALE[who] || 1), w = (tall / bw) * 100, h = (tall / bh) * 100;
         el.style.cssText = `left:${at[0] - w / 2}%;top:${at[1] - h * 0.94}%;width:${w}%;height:${h}%;z-index:${Math.round(at[1]) + 30}`;
         el.innerHTML = `<img src="${ASSETS.characters[who]}" alt="${name}" draggable="false">`;
     }
@@ -4273,15 +3853,15 @@ function personPose(who) {
 
 function drawPerson(who) {
     const set = (ASSETS.poses || {})[who], pose = personPose(who);
-    if (set) document.querySelectorAll(`#scene-map .place-person[data-who="${who}"]`).forEach(el => {
+    document.querySelectorAll(`#scene-map .place-person[data-who="${who}"]`).forEach(el => {
         el.dataset.pose = pose;
-        el.querySelector('img').src = set[pose];
+        if (set) el.querySelector('img').src = set[pose];
     });
 }
 
-// They strike poses one after another ([pose, ms] each), then stand again.
+// They strike poses one after another ([pose, ms] each), then stand again
+// (someone in one picture just hops for joy when they cheer).
 function posePerson(who, ...steps) {
-    if (!(ASSETS.poses || {})[who]) return;
     const now = personNow[who] || (personNow[who] = {});
     clearTimeout(now.timer);
     const next = () => {
@@ -4302,18 +3882,14 @@ function personPlace(who) {
 // An order handed over or a job done: they cheer and clap, now if their
 // place is on screen, otherwise when it next is.
 function cheerPerson(who) {
-    if (currentScene === 'map' && placeShown[personPlace(who)]) (TOWNSFOLK[who] && walkers[who] ? cheerWalker(who) : posePerson(who, ['cheer', 1000], ['clap', 1500]));
+    if (currentScene === 'map' && placeShown[personPlace(who)]) posePerson(who, ['cheer', 1000], ['clap', 1500]);
     else cheerLater.add(who);
 }
 
 // A place comes into view: its people wave (or cheer, if you did something
 // for them while away), each a moment apart.
 function greetPlace(id) {
-    if (id === 'town') townsfolkIn().filter(npc => personAt(npc.id, 'town')).forEach((npc, i) => setTimeout(() => {
-        if (cheerLater.delete(npc.id)) cheerWalker(npc.id);
-        else if (!walkers[npc.id].way) emote(walkers[npc.id], '👋', 1400);
-    }, 150 + i * 220));
-    document.querySelectorAll(`#scene-map .place-ui[data-place="${id}"] .place-person.posed`).forEach((el, i) => {
+    document.querySelectorAll(`#scene-map .place-ui[data-place="${id}"] .place-person`).forEach((el, i) => {
         const who = el.dataset.who;
         setTimeout(() => {
             if (cheerLater.delete(who)) posePerson(who, ['cheer', 1000], ['clap', 1500]);
@@ -4386,7 +3962,7 @@ function fillPlace(id, twin) {
     addJobChips(jobs, twin, task => spots.jobs[task.house || task.id] || [50, 50]);
     npcs.forEach(npc => {
         const at = spots.homes[npc.home];
-        if (!at || townsfolkIn().includes(npc)) return; // they walk about instead (THE TOWNSFOLK, OUT AND ABOUT)
+        if (!at) return;
         const person = addPlacePerson(twin, id, at, npc.id, npc.name, () => openNpc(npc));
         person.dataset.npc = npc.id;
         const r = npc.request;
@@ -4396,7 +3972,6 @@ function fillPlace(id, twin) {
 
 function refreshPlaces() {
     document.querySelectorAll('#scene-map .place-ui').forEach(twin => fillPlace(twin.dataset.place, twin));
-    dressTownsfolk();
     openNearestBanner();
 }
 
@@ -4406,11 +3981,10 @@ function placeGreeting(id) {
         const line = shopkeeperHint() || (dealsWaiting() ? 'Fresh Daily Deals on my cart today! Take a look.' : SHOPKEEPER_LINES[shopkeeperLine++ % SHOPKEEPER_LINES.length]);
         return { id: 'shopkeeper', who: 'Shopkeeper', at: PLACE_SPOTS.market.keeper, line };
     }
-    const here = npc => personAt(npc.id, 'town', PLACE_SPOTS.town.homes[npc.home]);
+    const here = npc => PLACE_SPOTS.town.homes[npc.home];
     const ready = npcs.find(n => canFulfill(n) && here(n));
     if (ready) return { id: ready.id, who: ready.name, at: here(ready), line: `You have my ${itemName(ready.request.mode, ready.request.tier)}! Tap me, and I will take it.` };
     const jobs = landTasks('town'), done = jobs.filter(taskDone).length, mayor = npcs.find(n => n.id === 'mayor');
-    if (!here(mayor)) return null; // out at the Market
     return { id: 'mayor', who: mayor.name, at: here(mayor),
         line: done < jobs.length ? `Welcome to ${TOWN_NAME}! We fixed ${done} of ${jobs.length} things. The board has today's missions.` : `${TOWN_NAME} looks brand new, thanks to you! The board has today's missions.` };
 }
@@ -4424,7 +3998,7 @@ function placeSay(id, again = false) {
     placeSaid[id] = true;
     twin.querySelectorAll('.place-say').forEach(el => el.remove());
     const { id: speaker, who, at, line } = greeting, [, , , bh] = plotBox(id);
-    const walks = !!walkers[speaker] && !!TOWNSFOLK[speaker], tall = walks ? PERSON_TALL * ASSETS.people[speaker].scale * 0.9 : PERSON_HEIGHT * 0.95;
+    const tall = PERSON_HEIGHT * (PERSON_SCALE[speaker] || 1) * 0.95;
     const say = document.createElement('div');
     say.className = 'place-say';
     say.style.left = at[0] + '%';
@@ -4440,8 +4014,7 @@ function placeSay(id, again = false) {
         say.classList.toggle('no-tail', Math.abs(shift) > half - 18); // the speaker is off the screen
     });
     twin.classList.add('talking');
-    if (walks) holdWalker(speaker, 4500); // they stop and turn to you while they talk
-    else posePerson(speaker, ...(again ? [] : [['wave', 1100]]), ['talk', again ? 4500 : 3400]);
+    posePerson(speaker, ...(again ? [] : [['wave', 1100]]), ['talk', again ? 4500 : 3400]);
     const hush = () => {
         say.remove();
         twin.classList.remove('talking');
@@ -4727,7 +4300,7 @@ function addZonePerson(el, tasks, zone) {
 
 function tapFix(task) {
     if (fixing) return;
-    if (currentScene === 'map') walkHeroTo(task, () => heroPose(taskReady(task) ? 'point' : 'think', 2000));
+    if (currentScene === 'map') { heroToJob(task); heroPose(taskReady(task) ? 'point' : 'think', 2000); }
     if (taskDone(task)) return toast(`“${task.line}”`);
     if (!taskOpen(task)) return toast('🔒 Later!');
     openTaskCard(task);
@@ -4863,8 +4436,7 @@ function callToFix(task) {
     const card = document.createElement('div');
     card.className = 'fix-call';
     card.dataset.job = task.id;
-    const wave = (ASSETS.wave || {})[npc.id];
-    card.innerHTML = `<img class="${wave ? 'wave' : 'face'}" src="${wave || npcPicture(npc)}" alt="${npc.name}">
+    card.innerHTML = `<img class="face" src="${npcPicture(npc)}" alt="${npc.name}">
                       <span><b>${task.name}</b><small>“${hasSpot(task) ? 'Let\'s fix it!' : 'Ready!'}”</small></span>
                       <button class="btn btn-primary">${uiIcon('hammer', '🔨')} ${hasSpot(task) ? 'Go fix' : 'Do it!'}</button><button class="fix-call-x">✕</button>`;
     card.querySelector('.btn').addEventListener('click', () => { card.remove(); hasSpot(task) ? goFix(task.land, task.id) : completeTask(task.id); });
@@ -4881,7 +4453,7 @@ function fixJob(id) {
     const scene = document.getElementById(task.land === 'town' ? 'scene-town' : currentScene === 'map' ? 'scene-map' : 'scene-fix');
     const spot = scene.hidden ? null : scene.querySelector(`[data-job="${id}"]`);
     if (!spot) return completeTask(id);
-    if (currentScene === 'map') walkHeroTo(task, () => heroPose('hammer', 1400), 900);
+    if (currentScene === 'map') { heroToJob(task); heroPose('hammer', 1400); }
     fixing = true;
     spot.classList.remove('spotlight');
     closeDialog();
@@ -5396,7 +4968,7 @@ function cluesHtml() {
     if (!found.length) return '';
     const done = id => restoration.done.includes(id);
     const people = SUSPECTS.filter(s => done(s.from)).map(s => {
-        const npc = npcs.find(n => n.id === s.who), pic = s.who === 'shopkeeper' ? (ASSETS.wave || {}).shopkeeper : npcPicture(npc);
+        const npc = npcs.find(n => n.id === s.who), pic = s.who === 'shopkeeper' ? (ASSETS.bust || {}).shopkeeper : npcPicture(npc);
         return `<span class="suspect${done(s.end) ? ' cleared' : ''}"><img src="${pic}" alt=""><b>${s.name}</b><small>${done(s.end) ? s.endNote : s.note}</small></span>`;
     }).join('');
     const next = nextClue();
@@ -5442,7 +5014,7 @@ function gossipHtml() {
     const list = GOSSIP[ch === -1 ? GOSSIP.length - 1 : ch];
     const [who, text] = list[((today() % list.length) + list.length) % list.length];
     const npc = npcs.find(n => n.id === who);
-    const pic = who === 'shopkeeper' ? (ASSETS.wave || {}).shopkeeper : npcPicture(npc);
+    const pic = who === 'shopkeeper' ? (ASSETS.bust || {}).shopkeeper : npcPicture(npc);
     return `<div class="gossip"><img src="${pic}" alt=""><p>“${text}”<small>${npc ? npc.name : KEEPER_NAME}</small></p></div>`;
 }
 
@@ -5477,9 +5049,9 @@ function playScene(title, lines, extra = '', then = null) {
         const by = sign ?? (who === 'note' ? '— A Friend' : '— R. Grimsby, Grimsby Land Co.');
         words = `<p class="story-note${who === 'letter' ? ' story-letter' : ''}">${text}</p>${by ? `<p class="hint">${by}</p>` : ''}`;
     } else if (who === 'shopkeeper' || npcs.some(n => n.id === who)) {
-        const npc = npcs.find(n => n.id === who), wave = (ASSETS.wave || {})[who];
-        art = wave || npcPicture(npc);
-        round = !wave;
+        const npc = npcs.find(n => n.id === who), bust = (ASSETS.bust || {})[who];
+        art = bust || npcPicture(npc);
+        round = !bust;
         words = `<p class="story-line">“${text}”</p><p class="hint">— ${npc ? npc.name : KEEPER_NAME}</p>`;
     } else { // the narrator
         art = book.book;
@@ -5540,7 +5112,7 @@ function playOpening() {
         <div class="op-title"><h1>Merge<br><span>Farmstead</span></h1><p>Tap to start</p></div>
         <p class="op-caption"></p>
         <div class="op-friends">${['shopkeeper', 'hattie', 'ruby', 'mayor', 'finn', 'poppy'].map((id, i) =>
-            `<img src="${ASSETS.characters[id] || (ASSETS.wave || {})[id]}" alt="" style="--i:${i}">`).join('')}</div>
+            `<img src="${ASSETS.characters[id] || (ASSETS.bust || {})[id]}" alt="" style="--i:${i}">`).join('')}</div>
         <div class="op-card"></div>
         <div class="op-wall"><i></i><i></i></div>
         <button class="op-skip">Skip ▸</button>
@@ -5620,7 +5192,7 @@ function playOpening() {
         el.className = 'welcome';
         caption.classList.remove('show');
         const mayor = npcs.find(n => n.id === 'mayor');
-        await ask(`<img class="op-who" src="${ASSETS.characters.mayor || npcPicture(mayor)}" alt="">
+        await ask(`<img class="op-who" src="${npcBust(mayor) || npcPicture(mayor)}" alt="">
             <b class="op-name">${mayor.name}</b>
             <p>You came! You must be Clara, the new farmer. Welcome to ${TOWN_NAME}!</p>
             <p>Our Golden Bell is gone. The families say they will come home when it rings again.</p>
@@ -5822,8 +5394,8 @@ function completeTask(id, quiet = false) {
     if (task.story) storyQueue.push(typeof task.story === 'function' ? task.story() : task.story); // a map piece counts as it's found
     if (quiet && !restored && !zoneFinished) cheer(task, npc);
     else showDialog({
-        art: npcPicture(npc),
-        artRound: true,
+        art: npcBust(npc) || npcPicture(npc),
+        artRound: !npcBust(npc),
         title: `✅ ${task.name}`,
         body: `<p>“${task.line}”</p><p class="hint">— ${npc.name}</p>
                <p><b>+⭐${task.xp}</b>${task.reward ? ` · ${rewardText(task.reward)}` : ''}</p>
@@ -6607,6 +6179,11 @@ function npcPicture(npc) {
     return ASSETS.portraits[npc.id] || ASSETS.characters[npc.id];
 }
 
+// Them from the waist up, for dialogs and story scenes (undefined: none).
+function npcBust(npc) {
+    return (ASSETS.bust || {})[npc.id];
+}
+
 // The square's painting: in fog until it's cleared, rebuilding, then restored.
 // `extra`: a job counted as done (the one being fixed right now).
 function townPicture(extra) {
@@ -6698,8 +6275,8 @@ function openNpc(npc) {
     const area = AREAS[r.mode];
     const ready = canFulfill(npc);
     showDialog({
-        art: npcPicture(npc),
-        artRound: true,
+        art: npcBust(npc) || npcPicture(npc),
+        artRound: !npcBust(npc),
         title: `${npc.name} · Lv.${level}`,
         body: `<p>“${npcAsk(npc, `${itemIcon(r.mode, r.tier)} <b>${itemName(r.mode, r.tier)}</b>`)}”</p>
                <p><b>Reward:</b> 💵 ${r.rewardMoney} · ⭐ ${r.rewardXp} XP${r.rewardProducer ? ` · 🎁 ${itemLabel(r.mode, { type: 'shop', level: 1 })}` : ''}</p>
@@ -10235,7 +9812,7 @@ addEventListener('pagehide', saveGame);
 const preloaded = [];
 (window.requestIdleCallback || (go => setTimeout(go, 1500)))(() => {
     const A = ASSETS, srcs = [...Object.values(A.plots || {}), (A.world || {}).ground, ...Object.values((A.world || {}).scenery || {}),
-        ...Object.values(A.people || {}).map(p => p.walk), ...Object.values(A.characters || {})].filter(Boolean);
+        A.hero && A.hero.stand, ...Object.values(A.characters || {})].filter(Boolean);
     srcs.forEach(src => {
         const img = new Image();
         img.decoding = 'async';

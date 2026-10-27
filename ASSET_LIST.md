@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**619 assets:** 591 done ✅, 2 placeholders 🟡, 26 missing ⬜.
+**619 assets:** 589 done ✅, 4 placeholders 🟡, 26 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -36,25 +36,27 @@ Same camera angle for all: front view, slightly from above, whole building with 
 
 ## 4. Characters (7 people)
 
-The cast walks about the world (Clara wherever you tap, the townsfolk round their doors and out to their part of
-the farm). Their art is in the Drive folder "characters for merge keeper": per person an **8-direction walk**
-(8 rows of 4 frames), the same walk as bigger figures in two sheets (**cardinal** and **diagonal**, not on a grid)
-and a **character reference**. `tools/cutwalk.py` cuts them into `assets/people/<name>/`: `walk.webp` (the walk,
-every frame on one box so the feet stay put), `body.webp` (standing, facing you: the areas, the opening),
-`side.webp` (three quarters: dialogs and story scenes) and `face.webp` (the round portraits, from the reference's
-big portrait when there is one). They're listed in `people`, `characters`, `wave` and `portraits` in `assets.js`.
-🟡: the bigger sheets and the reference were over the Drive download limit (6 MB), so standing, side and face are
-cut from the small walk for now; re-upload them as smaller PNG/WebP (or the references as JPG) and run the tool again.
+Nobody walks: Clara stands where she's working on the map (and turns up at each job you tap), and the townsfolk
+stand at their doors on the town square. Their art is in the Drive folder "characters for merge keeper": per person
+a **character reference** (a big figure on the left, four standing figures turning round along the top, a big
+portrait under them) and walk sheets (not used). `tools/cutpeople.py` cuts the reference into
+`assets/people/<name>/`: `stand.webp` (the first of the four: standing, facing you, on the map), `bust.webp` (the
+big figure from the waist up: dialogs and story scenes) and `face.webp` (the big portrait: tasks, orders and
+lists). They're listed in `hero`, `characters`, `bust` and `portraits` in `assets.js`.
+🟡: Bram's, Ellis's, Mira's and Mae's references were over the Drive download limit (6 MB), so their standing and
+waist-up pictures are stand-ins, `stand-walk.webp` and `bust-walk.webp`, cut from a frame of their walk (facing
+you, feet closest together). Upload the four references (`<Name>_Character_Reference.png`) to the repo, put them in
+`assets/raw/people/` and run the tool again.
 
-| | Character | Walk | Standing | Side | Portrait |
-|---|---|---|---|---|---|
-| ✅ | Clara Everhart, the player (`hero`) | ✅ | ✅ | ✅ | ✅ reference |
-| ✅ | the Village Mayor, Mayor Bramble (`mayor`) | ✅ | ✅ | ✅ | ✅ reference |
-| 🟡 | Bram Goodbarrel, the rancher (`hattie`) | ✅ | 🟡 | 🟡 | 🟡 |
-| ✅ | Ellis Spokewell, the carpenter (`ruby`) | ✅ | ✅ | ✅ | ✅ from the bigger figures |
-| ✅ | Mira Quayle, the fisher (`finn`) | ✅ | ✅ | ✅ | ✅ from the bigger figures |
-| 🟡 | Mae Bloombarrow, the florist (`poppy`) | ✅ | 🟡 | 🟡 | 🟡 |
-| ⬜ | Marigold in the new style: a character reference and an 8-direction walk like the others' (prompts in ASSETS.md), so she walks about the Market too | | | | |
+| | Character | Standing | Waist up | Face |
+|---|---|---|---|---|
+| ✅ | Clara Everhart, the player (`hero`) | ✅ reference | (not used) | (not used) |
+| ✅ | the Village Mayor, Mayor Bramble (`mayor`) | ✅ reference | ✅ reference | ✅ reference |
+| 🟡 | Bram Goodbarrel, the rancher (`hattie`) | 🟡 walk frame | 🟡 walk frame | 🟡 from the walk |
+| 🟡 | Ellis Spokewell, the carpenter (`ruby`) | 🟡 walk frame | 🟡 walk frame | ✅ from the bigger walk figures |
+| 🟡 | Mira Quayle, the fisher (`finn`) | 🟡 walk frame | 🟡 walk frame | ✅ from the bigger walk figures |
+| 🟡 | Mae Bloombarrow, the florist (`poppy`) | 🟡 walk frame | 🟡 walk frame | 🟡 from the walk |
+| ⬜ | Marigold in the new style: a character reference like the others' (prompt in ASSETS.md) | | | |
 | ✅ | the Market shopkeeper, Marigold: one pose sheet (`assets/raw/characters/shopkeeper_poses.jpg`, 4 × 2 poses on magenta), cut by `tools/cutposes.py` into her 8 poses in the market (`assets/characters/poses/shopkeeper/`), portrait, waving, standing and cheering | | | | |
 
 ## 5. Props (3)

@@ -18,3 +18,8 @@
   map keeps one bright look and no pink fringe from the cut-out background. They live in `assets/map/`.
 - Google Play: the developer account ($25), ID check and payments profile are done. Don't list them as to-dos again;
   the release steps that remain are in `app/README.md` (section 4).
+- Scope: the owner asked to be stopped from scope creep. Before building any new feature, expanding scope or adding
+  something not asked for (including ideas Claude suggests itself), run the `scope-gatekeeper` skill: pause, ask
+  what the end goal is, whether this is needed for it, what happens without it and whether there's a simpler way,
+  give an honest view, and wait for an explicit yes. Skip it only when told "skip the scope check". (The walking
+  cast was scope creep, and was taken out.)

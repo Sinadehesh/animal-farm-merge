@@ -291,22 +291,18 @@ The props' names, in the same order, are in ASSET_LIST.md (12b, Plot props still
 
 ### Marigold in the new style
 
-Attach `Clara_Everhart_Character_Reference.png` and `Clara_Everhart_8_Direction_Walk_Cycle.png` from the Drive
-folder "characters for merge keeper", and keep each file under 6 MB (WebP, or a compressed PNG) so the game's Drive
-connection can download it. Name them `Marigold_Character_Reference` and `Marigold_8_Direction_Walk_Cycle`.
+Attach `Clara_Everhart_Character_Reference.png` from the Drive folder "characters for merge keeper", and keep the
+file under 6 MB (WebP, or a compressed PNG) so the game's Drive connection can download it, or upload it to the repo.
+Name it `Marigold_Character_Reference`.
 
-Who she is (start both prompts with this):
+Who she is (start the prompt with this):
 
 > Marigold, the cheerful shopkeeper of a cozy farm-valley market, in exactly the same art style, proportions and
-> level of detail as the attached Clara Everhart sheets: a short, round, kind woman in her fifties with curly
+> level of detail as the attached Clara Everhart sheet: a short, round, kind woman in her fifties with curly
 > copper-red hair in a loose bun tied with a green ribbon, freckles and rosy cheeks, a long moss-green dress with
 > rolled sleeves, a cream apron dusted with flour, and small brown lace-up boots with white flour on the toes.
 
-1. **Character reference**: "A character reference sheet on a plain cream background, laid out like the attached
-   one: a big full-body figure on the left holding a basket of cinnamon buns; front, three-quarter, side and back
-   views across the top right; a large head-and-shoulders portrait at the bottom middle; her things at the bottom
-   right: the basket of buns, a green wax candle, a ball of string and a small gold lantern. Square, 2048 × 2048."
-2. **8-direction walk**: "A sprite sheet laid out exactly like the attached walk sheet, 2048 × 4096 on a
-   transparent background: 8 rows of 4 walk frames in 512 × 512 cells, the whole figure in every cell at the same
-   size, feet on the same line, seen from slightly above. Rows from the top: walking towards the viewer, down-left,
-   left, up-left, away from the viewer, up-right, right, down-right."
+**Character reference**: "A character reference sheet on a plain cream background, laid out like the attached
+one: a big full-body figure on the left holding a basket of cinnamon buns; front, three-quarter, side and back
+views across the top right; a large head-and-shoulders portrait at the bottom middle; her things at the bottom
+right: the basket of buns, a green wax candle, a ball of string and a small gold lantern. Square, 2048 × 2048."
