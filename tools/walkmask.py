@@ -37,11 +37,13 @@ SHAPE = {
     'berryrows': [50, 50.8, 97.7, 0.606], 'orchard': [49.8, 50.4, 97.4, 0.599], 'meadow': [49.8, 50.9, 97.7, 0.611],
     'stables': [49.9, 51.5, 97.8, 0.617], 'windmill': [50, 51.3, 97.7, 0.615], 'leafpiles': [50, 51.4, 97.7, 0.617],
     'mushrooms': [50.2, 51.8, 90.8, 0.573], 'muddyshore': [50, 50.8, 97.7, 0.607], 'lilypond': [50, 51.7, 97.7, 0.615],
-    'boatdock': [50.2, 50.4, 98.2, 0.604], 'gardengate': [50, 51.8, 97.6, 0.616],
+    'boatdock': [50.2, 50.4, 98.2, 0.604], 'gardengate': [50, 51.8, 97.6, 0.616], 'compostbins': [50, 51.3, 96.7, 0.613],
+    'rosearch': [50, 51.9, 96.4, 0.609], 'greenhouse': [50, 51.8, 96.4, 0.609],
 }
 NO_DIAMOND = {'market'}  # not a square plot: its whole picture is ground
 INDOORS = {'bigbarn'}
 ALL_GROUND = {'town'}  # its cobbles are too busy for the colour test: all its ground counts, less BLOCK
+BRICK = {'rosearch'}  # red brick paths count as path too
 BLOCK = {
     'barnyard': [[[15, 46], [26, 46], [26, 57], [15, 57]], [[43, 28], [49, 28], [49, 39], [43, 39]]],  # a hay bale, the barn door
     'henhouse': [[[46, 30], [62, 18], [98, 52], [86, 58], [70, 57], [58, 52], [46, 44]]],  # the chicken run
@@ -70,6 +72,13 @@ BLOCK = {
     'stables': [[[59, 48], [77, 30], [99, 49], [76, 69]], [[57, 27], [69, 27], [69, 38], [57, 38]],  # the paddock, the trough
                 [[49, 36], [60, 36], [60, 49], [49, 49]], [[24, 54], [33, 54], [33, 64], [24, 64]]],  # the tack rack, the mounting block
     'muddyshore': [[[26, 46], [37, 46], [37, 64], [26, 64]]],  # the canoe
+    'greenhouse': [[[14, 30], [24, 20], [45, 3], [56, 17], [56, 55], [48, 56], [40, 63], [30, 66], [14, 56]]],  # its glass reads as path
+    'rosearch': [[[2, 46], [25, 22], [30, 26], [30, 31], [20, 33], [8, 47], [5, 52], [2, 52]],  # the hedges (green, like the lawn)
+                 [[4, 44], [10, 42], [21, 52], [21, 62], [17, 62], [4, 52]], [[28, 46], [38, 40], [46, 44], [47, 58], [40, 63], [28, 56]],
+                 [[35, 8], [42, 3], [44, 10], [38, 20], [35, 17]], [[52, 22], [62, 12], [75, 18], [75, 30], [62, 38], [52, 34]],
+                 [[74, 40], [82, 33], [87, 36], [86, 48], [83, 62], [74, 58]], [[47, 66], [56, 58], [64, 60], [75, 58], [75, 68], [60, 76], [47, 74]],
+                 [[53, 38], [67, 38], [67, 56], [53, 56]], [[16, 34], [26, 34], [26, 47], [16, 47]],  # the fountain, the bench
+                 [[37, 22], [37, 6], [45, 2], [53, 6], [53, 24], [46, 27]]],  # the rose arch
     'town': [  # the houses, the fountain, the stage, the notice board, the dock and canal
         [[26, 6], [45, 6], [46, 40], [36, 42], [26, 36]], [[44, 41], [56, 41], [56, 57.5], [44, 57.5]],
         [[51, 15], [61, 15], [61, 30], [51, 30]], [[53, 33], [61, 33], [61, 48], [53, 48]],
@@ -163,6 +172,8 @@ def plot_mask(name):
     sd = np.sqrt(np.maximum(box_mean(v * v, 5) - box_mean(v, 5) ** 2, 0))  # how busy it looks
     grass = (h > 60) & (h < 120) & (s > 0.3) & (v > 0.42) & (sd < 0.09)
     path = ((s < 0.28) & (v > 0.5) & (sd < 0.13)) | ((h > 22) & (h < 55) & (s > 0.15) & (s < 0.6) & (v > 0.55) & (sd < 0.1))
+    if name in BRICK:
+        path |= (h > 6) & (h < 25) & (s > 0.25) & (s < 0.6) & (v > 0.45) & (sd < 0.11)  # not the roses (redder, deeper)
     if name in INDOORS:  # floorboards and the rug
         path |= ((h > 18) & (h < 42) & (s > 0.35) & (v > 0.38) & (sd < 0.12)) | ((((h > 200) & (h < 250)) | (h < 10) | (h > 340)) & (s > 0.3))
     yy, xx = np.mgrid[0:hgt, 0:W]

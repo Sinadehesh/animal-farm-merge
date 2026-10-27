@@ -121,7 +121,8 @@ const ASSETS = {
         windmill: 'assets/map/plots/windmill.webp', leafpiles: 'assets/map/plots/leafpiles.webp',
         mushrooms: 'assets/map/plots/mushrooms.webp', muddyshore: 'assets/map/plots/muddyshore.webp',
         lilypond: 'assets/map/plots/lilypond.webp', boatdock: 'assets/map/plots/boatdock.webp',
-        gardengate: 'assets/map/plots/gardengate.webp',
+        gardengate: 'assets/map/plots/gardengate.webp', compostbins: 'assets/map/plots/compostbins.webp',
+        rosearch: 'assets/map/plots/rosearch.webp', greenhouse: 'assets/map/plots/greenhouse.webp',
     },
     // Plot props, by name: transparent pictures cut from the sheets in assets/raw/plots/.
 

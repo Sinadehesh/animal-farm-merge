@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**618 assets:** 614 done ✅, 0 placeholders 🟡, 4 missing ⬜.
+**618 assets:** 617 done ✅, 0 placeholders 🟡, 1 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -440,14 +440,14 @@ plot shows it instead of its painting. Raw pictures in `assets/raw/plots/`; list
 | ✅ | Stables | `assets/map/plots/stables.webp` |
 | ✅ | Windmill | `assets/map/plots/windmill.webp` |
 | ✅ | Leaf Piles | `assets/map/plots/leafpiles.webp` |
-| ⬜ | Compost Bins | `assets/map/plots/compostbins.webp` (sent in the chat, still to come as a file) |
+| ✅ | Compost Bins | `assets/map/plots/compostbins.webp` |
 | ✅ | Mushroom Corner | `assets/map/plots/mushrooms.webp` |
 | ✅ | Muddy Shore | `assets/map/plots/muddyshore.webp` |
 | ✅ | Lily Pond | `assets/map/plots/lilypond.webp` |
 | ✅ | Boat Dock | `assets/map/plots/boatdock.webp` |
 | ✅ | Garden Gate | `assets/map/plots/gardengate.webp` |
-| ⬜ | Rose Arch | `assets/map/plots/rosearch.webp` (a new picture was sent in the chat, still to come as a file) |
-| ⬜ | Greenhouse | `assets/map/plots/greenhouse.webp` (a new picture was sent in the chat, still to come as a file) |
+| ✅ | Rose Arch | `assets/map/plots/rosearch.webp` |
+| ✅ | Greenhouse | `assets/map/plots/greenhouse.webp` (the magenta seen through its glass turned to clear glass by hand, before brightening) |
 
 A plot comes off its magenta background with `tools/cutplot.py`, then its soil edge is cut off with
 `tools/decliff.py` so plots sit flat on the ground. Every map picture
