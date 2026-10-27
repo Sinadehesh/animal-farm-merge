@@ -344,7 +344,7 @@ const GEM_PACKS = [
     { id: 'gems_vault',   name: 'Vault of Gems',   gems: 7500, price: '$119.99', tag: 'best value' },
 ];
 // Gems once a day for 30 days; a day you don't open the game is lost.
-const DAILY_BASKET = { id: 'daily_basket', name: '30 Day Daily Basket', gemsPerDay: 10, days: 30, price: '$3.99' }; // 💎300: about 2× a $3.99 pack
+const DAILY_BASKET = { id: 'daily_basket', name: '30 Day Daily Basket', gemsPerDay: 10, days: 30, price: '$1.99' }; // 💎300: the shop's best deal, priced low as a first purchase that brings players back each day
 // One-time offer, shown the first time you run out of energy: Merge Mansion's
 // Special Offer (III), 💎100, 🪙100 and ⚡100.
 const SPECIAL_OFFER = { id: 'special_offer', name: 'Special Offer', gems: 100, money: 100, energy: 100, price: '$3.49' };

@@ -137,7 +137,7 @@ set up. Don't ask for these again; start from step 1 below.
 | `gems_barrel` | Barrel of Gems, 💎3,400 | $59.99 |
 | `gems_vault` | Vault of Gems, 💎7,500 | $119.99 |
 | `special_offer` | Special Offer: 💎100 + 💵100 + ⚡100 (once) | $3.49 |
-| `daily_basket` | 30 Day Daily Basket: 💎10 a day | $3.99 |
+| `daily_basket` | 30 Day Daily Basket: 💎10 a day | $1.99 |
 | `gem_jar` | Break the Gem Jar (its saved-up 💎) | $2.99 |
 | `starter` | Starter Pack (48 h offer) | $2.99 |
 | `energy_bundle` | Energy Bundle (24 h offer) | $1.99 |
