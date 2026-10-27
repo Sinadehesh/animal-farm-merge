@@ -156,13 +156,15 @@ def cut_keyed(img, box, paper, pad=8, step=2):
         p = np.pad(keep, 1)
         keep = p[1:-1, 1:-1] | p[:-2, 1:-1] | p[2:, 1:-1] | p[1:-1, :-2] | p[1:-1, 2:]
     keep = np.repeat(np.repeat(keep, step, 0), step, 1)[:alpha.shape[0], :alpha.shape[1]]
-    # The outline near the edge keeps a purple tint from the magenta: take it out.
+    # Near the edge (the outline, gaps between fingers) the magenta leaves a purple tint:
+    # take it out of magenta-purple pixels only, not lilac or pink clothes.
     rim = alpha < 1
-    for _ in range(4):
+    for _ in range(8):
         p = np.pad(rim, 1)
         rim = p[1:-1, 1:-1] | p[:-2, 1:-1] | p[2:, 1:-1] | p[1:-1, :-2] | p[1:-1, 2:]
+    hue = np.asarray(Image.fromarray(fg.astype(np.uint8)).convert('HSV'))[..., 0] * (360 / 255)
     spill = np.minimum(fg[..., 0], fg[..., 2]) - fg[..., 1]
-    fix = rim & (spill > 0)
+    fix = rim & (spill > 0) & (hue >= 285) & (hue <= 335)
     fg[..., 0] = np.where(fix, fg[..., 0] - spill, fg[..., 0])
     fg[..., 2] = np.where(fix, fg[..., 2] - spill, fg[..., 2])
     out = Image.fromarray(np.dstack([fg, alpha * keep * 255]).round().astype(np.uint8), 'RGBA')
@@ -202,10 +204,10 @@ def main():
             # cream, fading out round the edge.
             pb = max((b for b in boxes if b[1] > img.height * 0.3 and b[0] > big[2] - 40), key=lambda b: (b[2] - b[0]) * (b[3] - b[1]))
             fig = cut_keyed(img, pb, paper)
-            n = round(fig.width * 1.08)
+            n = round(max(fig.width, fig.height) * 0.9)
             n += n % 2
             face = Image.new('RGBA', (n, n), CREAM + (255,))
-            face.alpha_composite(fig, ((n - fig.width) // 2, round(n * 0.03)))
+            face.paste(fig, ((n - fig.width) // 2, (n - fig.height) // 2), fig)  # in the middle: the face, not the hair, fills it
             paper = np.array(CREAM, float)
         else:
             # The big portrait (bottom middle), on its paper, fading out to plain paper

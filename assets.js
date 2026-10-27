@@ -333,33 +333,33 @@ const ASSETS = {
     // shop, Mae the flower shop and Marigold the market.
     characters: {
         mayor: 'assets/people/mayor/stand.webp',
-        hattie: 'assets/people/bram/stand.webp',
-        ruby: 'assets/people/ellis/stand.webp',
-        finn: 'assets/people/mira/stand.webp',
-        poppy: 'assets/people/mae/stand.webp',
-        shopkeeper: 'assets/people/marigold/stand.webp',
+        hattie: 'assets/people/bram/stand2.webp',
+        ruby: 'assets/people/ellis/stand2.webp',
+        finn: 'assets/people/mira/stand2.webp',
+        poppy: 'assets/people/mae/stand2.webp',
+        shopkeeper: 'assets/people/marigold/stand2.webp',
     },
 
     // Head-and-shoulders portraits, shown in a round frame (cards, the town,
     // popups). null = frame the full-body drawing above instead.
     portraits: {
         mayor: 'assets/people/mayor/portrait.webp',
-        hattie: 'assets/people/bram/portrait.webp',
-        ruby: 'assets/people/ellis/portrait.webp',
-        finn: 'assets/people/mira/portrait.webp',
-        poppy: 'assets/people/mae/portrait.webp',
-        shopkeeper: 'assets/people/marigold/portrait.webp',
+        hattie: 'assets/people/bram/portrait2.webp',
+        ruby: 'assets/people/ellis/portrait2.webp',
+        finn: 'assets/people/mira/portrait2.webp',
+        poppy: 'assets/people/mae/portrait2.webp',
+        shopkeeper: 'assets/people/marigold/portrait2.webp',
     },
 
     // The same people from the waist up (dialogs and story scenes), and full body cheering
     // (after a fix). null or missing = the portrait instead.
     bust: {
         mayor: 'assets/people/mayor/bust.webp',
-        hattie: 'assets/people/bram/bust.webp',
-        ruby: 'assets/people/ellis/bust.webp',
-        finn: 'assets/people/mira/bust.webp',
-        poppy: 'assets/people/mae/bust.webp',
-        shopkeeper: 'assets/people/marigold/bust.webp',
+        hattie: 'assets/people/bram/bust2.webp',
+        ruby: 'assets/people/ellis/bust2.webp',
+        finn: 'assets/people/mira/bust2.webp',
+        poppy: 'assets/people/mae/bust2.webp',
+        shopkeeper: 'assets/people/marigold/bust2.webp',
     },
     cheer: {},
 

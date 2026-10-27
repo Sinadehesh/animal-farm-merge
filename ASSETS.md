@@ -314,15 +314,15 @@ Mira_Quayle, Mae_Bloombarrow, Marigold) and run `python3 tools/cutpeople.py asse
 - **Mayor Bramble**, the village mayor: a friendly middle-aged man with short wavy grey-black hair and a warm smile,
   cream shirt with rolled sleeves, sage-green waistcoat with a gold pocket-watch chain, burgundy tie, brown trousers
   and shoes.
-- **Bram Goodbarrel**, the rancher: a big, broad, cheerful man with messy sandy-blond hair and a full beard, red plaid
+- ✅ **Bram Goodbarrel**, the rancher: a big, broad, cheerful man with messy sandy-blond hair and a full beard, red plaid
   flannel shirt with rolled sleeves, brown braces, olive work trousers, big brown boots, a tool belt with a hammer.
-- **Ellis Spokewell**, the carpenter: a young man with short brown hair and light stubble, blue work shirt, a long
+- ✅ **Ellis Spokewell**, the carpenter: a young man with short brown hair and light stubble, blue work shirt, a long
   brown leather carpenter's apron with pockets and a pencil, dark brown trousers, work boots.
-- **Mira Quayle**, the fisher: a young woman with long wavy black hair and light-brown skin, white-and-navy striped
+- ✅ **Mira Quayle**, the fisher: a young woman with long wavy black hair and light-brown skin, white-and-navy striped
   shirt, mustard-yellow vest, rolled-up blue jeans, brown rubber boots, a brass compass on her belt.
-- **Mae Bloombarrow**, the florist: a cheerful, short young girl with curly auburn hair and brown skin, a soft pink
+- ✅ **Mae Bloombarrow**, the florist: a cheerful, short young girl with curly auburn hair and brown skin, a soft pink
   headscarf, lilac puff-sleeved blouse, a sage-green pinafore with little flower patches, a small brass watering can
   at her belt, green rain boots.
-- **Marigold**, the market shopkeeper: a short, round, kind woman in her fifties with curly copper-red hair in a loose
+- ✅ **Marigold**, the market shopkeeper: a short, round, kind woman in her fifties with curly copper-red hair in a loose
   bun tied with a green ribbon, freckles and rosy cheeks, a long moss-green dress with rolled sleeves, a cream apron
   dusted with flour, small brown lace-up boots. In the big figure she holds a basket of cinnamon buns.

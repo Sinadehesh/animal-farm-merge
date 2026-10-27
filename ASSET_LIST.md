@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**618 assets:** 612 done ✅, 6 placeholders 🟡, 0 missing ⬜.
+**618 assets:** 617 done ✅, 1 placeholder 🟡, 0 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -52,11 +52,11 @@ keys those out and names their pictures `stand2.webp`, `bust2.webp` and `portrai
 |---|---|---|---|---|
 | ✅ | Clara Everhart, the player (`hero`), in the cartoon look | ✅ | (not used) | (not used) |
 | 🟡 | the Village Mayor, Mayor Bramble (`mayor`) | ✅ | ✅ | ✅ |
-| 🟡 | Bram Goodbarrel, the rancher (`hattie`) | ✅ | ✅ | ✅ |
-| 🟡 | Ellis Spokewell, the carpenter (`ruby`) | ✅ | ✅ | ✅ |
-| 🟡 | Mira Quayle, the fisher (`finn`) | ✅ | ✅ | ✅ |
-| 🟡 | Mae Bloombarrow, the florist (`poppy`) | ✅ | ✅ | ✅ |
-| 🟡 | Marigold, the Market shopkeeper (`shopkeeper`) | ✅ | ✅ | ✅ |
+| ✅ | Bram Goodbarrel, the rancher (`hattie`), in the cartoon look | ✅ | ✅ | ✅ |
+| ✅ | Ellis Spokewell, the carpenter (`ruby`), in the cartoon look | ✅ | ✅ | ✅ |
+| ✅ | Mira Quayle, the fisher (`finn`), in the cartoon look | ✅ | ✅ | ✅ |
+| ✅ | Mae Bloombarrow, the florist (`poppy`), in the cartoon look | ✅ | ✅ | ✅ |
+| ✅ | Marigold, the Market shopkeeper (`shopkeeper`), in the cartoon look | ✅ | ✅ | ✅ |
 
 ## 5. Props (3)
 
