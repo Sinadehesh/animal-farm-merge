@@ -288,3 +288,41 @@ Then the sheet's eight, left to right, top row first:
     small lemon tree in a big blue pot; two pots of purple orchids; a white curly metal love-seat bench.
 
 The props' names, in the same order, are in ASSET_LIST.md (12b, Plot props still to make).
+
+### The cast in the plots' cartoon look (7 people)
+
+Attach two pictures: a plot for the style (`assets/raw/plots/barnyard.webp`), and the person's current reference
+sheet so they stay recognisable. Paste the shared part, then the person's line. Save it as
+`assets/raw/people/<Name>_Character_Reference.png` (Clara_Everhart, Village_Mayor, Bram_Goodbarrel, Ellis_Spokewell,
+Mira_Quayle, Mae_Bloombarrow, Marigold) and run `python3 tools/cutpeople.py assets/raw/people assets/people/<name> <Name>`.
+
+> Character reference sheet for a cozy mobile farm game, redrawn in exactly the art style of the first attached
+> picture (an isometric farm plot): bright hand-painted cartoon look, clean dark-brown outlines on every shape, simple
+> soft shading with one light and one shadow tone, warm saturated colours, soft daylight from the top left, chunky
+> rounded toy-like shapes. Cute stylized proportions: a big head and a short sturdy body, about 4 heads tall, big
+> friendly eyes, simple hands. Keep the person from the second attached picture (same face, hair, skin tone, outfit
+> and colours); only the drawing style changes, a little brighter and more colourful.
+> Layout, on one square 2048 × 2048 sheet: a big full-body figure on the left in a relaxed, friendly pose; across the
+> top right, four small full-body views of the same person standing straight with arms down (front, three-quarter,
+> side, back), all the same size, evenly spaced, none touching; a big head-and-shoulders portrait at the bottom
+> middle, facing us and smiling. Nothing else on the sheet: no props, no text, no labels, no ground, no shadows under
+> the feet. Flat solid magenta background (#F509F1) everywhere, and no magenta anywhere on the person.
+
+- ✅ **Clara Everhart**, the young farmer (the player): long wavy blonde hair in a side braid, a red vest over a cream
+  long-sleeved shirt buttoned up to the collar, dark green work trousers, brown lace-up boots, a leather tool belt with
+  work gloves and a small brass key.
+- **Mayor Bramble**, the village mayor: a friendly middle-aged man with short wavy grey-black hair and a warm smile,
+  cream shirt with rolled sleeves, sage-green waistcoat with a gold pocket-watch chain, burgundy tie, brown trousers
+  and shoes.
+- **Bram Goodbarrel**, the rancher: a big, broad, cheerful man with messy sandy-blond hair and a full beard, red plaid
+  flannel shirt with rolled sleeves, brown braces, olive work trousers, big brown boots, a tool belt with a hammer.
+- **Ellis Spokewell**, the carpenter: a young man with short brown hair and light stubble, blue work shirt, a long
+  brown leather carpenter's apron with pockets and a pencil, dark brown trousers, work boots.
+- **Mira Quayle**, the fisher: a young woman with long wavy black hair and light-brown skin, white-and-navy striped
+  shirt, mustard-yellow vest, rolled-up blue jeans, brown rubber boots, a brass compass on her belt.
+- **Mae Bloombarrow**, the florist: a cheerful, short young girl with curly auburn hair and brown skin, a soft pink
+  headscarf, lilac puff-sleeved blouse, a sage-green pinafore with little flower patches, a small brass watering can
+  at her belt, green rain boots.
+- **Marigold**, the market shopkeeper: a short, round, kind woman in her fifties with curly copper-red hair in a loose
+  bun tied with a green ribbon, freckles and rosy cheeks, a long moss-green dress with rolled sleeves, a cream apron
+  dusted with flour, small brown lace-up boots. In the big figure she holds a basket of cinnamon buns.

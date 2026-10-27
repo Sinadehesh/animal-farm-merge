@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**618 assets:** 618 done ✅, 0 placeholders 🟡, 0 missing ⬜.
+**618 assets:** 612 done ✅, 6 placeholders 🟡, 0 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -44,15 +44,19 @@ folder "characters for merge keeper", the others' sent in the chat). `tools/cutp
 figure from the waist up: dialogs and story scenes) and `portrait.webp` (the big portrait: tasks, orders and
 lists). They're listed in `hero`, `characters`, `bust` and `portraits` in `assets.js`.
 
+The cast is being redrawn in the plots' cartoon look (their painted look didn't fit the map), one sheet each on flat
+magenta (prompt in ASSETS.md, section 7), saved as `assets/raw/people/<Name>_Character_Reference.png`. `cutpeople.py`
+keys those out and names their pictures `stand2.webp`, `bust2.webp` and `portrait2.webp`. 🟡 = still the old look.
+
 | | Character | Standing | Waist up | Portrait |
 |---|---|---|---|---|
-| ✅ | Clara Everhart, the player (`hero`) | ✅ | (not used) | (not used) |
-| ✅ | the Village Mayor, Mayor Bramble (`mayor`) | ✅ | ✅ | ✅ |
-| ✅ | Bram Goodbarrel, the rancher (`hattie`) | ✅ | ✅ | ✅ |
-| ✅ | Ellis Spokewell, the carpenter (`ruby`) | ✅ | ✅ | ✅ |
-| ✅ | Mira Quayle, the fisher (`finn`) | ✅ | ✅ | ✅ |
-| ✅ | Mae Bloombarrow, the florist (`poppy`) | ✅ | ✅ | ✅ |
-| ✅ | Marigold, the Market shopkeeper (`shopkeeper`) | ✅ | ✅ | ✅ |
+| ✅ | Clara Everhart, the player (`hero`), in the cartoon look | ✅ | (not used) | (not used) |
+| 🟡 | the Village Mayor, Mayor Bramble (`mayor`) | ✅ | ✅ | ✅ |
+| 🟡 | Bram Goodbarrel, the rancher (`hattie`) | ✅ | ✅ | ✅ |
+| 🟡 | Ellis Spokewell, the carpenter (`ruby`) | ✅ | ✅ | ✅ |
+| 🟡 | Mira Quayle, the fisher (`finn`) | ✅ | ✅ | ✅ |
+| 🟡 | Mae Bloombarrow, the florist (`poppy`) | ✅ | ✅ | ✅ |
+| 🟡 | Marigold, the Market shopkeeper (`shopkeeper`) | ✅ | ✅ | ✅ |
 
 ## 5. Props (3)
 
