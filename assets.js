@@ -116,6 +116,9 @@ const ASSETS = {
         barnyard: 'assets/map/plots/barnyard.webp', henhouse: 'assets/map/plots/henhouse.webp',
         bigbarn: 'assets/map/plots/bigbarn.webp', fieldgate: 'assets/map/plots/fieldgate.webp',
         market: 'assets/map/plots/market.webp', town: 'assets/map/plots/town.webp',
+        berryrows: 'assets/map/plots/berryrows.webp', orchard: 'assets/map/plots/orchard.webp',
+        meadow: 'assets/map/plots/meadow.webp', stables: 'assets/map/plots/stables.webp',
+        windmill: 'assets/map/plots/windmill.webp',
     },
     // Plot props, by name: transparent pictures cut from the sheets in assets/raw/plots/.
 
@@ -164,6 +167,24 @@ const ASSETS = {
         lantern: 'assets/map/props/lantern.webp', mailbox: 'assets/map/props/mailbox.webp', tulips: 'assets/map/props/tulips.webp',
         bench: 'assets/map/props/bench.webp', bird_feeder: 'assets/map/props/bird_feeder.webp', firewood: 'assets/map/props/firewood.webp',
         bunting: 'assets/map/props/bunting.webp', wreath: 'assets/map/props/wreath.webp',
+        // Crop Field mess and more
+        bed_bare: 'assets/map/props/bed_bare.webp', berries_wilted: 'assets/map/props/berries_wilted.webp', barrel_broken: 'assets/map/props/barrel_broken.webp',
+        netting_tangled: 'assets/map/props/netting_tangled.webp', molehole: 'assets/map/props/molehole.webp', apples_rotten: 'assets/map/props/apples_rotten.webp',
+        wall_rubble: 'assets/map/props/wall_rubble.webp', beehive_broken: 'assets/map/props/beehive_broken.webp',
+        stand_broken: 'assets/map/props/stand_broken.webp', swing_broken: 'assets/map/props/swing_broken.webp', baskets_tipped: 'assets/map/props/baskets_tipped.webp',
+        sapling: 'assets/map/props/sapling.webp', picnic: 'assets/map/props/picnic.webp', berry_cart: 'assets/map/props/berry_cart.webp',
+        bird_box: 'assets/map/props/bird_box.webp', juice_crate: 'assets/map/props/juice_crate.webp',
+        // Hay Field mess and new
+        horseshoes_old: 'assets/map/props/horseshoes_old.webp', mud_hole: 'assets/map/props/mud_hole.webp', stall_door_broken: 'assets/map/props/stall_door_broken.webp',
+        sail_broken: 'assets/map/props/sail_broken.webp', flour_spill: 'assets/map/props/flour_spill.webp', wall_cracked: 'assets/map/props/wall_cracked.webp',
+        hay_loose: 'assets/map/props/hay_loose.webp', sheep_woolly: 'assets/map/props/sheep_woolly.webp',
+        bales_stack: 'assets/map/props/bales_stack.webp', saddle_stand: 'assets/map/props/saddle_stand.webp', sheep_shorn: 'assets/map/props/sheep_shorn.webp',
+        flower_box: 'assets/map/props/flower_box.webp', weather_vane: 'assets/map/props/weather_vane.webp', hay_rack: 'assets/map/props/hay_rack.webp',
+        mounting_block: 'assets/map/props/mounting_block.webp', name_board: 'assets/map/props/name_board.webp',
+        // Compost Yard mess
+        leaf_heap: 'assets/map/props/leaf_heap.webp', rakes_broken: 'assets/map/props/rakes_broken.webp', tools_scattered: 'assets/map/props/tools_scattered.webp',
+        logs_rotten: 'assets/map/props/logs_rotten.webp', roots_tangled: 'assets/map/props/roots_tangled.webp', bin_broken: 'assets/map/props/bin_broken.webp',
+        barrow_leaves: 'assets/map/props/barrow_leaves.webp', pots_broken: 'assets/map/props/pots_broken.webp',
     },
 
     // The things in each area, by name (transparent PNGs, cut from

@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**619 assets:** 593 done ✅, 0 placeholders 🟡, 26 missing ⬜.
+**619 assets:** 603 done ✅, 0 placeholders 🟡, 16 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -435,37 +435,39 @@ plot shows it instead of its painting. Raw pictures in `assets/raw/plots/`; list
 | ✅ | Hen House | `assets/map/plots/henhouse.webp` |
 | ✅ | Barn Storeroom | `assets/map/plots/bigbarn.webp` |
 | ✅ | Field Gate | `assets/map/plots/fieldgate.webp` |
-| ⬜ | Strawberry Rows | `assets/map/plots/berryrows.webp` |
-| ⬜ | Orchard | `assets/map/plots/orchard.webp` |
-| ⬜ | Meadow | `assets/map/plots/meadow.webp` |
-| ⬜ | Stables | `assets/map/plots/stables.webp` |
-| ⬜ | Windmill | `assets/map/plots/windmill.webp` |
-| ⬜ | Leaf Piles | `assets/map/plots/leafpiles.webp` |
+| ✅ | Strawberry Rows | `assets/map/plots/berryrows.webp` |
+| ✅ | Orchard | `assets/map/plots/orchard.webp` |
+| ✅ | Meadow | `assets/map/plots/meadow.webp` |
+| ✅ | Stables | `assets/map/plots/stables.webp` |
+| ✅ | Windmill | `assets/map/plots/windmill.webp` |
+| ⬜ | Leaf Piles | `assets/map/plots/leafpiles.webp` (cut, shown once its Compost Yard props are in) |
 | ⬜ | Compost Bins | `assets/map/plots/compostbins.webp` |
-| ⬜ | Mushroom Corner | `assets/map/plots/mushrooms.webp` |
-| ⬜ | Muddy Shore | `assets/map/plots/muddyshore.webp` |
-| ⬜ | Lily Pond | `assets/map/plots/lilypond.webp` |
-| ⬜ | Boat Dock | `assets/map/plots/boatdock.webp` |
-| ⬜ | Garden Gate | `assets/map/plots/gardengate.webp` |
-| ⬜ | Rose Arch | `assets/map/plots/rosearch.webp` |
-| ⬜ | Greenhouse | `assets/map/plots/greenhouse.webp` |
+| ⬜ | Mushroom Corner | `assets/map/plots/mushrooms.webp` (cut, shown once its Compost Yard props are in) |
+| ⬜ | Muddy Shore | `assets/map/plots/muddyshore.webp` (cut, shown once its Fish Pond props are in) |
+| ⬜ | Lily Pond | `assets/map/plots/lilypond.webp` (cut, shown once its Fish Pond props are in) |
+| ⬜ | Boat Dock | `assets/map/plots/boatdock.webp` (cut, shown once its Fish Pond props are in) |
+| ⬜ | Garden Gate | `assets/map/plots/gardengate.webp` (cut, shown once its Flower Garden props are in) |
+| ⬜ | Rose Arch | `assets/map/plots/rosearch.webp` (`assets/raw/plots/rosearch.jpg` is only 1024 px wide: needs the full-size one) |
+| ⬜ | Greenhouse | `assets/map/plots/greenhouse.webp` (`assets/raw/plots/greenhouse.jpg` is only 1024 px wide: needs the full-size one) |
 
-The soil edge under each plot is cut off with `tools/decliff.py` so plots sit flat on the ground. Every map picture
+A plot comes off its magenta background with `tools/cutplot.py`, then its soil edge is cut off with
+`tools/decliff.py` so plots sit flat on the ground. Every map picture
 (plots, props, scenery, the ground, the road dirt) is then brightened once with `tools/brighten.py`, which also cleans
 the pink fringe left by the magenta background. They all live in `assets/map/`.
 
-### Plot props still to make (for the new plots)
+### Plot props for the new plots
 
-Ten more sheets of 8 on flat magenta, two per land: its mess and broken things (they puff away when a job is
-done) and the new things that pop up. Prompts in ASSETS.md; cut by name into `assets/map/props/`.
+Ten sheets of 8 on flat magenta, two per land: its mess and broken things (they puff away when a job is done) and
+the new things that pop up. Prompts in ASSETS.md; raw sheets in `assets/raw/plots/props_*.jpg`, cut by name into
+`assets/map/props/` with `tools/cutprops.py` (then `tools/brighten.py`) and listed in `plotProps` in `assets.js`.
 
 | | Sheet | Props |
 |---|---|---|
-| ⬜ | Crop Field mess | bed_bare, berries_wilted, barrel_broken, netting_tangled, molehole, apples_rotten, wall_rubble, beehive_broken |
-| ⬜ | Crop Field more | stand_broken, swing_broken, baskets_tipped, sapling, picnic, berry_cart, bird_box, juice_crate |
-| ⬜ | Hay Field mess | horseshoes_old, mud_hole, stall_door_broken, sail_broken, flour_spill, wall_cracked, hay_loose, sheep_woolly |
-| ⬜ | Hay Field new | bales_stack, saddle_stand, sheep_shorn, flower_box, weather_vane, hay_rack, mounting_block, name_board |
-| ⬜ | Compost Yard mess | leaf_heap, rakes_broken, tools_scattered, logs_rotten, roots_tangled, bin_broken, barrow_leaves, pots_broken |
+| ✅ | Crop Field mess | bed_bare, berries_wilted, barrel_broken, netting_tangled, molehole, apples_rotten, wall_rubble, beehive_broken |
+| ✅ | Crop Field more | stand_broken, swing_broken, baskets_tipped, sapling, picnic, berry_cart, bird_box, juice_crate |
+| ✅ | Hay Field mess | horseshoes_old, mud_hole, stall_door_broken, sail_broken, flour_spill, wall_cracked, hay_loose, sheep_woolly |
+| ✅ | Hay Field new | bales_stack, saddle_stand, sheep_shorn, flower_box, weather_vane, hay_rack, mounting_block, name_board |
+| ✅ | Compost Yard mess | leaf_heap, rakes_broken, tools_scattered, logs_rotten, roots_tangled, bin_broken, barrow_leaves, pots_broken |
 | ⬜ | Compost Yard new | leaf_cage, bug_hotel, potting_bench, toadstool_giant, mushroom_log, fairy_door, wind_chimes, hedgehog_house |
 | ⬜ | Fish Pond mess | cans_bottles, sticks_floating, algae, lilypads_dead, net_tangled, rowboat_sunken, sign_fallen, planks_missing |
 | ⬜ | Fish Pond new | frogs_log, fishing_spot, lotus, koi, lanterns_red, life_ring, rowboat, duck_house |
