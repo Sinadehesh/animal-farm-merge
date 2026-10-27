@@ -7,10 +7,10 @@ on the left, four standing figures turning round along the top, a big portrait
 under them) it writes, each cut off its paper:
   stand.webp  the first of the four: standing, facing you (on the map);
   bust.webp   the big figure from the waist up (dialogs and story scenes);
-  face.webp   head and shoulders off the big portrait, square (tasks, orders, lists).
+  portrait.webp  head and shoulders off the big portrait, square (tasks, orders, lists).
 Without a reference sheet it makes stand-walk.webp and bust-walk.webp, stand-ins
 until there is one, from _8_Direction_Walk_Cycle.png (of its frames facing you,
-the one with the feet closest together), and leaves face.webp as it is.
+the one with the feet closest together), and no portrait.
 It prints the standing figure's aspect (width / height).
 """
 import os
@@ -23,9 +23,11 @@ from PIL import Image, ImageFilter
 CELL = 512  # a walk cycle's frame
 TOL = 30  # how far from the paper's colour a pixel may be and still be paper
 WAIST = 0.47  # where the waist is, down a big figure
-# Where the big portrait's face is on a reference (middle x, y and the square's side, on a
-# 2048 sheet), where it isn't just under the top of the portrait.
-REF_FACE = {'Clara_Everhart': (905, 1400, 640), 'Village_Mayor': (1050, 1360, 640)}
+# By hand, on a 2048 sheet: where the big portrait's face is (middle x, y and the square's
+# side), and the big figure's box where it touches something else.
+REF_FACE = {'Clara_Everhart': (905, 1400, 640), 'Village_Mayor': (1050, 1360, 640), 'Ellis_Spokewell': (942, 1410, 700),
+            'Mae_Bloombarrow': (1126, 1455, 640), 'Bram_Goodbarrel': (983, 1316, 614), 'Mira_Quayle': (788, 1420, 600)}
+BIG = {'Mira_Quayle': (82, 37, 655, 1475)}
 
 
 def save(img, path, q=86):
@@ -129,7 +131,7 @@ def main():
         paper, k = paper_of(img), img.width / 2048
         boxes = figures(img, paper)
         tall = [b for b in boxes if b[3] - b[1] > img.height * 0.4]
-        big = min(tall, key=lambda b: b[0])  # the big figure, on the left
+        big = tuple(round(v * k) for v in BIG[name]) if name in BIG else min(tall, key=lambda b: b[0])  # the big figure, on the left
         row = sorted((b for b in tall if b[1] < img.height * 0.15 and b[3] < img.height * 0.6), key=lambda b: b[0])
         stand = cut(img, row[0], paper)
         bust = bust_of(cut(img, big, paper))
@@ -137,15 +139,16 @@ def main():
         # towards the edges so nothing next to it shows.
         if name in REF_FACE:
             cx, cy, n = (round(v * k) for v in REF_FACE[name])
+            n += n % 2
         else:
             pb = max((b for b in boxes if b[1] > img.height * 0.45 and b[0] < img.width * 0.5 < b[2]), key=lambda b: (b[2] - b[0]) * (b[3] - b[1]))
-            n = round(640 * k)
+            n = 2 * round(320 * k)
             cx, cy = (pb[0] + pb[2]) // 2, pb[1] + n // 2
         face = img.crop((cx - n // 2, cy - n // 2, cx + n // 2, cy + n // 2)).convert('RGBA')
         sheet = Image.new('RGBA', face.size, tuple(int(v) for v in paper) + (255,))
         r = np.hypot(*np.meshgrid(np.arange(n) - n / 2, np.arange(n) - n / 2)) / (n / 2)
         face = Image.composite(face, sheet, Image.fromarray((np.clip((1.02 - r) / 0.14, 0, 1) * 255).astype('uint8')))
-        save(face.resize((256, 256), Image.LANCZOS), os.path.join(out, 'face.webp'))
+        save(face.resize((256, 256), Image.LANCZOS), os.path.join(out, 'portrait.webp'))
     else:
         sheet = Image.open(os.path.join(raw, name + '_8_Direction_Walk_Cycle.png')).convert('RGBA')
         frames = [sheet.crop((c * CELL, 0, (c + 1) * CELL, CELL)) for c in range(4)]

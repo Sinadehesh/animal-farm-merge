@@ -285,25 +285,24 @@ const ASSETS = {
 
     // Townsfolk (keyed by NPC id) and the market shopkeeper, standing, facing you. The
     // townsfolk are the new cast (see hero above): Bram runs the ranch, Ellis the carpenter's,
-    // Mira the fish shop and Mae the flower shop. Theirs with -walk are stand-ins, a frame of
-    // their walk, until their reference sheets are cut.
+    // Mira the fish shop and Mae the flower shop.
     characters: {
         mayor: 'assets/people/mayor/stand.webp',
-        hattie: 'assets/people/bram/stand-walk.webp',
-        ruby: 'assets/people/ellis/stand-walk.webp',
-        finn: 'assets/people/mira/stand-walk.webp',
-        poppy: 'assets/people/mae/stand-walk.webp',
+        hattie: 'assets/people/bram/stand.webp',
+        ruby: 'assets/people/ellis/stand.webp',
+        finn: 'assets/people/mira/stand.webp',
+        poppy: 'assets/people/mae/stand.webp',
         shopkeeper: 'assets/characters/poses/shopkeeper/body.webp',
     },
 
     // Head-and-shoulders portraits, shown in a round frame (cards, the town,
     // popups). null = frame the full-body drawing above instead.
     portraits: {
-        mayor: 'assets/people/mayor/face.webp',
-        hattie: 'assets/people/bram/face.webp',
-        ruby: 'assets/people/ellis/face.webp',
-        finn: 'assets/people/mira/face.webp',
-        poppy: 'assets/people/mae/face.webp',
+        mayor: 'assets/people/mayor/portrait.webp',
+        hattie: 'assets/people/bram/portrait.webp',
+        ruby: 'assets/people/ellis/portrait.webp',
+        finn: 'assets/people/mira/portrait.webp',
+        poppy: 'assets/people/mae/portrait.webp',
         shopkeeper: 'assets/characters/poses/shopkeeper/face.webp',
     },
 
@@ -311,10 +310,10 @@ const ASSETS = {
     // and full body cheering (after a fix). null or missing = the portrait instead.
     bust: {
         mayor: 'assets/people/mayor/bust.webp',
-        hattie: 'assets/people/bram/bust-walk.webp',
-        ruby: 'assets/people/ellis/bust-walk.webp',
-        finn: 'assets/people/mira/bust-walk.webp',
-        poppy: 'assets/people/mae/bust-walk.webp',
+        hattie: 'assets/people/bram/bust.webp',
+        ruby: 'assets/people/ellis/bust.webp',
+        finn: 'assets/people/mira/bust.webp',
+        poppy: 'assets/people/mae/bust.webp',
         shopkeeper: 'assets/characters/poses/shopkeeper/hello.webp',
     },
     cheer: {

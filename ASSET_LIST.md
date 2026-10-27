@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**619 assets:** 589 done ✅, 4 placeholders 🟡, 26 missing ⬜.
+**619 assets:** 593 done ✅, 0 placeholders 🟡, 26 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -37,25 +37,21 @@ Same camera angle for all: front view, slightly from above, whole building with 
 ## 4. Characters (7 people)
 
 Nobody walks: Clara stands where she's working on the map (and turns up at each job you tap), and the townsfolk
-stand at their doors on the town square. Their art is in the Drive folder "characters for merge keeper": per person
-a **character reference** (a big figure on the left, four standing figures turning round along the top, a big
-portrait under them) and walk sheets (not used). `tools/cutpeople.py` cuts the reference into
-`assets/people/<name>/`: `stand.webp` (the first of the four: standing, facing you, on the map), `bust.webp` (the
-big figure from the waist up: dialogs and story scenes) and `face.webp` (the big portrait: tasks, orders and
+stand at their doors on the town square. Their art is a **character reference** per person (a big figure on the
+left, standing figures turning round along the top, a big portrait under them; Clara's and the Mayor's in the Drive
+folder "characters for merge keeper", the others' sent in the chat). `tools/cutpeople.py` cuts each into
+`assets/people/<name>/`: `stand.webp` (the first standing figure, facing you, on the map), `bust.webp` (the big
+figure from the waist up: dialogs and story scenes) and `portrait.webp` (the big portrait: tasks, orders and
 lists). They're listed in `hero`, `characters`, `bust` and `portraits` in `assets.js`.
-🟡: Bram's, Ellis's, Mira's and Mae's references were over the Drive download limit (6 MB), so their standing and
-waist-up pictures are stand-ins, `stand-walk.webp` and `bust-walk.webp`, cut from a frame of their walk (facing
-you, feet closest together). Upload the four references (`<Name>_Character_Reference.png`) to the repo, put them in
-`assets/raw/people/` and run the tool again.
 
-| | Character | Standing | Waist up | Face |
+| | Character | Standing | Waist up | Portrait |
 |---|---|---|---|---|
-| ✅ | Clara Everhart, the player (`hero`) | ✅ reference | (not used) | (not used) |
-| ✅ | the Village Mayor, Mayor Bramble (`mayor`) | ✅ reference | ✅ reference | ✅ reference |
-| 🟡 | Bram Goodbarrel, the rancher (`hattie`) | 🟡 walk frame | 🟡 walk frame | 🟡 from the walk |
-| 🟡 | Ellis Spokewell, the carpenter (`ruby`) | 🟡 walk frame | 🟡 walk frame | ✅ from the bigger walk figures |
-| 🟡 | Mira Quayle, the fisher (`finn`) | 🟡 walk frame | 🟡 walk frame | ✅ from the bigger walk figures |
-| 🟡 | Mae Bloombarrow, the florist (`poppy`) | 🟡 walk frame | 🟡 walk frame | 🟡 from the walk |
+| ✅ | Clara Everhart, the player (`hero`) | ✅ | (not used) | (not used) |
+| ✅ | the Village Mayor, Mayor Bramble (`mayor`) | ✅ | ✅ | ✅ |
+| ✅ | Bram Goodbarrel, the rancher (`hattie`) | ✅ | ✅ | ✅ |
+| ✅ | Ellis Spokewell, the carpenter (`ruby`) | ✅ | ✅ | ✅ |
+| ✅ | Mira Quayle, the fisher (`finn`) | ✅ | ✅ | ✅ |
+| ✅ | Mae Bloombarrow, the florist (`poppy`) | ✅ | ✅ | ✅ |
 | ⬜ | Marigold in the new style: a character reference like the others' (prompt in ASSETS.md) | | | |
 | ✅ | the Market shopkeeper, Marigold: one pose sheet (`assets/raw/characters/shopkeeper_poses.jpg`, 4 × 2 poses on magenta), cut by `tools/cutposes.py` into her 8 poses in the market (`assets/characters/poses/shopkeeper/`), portrait, waving, standing and cheering | | | | |
 
