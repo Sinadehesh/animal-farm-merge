@@ -118,7 +118,10 @@ const ASSETS = {
         market: 'assets/map/plots/market.webp', town: 'assets/map/plots/town.webp',
         berryrows: 'assets/map/plots/berryrows.webp', orchard: 'assets/map/plots/orchard.webp',
         meadow: 'assets/map/plots/meadow.webp', stables: 'assets/map/plots/stables.webp',
-        windmill: 'assets/map/plots/windmill.webp',
+        windmill: 'assets/map/plots/windmill.webp', leafpiles: 'assets/map/plots/leafpiles.webp',
+        mushrooms: 'assets/map/plots/mushrooms.webp', muddyshore: 'assets/map/plots/muddyshore.webp',
+        lilypond: 'assets/map/plots/lilypond.webp', boatdock: 'assets/map/plots/boatdock.webp',
+        gardengate: 'assets/map/plots/gardengate.webp',
     },
     // Plot props, by name: transparent pictures cut from the sheets in assets/raw/plots/.
 
@@ -185,6 +188,26 @@ const ASSETS = {
         leaf_heap: 'assets/map/props/leaf_heap.webp', rakes_broken: 'assets/map/props/rakes_broken.webp', tools_scattered: 'assets/map/props/tools_scattered.webp',
         logs_rotten: 'assets/map/props/logs_rotten.webp', roots_tangled: 'assets/map/props/roots_tangled.webp', bin_broken: 'assets/map/props/bin_broken.webp',
         barrow_leaves: 'assets/map/props/barrow_leaves.webp', pots_broken: 'assets/map/props/pots_broken.webp',
+        // Compost Yard new
+        leaf_cage: 'assets/map/props/leaf_cage.webp', bug_hotel: 'assets/map/props/bug_hotel.webp', potting_bench: 'assets/map/props/potting_bench.webp',
+        toadstool_giant: 'assets/map/props/toadstool_giant.webp', mushroom_log: 'assets/map/props/mushroom_log.webp', fairy_door: 'assets/map/props/fairy_door.webp',
+        wind_chimes: 'assets/map/props/wind_chimes.webp', hedgehog_house: 'assets/map/props/hedgehog_house.webp',
+        // Fish Pond mess
+        cans_bottles: 'assets/map/props/cans_bottles.webp', sticks_floating: 'assets/map/props/sticks_floating.webp', algae: 'assets/map/props/algae.webp',
+        lilypads_dead: 'assets/map/props/lilypads_dead.webp', net_tangled: 'assets/map/props/net_tangled.webp', rowboat_sunken: 'assets/map/props/rowboat_sunken.webp',
+        sign_fallen: 'assets/map/props/sign_fallen.webp', planks_missing: 'assets/map/props/planks_missing.webp',
+        // Fish Pond new
+        frogs_log: 'assets/map/props/frogs_log.webp', fishing_spot: 'assets/map/props/fishing_spot.webp', lotus: 'assets/map/props/lotus.webp',
+        koi: 'assets/map/props/koi.webp', lanterns_red: 'assets/map/props/lanterns_red.webp', life_ring: 'assets/map/props/life_ring.webp',
+        rowboat: 'assets/map/props/rowboat.webp', duck_house: 'assets/map/props/duck_house.webp',
+        // Flower Garden mess
+        roses_dead: 'assets/map/props/roses_dead.webp', fountain_cracked: 'assets/map/props/fountain_cracked.webp', glass_broken: 'assets/map/props/glass_broken.webp',
+        arch_broken: 'assets/map/props/arch_broken.webp', bed_withered: 'assets/map/props/bed_withered.webp', trellis_fallen: 'assets/map/props/trellis_fallen.webp',
+        cans_tipped: 'assets/map/props/cans_tipped.webp', planter_cracked: 'assets/map/props/planter_cracked.webp',
+        // Flower Garden new
+        beehive_white: 'assets/map/props/beehive_white.webp', bird_bath: 'assets/map/props/bird_bath.webp', hanging_basket: 'assets/map/props/hanging_basket.webp',
+        herb_pots: 'assets/map/props/herb_pots.webp', sunflower_giant: 'assets/map/props/sunflower_giant.webp', lemon_tree: 'assets/map/props/lemon_tree.webp',
+        orchid_pots: 'assets/map/props/orchid_pots.webp', love_seat: 'assets/map/props/love_seat.webp',
     },
 
     // The things in each area, by name (transparent PNGs, cut from
@@ -304,16 +327,16 @@ const ASSETS = {
         flowershop: 'assets/town/flowershop.svg',
     },
 
-    // Townsfolk (keyed by NPC id) and the market shopkeeper, standing, facing you. The
-    // townsfolk are the new cast (see hero above): Bram runs the ranch, Ellis the carpenter's,
-    // Mira the fish shop and Mae the flower shop.
+    // Townsfolk (keyed by NPC id) and the market shopkeeper, standing, facing you. They are
+    // the new cast (see hero above): Bram runs the ranch, Ellis the carpenter's, Mira the fish
+    // shop, Mae the flower shop and Marigold the market.
     characters: {
         mayor: 'assets/people/mayor/stand.webp',
         hattie: 'assets/people/bram/stand.webp',
         ruby: 'assets/people/ellis/stand.webp',
         finn: 'assets/people/mira/stand.webp',
         poppy: 'assets/people/mae/stand.webp',
-        shopkeeper: 'assets/characters/poses/shopkeeper/body.webp',
+        shopkeeper: 'assets/people/marigold/stand.webp',
     },
 
     // Head-and-shoulders portraits, shown in a round frame (cards, the town,
@@ -324,35 +347,25 @@ const ASSETS = {
         ruby: 'assets/people/ellis/portrait.webp',
         finn: 'assets/people/mira/portrait.webp',
         poppy: 'assets/people/mae/portrait.webp',
-        shopkeeper: 'assets/characters/poses/shopkeeper/face.webp',
+        shopkeeper: 'assets/people/marigold/portrait.webp',
     },
 
-    // The same people from the waist up (dialogs and story scenes; the shopkeeper waving),
-    // and full body cheering (after a fix). null or missing = the portrait instead.
+    // The same people from the waist up (dialogs and story scenes), and full body cheering
+    // (after a fix). null or missing = the portrait instead.
     bust: {
         mayor: 'assets/people/mayor/bust.webp',
         hattie: 'assets/people/bram/bust.webp',
         ruby: 'assets/people/ellis/bust.webp',
         finn: 'assets/people/mira/bust.webp',
         poppy: 'assets/people/mae/bust.webp',
-        shopkeeper: 'assets/characters/poses/shopkeeper/hello.webp',
+        shopkeeper: 'assets/people/marigold/bust.webp',
     },
-    cheer: {
-        shopkeeper: 'assets/characters/poses/shopkeeper/cheer.webp',
-    },
+    cheer: {},
 
-    // The shopkeeper's poses in the market, cut from
-    // assets/raw/characters/<id>_poses.jpg with tools/cutposes.py (which also
-    // makes the body, face and hello pictures above). All are drawn on one
-    // frame: [width, height, the standing figure's height, the feet's height
-    // above the bottom], in px. Who has none stands in one picture.
-    poses: {
-        shopkeeper: {
-            frame: [184, 264, 256, 4],
-            stand: 'assets/characters/poses/shopkeeper/stand.webp', wave: 'assets/characters/poses/shopkeeper/wave.webp', talk: 'assets/characters/poses/shopkeeper/talk.webp', cheer: 'assets/characters/poses/shopkeeper/cheer.webp',
-            clap: 'assets/characters/poses/shopkeeper/clap.webp', think: 'assets/characters/poses/shopkeeper/think.webp', point: 'assets/characters/poses/shopkeeper/point.webp', ask: 'assets/characters/poses/shopkeeper/ask.webp',
-        },
-    },
+    // Poses for someone on a place's picture (wave, talk, cheer...), by who, all drawn on
+    // one frame: [width, height, the standing figure's height, the feet's height above the
+    // bottom], in px. Who has none (everyone, now) stands in one picture.
+    poses: {},
 
     // Tool producers, one per land (a single picture each), by chain. Their
     // items go in items.<chain> once drawn (tools, garden, wood, clean, fishing,

@@ -288,21 +288,3 @@ Then the sheet's eight, left to right, top row first:
     small lemon tree in a big blue pot; two pots of purple orchids; a white curly metal love-seat bench.
 
 The props' names, in the same order, are in ASSET_LIST.md (12b, Plot props still to make).
-
-### Marigold in the new style
-
-Attach `Clara_Everhart_Character_Reference.png` from the Drive folder "characters for merge keeper", and keep the
-file under 6 MB (WebP, or a compressed PNG) so the game's Drive connection can download it, or upload it to the repo.
-Name it `Marigold_Character_Reference`.
-
-Who she is (start the prompt with this):
-
-> Marigold, the cheerful shopkeeper of a cozy farm-valley market, in exactly the same art style, proportions and
-> level of detail as the attached Clara Everhart sheet: a short, round, kind woman in her fifties with curly
-> copper-red hair in a loose bun tied with a green ribbon, freckles and rosy cheeks, a long moss-green dress with
-> rolled sleeves, a cream apron dusted with flour, and small brown lace-up boots with white flour on the toes.
-
-**Character reference**: "A character reference sheet on a plain cream background, laid out like the attached
-one: a big full-body figure on the left holding a basket of cinnamon buns; front, three-quarter, side and back
-views across the top right; a large head-and-shoulders portrait at the bottom middle; her things at the bottom
-right: the basket of buns, a green wax candle, a ball of string and a small gold lantern. Square, 2048 × 2048."

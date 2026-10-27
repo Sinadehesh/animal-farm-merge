@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**619 assets:** 603 done ✅, 0 placeholders 🟡, 16 missing ⬜.
+**618 assets:** 614 done ✅, 0 placeholders 🟡, 4 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -52,8 +52,7 @@ lists). They're listed in `hero`, `characters`, `bust` and `portraits` in `asset
 | ✅ | Ellis Spokewell, the carpenter (`ruby`) | ✅ | ✅ | ✅ |
 | ✅ | Mira Quayle, the fisher (`finn`) | ✅ | ✅ | ✅ |
 | ✅ | Mae Bloombarrow, the florist (`poppy`) | ✅ | ✅ | ✅ |
-| ⬜ | Marigold in the new style: a character reference like the others' (prompt in ASSETS.md) | | | |
-| ✅ | the Market shopkeeper, Marigold: one pose sheet (`assets/raw/characters/shopkeeper_poses.jpg`, 4 × 2 poses on magenta), cut by `tools/cutposes.py` into her 8 poses in the market (`assets/characters/poses/shopkeeper/`), portrait, waving, standing and cheering | | | | |
+| ✅ | Marigold, the Market shopkeeper (`shopkeeper`) | ✅ | ✅ | ✅ |
 
 ## 5. Props (3)
 
@@ -440,15 +439,15 @@ plot shows it instead of its painting. Raw pictures in `assets/raw/plots/`; list
 | ✅ | Meadow | `assets/map/plots/meadow.webp` |
 | ✅ | Stables | `assets/map/plots/stables.webp` |
 | ✅ | Windmill | `assets/map/plots/windmill.webp` |
-| ⬜ | Leaf Piles | `assets/map/plots/leafpiles.webp` (cut, shown once its Compost Yard props are in) |
-| ⬜ | Compost Bins | `assets/map/plots/compostbins.webp` |
-| ⬜ | Mushroom Corner | `assets/map/plots/mushrooms.webp` (cut, shown once its Compost Yard props are in) |
-| ⬜ | Muddy Shore | `assets/map/plots/muddyshore.webp` (cut, shown once its Fish Pond props are in) |
-| ⬜ | Lily Pond | `assets/map/plots/lilypond.webp` (cut, shown once its Fish Pond props are in) |
-| ⬜ | Boat Dock | `assets/map/plots/boatdock.webp` (cut, shown once its Fish Pond props are in) |
-| ⬜ | Garden Gate | `assets/map/plots/gardengate.webp` (cut, shown once its Flower Garden props are in) |
-| ⬜ | Rose Arch | `assets/map/plots/rosearch.webp` (`assets/raw/plots/rosearch.jpg` is only 1024 px wide: needs the full-size one) |
-| ⬜ | Greenhouse | `assets/map/plots/greenhouse.webp` (`assets/raw/plots/greenhouse.jpg` is only 1024 px wide: needs the full-size one) |
+| ✅ | Leaf Piles | `assets/map/plots/leafpiles.webp` |
+| ⬜ | Compost Bins | `assets/map/plots/compostbins.webp` (sent in the chat, still to come as a file) |
+| ✅ | Mushroom Corner | `assets/map/plots/mushrooms.webp` |
+| ✅ | Muddy Shore | `assets/map/plots/muddyshore.webp` |
+| ✅ | Lily Pond | `assets/map/plots/lilypond.webp` |
+| ✅ | Boat Dock | `assets/map/plots/boatdock.webp` |
+| ✅ | Garden Gate | `assets/map/plots/gardengate.webp` |
+| ⬜ | Rose Arch | `assets/map/plots/rosearch.webp` (a new picture was sent in the chat, still to come as a file) |
+| ⬜ | Greenhouse | `assets/map/plots/greenhouse.webp` (a new picture was sent in the chat, still to come as a file) |
 
 A plot comes off its magenta background with `tools/cutplot.py`, then its soil edge is cut off with
 `tools/decliff.py` so plots sit flat on the ground. Every map picture
@@ -460,6 +459,7 @@ the pink fringe left by the magenta background. They all live in `assets/map/`.
 Ten sheets of 8 on flat magenta, two per land: its mess and broken things (they puff away when a job is done) and
 the new things that pop up. Prompts in ASSETS.md; raw sheets in `assets/raw/plots/props_*.jpg`, cut by name into
 `assets/map/props/` with `tools/cutprops.py` (then `tools/brighten.py`) and listed in `plotProps` in `assets.js`.
+`orchid_pots` was brightened with `RIM = 2` (a thinner magenta clean), or its pink petals turn grey.
 
 | | Sheet | Props |
 |---|---|---|
@@ -468,11 +468,11 @@ the new things that pop up. Prompts in ASSETS.md; raw sheets in `assets/raw/plot
 | ✅ | Hay Field mess | horseshoes_old, mud_hole, stall_door_broken, sail_broken, flour_spill, wall_cracked, hay_loose, sheep_woolly |
 | ✅ | Hay Field new | bales_stack, saddle_stand, sheep_shorn, flower_box, weather_vane, hay_rack, mounting_block, name_board |
 | ✅ | Compost Yard mess | leaf_heap, rakes_broken, tools_scattered, logs_rotten, roots_tangled, bin_broken, barrow_leaves, pots_broken |
-| ⬜ | Compost Yard new | leaf_cage, bug_hotel, potting_bench, toadstool_giant, mushroom_log, fairy_door, wind_chimes, hedgehog_house |
-| ⬜ | Fish Pond mess | cans_bottles, sticks_floating, algae, lilypads_dead, net_tangled, rowboat_sunken, sign_fallen, planks_missing |
-| ⬜ | Fish Pond new | frogs_log, fishing_spot, lotus, koi, lanterns_red, life_ring, rowboat, duck_house |
-| ⬜ | Flower Garden mess | roses_dead, fountain_cracked, glass_broken, arch_broken, bed_withered, trellis_fallen, cans_tipped, planter_cracked |
-| ⬜ | Flower Garden new | beehive_white, bird_bath, hanging_basket, herb_pots, sunflower_giant, lemon_tree, orchid_pots, love_seat |
+| ✅ | Compost Yard new | leaf_cage, bug_hotel, potting_bench, toadstool_giant, mushroom_log, fairy_door, wind_chimes, hedgehog_house |
+| ✅ | Fish Pond mess | cans_bottles, sticks_floating, algae, lilypads_dead, net_tangled, rowboat_sunken, sign_fallen, planks_missing |
+| ✅ | Fish Pond new | frogs_log, fishing_spot, lotus, koi, lanterns_red, life_ring, rowboat, duck_house |
+| ✅ | Flower Garden mess | roses_dead, fountain_cracked, glass_broken, arch_broken, bed_withered, trellis_fallen, cans_tipped, planter_cracked |
+| ✅ | Flower Garden new | beehive_white, bird_bath, hanging_basket, herb_pots, sunflower_giant, lemon_tree, orchid_pots, love_seat |
 
 ### The world around the areas
 

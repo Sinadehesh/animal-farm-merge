@@ -26,7 +26,8 @@ WAIST = 0.47  # where the waist is, down a big figure
 # By hand, on a 2048 sheet: where the big portrait's face is (middle x, y and the square's
 # side), and the big figure's box where it touches something else.
 REF_FACE = {'Clara_Everhart': (905, 1400, 640), 'Village_Mayor': (1050, 1360, 640), 'Ellis_Spokewell': (942, 1410, 700),
-            'Mae_Bloombarrow': (1126, 1455, 640), 'Bram_Goodbarrel': (983, 1316, 614), 'Mira_Quayle': (788, 1420, 600)}
+            'Mae_Bloombarrow': (1126, 1455, 640), 'Bram_Goodbarrel': (983, 1316, 614), 'Mira_Quayle': (788, 1420, 600),
+            'Marigold': (1096, 1340, 640)}
 BIG = {'Mira_Quayle': (82, 37, 655, 1475)}
 
 
@@ -130,7 +131,7 @@ def main():
         img = Image.open(ref).convert('RGB')
         paper, k = paper_of(img), img.width / 2048
         boxes = figures(img, paper)
-        tall = [b for b in boxes if b[3] - b[1] > img.height * 0.4]
+        tall = [b for b in boxes if b[3] - b[1] > img.height * 0.35]
         big = tuple(round(v * k) for v in BIG[name]) if name in BIG else min(tall, key=lambda b: b[0])  # the big figure, on the left
         row = sorted((b for b in tall if b[1] < img.height * 0.15 and b[3] < img.height * 0.6), key=lambda b: b[0])
         stand = cut(img, row[0], paper)
