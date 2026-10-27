@@ -1073,6 +1073,9 @@ function watchAdForGems(n, retry) {
 function openShop(note = '') {
     const basketDays = basketDaysLeft();
     const actions = [];
+    // The basket comes first: priced low, it's meant to be the first purchase.
+    if (basketDays <= 0) actions.push({ label: `🧺 ${DAILY_BASKET.name}: 💎 ${DAILY_BASKET.gemsPerDay} every day · ${DAILY_BASKET.price}`,
+        primary: true, wide: true, onClick: buyDailyBasket });
     if (!shop.offerBought) {
         actions.push({
             label: `⭐ ${SPECIAL_OFFER.name}: 💎 ${SPECIAL_OFFER.gems} + 💵 ${withCommas(SPECIAL_OFFER.money)} + ⚡ ${SPECIAL_OFFER.energy} · ${SPECIAL_OFFER.price}`,
@@ -1084,10 +1087,7 @@ function openShop(note = '') {
         primary: true, wide: true,
         onClick: () => purchase(pack.id),
     }));
-    actions.push(basketDays > 0
-        ? { label: `🧺 Daily Basket active · ${basketDeliveriesLeft()} more days`, wide: true, disabled: true }
-        : { label: `🧺 ${DAILY_BASKET.name}: 💎 ${DAILY_BASKET.gemsPerDay} every day · ${DAILY_BASKET.price}`,
-            primary: true, wide: true, onClick: buyDailyBasket });
+    if (basketDays > 0) actions.push({ label: `🧺 Daily Basket active · ${basketDeliveriesLeft()} more days`, wide: true, disabled: true });
     actions.push({ label: `⚡ ${ENERGY_PACK} Energy · 💎 ${energyPrice()}`, wide: true, onClick: buyEnergy });
     if (!pass.golden) actions.push({ label: `🎟️ ${GOLDEN_PASS.name}: golden rewards, 💎${GOLDEN_PASS.gemsPerDay} a day · ${GOLDEN_PASS.price}`, primary: true, wide: true, onClick: () => buyGoldenPass() });
     actions.push({ label: '🏷️ Flash Sale & 🎁 Daily Deals at the Market', wide: true, onClick: () => { goTo('market'); openFlashSale(); } });
