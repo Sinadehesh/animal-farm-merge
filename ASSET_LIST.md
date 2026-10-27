@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**618 assets:** 617 done ✅, 1 placeholder 🟡, 0 missing ⬜.
+**618 assets:** 618 done ✅, 0 placeholders 🟡, 0 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -46,12 +46,12 @@ lists). They're listed in `hero`, `characters`, `bust` and `portraits` in `asset
 
 The cast is being redrawn in the plots' cartoon look (their painted look didn't fit the map), one sheet each on flat
 magenta (prompt in ASSETS.md, section 7), saved as `assets/raw/people/<Name>_Character_Reference.png`. `cutpeople.py`
-keys those out and names their pictures `stand2.webp`, `bust2.webp` and `portrait2.webp`. 🟡 = still the old look.
+keys those out and names their pictures `stand2.webp`, `bust2.webp` and `portrait2.webp`.
 
 | | Character | Standing | Waist up | Portrait |
 |---|---|---|---|---|
 | ✅ | Clara Everhart, the player (`hero`), in the cartoon look | ✅ | (not used) | (not used) |
-| 🟡 | the Village Mayor, Mayor Bramble (`mayor`) | ✅ | ✅ | ✅ |
+| ✅ | the Village Mayor, Mayor Bramble (`mayor`), in the cartoon look | ✅ | ✅ | ✅ |
 | ✅ | Bram Goodbarrel, the rancher (`hattie`), in the cartoon look | ✅ | ✅ | ✅ |
 | ✅ | Ellis Spokewell, the carpenter (`ruby`), in the cartoon look | ✅ | ✅ | ✅ |
 | ✅ | Mira Quayle, the fisher (`finn`), in the cartoon look | ✅ | ✅ | ✅ |

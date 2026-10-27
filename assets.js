@@ -332,7 +332,7 @@ const ASSETS = {
     // the new cast (see hero above): Bram runs the ranch, Ellis the carpenter's, Mira the fish
     // shop, Mae the flower shop and Marigold the market.
     characters: {
-        mayor: 'assets/people/mayor/stand.webp',
+        mayor: 'assets/people/mayor/stand2.webp',
         hattie: 'assets/people/bram/stand2.webp',
         ruby: 'assets/people/ellis/stand2.webp',
         finn: 'assets/people/mira/stand2.webp',
@@ -343,7 +343,7 @@ const ASSETS = {
     // Head-and-shoulders portraits, shown in a round frame (cards, the town,
     // popups). null = frame the full-body drawing above instead.
     portraits: {
-        mayor: 'assets/people/mayor/portrait.webp',
+        mayor: 'assets/people/mayor/portrait2.webp',
         hattie: 'assets/people/bram/portrait2.webp',
         ruby: 'assets/people/ellis/portrait2.webp',
         finn: 'assets/people/mira/portrait2.webp',
@@ -354,7 +354,7 @@ const ASSETS = {
     // The same people from the waist up (dialogs and story scenes), and full body cheering
     // (after a fix). null or missing = the portrait instead.
     bust: {
-        mayor: 'assets/people/mayor/bust.webp',
+        mayor: 'assets/people/mayor/bust2.webp',
         hattie: 'assets/people/bram/bust2.webp',
         ruby: 'assets/people/ellis/bust2.webp',
         finn: 'assets/people/mira/bust2.webp',

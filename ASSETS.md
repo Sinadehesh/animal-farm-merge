@@ -311,7 +311,7 @@ Mira_Quayle, Mae_Bloombarrow, Marigold) and run `python3 tools/cutpeople.py asse
 - ✅ **Clara Everhart**, the young farmer (the player): long wavy blonde hair in a side braid, a red vest over a cream
   long-sleeved shirt buttoned up to the collar, dark green work trousers, brown lace-up boots, a leather tool belt with
   work gloves and a small brass key.
-- **Mayor Bramble**, the village mayor: a friendly middle-aged man with short wavy grey-black hair and a warm smile,
+- ✅ **Mayor Bramble**, the village mayor: a friendly middle-aged man with short wavy grey-black hair and a warm smile,
   cream shirt with rolled sleeves, sage-green waistcoat with a gold pocket-watch chain, burgundy tie, brown trousers
   and shoes.
 - ✅ **Bram Goodbarrel**, the rancher: a big, broad, cheerful man with messy sandy-blond hair and a full beard, red plaid
