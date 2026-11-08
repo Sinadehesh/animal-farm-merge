@@ -23,7 +23,17 @@ await shot('map', () => {
   closeDialog();
   for (const t of TASKS.filter(t => t.zone === 'barnyard').slice(0, 11)) if (!restoration.done.includes(t.id)) restoration.done.push(t.id);
   goTo('map'); closeDialog();
-}, 1500);
+  heroToJob(openTasks().find(t => jobWorldXY(t))); // Clara at her next job, in the middle
+}, 900);
+await ev(() => heroEl().scrollIntoView({ block: 'center', inline: 'center' })); await page.waitForTimeout(900);
+await page.screenshot({ path: `${out}/map.png` });
 await shot('letter', () => { closeDialog(); playScene('✉️', STORY_BEATS.barn10.slice(1)); });
-await shot('town', () => { closeDialog(); goTo('town'); closeDialog(); }, 1500);
+// The town square on the map: the townsfolk at their doors, the Mayor saying hello.
+await shot('town', () => {
+  closeDialog(); goTo('map'); closeDialog();
+  const v = document.querySelector('#scene-map .world-view'), st = v.querySelector('.world-stage'), [bx, by, bw, bh] = plotBox('town'), { x0, y0, w, h } = WORLD_BOX;
+  v.scrollLeft = (bx + bw * 0.5 - x0) / w * st.offsetWidth - v.clientWidth / 2;
+  v.scrollTop = (by + bh * 0.55 - y0) / h * st.offsetHeight + st.offsetTop - v.clientHeight / 2;
+  v.dispatchEvent(new Event('scroll'));
+}, 2500);
 await browser.close();

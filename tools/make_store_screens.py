@@ -2,7 +2,8 @@
 # of the icon art.
 #   node tools/store_screenshots.mjs http://localhost:8765/ <raw_dir>      (the game served locally)
 #   python3 tools/make_store_screens.py <raw_dir> app/store/screenshots <fonts_dir>
-# <fonts_dir> holds CinzelDecorative-Bold.ttf.ttf from github.com/google/fonts (OFL).
+# <fonts_dir> holds CinzelDecorative-Bold.ttf.ttf from github.com/google/fonts (OFL); the same font is the .ttf
+# that fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700 links to, for an old browser's user agent.
 import sys, os
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
