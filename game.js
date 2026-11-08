@@ -2463,7 +2463,7 @@ const TASKS = [
     { id: 'town6', land: 'town', after: ['town3', 'town4', 'town5', 'hen3', 'aqua3', 'big2', 'farm5', 'aqua8', 'fert10'], house: 'townhall', name: 'Restore the Town Hall', who: 'mayor', xp: 80, reward: { chest: 'blue' },
       needs: [{ item: 'barn', tier: 6, n: 1 }, { item: 'hay', tier: 5, n: 1 }, { item: 'aqua', tier: 5, n: 1 }],
       line: 'You\'re a hero!' },
-    { id: 'town7', land: 'town', at: [50, 66], look: ['🪧', '🎉'], after: ['town6'], name: 'Throw the Sunnyvale festival', who: 'hattie', xp: 100, reward: { gems: 50 },
+    { id: 'town7', land: 'town', at: [50, 66], look: ['🪧', '🎉'], after: ['town6', 'flower5'], // the finale: after the festival garden name: 'Throw the Sunnyvale festival', who: 'hattie', xp: 100, reward: { gems: 50 },
       needs: [{ item: 'decor', tier: 6, n: 1 }, { item: 'farm', tier: 6, n: 1 }], line: 'Thank you!' },
 ];
 
@@ -4941,43 +4941,83 @@ function jobsOf(...lands) {
 // the Keeper in Mira's story, and a slip about the "silver" key); the red
 // herrings each get cleared (Mira's lantern, Mae's tiny feet, the Mayor's
 // nerves, Ellis's rope). You guess who the Friend is, twice; guessing right pays.
-// Each chapter opens on a cliffhanger; the end teases the Silver Bell.
+// Around it, three soap-opera threads, each with a secret, a fight and a payoff:
+// Mr. Grimsby is the Mayor's son, Reggie, who left for the big city after a
+// fight twenty years ago (the R scarf, the toy bell, the oak, then the letter
+// that blows out of the Mayor's coat at the windmill; he comes home at the
+// festival). Bram, broke after the storm, nearly sells his ranch to Grimsby (he
+// owns up and tears up the deal once his ranch is fixed). And Ellis and Mira
+// bicker because they like each other (Mae reads his note "To M." as Marigold,
+// finds her mistake on the boat dock, and he asks Mira to dance there). Each
+// chapter opens on a scene and ends on a cliffhanger; the end teases the Silver
+// Bell. Where jobs can come in another order, a scene checks what has happened.
 
 // Each chapter is a set of jobs, with a scene when it starts (once the one
-// before is done). A scene is a list of [who, words, answer, sign]: who is a
+// before is done) and a cliffhanger when it ends (end: played just before the
+// next chapter's scene; endRecap: the question it leaves, for "Previously in
+// Sunnyvale..."). A scene is a list of [who, words, answer, sign]: who is a
 // townsperson, 'shopkeeper' (Marigold), 'narrator' (the storybook), 'note' (from
-// "A Friend") or 'letter' (from Mr. Grimsby); answer is the button, or a list
-// of choices ({ label, reply: [lines], guess }); sign replaces a note's
-// signature. A scene can be a function giving that list when it plays.
+// "A Friend"), 'letter' (from Mr. Grimsby) or 'stranger' (Reggie in person, a
+// voice with no face); answer is the button, or a list of choices ({ label,
+// reply: [lines], guess }); sign replaces a note's or a voice's signature. A
+// scene can be a function giving that list when it plays.
 const CHAPTERS = [
-    { title: 'A Note in the Planks', scene: [['mayor', 'Welcome to Sunnyvale!']], jobs: jobsIn('barnyard') }, // the opening tells chapter 1
+    { title: 'A Note in the Planks', scene: [['mayor', 'Welcome to Sunnyvale!']], jobs: jobsIn('barnyard'), // the opening tells chapter 1
+      end: [['narrator', 'That night, you walk past the Mayor\'s window.'],
+          ['narrator', 'He sits alone with an old photo. It shows a little boy with a toy bell.'],
+          ['mayor', 'Twenty years... Where are you now, my boy?'],
+          ['narrator', 'Then he sees you. He hides the photo and shuts the curtains!'],
+          ['narrator', 'Who is the boy in the photo? To be continued...', 'Next chapter!']],
+      endRecap: 'The Mayor has a secret photo of a little boy with a toy bell.' },
     { title: 'The Silver Key',
       scene: [['narrator', 'That night, the hens wake up. Bok, bok, BOK!'],
           ['narrator', 'You run out with a lamp. The hen house door is swinging open...'],
           ['hattie', 'Something was in there! My hens don\'t yell for nothing.'],
           ['ruby', 'Then let\'s fix the hen house and look around.', 'Let\'s look!']],
-      jobs: jobsIn('henhouse', 'bigbarn') },
+      jobs: jobsIn('henhouse', 'bigbarn'),
+      end: [['narrator', 'Late that night, you look out at Bram\'s ranch.'],
+          ['narrator', 'A long black car stops at the gate. A man in a grey coat gets out.'],
+          ['narrator', 'And Bram walks out to meet him!'],
+          ['narrator', 'They shake hands. The man gives Bram a fat envelope.'],
+          ['narrator', 'Is Bram selling his ranch?! To be continued...', 'Next chapter!']],
+      endRecap: 'Bram met the man in the grey coat at night. Is he selling his ranch?' },
     { title: 'The Big Wheel',
-      scene: [['narrator', 'Late at night, a long black car rolls down the road.'],
-          ['narrator', 'It stops by your barn. Then its lights go off.'],
+      scene: [['narrator', 'The next morning, Bram will not look at you.'],
+          ['hattie', 'Morning. Can\'t talk. Busy. Very busy!'],
+          ['ruby', 'What\'s up with him? He ran off like a scared chicken.'],
+          ['narrator', 'Down the road, the long black car is parked again. Its lights are off.'],
           ['mayor', 'That is Mr. Grimsby\'s car. He is watching us.'],
           ['ruby', 'Let him watch. We work faster than he snoops.'],
           ['mayor', 'To the fields! The big wheel from the note must be out there.', 'Let\'s go!']],
-      jobs: jobsOf('farm', 'hay') },
+      jobs: jobsOf('farm', 'hay'),
+      end: [['narrator', 'That night, the black car parks under the Town Hall tower.'],
+          ['narrator', 'The man in the grey coat looks up at the empty bell spot for a long, long time.'],
+          ['stranger', 'I\'m coming home, Dad. My way.'],
+          ['narrator', 'What does he mean? To be continued...', 'Next chapter!']],
+      endRecap: 'At night, Reggie stood under the empty bell tower: "I\'m coming home, Dad. My way."' },
     { title: 'Fog Over Town',
       scene: () => [['narrator', 'A thick fog sits over the town square.'],
-          ['mayor', 'And no new note for days. I am worried about our Friend.'],
+          ['narrator', 'The Mayor has not come out of his house for three days.'],
+          ['ruby', 'And no new note for days. I\'m worried about our Friend.'],
           ['ruby', 'That black car followed their lantern into town. We have to hurry.'],
           guessLine('Before we go... who do you think the Friend is?'),
-          ['mayor', 'Now, let\'s clear that fog!', 'Let\'s go!']],
-      jobs: ['town1', 'town2', 'town3', 'town4', ...jobsOf('fert', 'aqua')] },
+          ['hattie', 'Let\'s clear that fog. And get the Mayor out of his house!', 'Let\'s go!']],
+      jobs: ['town1', 'town2', 'town3', 'town4', ...jobsOf('fert', 'aqua')],
+      end: [['narrator', 'That night, there is a knock at the Mayor\'s door.'],
+          ['narrator', 'The Mayor opens it. A tall man in a grey coat stands in the rain.'],
+          ['stranger', 'Hello, Dad.'],
+          ['mayor', 'Reggie...?'],
+          ['narrator', 'The door closes. What will they say? To be continued...', 'Next chapter!']],
+      endRecap: 'Reggie knocked on the Mayor\'s door in the rain: "Hello, Dad."' },
     { title: 'The Golden Bell',
-      scene: () => [['narrator', 'The Harvest Festival is coming. A grey letter waits in the mailbox.'],
+      scene: () => [['narrator', 'In the morning, the Mayor looks so tired. Reggie is gone.'],
+          ['mayor', 'We talked all night. Then we had a fight again. Just like before.'],
+          ['narrator', 'The Harvest Festival is coming. A grey letter waits in the mailbox.'],
           ['letter', 'Dear Mayor, on Festival Day I will buy the whole valley. No bell, no town. Ha!'],
           ['mayor', 'If the bell does not ring at the festival... the families will sell.'],
           restoration.done.includes('town6') ? ['hattie', 'But we found it! Let\'s ring it LOUD!', 'Yee-haw!']
               : guessLine('This is it. Last chance: who is the Friend?', 'Let\'s find that bell!')],
-      jobs: ['town5', 'town6', 'town7', ...jobsOf('flower')] },
+      jobs: ['town5', 'town6', ...jobsOf('flower'), 'town7'] },
 ];
 
 // "Who is the Friend?": your guess, with a word from whoever you name. The
@@ -4993,7 +5033,7 @@ function guessLine(question, then = 'We\'ll see!') {
 }
 
 const STORY_END = [['narrator', 'Every barn, field and pond is fixed.'],
-    ['mayor', 'Sunnyvale is the happiest town in the valley again.'],
+    ['mayor', 'Sunnyvale is the happiest town in the valley again. And my son is home.'],
     ['shopkeeper', 'And every night, the Golden Bell rings for you, dear.'],
     ['finn', 'Now... about that Silver Bell.', 'Tell me more!']];
 
@@ -5029,7 +5069,11 @@ function mapBeat(...found) {
     };
 }
 
+// Whether a job is done: a scene told differently once it is, where jobs can come in another order.
+const did = id => restoration.done.includes(id);
+
 const STORY_BEATS = {
+    // Chapter 1: A Note in the Planks
     barn1: [['ruby', 'Hi! I\'m Ellis. I fix stuff. Nice work, newbie!'],
         ['ruby', 'Hey... what\'s that under the planks?'],
         ['narrator', 'A rolled-up note, closed with green wax. The wax is shaped like a tiny bell.'],
@@ -5040,10 +5084,19 @@ const STORY_BEATS = {
     barn2: [['hattie', 'Howdy, partner! I\'m Bram. I look after the animals.'],
         ['hattie', 'My hens ran off the night of the storm. Something gave them a big scare.'],
         ['hattie', 'Animals don\'t lie. Somebody was out here that night.', 'Who?']],
+    barn4: [['ruby', 'Fixed! But this feed bin is empty, Bram.'],
+        ['hattie', 'I know. The storm took my feed... and all my money.'],
+        ['hattie', 'Shh! Don\'t tell anyone. Please?', [
+            { label: 'I won\'t tell.', reply: [['hattie', 'Thanks, partner. You\'re a good egg.']] },
+            { label: 'We can help!', reply: [['hattie', 'That\'s kind. But I have to fix this myself.']] }]]],
     barn6: [['shopkeeper', 'Yoo-hoo! I\'m Marigold. I run the Market in town.'],
         ['shopkeeper', 'I brought you cinnamon buns. Welcome to Sunnyvale, dear!'],
         ['hattie', 'Marigold\'s buns are the best in the whole valley!'],
         ['shopkeeper', 'Hee hee! Come see my shop. I have a bit of everything.', 'Thanks!']],
+    barn7: [['ruby', 'This old pump is as rusty as Mira\'s boat.'],
+        ['hattie', 'You sure look at Mira\'s boat a lot, Ellis.'],
+        ['ruby', 'I do NOT! I look at all the boats. The same amount!'],
+        ['hattie', 'Uh-huh. Your ears are going red, buddy.', 'Ha!']],
     barn9: [['narrator', 'That night, you see a little gold light out by the fence.'],
         ['narrator', 'It bobs up and down... then it is gone.'],
         ['ruby', 'Someone with a lantern! Out here, at night?'],
@@ -5055,26 +5108,66 @@ const STORY_BEATS = {
         ['ruby', 'So, newbie. Are you selling?', [
             { label: 'Never!', reply: [['ruby', 'That\'s what I like to hear!']] },
             { label: 'How much?', reply: [['ruby', 'HOW MUCH?! ...Ha, you\'re kidding. Right?'], ['mayor', 'Oh, my poor heart!']] }]]],
+    barn14: [['narrator', 'The Mayor knits very fast. But it is not a pump cover...'],
+        ['narrator', 'It is a tiny blue scarf. A big R is sewn on it.'],
+        ['hattie', 'Who is R, Mayor?'],
+        ['mayor', 'R? R is for... Round! A round scarf. For the pump! Excuse me!', 'Hmm...']],
     barn20: [['narrator', 'Under the dust, you find two sets of footprints.'],
         ['narrator', 'Small boots with flour on them. And big, shiny city shoes.'],
         ['ruby', 'Nobody in Sunnyvale wears city shoes.'],
         ['mayor', 'Ahem! Nobody at all. Ha... ha.'],
         ['hattie', 'Mayor, why are you sweating?', 'Hmm!']],
+    barn27: [['ruby', 'One bench, made by me!'],
+        ['hattie', 'That\'s a bench for two. Who sits with you, Ellis?'],
+        ['ruby', 'My hammer. My hammer sits with me.'],
+        ['hattie', 'Sure. And Mira just HAPPENS to walk past here every day.', 'Ha!']],
+    // Chapter 2: The Silver Key
     hen3: [['narrator', 'In the nest, there is no egg. There is a little silver key!'],
         ['narrator', 'A tiny bell is carved on the top.'],
         ['hattie', 'My hens can\'t lay keys!'],
         ['ruby', 'Somebody dropped this in a hurry. The night of the storm, I bet.', 'I\'ll keep it safe.']],
+    hen7: [['ruby', 'Hey, Bram. Where\'s your fancy saddle? The one with the stars?'],
+        ['hattie', 'I sold it. To buy feed for the hens.'],
+        ['ruby', 'But you LOVED that saddle!'],
+        ['hattie', 'I love my hens more. Now drop it, Ellis.', 'Poor Bram...']],
+    barn35: [['narrator', 'A grey letter waits on the Mayor\'s desk. He reads it and goes white.'],
+        ['mayor', 'This writing... I know this writing!'],
+        ['narrator', 'He rips it up and throws it in the fire.'],
+        ['mayor', 'Not a word to anyone. Please, my friend.', [
+            { label: 'Your secret is safe.', reply: [['mayor', 'Thank you. You are a true friend.']] },
+            { label: 'What did it say?', reply: [['mayor', 'Nothing! Old news. Very, very old news.']] }]]],
+    barn41: [['shopkeeper', 'Mayor, dear. Any word from... him?'],
+        ['mayor', 'Not one word, Marigold. Not in twenty years.'],
+        ['narrator', 'They both go quiet. Then they see you, and smile too big.'],
+        ['shopkeeper', 'Cinnamon buns, anyone? Hee hee!', 'From who?!']],
+    barn44: [['narrator', 'Bram gets a grey letter too.'],
+        ['letter', 'Dear Bram, I know about your money trouble. Sell me your ranch, and it all goes away.'],
+        ['narrator', 'Bram reads it twice. Then he puts it in his pocket. He does not throw it away...', 'Uh-oh.']],
     hen10: [['hattie', 'The hens came home! All of them!'],
         ['hattie', 'They still hide when a car goes by, though. Poor babies.'],
         ['hattie', 'Thank you, partner. You\'re family now.', 'Aww!']],
     big2: mapBeat(['narrator', 'One scroll is not like the others. It is torn...']),
+    big3: [['ruby', 'Look what fell off the shelf. An old festival photo!'],
+        ['ruby', 'That\'s me at six. And that\'s Mira, pushing me into the pond.'],
+        ['hattie', 'And you\'re smiling in the picture! Ha!'],
+        ['ruby', 'I was smiling at the pond. It was a nice pond.', 'Sure, Ellis.']],
     big5: [['narrator', 'One jar has no jam. It has a note, with the same green wax!'],
         ['note', 'Well done. Next, find the big wheel the wind turns. And watch out for the man in the grey coat.'],
         ['ruby', 'Grey coat... big city shoes... That\'s Grimsby!'],
         ['ruby', 'And a big wheel the wind turns? The old windmill!', 'To the windmill!']],
+    barn52: [['narrator', 'Under the creaky board is a tiny toy bell. Two letters are carved on it: R.B.'],
+        ['mayor', 'WHERE did you find that?!'],
+        ['narrator', 'The Mayor takes the bell with shaking hands. He holds it close.'],
+        ['mayor', 'I... I must go home. Good night!', 'R.B.?']],
+    barn62: [['narrator', 'In the morning, a big poster is stuck on the new notice board.'],
+        ['letter', 'COMING SOON: THE SUNNYVALE PARKING LOT. Room for 10,000 cars!', null, '— Grimsby Land Co.'],
+        ['hattie', 'A parking lot? On top of my cows?!'],
+        ['ruby', 'Not on my watch!'],
+        ['mayor', 'We will NOT let this happen!', 'Never!']],
     big8: [['letter', 'Dear Farmer, I will pay you TWICE as much. You could buy a castle!'],
         ['hattie', 'A castle? We have a barn. Barns are better.'],
         ['ruby', 'He\'s scared. You\'re fixing things too fast for him.', 'Ha!']],
+    // Chapter 3: The Big Wheel
     farm1: [['mayor', 'Our very own field! Splendid!'],
         ['mayor', 'The families can\'t come home to empty fields. Let\'s grow food!']],
     farm5: mapBeat(['narrator', 'The scarecrow\'s pocket crinkles. There is paper inside!']),
@@ -5084,47 +5177,236 @@ const STORY_BEATS = {
         ['poppy', 'Only to sing to the moonflowers. They open at midnight!', [
             { label: 'I believe you.', reply: [['poppy', 'Thank you! You have a kind face.']] },
             { label: 'Hmm, really?', reply: [['poppy', 'Really! Come at midnight and I\'ll sing you a song.']] }]]],
+    farm36: [['poppy', 'Sunflowers! Do you know what they mean?'],
+        ['poppy', 'They mean "I like you a LOT." Who are they for, Ellis?'],
+        ['ruby', 'For the bees. The bees like them a lot.'],
+        ['poppy', 'Hee hee! The bees told me they\'re for Mira.', 'Ooh!']],
+    farm44: [['ruby', 'Bram! Where were you last night? Your lamp was on at midnight.'],
+        ['hattie', 'Me? I was... feeding the night chickens.'],
+        ['ruby', 'NIGHT chickens?'],
+        ['hattie', 'Very rare. Very hungry. Bye!', 'Night chickens?!']],
+    farm10: [['narrator', 'The new signpost has an arrow. It says BIG CITY.'],
+        ['mayor', 'Some roads only go one way. Away.'],
+        ['mayor', 'Someone I love took that road. He never came back.'],
+        ['narrator', 'The Mayor wipes his eyes and walks off fast.', 'Oh, Mayor...']],
+    farm17: [['narrator', 'Bram counts coins into a basket. Then he counts them again.'],
+        ['hattie', 'Not enough. It\'s never enough.'],
+        ['hattie', 'Grimsby says he\'ll pay ten times what my ranch is worth. TEN times!'],
+        ['hattie', 'What would you do, partner?', [
+            { label: 'Never sell!', reply: [['hattie', 'Easy to say. They\'re not your cows going hungry.']] },
+            { label: 'I don\'t know.', reply: [['hattie', 'Me neither. That\'s the trouble.']] }]]],
+    farm18: () => [['narrator', 'A man in a grey coat comes to the berry stand. His hat hides his face.'],
+        ['narrator', 'He buys every berry. He pays with a big gold coin and walks off without a word.'],
+        ['narrator', 'Under the coin is a little card: R. Grimsby, Grimsby Land Co.'],
+        did('hay27') ? ['mayor', 'Reggie... You were right here. And you didn\'t even say hello.', 'Oh, Mayor...']
+            : ['mayor', 'R... R. Grimsby. R...', 'Mayor?']],
+    farm76: [['poppy', 'Ellis asked me to bake an apple pie. A BIG one!'],
+        ['poppy', 'Apple pie is Mira\'s favourite. Hee hee!'],
+        ['ruby', 'Mae! That\'s a secret! A top secret pie!', 'Ha!']],
     farm28: [['mayor', 'A picnic, like the old days! But first, I must tell you something.'],
         ['mayor', 'The night of the storm, a man in a grey coat came to my door.'],
         ['mayor', 'He said, "I love old bells! May I see yours?" So I let him into the tower.'],
+        ['mayor', 'He went right to the secret stairs. Only Sunnyvale folk know those stairs!'],
         ['mayor', 'Then the storm came... and the bell was gone. It\'s all my fault!', [
             { label: 'It\'s not your fault.', reply: [['mayor', 'Thank you, my friend. I will make this right.']] },
             { label: 'Oh, Mayor!', reply: [['mayor', 'I know, I know! I was a silly old fool.'], ['mayor', 'But I will make this right.']] }]]],
     hay1: [['mayor', 'The Hay Field is ours!'],
         ['mayor', 'And look over there... the old windmill. The big wheel the wind turns!', 'The note!']],
-    hay9: [['hattie', 'The sheep are back! They\'re SO fluffy. I could nap on one.']],
-    hay18: [['ruby', 'Two stalls, built in one go. Boom!'], ['hattie', 'The horses say thank you. Well, they say "neigh". Same thing!']],
+    hay9: [['hattie', 'The sheep are back! They\'re SO fluffy. I could nap on one.'],
+        ['narrator', 'Later, you hear Bram talking to a sheep, all alone.'],
+        ['hattie', 'If I sell the ranch, who will look after you, Woolly?'],
+        ['narrator', 'Sell the ranch?! Then Bram sees you, and runs off.', 'Bram!']],
+    hay33: [['shopkeeper', 'Mayor, dear. You should tell our farmer the truth.'],
+        ['mayor', 'Not yet, Marigold. I\'m not ready.'],
+        ['narrator', 'They stop talking when they see you. AGAIN.', 'What truth?!']],
+    hay45: [['letter', 'Dear Mayor, do you remember the big oak by the meadow? I do. I will cut it down.'],
+        ['narrator', 'The Mayor runs to the big oak. Carved deep in the bark: R.B. + DAD.'],
+        ['mayor', 'Only one person in the whole world knows about this tree...'],
+        ['mayor', 'No. It can\'t be. It CAN\'T be!', 'Who?!']],
+    hay18: [['ruby', 'Two stalls, built in one go. Boom!'],
+        ['hattie', 'The horses say thank you. Well, they say "neigh". Same thing!'],
+        ['ruby', 'Bram, why was a man in a grey coat counting your horses this morning?'],
+        ['hattie', 'He was... lost. Asking the way. That\'s all!', 'Hmm...']],
+    hay52: [['ruby', 'Bram. I saw you with the black car. Two nights ago.'],
+        ['hattie', 'You saw NOTHING, Ellis.'],
+        ['ruby', 'Are you selling to Grimsby? Tell me the truth!'],
+        ['hattie', 'Mind your own business!'],
+        ['narrator', 'Bram stomps off. Even the horses look shocked.', 'Uh-oh...']],
+    hay63: [['poppy', 'Psst! I heard the grown-ups talking.'],
+        ['poppy', 'Grimsby gave Bram until the festival to say yes or no!'],
+        ['poppy', 'If Bram says yes... his ranch turns into a parking lot!', 'Oh no!']],
     hay20: [['narrator', 'The old windmill creaks in the wind. Its sails are broken.'],
         ['hattie', 'This is it! The big wheel the wind turns!'],
         ['ruby', 'Let\'s fix those sails. The next note must be up there.', 'Let\'s fix it!']],
+    hay27: [['narrator', 'A big wind blows over the windmill. It blows the Mayor\'s hat away...'],
+        ['narrator', '...and a grey letter flies out of his coat. It lands at your feet.'],
+        ['letter', 'Dad, I am coming home. And I will buy every farm in Sunnyvale.', null, '— Your son, Reggie'],
+        ['narrator', 'Grey paper. Just like Mr. Grimsby\'s letters...'],
+        ['mayor', 'Please... give that back. I can\'t talk about it. Not yet.', 'Grimsby is his SON?!']],
     hay64: [['letter', 'Dear Farmer, I hear you are fixing that old windmill. STOP. Or else!'],
         ['ruby', 'Or else WHAT? Ha! He\'s worried.'],
         ['mayor', 'That means we are close. Keep going!', 'Keep going!']],
-    hay6: [['narrator', 'The sails turn round and round. Whoosh!'],
-        ['narrator', 'A note floats down from the top and lands at your feet.'],
-        ['note', 'Good work! The one who fishes knows the old Bell Keeper story. Ask him. Quietly!'],
-        ['mayor', 'The one who fishes... that\'s Mira! Is Mira in on this?', 'Let\'s ask Mira!']],
     hay72: [['narrator', 'From the top of the windmill, you can see the whole valley.'],
         ['narrator', 'A little gold light hurries down the road into town...'],
         ['narrator', '...and a long black car follows it, with its lights off.'],
         ['ruby', 'Grimsby is following our Friend! We have to hurry!', 'Hurry!']],
+    hay6: [['narrator', 'The sails turn round and round. Whoosh!'],
+        ['narrator', 'A note floats down from the top and lands at your feet.'],
+        ['note', 'Good work! The one who fishes knows the old Bell Keeper story. Ask her. Quietly!'],
+        ['mayor', 'The one who fishes... that\'s Mira! Is Mira in on this?', 'Let\'s ask Mira!']],
+    // Chapter 4: Fog Over Town
+    fert1: [['poppy', 'Leaves and mud! This is where good gardens begin.']],
+    fert10: mapBeat(['narrator', 'Under the last big leaf pile, something crinkles...']),
+    fert35: () => (did('hay27')
+        ? [['poppy', 'Is it true? Is Mr. Grimsby the Mayor\'s son?'],
+            ['poppy', 'Everyone is talking about it. Even the ducks!'],
+            ['hattie', 'Hush, Mae. Let the Mayor tell it when he\'s ready.', 'Poor Mayor...']]
+        : [['poppy', 'Why is the Mayor so sad lately?'],
+            ['poppy', 'He sits by his window all day. He holds a tiny toy bell.'],
+            ['hattie', 'Some secrets are heavy, Mae.', 'Hmm...']]),
     town1: [['mayor', 'The fog is lifting! I can see my town again!'],
-        ['narrator', 'Up in the Town Hall tower, the bell spot is empty.'],
-        ['narrator', 'On the tower steps: big city shoe prints. They stop at a broken stair.'],
-        ['ruby', 'Grimsby tried to climb up. But nobody can get past those stairs.'],
-        ['mayor', 'Then we will fix my Town Hall. Every last stair!', 'Let\'s do it!']],
+        ['narrator', 'The whole town is in the square. They all look at the Mayor.'],
+        ['mayor', 'It\'s true. Mr. Grimsby is my son. His real name is Reggie Bramble.'],
+        ['mayor', 'Twenty years ago, we had a big fight. I said he would never be anything.'],
+        ['mayor', 'He left that night. He never came back... until the storm.'],
+        ['shopkeeper', 'Oh, Mayor. You poor dear.'],
+        ['narrator', 'Up in the tower, the bell spot is empty. Big city shoe prints stop at a broken stair.'],
+        ['ruby', 'He tried to climb up for the bell. But nobody can get past those stairs.'],
+        ['mayor', 'Then we will fix my Town Hall. Every last stair. Will you help me?', [
+            { label: 'Of course!', reply: [['mayor', 'Thank you, my friend. Splendid. Simply splendid.']] },
+            { label: 'We\'ll bring Reggie home.', reply: [['mayor', 'Home... Oh, I hope so. I really do.']] }]]],
     town2: [['ruby', 'My workshop! I can build anything now!'],
         ['hattie', 'Ellis... why is the bell\'s old rope in your shed?'],
         ['ruby', 'Don\'t look at me like that! I found it in the river after the storm.'],
         ['ruby', 'I\'m fixing it. For when we find the bell!', [
             { label: 'I believe you.', reply: [['ruby', 'Thanks, boss. That means a lot.']] },
-            { label: 'Hmm...', reply: [['ruby', 'Hmm yourself! I\'m a fixer, not a hider.']] }]]],
-    town3: [['hattie', 'Home sweet home! Thank you, partner!'],
-        ['hattie', 'Hey... city shoe prints by my gate. Grimsby is snooping everywhere!']],
+            { label: 'Hmm...', reply: [['ruby', 'Hmm yourself! I\'m a fixer, not a hider.']] }]],
+        ['narrator', 'On his bench sits a little wooden heart. One letter is carved on it: M.', 'M?']],
+    town3: [['hattie', 'Home sweet home! My ranch looks better than ever.'],
+        ['hattie', 'Partner... everyone... I have to tell you something.'],
+        ['hattie', 'I almost sold the ranch to Grimsby. I was so scared. I had no money for feed.'],
+        ['narrator', 'Bram pulls out the fat envelope. Inside is a paper that says SOLD. It just needs his name.'],
+        ['hattie', 'But look at my ranch now. You all fixed it. How could I sell it?', [
+            { label: 'Tear it up!', reply: [['narrator', 'RIIIP! Bram tears the paper into a hundred pieces.']] },
+            { label: 'We forgive you.', reply: [['hattie', 'You... you do? Then here goes!'], ['narrator', 'RIIIP! Bram tears the paper into a hundred pieces.']] }]],
+        ['ruby', 'Sorry I yelled at you, Bram. THAT\'s the Bram I know!'],
+        ['hattie', 'Sunnyvale is my family. And family is NOT for sale!', 'Yee-haw!']],
+    fert4: [['poppy', 'Pee-yew! It smells SO strong.'], ['poppy', 'But the plants love it. Yum, yum!']],
+    fert57: () => (did('town3')
+        ? [['hattie', 'I feel lighter than a feather since I told the truth.'],
+            ['ruby', 'Lighter? You ate six buns this morning.'],
+            ['hattie', 'Lighter in my HEART, Ellis. Ha!', 'Ha!']]
+        : [['hattie', 'Grimsby\'s envelope is still in my pocket. It feels so heavy.'],
+            ['hattie', 'Help me fix up my ranch, partner. Maybe then I\'ll know what to do.', 'We will!']]),
+    fert64: () => (did('hay27')
+        ? [['shopkeeper', 'I remember Reggie when he was little, dear.'],
+            ['shopkeeper', 'Every night, his dad lifted him up to ring the Golden Bell.'],
+            ['shopkeeper', 'He loved that bell more than anyone in town.'],
+            ['narrator', 'Marigold looks up at the empty tower. Her eyes are wet.', 'Poor Reggie...']]
+        : [['shopkeeper', 'Our compost goes to every garden in town now, dear.'],
+            ['shopkeeper', 'Sunnyvale is coming back to life. Little by little.', 'Yay!']]),
+    fert21: [['hattie', 'It\'s so dark in here!'], ['ruby', 'Scared of the dark, cowboy?'], ['hattie', 'Me? Never! ...Hold my hand, though.']],
+    aqua1: [['finn', 'Ahoy! Mira\'s the name. Fish are my game.'],
+        ['finn', 'And Ellis, I can see you hiding behind that tree.'],
+        ['ruby', 'I\'m not hiding! I\'m... checking the tree. For bugs.'],
+        ['finn', 'A night lantern? Sure, I fish at night. But my lantern is big and green.'],
+        ['finn', 'A little gold one? Not mine, friend.'],
+        ['finn', 'Help me fix my pond, and I\'ll tell you the Bell Keeper story.', 'Deal!']],
+    aqua8: mapBeat(['narrator', 'Inside the old tyre is a bottle. Inside the bottle is paper!']),
+    aqua3: [['finn', 'Here is the story my grandpa told me.'],
+        ['finn', 'Long ago, the town picked a secret Bell Keeper.'],
+        ['finn', 'In bad times, the Keeper hides the bell. Nobody knows who it is. Not even the Mayor!'],
+        ['finn', 'The last Keeper Grandpa knew was a lady with bright red hair.'],
+        ['narrator', 'A secret Keeper... could that be our Friend?', 'Hmm!']],
+    fert74: [['poppy', 'A toadstool ring! Make a wish inside it!'],
+        ['ruby', 'Okay. I wish for... a new hammer.'],
+        ['poppy', 'No you don\'t! You wished for Mira. I can tell!'],
+        ['ruby', 'A new HAMMER, Mae!', 'Hee hee!']],
+    fert81: [['narrator', 'At the midnight picnic, Ellis sits next to Mira. Very close.'],
+        ['narrator', 'Slowly, he reaches for her hand...'],
+        ['narrator', '...and a big frog jumps into his lap! RIBBIT!'],
+        ['finn', 'Ha! Even the frogs like you, Ellis.'],
+        ['ruby', 'Silly frog. I mean... nice frog.', 'So close!']],
+    fert5: [['poppy', 'Fairy lights! So pretty!'],
+        ['narrator', 'The lights shine on a note, tucked in a mossy log.'],
+        ['note', 'You are so close. Fix the town and climb the tower. Bring the silver key.'],
+        ['poppy', 'Cinnamon again... Where have I smelled that before?', 'Hmm!']],
+    aqua36: [['finn', 'You tie knots like a cat, Ellis.'],
+        ['ruby', 'And you fish like a... like a really good fisher.'],
+        ['finn', '...Wait. Was that nice? Are you being NICE to me?'],
+        ['ruby', 'NO. Pass me the hammer.', 'Ha!']],
     town4: [['finn', 'My shop is open! Fresh fish for everyone.'],
         ['finn', 'And yes, I saw the grey coat man the night of the storm.'],
         ['finn', 'He ran past my dock with a big empty sack. Mad as a wet cat.'],
-        ['ruby', 'Empty! So he never got the bell!', 'Phew!']],
+        ['ruby', 'Empty! So he never got the bell!'],
+        ['narrator', 'Over the door hangs a new sign: MIRA\'S FISH. It has a little heart on it.'],
+        ['finn', 'Who made this? ...Ellis?'],
+        ['ruby', 'The heart was an accident. My chisel slipped.', 'Sure it did!']],
+    aqua4: () => (did('hay27')
+        ? [['finn', 'Reggie Bramble... I knew him when I was little.'],
+            ['finn', 'He was the big kid who taught me to fish. He was kind.'],
+            ['finn', 'What happened to him in the big city?', 'I wonder...']]
+        : [['finn', 'Look at them go! Little gold fish, home again.'],
+            ['finn', 'Just like the families will be, when that bell rings.', 'Soon!']]),
+    aqua52: [['narrator', 'By the new duck house, Ellis is talking to a duck.'],
+        ['ruby', 'Mira, will you... no. Mira, I really... no!'],
+        ['narrator', 'The duck just looks at him.'],
+        ['ruby', 'You\'re right. Words are hard.', 'Quack!']],
+    aqua63: [['narrator', 'Ellis hides a note in a little candle boat.'],
+        ['note', 'To M. Will you dance with me at the festival?', null, '— E.'],
+        ['narrator', 'But the wind blows the boat the wrong way... right to Mae!', 'Oh no!']],
+    aqua20: [['poppy', 'Everyone! Ellis wrote a love note! To M!'],
+        ['poppy', 'M is for... MARIGOLD! Ellis loves Marigold!'],
+        ['shopkeeper', 'Me?! Oh my. Hee hee... oh dear.'],
+        ['narrator', 'Mira drops her lantern. It goes out. Fizz.'],
+        ['finn', 'Marigold. Of course. Great. That\'s just GREAT.'],
+        ['narrator', 'Mira walks off into the dark.', [
+            { label: 'Go after her, Ellis!', reply: [['ruby', 'I can\'t. She won\'t want to see me now.']] },
+            { label: 'Mae, are you sure?', reply: [['poppy', 'M is for Marigold! ...Right?']] }]]],
+    aqua66: [['ruby', 'Mira! Wait! It\'s not what you think!'],
+        ['finn', 'I don\'t want to hear it, Ellis.'],
+        ['narrator', 'She slams the boathouse door. BANG! It falls right off.', 'Poor Ellis...']],
+    aqua70: [['poppy', 'We fixed the door Mira slammed. But Mira is still so sad.'],
+        ['poppy', 'Did I do something wrong?', [
+            { label: 'Maybe M isn\'t Marigold.', reply: [['poppy', 'Not Marigold? Then who...? Hmm!']] },
+            { label: 'Let\'s find out!', reply: [['poppy', 'Yes! I\'ll be a detective, like you!']] }]]],
+    aqua74: [['finn', 'Marigold. Of course he likes Marigold. Everyone likes Marigold.'],
+        ['finn', 'She bakes buns. I smell like fish.'],
+        ['narrator', 'A tear drops into the water. A little fish swims up to look.', [
+            { label: 'He likes YOU.', reply: [['finn', 'Ha. Nice try, friend.']] },
+            { label: 'Fish smell nice!', reply: [['finn', 'Ha! You\'re a bad liar. But thanks.']] }]]],
+    aqua76: [['narrator', 'Up on the boathouse roof, Mae finds a pile of crumpled notes.'],
+        ['poppy', 'They\'re from Ellis! "Dear Mira..." "Dear Mira..." "Dear Mira..."'],
+        ['poppy', 'M is for MIRA! Not Marigold! Oh no, what did I do?!'],
+        ['narrator', 'Mae runs all the way to Mira\'s door.'],
+        ['poppy', 'Mira! I\'m SO sorry! The note was for YOU! Ellis likes YOU!'],
+        ['finn', '...Me? Then why didn\'t that big silly just SAY so?!', 'Ha!']],
+    aqua78: [['narrator', 'Ellis builds a little sailboat. Then he paints a name on the side.'],
+        ['poppy', 'Ooh! What does it say? Let me see!'],
+        ['ruby', 'Not yet, Mae! It\'s a surprise.', 'Ooh!']],
+    aqua80: [['narrator', 'The sailboat slides into the water. Its name is painted in big letters: MIRA.'],
+        ['ruby', 'Mira. The note was for you. It was always for you.'],
+        ['ruby', 'Will you dance with me at the festival?'],
+        ['finn', 'You big silly. ...Yes. YES, I will!'],
+        ['hattie', 'FINALLY! Yee-haw!', 'Aww!']],
+    aqua5: [['finn', 'Row, row, row! The water is clear again.'],
+        ['finn', 'Look, a little gold lantern, stuck in the reeds.'],
+        ['ruby', 'The Friend\'s lantern! They were here. Where do people even buy those?', 'Hmm...']],
+    // Chapter 5: The Golden Bell
+    flower1: [['poppy', 'My garden! It looks sad now... but not for long!']],
+    flower3: () => (did('hay27')
+        ? [['mayor', 'Tulips! They were Reggie\'s favourite flower when he was little.'],
+            ['mayor', 'He picked them every spring, and got mud all over the house.'],
+            ['mayor', 'I would give anything to see that mud again.', 'Oh, Mayor...']]
+        : [['mayor', 'Tulips! Just for me? How splendid!'],
+            ['mayor', 'Someone I love liked tulips too. A long time ago.', 'Who?']]),
+    flower31: () => (did('hay27')
+        ? [did('town3') ? ['hattie', 'Mayor, I know a thing or two about saying sorry. Write to Reggie. Today.']
+                : ['shopkeeper', 'Mayor, dear. It\'s time. Write to Reggie today.'],
+            ['narrator', 'So the Mayor writes a short letter, and you mail it for him.'],
+            ['note', 'Dear Reggie, I was wrong. I am so sorry. Please come home.', null, '— Dad'],
+            ['mayor', 'Will he even read it?', 'I hope so.']]
+        : [['mayor', 'Nice and neat! The festival is getting closer every day.']]),
     town5: [['poppy', 'My shop smells like spring again!'],
         ['poppy', 'And look, my boots have little flowers on the bottom. No flour!'],
         ['hattie', 'So those small floury boots weren\'t yours. Sorry, Mae!', 'Sorry, Mae!']],
@@ -5145,42 +5427,63 @@ const STORY_BEATS = {
             ['ruby', 'And you knew the key was silver before anyone told you!'],
             ['shopkeeper', 'Hee hee. I did slip a little, didn\'t I?'],
             right ? ['ruby', 'And you guessed it was Marigold! Sharp as a nail, boss. Here\'s 💎25.'] : ['ruby', 'Bet you didn\'t see that coming, boss!'],
-            ['shopkeeper', 'Now, let\'s put this bell back where it belongs!', 'Ring the bell!']];
+            ...(did('hay27') ? [['shopkeeper', 'And Mayor, dear... I wrote to Reggie, too. I told him the bell is safe.']] : []),
+            ['shopkeeper', 'Now, let\'s hang this bell up, ready for the festival!', 'Hang it up!']];
     },
-    town7: [['narrator', 'Festival Day. The whole valley goes quiet...'],
-        ['narrator', 'DING! DONG! The Golden Bell rings out over the hills!'],
-        ['narrator', 'Far away, the families hear it. One by one, they come home.'],
-        ['letter', 'Fine. Keep your silly bell. I\'m leaving. But I\'ll be back!'],
-        ['hattie', 'He\'s gone! Yee-haw! Let\'s dance!'],
-        ['mayor', 'Thank you, farmer. You saved Sunnyvale. You are one of us now.'],
+    flower13: () => [['poppy', 'Poor roses. Don\'t worry, we\'ll make you happy again.'],
+        ...(did('town6') ? [['mayor', 'The bell is back in the tower. It will ring at the festival.'],
+            ['mayor', 'But will my son be there to hear it?', 'I hope so.']] : [])],
+    flower4: () => (did('aqua80')
+        ? [['ruby', 'This arch is the prettiest spot in town.'],
+            ['ruby', 'Mira and I will dance right here, at the festival. I can\'t wait!', 'Aww!']]
+        : [['ruby', 'This arch is the prettiest spot in town.'],
+            ['ruby', 'I want to ask Mira to dance. Right here. At the festival.'],
+            ['ruby', 'If she even looks at me. Wish me luck, boss.', [
+                { label: 'Good luck!', reply: [['ruby', 'Thanks. My knees are shaking like jelly.']] },
+                { label: 'Just tell her!', reply: [['ruby', 'Easy for you to say! ...Okay. Okay, I will.']] }]]]),
+    flower49: () => (did('hay27')
+        ? [['letter', did('town6') ? 'Dad, I got your letter. And Marigold says the Golden Bell is back.' : 'Dad, I got your letter. I read it ten times.', null, '— Reggie'],
+            ['letter', 'You used to lift me up to ring the bell. Do you remember? ...I do.', null, '— Reggie'],
+            ['mayor', 'He remembers. My boy remembers!', 'Aww...']]
+        : [['mayor', 'These roses climb all the way up! Splendid!']]),
+    flower60: () => (did('aqua80')
+        ? [['poppy', 'A love seat! For Ellis and Mira, at the festival. Hee hee!'],
+            ['ruby', 'Mae... thank you. Really.', 'Aww!']]
+        : [['poppy', 'A love seat! For two people who like each other... but are too silly to say so.'],
+            ['ruby', 'Mae! That is not a secret at all.', 'Hee hee!']]),
+    flower21: () => (did('aqua80')
+        ? [['narrator', 'Rose petals fall like pink snow. Ellis and Mira practise their dance.'],
+            ['finn', 'Ow! That was my foot, Ellis.'],
+            ['ruby', 'Sorry! I\'m nervous. You look so pretty.'],
+            ['finn', '...You big silly.', 'Aww!']]
+        : [['narrator', 'Rose petals fall like pink snow. Ellis looks at Mira.'],
+            ['narrator', 'Mira looks away. Ellis looks at his boots.', 'So close!']]),
+    flower22: () => [['poppy', 'Careful! Broken glass everywhere.'],
+        ['ruby', 'Leave it to me. I\'ll make it shine.'],
+        ...(did('aqua80') ? [['hattie', 'Ellis has been smiling all day. He can\'t stop!'],
+            ['ruby', 'I\'m not smiling. The sun is in my eyes.', 'Ha!']] : [])],
+    flower70: () => [['letter', 'I will be at the festival. With my papers to buy the valley.'],
+        ...(did('hay27') ? [['mayor', 'He signed it Grimsby again. Not Reggie.'],
+            ['mayor', 'Is he coming to buy our town... or to come home?', 'We\'ll see...']]
+            : [['mayor', 'We will see about that!', 'Never!']])],
+    flower5: [['poppy', 'It\'s perfect! The festival will be the prettiest ever.'], ['mayor', 'Splendid! Simply splendid!']],
+    town7: () => [['narrator', 'Festival Day. The whole valley comes to the square...'],
+        ['narrator', 'A black car stops at the gate. A man in a grey coat gets out, holding a big pile of papers.'],
+        ['mayor', 'Reggie...'],
+        ['narrator', 'Then... DING! DONG! The Golden Bell rings out over the hills!'],
+        ['narrator', 'Reggie stops. He looks up at the tower. The papers fall out of his hands.'],
+        ['stranger', 'I remember... You lifted me up to ring it. Every night.', null, '— Reggie'],
+        ['mayor', 'I was wrong, son. You were always somebody. You were MY somebody.'],
+        ['stranger', 'I don\'t want to buy the town, Dad. I want to come home.', null, '— Reggie'],
+        ['narrator', 'The Mayor hugs his son tight. The whole town cheers!'],
+        ['narrator', 'Far away, the families hear the bell. One by one, they come home.'],
+        did('aqua80') ? ['narrator', 'Under the rose arch, Ellis and Mira dance. Bram dances with a sheep.']
+            : ['narrator', 'Ellis finally asks Mira to dance. She says yes! Bram dances with a sheep.'],
+        ['hattie', 'Woolly is a great dancer! Yee-haw!'],
+        ['mayor', 'Thank you, farmer. You saved Sunnyvale. And my family.'],
         ['narrator', 'Later, Ellis polishes the bell. Inside, words are carved in the gold:'],
         ['note', 'When the gold bell rings again, look for the silver one.', null, ''],
         ['finn', 'The Silver Bell! Grandpa said that was the second part of the story...', 'To be continued!']],
-    fert1: [['poppy', 'Leaves and mud! This is where good gardens begin.']],
-    fert4: [['poppy', 'Pee-yew! It smells SO strong.'], ['poppy', 'But the plants love it. Yum, yum!']],
-    fert10: mapBeat(['narrator', 'Under the last big leaf pile, something crinkles...']),
-    fert21: [['hattie', 'It\'s so dark in here!'], ['ruby', 'Scared of the dark, cowgirl?'], ['hattie', 'Me? Never! ...Hold my hand, though.']],
-    fert5: [['poppy', 'Fairy lights! So pretty!'],
-        ['narrator', 'The lights shine on a note, tucked in a mossy log.'],
-        ['note', 'You are so close. Fix the town and climb the tower. Bring the silver key.'],
-        ['poppy', 'Cinnamon again... Where have I smelled that before?', 'Hmm!']],
-    aqua1: [['finn', 'Ahoy! Mira\'s the name. Fish are my game.'],
-        ['finn', 'A night lantern? Sure, I fish at night. But my lantern is big and green.'],
-        ['finn', 'A little gold one? Not mine, friend.'],
-        ['finn', 'Help me fix my pond, and I\'ll tell you the Bell Keeper story.', 'Deal!']],
-    aqua3: [['finn', 'Here is the story my grandpa told me.'],
-        ['finn', 'Long ago, the town picked a secret Bell Keeper.'],
-        ['finn', 'In bad times, the Keeper hides the bell. Nobody knows who it is. Not even the Mayor!'],
-        ['finn', 'The last Keeper Grandpa knew was a lady with bright red hair.'],
-        ['narrator', 'A secret Keeper... could that be our Friend?', 'Hmm!']],
-    aqua8: mapBeat(['narrator', 'Inside the old tyre is a bottle. Inside the bottle is paper!']),
-    aqua5: [['finn', 'Row, row, row! The water is clear again.'],
-        ['finn', 'Look, a little gold lantern, stuck in the reeds.'],
-        ['ruby', 'The Friend\'s lantern! They were here. Where do people even buy those?', 'Hmm...']],
-    flower1: [['poppy', 'My garden! It looks sad now... but not for long!']],
-    flower13: [['poppy', 'Poor roses. Don\'t worry, we\'ll make you happy again.']],
-    flower22: [['poppy', 'Careful! Broken glass everywhere.'], ['ruby', 'Leave it to me. I\'ll make it shine.']],
-    flower5: [['poppy', 'It\'s perfect! The festival will be the prettiest ever.'], ['mayor', 'Splendid! Simply splendid!']],
 };
 TASKS.forEach(t => { if (STORY_BEATS[t.id]) t.story = STORY_BEATS[t.id]; });
 
@@ -5237,25 +5540,58 @@ function nextClue() {
     return CLUES.find(c => !c.map && !clueFound(c) && (unlocks[TASKS.find(t => t.id === c.task).land] || TASKS.find(t => t.id === c.task).land === 'town'));
 }
 
-// Back after a while: the story so far, in a few lines, and where to look next.
+// What some scenes add to the story, for "Previously in Sunnyvale...".
+const RECAPS = {
+    barn4: 'Bram lost all his money in the storm. It\'s a secret.',
+    barn14: 'The Mayor knitted a tiny scarf with a big R on it.',
+    hen7: 'Bram sold his star saddle to buy feed.',
+    barn35: 'The Mayor knew the writing on a grey letter. He burned it.',
+    barn41: 'Marigold asked the Mayor about "him". No word in twenty years.',
+    barn44: 'Grimsby wrote to Bram: sell me your ranch. Bram kept the letter.',
+    barn52: 'You found a toy bell with R.B. carved on it. The Mayor took it.',
+    barn62: 'Grimsby wants to turn Sunnyvale into a parking lot!',
+    farm10: 'Someone the Mayor loves took the road to the big city.',
+    farm17: 'Grimsby offered Bram ten times what his ranch is worth.',
+    farm18: 'A man in a grey coat left a card at the berry stand: R. Grimsby.',
+    hay9: 'Bram told his sheep he might sell the ranch.',
+    hay45: 'Carved on the big oak: R.B. + DAD.',
+    hay52: 'Ellis saw Bram with the black car. They had a big fight.',
+    hay63: 'Bram must say yes or no to Grimsby by the festival.',
+    hay27: 'A letter blew out of the Mayor\'s coat: "Dad, I am coming home. Your son, Reggie."',
+    town1: 'The Mayor told the town: Mr. Grimsby is his son, Reggie.',
+    town3: 'Bram told the truth and tore up Grimsby\'s deal!',
+    aqua63: 'Ellis sent a note in a candle boat: "To M. Will you dance with me?"',
+    aqua20: 'Mae told everyone the note was for Marigold. Mira was so sad.',
+    aqua66: 'Mira slammed the door on Ellis. It fell right off!',
+    aqua76: 'Mae found out the note was for Mira, and told her!',
+    aqua80: 'Ellis asked Mira to dance. She said yes!',
+};
+
+// Back after a while, soap-opera style: "Previously in Sunnyvale...", the
+// latest things that happened (the cliffhanger the chapter opened on among
+// them), and where to look next.
 function storyRecap() {
-    const found = CLUES.filter(c => !c.map && clueFound(c));
-    if (!found.length || restoration.done.includes('town7')) return null;
+    if (did('town7')) return null;
+    const lines = restoration.done.map((id, at) => ({ at, text: RECAPS[id] || CLUES.find(c => c.task === id)?.recap })).filter(l => l.text);
+    const ch = currentChapter();
+    const hook = ch > 0 && CHAPTERS[ch - 1].endRecap;
+    if (hook) lines.push({ at: Math.max(...CHAPTERS[ch - 1].jobs.map(id => restoration.done.indexOf(id))) + 0.5, text: hook });
+    if (!lines.length) return null;
     const next = nextClue();
-    return [['narrator', 'The story so far...'],
-        ...found.slice(-2).map(c => ['narrator', c.recap]),
+    return [['narrator', `Previously in ${TOWN_NAME}...`],
+        ...lines.sort((a, b) => a.at - b.at).slice(-3).map(l => ['narrator', l.text]),
         ...(next ? [['narrator', `Next: ${next.next}`]] : []),
-        ['narrator', 'Who is the Friend? Let\'s find out!', 'Let\'s go!']];
+        ['narrator', did('town6') ? 'What happens next? Let\'s find out!' : 'Who is the Friend? Let\'s find out!', 'Let\'s go!']];
 }
 
 // A line of town talk on the daily gift card, from the chapter you're in.
 const GOSSIP = [
-    [['hattie', 'My hens are still hiding. Something scared them silly.'], ['ruby', 'If you find a nail on the road, it\'s mine. Probably.'], ['mayor', 'I practise my festival speech every morning. Splendid, isn\'t it?']],
-    [['shopkeeper', 'Fresh cinnamon buns today, dear! Hee hee.'], ['ruby', 'Saw that black car again last night. Creepy.'], ['hattie', 'A key in a nest! Hens are full of surprises.']],
-    [['poppy', 'The moonflowers told me a secret. They won\'t say what it is.'], ['mayor', 'I can\'t sleep. That grey coat man is out there somewhere.'], ['finn', 'Caught a fish as big as a boot today. It WAS a boot.']],
-    [['finn', 'The fog is so thick, I said hello to a lamp post.'], ['ruby', 'I\'m fixing the bell rope. For when we find it. WHEN.'], ['shopkeeper', 'Little gold lanterns, two for a coin! Hee hee.']],
-    [['mayor', 'The festival is so close! Will our bell ring?'], ['poppy', 'I\'m making flower crowns for everyone. Even Grimsby. Maybe.'], ['hattie', 'My hens laid golden eggs! ...Okay, yellow ones.']],
-    [['finn', 'The Silver Bell... Grandpa said it sings over the sea.'], ['shopkeeper', 'Ding, dong! Hear that? That\'s our bell, dear.'], ['ruby', 'Grimsby said he\'ll be back. Let him try.']],
+    [['hattie', 'My hens are still hiding. Something scared them silly.'], ['ruby', 'Mira? Never heard of her. Who? ...Okay, I\'ve heard of her.'], ['mayor', 'I practise my festival speech every morning. Splendid, isn\'t it?']],
+    [['shopkeeper', 'Fresh cinnamon buns today, dear! Hee hee.'], ['ruby', 'Bram is acting weird lately. Anyone else see it?'], ['hattie', 'A key in a nest! Hens are full of surprises.']],
+    [['poppy', 'Bram\'s lamp was on at midnight. AGAIN.'], ['mayor', 'I can\'t sleep. That grey coat man is out there somewhere.'], ['finn', 'Caught a fish as big as a boot today. It WAS a boot.']],
+    [['poppy', 'The Mayor has a SON? I can\'t believe it!'], ['ruby', 'I\'m fixing the bell rope. For when we find it. WHEN.'], ['finn', 'Ellis walked past my shop ten times today. TEN.']],
+    [['mayor', 'The festival is so close! Will our bell ring? Will Reggie come?'], ['poppy', 'I\'m making flower crowns for everyone. Even Grimsby. Maybe.'], ['hattie', 'Ellis asked me how to dance. I said: like a happy cow!']],
+    [['finn', 'The Silver Bell... Grandpa said it sings over the sea.'], ['mayor', 'Reggie and I fixed the old swing on the big oak. Splendid!'], ['ruby', 'Mira says I dance like a cat. A GOOD cat.']],
 ];
 
 function gossipHtml() {
@@ -5297,6 +5633,8 @@ function playScene(title, lines, extra = '', then = null) {
         art = book.note;
         const by = sign ?? (who === 'note' ? '— A Friend' : '— R. Grimsby, Grimsby Land Co.');
         words = `<p class="story-note${who === 'letter' ? ' story-letter' : ''}">${text}</p>${by ? `<p class="hint">${by}</p>` : ''}`;
+    } else if (who === 'stranger') { // Reggie in person: a voice with no face
+        words = `<p class="story-line story-stranger">“${text}”</p><p class="hint">${sign ?? '— The man in the grey coat'}</p>`;
     } else if (who === 'shopkeeper' || npcs.some(n => n.id === who)) {
         const npc = npcs.find(n => n.id === who), bust = (ASSETS.bust || {})[who];
         art = bust || npcPicture(npc);
@@ -5503,7 +5841,9 @@ function syncStory() {
         }
     } else if (!story.seen.includes(i)) {
         story.seen.push(i);
-        playChapter(i);
+        const end = i > 0 && CHAPTERS[i - 1].end; // the chapter before ends on its cliffhanger first
+        if (end) playScene(`📖 Chapter ${i}: ${CHAPTERS[i - 1].title}`, end, '', () => playChapter(i));
+        else playChapter(i);
     }
 }
 
