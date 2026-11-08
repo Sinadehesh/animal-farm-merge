@@ -666,7 +666,10 @@
         }
         .item.box .emoji { font-size: 7.5cqw; }
         .item.box.has-sprite { background: none; border: none; box-shadow: none; }
-        .item.webbed { filter: saturate(0.5) brightness(0.92); cursor: pointer; }
+        /* Crates and cobwebs stay quiet (pale, like Merge Mansion's boxes), so what you can play stands out. */
+        .item.box.has-sprite img { filter: saturate(0.65) sepia(0.2) brightness(1.18) contrast(0.78); opacity: 0.82; transform: scale(0.84); }
+        .item.webbed { filter: saturate(0.6) brightness(1.05); opacity: 0.85; cursor: pointer; }
+        .item.webbed .web { opacity: 0.55; }
         .item .web {
             position: absolute;
             inset: -6%;
@@ -1222,6 +1225,86 @@
         .dialog-backdrop[data-kind="pass"] .dialog { height: 100%; }
         .dialog-backdrop[data-kind="pass"] .dialog-body { flex: 1 1 auto; max-height: none; min-height: 40cqw; }
         .dialog-backdrop[data-kind="pass"] .dialog-actions { gap: 2cqw; margin-top: 3cqw; }
+        /* The shop: picture cards, each with a green price button (openShop in game.js). */
+        .dialog-backdrop[data-kind="shop"] .dialog { height: 100%; }
+        .dialog-backdrop[data-kind="shop"] .dialog-body { flex: 1 1 auto; max-height: none; padding: 2.4cqw 1cqw 1cqw; }
+        .dialog-backdrop[data-kind="shop"] .dialog-actions { margin-top: 3cqw; }
+        .shop { display: flex; flex-direction: column; gap: 3.2cqw; text-align: left; }
+        .shop button { font: inherit; color: var(--ink); cursor: pointer; }
+        .shop button:active { translate: 0 0.6cqw; }
+        .shop-feature, .shop-wide {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 2.4cqw;
+            padding: 2.2cqw 2.6cqw;
+            border-radius: 4cqw;
+            background: linear-gradient(#fff6dc, #ffe1a0);
+            border: 0.7cqw solid #e0a83a;
+            box-shadow: 0 1cqw 0 #c4872a;
+        }
+        .shop-feature { min-height: 22cqw; }
+        .shop-feature.offer { background: linear-gradient(#fff0f1, #ffc8ce); border-color: #e2606f; box-shadow: 0 1cqw 0 #b9404f; }
+        .shop-feature.done { background: linear-gradient(#eefbe7, #cdeebb); border-color: #6cb84a; box-shadow: 0 1cqw 0 #4f9435; }
+        .shop-wide { background: linear-gradient(#fffaf0, #f4e6c8); border-color: #d6b77c; box-shadow: 0 1cqw 0 #b8955a; }
+        .shop-art { flex: 0 0 auto; display: grid; place-items: center; width: 17cqw; height: 17cqw; object-fit: contain; font-size: 11cqw; filter: drop-shadow(0 0.8cqw 0 rgba(90, 50, 10, 0.22)); }
+        .shop-wide .shop-art { width: 12cqw; height: 12cqw; font-size: 8cqw; }
+        .shop-text { flex: 1; display: grid; gap: 0.6cqw; line-height: 1.15; text-align: left; }
+        .shop-text b { font-size: 4.2cqw; }
+        .shop-text small { font-size: 3.3cqw; font-weight: 800; color: #7a5a3a; }
+        .shop-price {
+            flex: 0 0 auto;
+            min-width: 19cqw;
+            padding: 1.8cqw 2.6cqw 2.4cqw;
+            border-radius: 999px;
+            background: linear-gradient(#7fdc4a, #3fae2a);
+            box-shadow: 0 0.8cqw 0 #2a7a1c;
+            color: #fff;
+            font-size: 4cqw;
+            font-weight: 900;
+            text-align: center;
+            white-space: nowrap;
+            text-shadow: 0 0.45cqw 0 rgba(20, 70, 10, 0.5);
+        }
+        .shop-price.gems { background: linear-gradient(#ffc24a, #f08c1a); box-shadow: 0 0.8cqw 0 #b45f0a; text-shadow: 0 0.45cqw 0 rgba(120, 60, 0, 0.5); }
+        .shop-price.go { background: linear-gradient(#6cc4ff, #2e86d8); box-shadow: 0 0.8cqw 0 #1d568f; text-shadow: 0 0.45cqw 0 rgba(20, 40, 70, 0.45); }
+        .shop-tag {
+            position: absolute;
+            top: -2.6cqw;
+            left: 3cqw;
+            padding: 0.4cqw 2.4cqw 0.7cqw;
+            border: 0.5cqw solid #fff;
+            border-radius: 999px;
+            background: linear-gradient(#ff7a5c, #e2433a);
+            box-shadow: 0 0.6cqw 1cqw rgba(0, 0, 0, 0.2);
+            color: #fff;
+            font-size: 2.9cqw;
+            font-weight: 900;
+            white-space: nowrap;
+            text-shadow: 0 0.3cqw 0 rgba(110, 20, 20, 0.5);
+        }
+        .shop-tag.hot { background: linear-gradient(#ffb43a, #f0711a); }
+        .shop-tag.best { background: linear-gradient(#b57cff, #7a45e0); }
+        .shop-head { margin: 1.6cqw 0 0; font-size: 4.6cqw; font-weight: 900; text-align: center; color: #6a4528; }
+        .shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4cqw 2.4cqw; padding-top: 1.4cqw; }
+        .shop-pack {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1cqw;
+            padding: 2.4cqw 1.4cqw 2.2cqw;
+            border-radius: 4cqw;
+            background: linear-gradient(#f4fbff, #cdeeff);
+            border: 0.7cqw solid #6cb7e6;
+            box-shadow: 0 1cqw 0 #3f86b8;
+        }
+        .shop-pack .shop-tag { left: 50%; translate: -50% 0; }
+        .gem-pile { position: relative; width: 100%; aspect-ratio: 1.15; }
+        .gem-pile img { position: absolute; translate: -50% -50%; filter: drop-shadow(0 0.6cqw 0 rgba(20, 60, 110, 0.3)); }
+        .shop-amount { font-size: 4cqw; }
+        .shop-pack .shop-price { min-width: 0; width: 100%; padding: 1.4cqw 1cqw 1.9cqw; font-size: 3.6cqw; }
+        .shop-note { text-align: center; }
         .big-count { font-size: 8cqw; font-weight: 900; }
         .btn:disabled { background: #e2d8c8; color: #8a7a6a; text-shadow: none; cursor: not-allowed; }
         #toasts {
@@ -1665,9 +1748,9 @@
             border-radius: 16px;
             box-shadow: 0 5px 0 rgba(110, 75, 35, 0.45), 0 10px 22px rgba(0, 0, 0, 0.3);
         }
-        .board .grid-cell { background: #efdfc0; border-radius: 14%; box-shadow: none; }
+        .board .grid-cell { background: #efdcb6; border-radius: 14%; box-shadow: inset 0 -0.6cqw 0 rgba(140, 100, 50, 0.13); }
         .board .grid-cell:nth-child(12n+1), .board .grid-cell:nth-child(12n+3), .board .grid-cell:nth-child(12n+5),
-        .board .grid-cell:nth-child(12n+8), .board .grid-cell:nth-child(12n+10), .board .grid-cell:nth-child(12n+12) { background: #f6ead2; }
+        .board .grid-cell:nth-child(12n+8), .board .grid-cell:nth-child(12n+10), .board .grid-cell:nth-child(12n+12) { background: #fbf1dc; }
         .board-footer { display: flex; align-items: center; gap: 2.5cqw; padding: 2.5cqw 3% 2.5%; }
         .board-footer .info-bar { flex: 1; border-color: #c9a46b; box-shadow: 0 3px 0 rgba(110, 75, 35, 0.4); }
         .place-btn {
@@ -1689,8 +1772,10 @@
         .place-btn .badge { right: -2cqw; top: -2cqw; }
         .place-btn:active { translate: 0 2px; box-shadow: 0 2px 0 #1d4f8a; }
         /* Requests: who wants what, bigger, on cream cards over the place. */
-        .board .orders { align-items: flex-end; padding: 0 3%; gap: 2.5cqw; }
-        .board .order-card { width: 24cqw; padding: 1.5cqw; background: rgba(255, 248, 231, 0.96); border: 3px solid #d9bb86; box-shadow: 0 4px 0 rgba(110, 75, 35, 0.45); }
+        .board .orders { align-items: flex-end; padding: 0 3%; gap: 2cqw; }
+        .board .orders.scrolls { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 7cqw), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 7cqw), transparent); }
+        .board .order-card { width: 22cqw; padding: 1.5cqw; background: rgba(255, 248, 231, 0.96); border: 3px solid #d9bb86; box-shadow: 0 4px 0 rgba(110, 75, 35, 0.45); }
+        .board .order-need { white-space: normal; text-align: center; line-height: 1.1; min-height: 2.2em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
         .board .order-card.ready { background: #e8fbe2; border-color: #3cb94a; box-shadow: 0 4px 0 #2e8c3c; }
         .board .order-who .face { width: 12cqw; height: 12cqw; border-width: 3px; }
         .board .order-who .want { width: 11cqw; height: 11cqw; border-color: #d9bb86; }
@@ -2066,6 +2151,9 @@
         html.kit .btn:disabled { background: none; border-image-source: var(--kit-btn-grey); color: #f4f1ec; text-shadow: 0 0.4cqw 0 rgba(0, 0, 0, 0.3); }
         html.kit .btn:active, html.kit .sell-btn:active { transform: translateY(0.5cqw) scale(0.97); box-shadow: none; }
         html.kit .btn-half { padding-left: 2.5cqw; padding-right: 2.5cqw; font-size: 3.8cqw; }
+        html.kit .shop-price { background: none; border: 0 solid transparent; border-radius: 0; border-image: var(--kit-btn-green) 62 66 66 66 fill / 4.2cqw 4.4cqw; box-shadow: none; }
+        html.kit .shop-price.gems { border-image-source: var(--kit-btn-orange); }
+        html.kit .shop-price.go { border-image-source: var(--kit-btn-blue); }
         html.kit .sell-btn { min-height: 9cqw; padding: 1.2cqw 3.6cqw 2cqw; border-image-width: 4.2cqw 4.4cqw; font-size: 3cqw; }
         html.kit .fix-call .btn { min-height: 9.5cqw; padding: 1.6cqw 4cqw 2.4cqw; border-image-width: 4.6cqw 4.8cqw; font-size: 3.6cqw; }
 
@@ -2238,8 +2326,8 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202610271625"></script>
-    <script src="monetize.js?v=202610271625"></script>
-    <script src="game.js?v=202610271625"></script>
+    <script src="assets.js?v=202611081952"></script>
+    <script src="monetize.js?v=202611081952"></script>
+    <script src="game.js?v=202611081952"></script>
 </body>
 </html>

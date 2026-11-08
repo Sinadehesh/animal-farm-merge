@@ -1070,35 +1070,63 @@ function watchAdForGems(n, retry) {
 
 // --- SHOP ---
 
+// The shop, Merge Mansion style: picture cards, each with a green price button.
+// The Daily Basket comes first on a banner (priced low, it's meant to be the
+// first purchase), then the one-time Special Offer, the gem packs (a pile of
+// gems that grows with the pack) and the rest. Every picture is one the game
+// already has (ASSETS.ui).
+// Each gem of a pack's pile: [% across, % down, width %, turn°], back ones first.
+const GEM_PILES = [
+    [[50, 52, 74, 0]],
+    [[34, 56, 60, -10], [66, 56, 60, 10]],
+    [[50, 34, 54, 0], [30, 64, 54, -10], [70, 64, 54, 10]],
+    [[50, 30, 50, 0], [24, 66, 48, -12], [76, 66, 48, 12], [50, 70, 50, 0]],
+    [[36, 34, 46, -6], [64, 34, 46, 6], [20, 68, 44, -12], [80, 68, 44, 12], [50, 70, 48, 0]],
+    [[50, 22, 44, 0], [33, 44, 44, -6], [67, 44, 44, 6], [18, 72, 42, -12], [82, 72, 42, 12], [50, 74, 46, 0]],
+];
+
+function gemPile(n) {
+    const src = (ASSETS.ui || {}).gem;
+    if (!src) return '<span class="shop-art">💎</span>';
+    return `<span class="gem-pile">${GEM_PILES[n - 1].map(([x, y, w, r]) =>
+        `<img src="${src}" alt="" draggable="false" style="left:${x}%;top:${y}%;width:${w}%;rotate:${r}deg">`).join('')}</span>`;
+}
+
 function openShop(note = '') {
-    const basketDays = basketDaysLeft();
-    const actions = [];
-    // The basket comes first: priced low, it's meant to be the first purchase.
-    if (basketDays <= 0) actions.push({ label: `🧺 ${DAILY_BASKET.name}: 💎 ${DAILY_BASKET.gemsPerDay} every day · ${DAILY_BASKET.price}`,
-        primary: true, wide: true, onClick: buyDailyBasket });
-    if (!shop.offerBought) {
-        actions.push({
-            label: `⭐ ${SPECIAL_OFFER.name}: 💎 ${SPECIAL_OFFER.gems} + 💵 ${withCommas(SPECIAL_OFFER.money)} + ⚡ ${SPECIAL_OFFER.energy} · ${SPECIAL_OFFER.price}`,
-            primary: true, wide: true, onClick: buySpecialOffer,
-        });
-    }
-    GEM_PACKS.forEach(pack => actions.push({
-        label: `${pack.name}: 💎 ${withCommas(pack.gems)}${pack.tag ? ` (${pack.tag})` : ''} · ${pack.price}`,
-        primary: true, wide: true,
-        onClick: () => purchase(pack.id),
-    }));
-    if (basketDays > 0) actions.push({ label: `🧺 Daily Basket active · ${basketDeliveriesLeft()} more days`, wide: true, disabled: true });
-    actions.push({ label: `⚡ ${ENERGY_PACK} Energy · 💎 ${energyPrice()}`, wide: true, onClick: buyEnergy });
-    if (!pass.golden) actions.push({ label: `🎟️ ${GOLDEN_PASS.name}: golden rewards, 💎${GOLDEN_PASS.gemsPerDay} a day · ${GOLDEN_PASS.price}`, primary: true, wide: true, onClick: () => buyGoldenPass() });
-    actions.push({ label: '🏷️ Flash Sale & 🎁 Daily Deals at the Market', wide: true, onClick: () => { goTo('market'); openFlashSale(); } });
-    actions.push({ label: 'Close' });
+    const ui = ASSETS.ui || {};
+    const pic = (name, emoji) => (ui[name] ? `<img class="shop-art" src="${ui[name]}" alt="" draggable="false">` : `<span class="shop-art">${emoji}</span>`);
+    const price = (text, cls = '') => `<span class="shop-price${cls ? ` ${cls}` : ''}">${text}</span>`;
+    const tag = (text, cls = '') => `<span class="shop-tag${cls ? ` ${cls}` : ''}">${text}</span>`;
+    const words = (name, line) => `<span class="shop-text"><b>${name}</b><small>${line}</small></span>`;
+    const buys = {}; // what each card does
+    const card = (id, cls, html, onClick) => { buys[id] = onClick; return `<button class="${cls}" data-buy="${id}">${html}</button>`; };
+
+    const top = [basketDaysLeft() <= 0
+        ? card('basket', 'shop-feature', tag('Best deal') + pic('merge', '🧺') + words(DAILY_BASKET.name, `💎${DAILY_BASKET.gemsPerDay} every day for ${DAILY_BASKET.days} days`) + price(DAILY_BASKET.price), buyDailyBasket)
+        : `<div class="shop-feature done">${pic('merge', '🧺')}${words('Daily Basket is on!', `💎${DAILY_BASKET.gemsPerDay} a day, ${basketDeliveriesLeft()} more days`)}</div>`];
+    if (!shop.offerBought) top.push(card('offer', 'shop-feature offer', tag('Only once', 'hot') + pic('gift', '🎁') + words(SPECIAL_OFFER.name, `💎${SPECIAL_OFFER.gems} + 💵${withCommas(SPECIAL_OFFER.money)} + ⚡${SPECIAL_OFFER.energy}`) + price(SPECIAL_OFFER.price), buySpecialOffer));
+    const packs = GEM_PACKS.map((pack, i) => card(pack.id, 'shop-pack',
+        (pack.tag ? tag(pack.tag === 'popular' ? 'Popular' : 'Best value', pack.tag === 'popular' ? '' : 'best') : '') + gemPile(i + 1) + `<b class="shop-amount">💎${withCommas(pack.gems)}</b>` + price(pack.price),
+        () => purchase(pack.id)));
+    const more = [];
+    if (!pass.golden) more.push(card('pass', 'shop-wide', pic('pass', '🎟️') + words(GOLDEN_PASS.name, `Golden rewards and 💎${GOLDEN_PASS.gemsPerDay} a day`) + price(GOLDEN_PASS.price), () => buyGoldenPass()));
+    more.push(card('energy', 'shop-wide', pic('energy', '⚡') + words(`${ENERGY_PACK} Energy`, 'Keep on merging, right now') + price(`💎${energyPrice()}`, 'gems'), buyEnergy));
+    more.push(card('sale', 'shop-wide', pic('sale', '🏷️') + words('Flash Sale & Daily Deals', 'New deals at the Market') + price('Go', 'go'), () => { goTo('market'); openFlashSale(); }));
+
     showDialog({
         title: 'Shop',
-        body: `${note ? `<p><b>${note}</b></p>` : ''}
-               <p>💎 Gems buy ⚡ energy, recharge producers instantly and cover any 💵 you're short.</p>
+        kind: 'shop',
+        body: `${note ? `<p class="shop-note"><b>${note}</b></p>` : ''}
+               <div class="shop">${top.join('')}
+               <h3 class="shop-head">Gems</h3><div class="shop-grid">${packs.join('')}</div>
+               <h3 class="shop-head">More</h3>${more.join('')}</div>
                ${billing || nativeApp ? '' : '<p class="hint">Test mode: no real payment is taken here.</p>'}`,
-        actions,
+        actions: [{ label: 'Close' }],
     });
+    dialogBody.querySelectorAll('[data-buy]').forEach(btn => btn.addEventListener('click', () => {
+        closeDialog();
+        buys[btn.dataset.buy]();
+    }));
 }
 
 function openSpecialOffer(title = SPECIAL_OFFER.name) {
@@ -5870,6 +5898,7 @@ function showDialog({ art, artRound = false, title, body, actions, sheet = false
         dialogActions.appendChild(btn);
     });
     dialogEl.hidden = false;
+    dialogBody.scrollTop = 0; // a new popup starts at its top (once shown: a hidden one can't scroll)
     Sales.inDialog(sale);
 }
 
@@ -8176,6 +8205,7 @@ function renderOrders(mode, el) {
     });
 
     if (!el.children.length) el.innerHTML = '<p class="no-orders">No orders right now. Check the Town Square later.</p>';
+    el.classList.toggle('scrolls', el.scrollWidth > el.clientWidth + 2); // more than fit: they fade out at the edge
 }
 
 function sellPrice(mode, item) {

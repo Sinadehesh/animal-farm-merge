@@ -364,24 +364,24 @@ missing shows its emoji.
 | | Icon | Where | File |
 |---|---|---|---|
 | ✅ | 💵 coins | top bar | `assets/ui/kit/icon_coin.webp` |
-| ✅ | 💎 gems | top bar | `assets/ui/kit/icon_gem.webp` |
-| ✅ | ⚡ energy | top bar | `assets/ui/kit/icon_energy.webp` |
+| ✅ | 💎 gems | top bar; the shop's gem packs (a pile of them, bigger for bigger packs) | `assets/ui/kit/icon_gem.webp` |
+| ✅ | ⚡ energy | top bar; the shop's energy card | `assets/ui/kit/icon_energy.webp` |
 | ✅ | ⭐ level | top bar | `assets/ui/kit/icon_star.webp` |
-| ✅ | 🎁 daily gift, Daily Deals, rewards box | map, Market and board buttons | `assets/ui/gift.png` |
+| ✅ | 🎁 daily gift, Daily Deals, rewards box | map, Market and board buttons; the shop's Special Offer | `assets/ui/gift.png` |
 | ✅ | 📋 tasks | bottom-right Tasks button | `assets/ui/jobs.png` |
-| ✅ | 🧺 merge board | bottom-left Merge button | `assets/ui/merge.png` |
+| ✅ | 🧺 merge board | bottom-left Merge button; the shop's Daily Basket | `assets/ui/merge.png` |
 | ✅ | 🗝️ golden key | an area unlocking | `assets/ui/key.png` |
 | ✅ | 🎁 reward box | area and land rewards, task cards | `assets/ui/reward.png` |
 | ✅ | ☁️ cloud | spare: locked areas | `assets/ui/cloud.png` |
 | ✅ | ✅ check badge | spare: ready items | `assets/ui/kit/badge_tick.webp` |
 | ✅ | ✨ sparkle | empty spots to build on | `assets/ui/sparkle.png` |
-| ✅ | 🎟️ Season Pass | map button | `assets/ui/pass.png` |
+| ✅ | 🎟️ Season Pass | map button; the shop's Golden Pass | `assets/ui/pass.png` |
 | ✅ | 📅 daily goals | map button | `assets/ui/daily.png` |
 | ✅ | 🫙 Gem Jar | map button | `assets/ui/jar.png` |
 | ✅ | 🔥 offers | map button | `assets/ui/offer.png` |
 | ✅ | 🎒 inventory | board info bar | `assets/ui/inventory.png` |
 | ✅ | 🔒 lock | locked chests, lands and deeds | `assets/ui/lock.png` |
-| ✅ | 🏷️ Flash Sale (price tag) | Market button | `assets/ui/sale.png` |
+| ✅ | 🏷️ Flash Sale (price tag) | Market button; the shop's Flash Sale card | `assets/ui/sale.png` |
 | ✅ | 🕸️ cobweb | info bar for cobwebbed items | `assets/ui/cobweb.png` |
 | ✅ | 🔨 hammer | job tags on the map and job cards | `assets/ui/hammer.png` |
 | ✅ | 🏆 trophy | Country Fair ribbon, header and race | `assets/ui/trophy.png` |
