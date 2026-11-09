@@ -643,8 +643,21 @@ function isWorkingProducer(item) {
     return !!item && item.type === 'shop' && producerLevel(item) >= FIRST_WORKING_LEVEL;
 }
 
+// A new farmer's first session should flow: until level 5, producers and toolboxes rest a
+// quarter as long, so ⚡ energy (not waiting with energy to spare) is what runs out first.
+const EARLY_LEVELS = 5;
+const EARLY_REST = 0.25;
+
+function restScale() {
+    return quests.level < EARLY_LEVELS ? EARLY_REST : 1;
+}
+
 function rechargeMs(mode) {
-    return PRODUCERS[mode].minutes * 60000;
+    return PRODUCERS[mode].minutes * 60000 * restScale();
+}
+
+function toolRestMs(chain) {
+    return TOOLS[chain].minutes * 60000 * restScale();
 }
 
 // Catches a producer up on recharges, including time the game was closed. It
@@ -780,7 +793,7 @@ function openRecharge(mode, index) {
     showDialog({
         title: `${rechargeName(mode, item)} is recharging`,
         body: `<p class="big-count">⏳ <span data-ready="${item.readyAt}">${formatDuration(item.readyAt - Date.now())}</span></p>
-               <p class="hint">${tool ? `It gives ${TOOL_CHARGES} taps, then rests ${formatDuration(TOOLS[item.chain].minutes * 60000)}.`
+               <p class="hint">${tool ? `It gives ${TOOL_CHARGES} taps, then rests ${formatDuration(toolRestMs(item.chain))}.`
                    : `Each charge gives ${s.drops} taps and takes ${formatDuration(rechargeMs(mode))}. It stores up to ${s.charges} charges while you're away.`}
                Don't stop now: keep it going with 💎!</p>`,
         actions: [
@@ -2893,9 +2906,11 @@ function pointAtJob(task) {
         spot.classList.add('spotlight');
     }
     storyHoldUntil = Date.now() + 1500;
-    // The card comes up once nothing else is showing (a bubble already open goes first).
+    // The card comes up once nothing else is showing (a bubble already open goes first),
+    // while you're still where the job is (gone off to merge, it doesn't follow you).
+    const where = currentScene;
     const card = (tries = 0) => {
-        if (taskDone(task) || tries > 60) return;
+        if (taskDone(task) || tries > 60 || currentScene !== where) return;
         if (dialogEl.hidden && !document.body.classList.contains('busy')) openTaskCard(task); // after any unlock animation
         else setTimeout(() => card(tries + 1), 400);
     };
@@ -5825,13 +5840,16 @@ function playChapter(i) {
 // Every second: the first daily gift after the tutorial, then (on the map, with
 // no dialog open) a new day's bubble or the ending.
 function syncStory() {
-    if (!tutorial.done || !dialogEl.hidden || Date.now() < storyHoldUntil) return;
-    if (giftAfterTutorial) {
+    // The first job's scene plays before the tutorial's last word, right after that job.
+    const lastWord = !tutorial.done && TUTORIAL[tutorial.step]?.id === 'onward';
+    if ((!tutorial.done && !lastWord) || !dialogEl.hidden || Date.now() < storyHoldUntil) return;
+    // Never mid-merge: beats wait for the map, a place or the town.
+    if (storyQueue.length && !fixing && !isBoard(currentScene)) return playScene('📖', storyQueue.shift());
+    if (!tutorial.done) return;
+    if (giftAfterTutorial && !fixing && !isBoard(currentScene)) {
         giftAfterTutorial = false;
         if (dailyAvailable()) return openDailyGift();
     }
-    // Never mid-merge: beats wait for the map, a place or the town.
-    if (storyQueue.length && !fixing && !isBoard(currentScene)) return playScene('📖', storyQueue.shift());
     if (currentScene !== 'map') return;
     const i = currentChapter();
     if (i === -1) {
@@ -5981,6 +5999,7 @@ function completeTask(id, quiet = false) {
     else sfx('taskdone');
     thump(restored || zoneFinished);
     if (task.story) storyQueue.push(typeof task.story === 'function' ? task.story() : task.story); // a map piece counts as it's found
+    if (storyQueue.length) setTimeout(syncStory, 300); // right away, before you go back to merging
     if (quiet && !restored && !zoneFinished) cheer(task, npc);
     else showDialog({
         art: npcBust(npc) || npcPicture(npc),
@@ -6435,11 +6454,13 @@ function celebrate(what) {
 }
 
 function toast(message, kind = '') {
+    if ([...toastLayer.children].some(t => t.dataset.msg === message)) return; // already saying it
     const el = document.createElement('div');
+    el.dataset.msg = message;
     el.className = 'toast ' + kind;
     el.innerHTML = iconize(message); // the game's own words, with item pictures and icons
     toastLayer.appendChild(el);
-    while (toastLayer.children.length > 3) toastLayer.firstChild.remove();
+    while (toastLayer.children.length > 2) toastLayer.firstChild.remove(); // never a pile over the board
     setTimeout(() => el.remove(), 2600);
 }
 
@@ -7089,7 +7110,7 @@ const TUTORIAL = [
     { id: 'fix', scene: 'map', who: 'mayor', text: 'You opened a box, so the planks can go! Tap the job to fix it.',
       target: () => jobSpot(), done: () => stats.jobs >= 1 },
     // Off you go: the next job, and how to see what any job needs.
-    { id: 'onward', scene: 'map', who: 'mayor', explain: true,
+    { id: 'onward', scene: 'map', who: 'mayor', explain: true, leaveOk: true,
       text: 'That\'s how it\'s done! These are your next jobs. Tap one to see what it needs. Then make it on the merge board. Drag to look around!',
       target: () => [...document.querySelectorAll('#scene-map .task-pin')], done: () => stats.jobs >= 2 },
 ];
@@ -7170,12 +7191,19 @@ function updateTutorial() {
     let text = step.text;
     let drag = step.drag;
     let explain = step.explain;
+    // The last word ("these are your next jobs") is for the map: gone off to merge, you're on your way.
+    if (currentScene !== step.scene && step.leaveOk) {
+        tutorial.explained.push(step.id);
+        return updateTutorial();
+    }
     if (currentScene !== step.scene) {
         explain = drag = false;
         if (step.scene === 'map' && currentScene === 'barn') {
-            // Back from the board to the Barnyard: its job card leads there.
-            target = document.querySelector('#scene-barn .task-card') || backBtn;
-            text = 'Now tap the job to go back to the Barnyard!';
+            // Back from the board to the Barnyard: a ready job's card leads there (and fixes it).
+            // Any other job's card would only open its card, whose Go stays on this board.
+            const ready = document.querySelector('#scene-barn .task-card.ready');
+            target = ready || backBtn;
+            text = ready ? 'Now tap the job to go back to the Barnyard!' : 'Back to the farm!';
         } else if (step.scene === 'barn' && currentScene === 'map') {
             target = document.querySelector('#scene-map .fix-merge');
             text = 'Tap Merge to go to the merge board!';
@@ -7358,7 +7386,8 @@ function webPair() {
     const same = (a, b) => JSON.stringify({ ...a, web: 0 }) === JSON.stringify({ ...b, web: 0 });
     for (let a = 0; a < g.length; a++) {
         if (!g[a] || g[a].type || !isFree(g[a])) continue;
-        const b = g.findIndex((c, i) => i !== a && c && c.web && !c.type && same(c, g[a]));
+        // (only a pair that would really merge: never one stuck at its chain's top tier for now)
+        const b = g.findIndex((c, i) => i !== a && c && c.web && !c.type && same(c, g[a]) && wouldMerge(mode, g[a], c));
         if (b >= 0) return [a, b];
     }
     return [];
@@ -7480,8 +7509,14 @@ const GUIDES = [
                 target: () => cellItem(onBoard(), boardCell(c => c.type === 'toolbox' && c.drops > 0)), done: () => marked('toolbox') }] },
     // A full board: the backpack.
     { id: 'inventory', when: () => onBoard() && !grids[onBoard()].includes(null), // (boardFull() would also toast)
-      steps: [{ scene: () => onBoard(), who: 'hattie', text: 'Board full? Drag things into your 🎒 for later, or tap one and Sell it.',
-                target: () => q(`#scene-${onBoard()} .inv-btn`), done: () => inventory.items.length > 0 || !onBoard() || grids[onBoard()].includes(null) }] },
+      steps: [{ scene: () => onBoard(), who: 'hattie', text: 'Board full? Drag things into your 🎒 for later, or tap one and Sell it.', drag: true,
+                // The hand drags the least of your things (the lowest plain item) into the 🎒.
+                target: () => {
+                    const m = onBoard(), g = grids[m];
+                    const low = g.map((c, i) => (c && isFree(c) && !c.type ? i : -1)).filter(i => i >= 0).sort((a, b) => g[a].tier - g[b].tier)[0];
+                    return [low === undefined ? null : cellItem(m, low), q(`#scene-${m} .inv-btn`)];
+                },
+                done: () => inventory.items.length > 0 || !onBoard() || grids[onBoard()].includes(null) }] },
     // The town's orders.
     { id: 'town', when: () => quests.level >= 2 && currentScene !== 'town',
       steps: [{ scene: 'town', who: 'mayor', lead: 'Townsfolk need your help!', text: 'Townsfolk post orders here. Tap someone\'s card to see what they need!',
@@ -7812,7 +7847,7 @@ function checkOffers() {
         Object.assign(s, { until: now + offer.hours * 3600000, bought: false, base: stats.outOfEnergy });
         pendingOffers.push(offer.id);
     });
-    if (pendingOffers.length && quietOnMap()) openOffer(pendingOffers.shift());
+    if (pendingOffers.length && quietOnMap() && !Sales.quiet()) openOffer(pendingOffers.shift());
 }
 
 function openOffer(id) {
@@ -9364,7 +9399,6 @@ function handleDragEnd(e) {
                 fillJar(GEM_JAR.perMerge);
                 if (targetItem.web) {
                     stats.webs++;
-                    toast('🕸️ Freed!', 'good');
                 }
                 const opened = openBoxesAround(mode, targetIndex);
                 popped = [targetIndex, ...opened, ...afterMerge(mode, targetIndex, made)];
@@ -10017,7 +10051,7 @@ function tapToolbox(mode, index) {
     }
     if (boardFull(mode) || !payTapEnergy(1)) return;
     box.drops--;
-    if (box.drops <= 0) box.readyAt = Date.now() + TOOLS[box.chain].minutes * 60000;
+    if (box.drops <= 0) box.readyAt = Date.now() + toolRestMs(box.chain);
     lastSale = null;
     updateUI();
     let roll = Math.random();

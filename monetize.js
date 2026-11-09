@@ -284,6 +284,9 @@ const Sales = (() => {
         return Date.now() - s.lastAt >= pace.gapSeconds * 1000 * cfg.rules.backoff ** s.noStreak;
     };
 
+    // A new player's first minutes: nothing unasked yet (offers wait too).
+    api.quiet = () => cfg.childDirected || st.playedSec < cfg.rules.quietMinutes * 60;
+
     // An unasked suggestion at a natural pause, or null when it's not the time.
     api.suggest = (p, options) => {
         if (!options.length || !api.canSuggest()) return null;
