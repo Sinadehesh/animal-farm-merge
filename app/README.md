@@ -123,8 +123,18 @@ set up. Don't ask for these again; start from step 1 below.
 7. **Main store listing**: short and full description, 512×512 icon (`app/store/play-icon-512.png`),
    1024×500 feature graphic (`app/store/feature-graphic-1024x500.png`), phone screenshots
    (`app/store/screenshots/`, in order).
-8. When internal testing looks good: **Production → Create new release** (new accounts may first need a
-   closed test with testers for 14 days — Play Console says if so).
+8. **Closed test, required before production for this (personal) account**: **Test and release → Testing →
+   Closed testing**: create a track, upload the AAB, add the testers (put the same list under License testing,
+   step 4) and roll out. At least **12 testers** must stay opted in for **14 days in a row**; internal testing
+   doesn't count. Then **Dashboard → Apply for production**: a form in three parts. The closed test (how easy
+   recruiting was, how testers used the game, their feedback and how you collected it); the game (who it's for,
+   what makes it unique, installs expected in the first year); readiness (what you changed because of the test,
+   how you decided it's ready). Keep all 12 opted in until you hear back. Google answers by email, usually
+   within 7 days. If it asks for more testing, keep the closed test running (testers really playing), then
+   apply again.
+9. Once approved: **Test and release → Production**: pick the countries/regions, then **Create new release**,
+   **Add from library** (the newest AAB), release notes, **Save → review → Start rollout**. Google reviews it
+   (usually a few days). When it's live, link the app to Google Play in AdMob (**Apps**).
 
 ### Product IDs
 
