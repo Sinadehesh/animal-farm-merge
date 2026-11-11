@@ -1,2 +1,4 @@
 /build/*
 !/build/.npmkeep
+# The Firebase config comes from a repository secret at build time (see app/README.md).
+google-services.json

@@ -16,6 +16,9 @@
   check the pink previews (where the farmer may stand), and paste the printed `PLOT_WALK` table into `game.js`.
 - Every map picture (plots, plot props, scenery, the ground) goes through `tools/brighten.py` once, as cut, so the
   map keeps one bright look and no pink fringe from the cut-out background. They live in `assets/map/`.
+- Analytics: every event the game sends (`Track.event` in `game.js`, and the sales director's in `monetize.js`) is
+  listed in `app/README.md` (section 5). When a change adds, removes or renames one, update that list in the same
+  commit. Each kind of thing gets its own event name, so the owner can read the counts without setting anything up.
 - Google Play: the developer account ($25), ID check and payments profile are done. Don't list them as to-dos again;
   the release steps that remain are in `app/README.md` (section 4).
 - Scope: the owner asked to be stopped from scope creep. Before building any new feature, expanding scope or adding

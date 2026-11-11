@@ -7,6 +7,96 @@
 // Running as the Android app (Capacitor) rather than the website.
 const nativeApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 
+// --- WHAT PLAYERS DO ---
+// In the Android app the game tells Google Analytics (Firebase) what happens in
+// play: how far the tutorial got, levels and jobs, when ⚡ ran out, what 💎 went
+// on, what was bought. No names, no e-mail, nothing a player types. Nothing is
+// sent from the website, or from an app built without the Firebase file.
+//
+// And nothing is sent until the consent step allows it (Google's "basic consent
+// mode"). Google's consent form, shown by the ad plugin where the law asks for
+// one, saves the player's choices on the phone as four digits: ad storage, ad
+// user data, ad personalisation, analytics storage (1 yes, 2 no, 3 no need to
+// ask this player, 4 not set up in AdMob, 0 not known yet). The app's own
+// ConsentMode plugin reads them. Analytics run when the last digit is a yes or
+// a no-need-to-ask, or when nothing is set up and the form says this player
+// needn't be asked. Until the answer is in, events wait in a short queue; the
+// answer is remembered for the next start (a game played offline still counts).
+// Every event the game sends is listed in app/README.md.
+const Track = (() => {
+    const P = (nativeApp && window.Capacitor.Plugins) || {};
+    const FA = P.FirebaseAnalytics, CM = P.ConsentMode;
+    const KEY = 'merge-farmstead-track';
+    const waiting = [];
+    let on = null;     // null: not known yet (events wait), true: sending, false: not sending
+    let built = false; // this build has the Firebase file
+    let was = null;    // last time's answer
+    try { was = localStorage.getItem(KEY); } catch (e) { /* storage blocked */ }
+    if (!FA || !CM || was === '0') on = false;
+
+    // Google takes letters, digits and _ in names (40 at most), and text or
+    // numbers as details (100 characters at most).
+    const tidy = name => String(name).replace(/[^A-Za-z0-9_]/g, '_').slice(0, 40);
+    const clean = details => {
+        const out = {};
+        Object.keys(details || {}).slice(0, 25).forEach(key => {
+            const v = details[key];
+            if (typeof v === 'number' && isFinite(v)) out[tidy(key)] = Math.round(v * 100) / 100;
+            else if (typeof v === 'boolean') out[tidy(key)] = v ? 1 : 0;
+            else if (typeof v === 'string' && v) out[tidy(key)] = v.slice(0, 100);
+        });
+        return out;
+    };
+    // Analytics must never break the game.
+    const call = (method, options) => { try { FA[method](options).catch(() => {}); } catch (e) { /* not there */ } };
+    function set(yes) {
+        on = yes && built;
+        if (built) {
+            try { localStorage.setItem(KEY, on ? '1' : '0'); } catch (e) { /* storage blocked */ }
+            call('setEnabled', { enabled: on });
+        }
+        const held = waiting.splice(0);
+        if (on) held.forEach(([name, params]) => call('logEvent', { name, params }));
+    }
+    // Asks the phone: is the Firebase file in this build, and the saved consent digits.
+    const read = () => CM.get().then(r => { built = !!(r && r.analytics); return (r && r.values) || ''; });
+    // At the start: last time's yes holds until this time's answer is in (unless
+    // the digits already say no, or that the player is about to be asked again).
+    if (FA && CM) read().then(values => {
+        if (!built) set(false);
+        else if (was === '1' && on === null && values[3] !== '2' && values[3] !== '0') set(true);
+    }).catch(() => {});
+
+    return {
+        // Something happened: its name and a few details (text or numbers).
+        event(name, details) {
+            if (on === false) return;
+            const e = [tidy(name), clean(details)];
+            if (on) call('logEvent', { name: e[0], params: e[1] });
+            else if (waiting.length < 60) waiting.push(e);
+        },
+        // The consent step is through: 'NOT_REQUIRED' (no need to ask this player),
+        // 'OBTAINED' (they chose), or not known.
+        consent(status) {
+            if (!FA || !CM) return;
+            read().then(values => {
+                const a = values[3];
+                set(!MONETIZE.childDirected && (a === '1' || a === '3' || ((!a || a === '4') && status === 'NOT_REQUIRED')));
+            }).catch(() => {});
+        },
+    };
+})();
+// The sales director's events go the same way: what it showed and what was taken.
+// Its 'session' is Google's own session_start; an ad watched is counted by where
+// it was offered (showRewardedAd); a purchase is named after its product.
+MONETIZE.onEvent = (name, data) => {
+    if (name === 'session' || name === 'ad_watched') return;
+    if (name === 'purchase') return Track.event(`buy_${data.product}`, { value: data.usd, currency: 'USD' });
+    Track.event(name === 'ad_bubble' ? 'ad_bubble_show' : name, data);
+};
+SalesAds.onConsent = Track.consent;
+if (SalesAds.consent) Track.consent(SalesAds.consent);
+
 const GAME_WIDTH = 6;
 const GAME_HEIGHT = 8;
 const NUM_CELLS = GAME_WIDTH * GAME_HEIGHT;
@@ -433,7 +523,9 @@ const stats = {
     outOfEnergy: 0, energySpent: 0, jobs: 0, chestDrops: 0, xpEarned: 0, collected: 0,
 };
 // Player toggles (saved with the game). charge = index into CHARGE_MODES;
-// unlimitedUntil = when Unlimited Energy runs out (ms timestamp).
+// unlimitedUntil = when Unlimited Energy runs out (ms timestamp). In the app,
+// also: reminders (true or false once answered), remindAsk ([times asked, the
+// day of the last ask]) and ratedAt (when a rating was last asked for).
 const settings = { charge: 0, unlimitedUntil: 0, sound: true, vibrate: true, music: true, tips: true };
 // Player level and XP toward the next level.
 const quests = { level: 1, xp: 0 };
@@ -776,7 +868,7 @@ function refill(mode, item) {
 function skipRecharge(mode, index) {
     const item = grids[mode][index];
     if (!item || !item.readyAt || !(item.type === 'toolbox' || isWorkingProducer(item))) return;
-    if (!spendGems(rechargePrice(mode, item), () => skipRecharge(mode, index))) return;
+    if (!spendGems(rechargePrice(mode, item), () => skipRecharge(mode, index), item.type === 'toolbox' ? 'tool_recharge' : 'recharge')) return;
     refill(mode, item);
     sfx('sparkle');
     document.querySelectorAll('.recharge-call').forEach(el => el.remove());
@@ -809,6 +901,7 @@ function offerRefill(mode, index) {
     document.querySelectorAll('.recharge-call').forEach(el => el.remove());
     const item = grids[mode][index];
     if (!isOutOfCharges(item)) return;
+    Track.event('producer_out', { board: mode, tool: item.type === 'toolbox', level: quests.level });
     const card = document.createElement('div');
     card.className = 'recharge-call';
     card.innerHTML = iconize(`<span class="recharge-face">${tooltipIcon(mode, item)}</span>
@@ -837,7 +930,7 @@ function watchAdForRecharge(mode, index) {
         refill(mode, item);
         toast(`${rechargeName(mode, item)} recharged!`, 'good');
         refreshBoard(mode, [index]);
-    });
+    }, 'recharge');
 }
 
 function boosterName(item) {
@@ -949,14 +1042,16 @@ function timeUntilFullEnergy() {
 }
 
 // Takes gems if you have enough; otherwise offers the quickest ways to get
-// them. retry: does the thing again once an ad has covered the gems.
-function spendGems(n, retry) {
+// them. retry: does the thing again once an ad has covered the gems. what: what
+// they went on, for the analytics.
+function spendGems(n, retry, what = 'other') {
     if (res.gems < n) {
         openGemShortfall(n, retry);
         return false;
     }
     res.gems -= n;
     sfx('buy');
+    Track.event(`gems_${what}`, { value: n, level: quests.level });
     return true;
 }
 
@@ -982,11 +1077,14 @@ function energyPrice() {
 function openEnergy(ranOut = false) {
     markGuide('energy');
     tickEnergy();
-    if (ranOut) stats.outOfEnergy++;
+    if (ranOut) {
+        stats.outOfEnergy++;
+        Track.event('energy_out', { times: stats.outOfEnergy, level: quests.level, minutes: Math.round(Sales.playedSec() / 60) });
+    }
     // The first time you run out, show the one-time offer instead.
     if (ranOut && !shop.offerBought && !shop.offerShown) {
         shop.offerShown = true;
-        openSpecialOffer('Out of ⚡ Energy?');
+        openSpecialOffer('Out of ⚡ Energy?', () => Reminders.offer('energy'));
         return;
     }
     const full = res.energy >= ENERGY_CAP;
@@ -1007,7 +1105,8 @@ function openEnergy(ranOut = false) {
     const order = sale ? [...sale.order, ...Object.keys(ways).filter(arm => !sale.order.includes(arm))] : ['gems', 'ad', 'offer'];
     const actions = order.filter(arm => ways[arm]).map((arm, i) => ({ ...ways[arm], primary: i === 0, wide: true,
         sale: sale && sale.order.includes(arm) ? arm : null, waitFor: ways[arm].wait }));
-    actions.push({ label: full ? 'OK' : 'Wait' });
+    // Out of ⚡ and waiting it out: the moment a reminder would help.
+    actions.push({ label: full ? 'OK' : 'Wait', onClick: ranOut ? () => Reminders.offer('energy') : null });
     showDialog({
         sale,
         title: ranOut ? 'Out of ⚡ Energy' : '⚡ Energy',
@@ -1019,7 +1118,7 @@ function openEnergy(ranOut = false) {
 
 function buyEnergy() {
     const price = energyPrice();
-    if (!spendGems(price, buyEnergy)) return;
+    if (!spendGems(price, buyEnergy, 'energy')) return;
     shop.energyBought++;
     res.energy += ENERGY_PACK;
     tickEnergy();
@@ -1035,7 +1134,7 @@ function watchAdForEnergy() {
         tickEnergy();
         updateUI();
         toast(`+⚡ ${AD_ENERGY}`, 'good');
-    });
+    }, 'energy');
 }
 
 // Short of 💎: the quickest ways to cover it, the one this player is likeliest
@@ -1078,7 +1177,7 @@ function watchAdForGems(n, retry) {
         updateUI();
         toast(`+💎 ${n}`, 'good');
         if (retry) retry();
-    });
+    }, 'gems');
 }
 
 // --- SHOP ---
@@ -1106,6 +1205,7 @@ function gemPile(n) {
 }
 
 function openShop(note = '') {
+    Track.event('shop_open', { level: quests.level });
     const ui = ASSETS.ui || {};
     const pic = (name, emoji) => (ui[name] ? `<img class="shop-art" src="${ui[name]}" alt="" draggable="false">` : `<span class="shop-art">${emoji}</span>`);
     const price = (text, cls = '') => `<span class="shop-price${cls ? ` ${cls}` : ''}">${text}</span>`;
@@ -1142,14 +1242,14 @@ function openShop(note = '') {
     }));
 }
 
-function openSpecialOffer(title = SPECIAL_OFFER.name) {
+function openSpecialOffer(title = SPECIAL_OFFER.name, onNo = null) {
     showDialog({
         title,
         body: `<p><b>One-time ${SPECIAL_OFFER.name}</b></p>
                <p>💎 ${SPECIAL_OFFER.gems} + 💵 ${withCommas(SPECIAL_OFFER.money)} + ⚡ ${SPECIAL_OFFER.energy}</p>`,
         actions: [
             { label: `Get it for ${SPECIAL_OFFER.price}`, primary: true, wide: true, onClick: buySpecialOffer },
-            { label: 'No thanks' },
+            { label: 'No thanks', onClick: onNo },
         ],
     });
 }
@@ -1296,11 +1396,12 @@ document.addEventListener('deviceready', () => {
 }, false);
 
 // The ad network (SalesAds in monetize.js) plays it; onReward only once it was
-// watched to the end.
-function showRewardedAd(onReward) {
+// watched to the end. place: where it was offered, for the analytics.
+function showRewardedAd(onReward, place = 'other') {
     if (SalesAds.test) toast('(test ad)');
     SalesAds.show(() => {
         Sales.adDone();
+        Track.event(`ad_watched_${place}`, { level: quests.level });
         onReward();
     }, syncMusic);
     syncMusic(); // the music waits while the ad plays
@@ -1396,6 +1497,7 @@ function addXp(n) {
     while (quests.xp >= xpToNext(quests.level)) {
         quests.xp -= xpToNext(quests.level);
         quests.level++;
+        Track.event('level_up', { level: quests.level });
         const reward = levelReward(quests.level);
         grantReward(reward, `⭐ Level ${quests.level}!`);
         salesPause();
@@ -4072,7 +4174,7 @@ function wishingWell() {
         shop.adsWatched++;
         grantReward(WELL_GIFTS[Math.floor(Math.random() * WELL_GIFTS.length)], '🪙 The wishing well:');
         refreshPlaces();
-    });
+    }, 'well');
 }
 
 // A person standing on a place's picture, at their feet's spot (% of it), in
@@ -4661,7 +4763,7 @@ function toolOffer(task) {
     const price = TOOL_GEMS[Math.min(need.tier, TOOL_GEMS.length - 1)];
     const name = itemName(need.item, need.tier);
     return { icon: uiIcon('gem', '💎'), label: `Stuck? Get the ${name} now · 💎${price}`, wide: true, onClick: () => {
-        if (!spendGems(price)) return;
+        if (!spendGems(price, null, 'tool')) return;
         sendToBoard(TOOLS[need.item].board, { tier: need.tier, chain: need.item });
         sfx('buy');
     } };
@@ -5756,6 +5858,8 @@ function playOpening() {
         if (!openingOn) return;
         openingOn = false;
         story.intro = true;
+        Track.event(skipped ? 'intro_skipped' : 'intro_watched');
+        Track.event('tutorial_begin');
         stopRain();
         sfx('whoosh');
         // The clouds close in, the film goes, and they part on the map.
@@ -5856,10 +5960,12 @@ function syncStory() {
     if (i === -1) {
         if (!story.ended) {
             story.ended = true;
+            Track.event('story_end');
             playScene(`🎉 ${TOWN_NAME} saved!`, STORY_END);
         }
     } else if (!story.seen.includes(i)) {
         story.seen.push(i);
+        Track.event(`chapter_${i + 1}`);
         const end = i > 0 && CHAPTERS[i - 1].end; // the chapter before ends on its cliffhanger first
         if (end) playScene(`📖 Chapter ${i}: ${CHAPTERS[i - 1].title}`, end, '', () => playChapter(i));
         else playChapter(i);
@@ -5966,6 +6072,8 @@ function checkTasks() {
 
 // A whole land (or the town) done pays this on top.
 const LAND_REWARD = { gems: 10, chest: 'brown' };
+// For the analytics: how many players get this far, by jobs done.
+const JOB_MARKS = [1, 3, 5, 10, 20, 35, 50, 75, 100, 150, 200, 300, 400];
 
 // Does a job: uses up its items, pays its XP and reward, and shows who's happy:
 // after a fix (quiet) just a cheer over the place, otherwise a thank-you. A
@@ -5979,6 +6087,8 @@ function completeTask(id, quiet = false) {
     restoration.done.push(task.id);
     document.querySelectorAll(`.fix-call[data-job="${task.id}"]`).forEach(el => el.remove());
     stats.jobs++;
+    Track.event('job_done', { job: task.id, land: task.land, jobs: restoration.done.length, level: quests.level });
+    if (JOB_MARKS.includes(restoration.done.length) || restoration.done.length === TASKS.length) Track.event(`jobs_${restoration.done.length}`);
     salesPause();
     addPassPoints(JOB_PASS_POINTS);
     fillJar(GEM_JAR.perJob);
@@ -5994,10 +6104,16 @@ function completeTask(id, quiet = false) {
     if (restored) {
         grantReward(LAND_REWARD, '✨');
         if (LAND_STORY[task.land]) storyQueue.push(LAND_STORY[task.land]);
+        Track.event('land_done', { land: task.land, level: quests.level });
     }
-    if (zoneFinished) grantReward(ZONE_REWARD, '✨');
-    if (restored || zoneFinished) celebrate();
-    else sfx('taskdone');
+    if (zoneFinished) {
+        grantReward(ZONE_REWARD, '✨');
+        Track.event('area_done', { area: zone.id, level: quests.level });
+    }
+    if (restored || zoneFinished) {
+        celebrate();
+        happyAt = Date.now(); // a happy moment: Google Play's rating card may follow (maybeAskRating)
+    } else sfx('taskdone');
     thump(restored || zoneFinished);
     if (task.story) storyQueue.push(typeof task.story === 'function' ? task.story() : task.story); // a map piece counts as it's found
     if (storyQueue.length) setTimeout(syncStory, 300); // right away, before you go back to merging
@@ -6122,7 +6238,7 @@ function openDailyGift() {
         actions: available
             ? [
                 { label: `Claim day ${day}: ${rewardText(DAILY_GIFTS[day - 1])}`, primary: true, wide: true, onClick: () => claimDailyGift() },
-                adsLeft() > 0 ? { icon: uiIcon('ad', '📺'), label: 'Watch an ad · claim it twice', wide: true, onClick: () => showRewardedAd(() => { shop.adsWatched++; claimDailyGift(true); }) } : null,
+                adsLeft() > 0 ? { icon: uiIcon('ad', '📺'), label: 'Watch an ad · claim it twice', wide: true, onClick: () => showRewardedAd(() => { shop.adsWatched++; claimDailyGift(true); }, 'gift') } : null,
             ].filter(Boolean)
             : [{ label: `Next gift in ${formatDuration(msUntilTomorrow())}`, disabled: true }, { label: 'OK' }],
     });
@@ -6134,6 +6250,7 @@ function claimDailyGift(twice = false) {
     daily.streak = daily.lastDay === today() - 1 ? daily.streak + 1 : 1;
     daily.lastDay = today();
     stats.gifts++;
+    Track.event('daily_gift', { day, streak: daily.streak, twice });
     grantReward(DAILY_GIFTS[day - 1], `🎁 Day ${day} gift:`);
     if (twice) grantReward(DAILY_GIFTS[day - 1], '📺 And again:');
     checkTasks();
@@ -6262,7 +6379,10 @@ function showDialog({ art, artRound = false, title, body, actions, sheet = false
     Sales.inDialog(sale);
 }
 
+let dialogClosedAt = 0; // when the last popup closed
+
 function closeDialog() {
+    if (!dialogEl.hidden) dialogClosedAt = Date.now();
     dialogEl.hidden = true;
     Sales.closed();
     setTimeout(updateTutorial, 0); // the tutorial hand comes back once the dialog is gone
@@ -6475,7 +6595,7 @@ function buyAction(cost, onBuy, label = `Buy for 💵 ${withCommas(cost)}`) {
         label: res.money > 0 ? `Buy for 💵 ${withCommas(res.money)} + 💎 ${gems}` : `Buy for 💎 ${gems}`,
         primary: true,
         onClick: () => {
-            if (!spendGems(gems)) return;
+            if (!spendGems(gems, null, 'coins')) return;
             res.money += gems * COINS_PER_GEM;
             onBuy();
         },
@@ -6673,14 +6793,16 @@ function renderMap() {
     scene.append(side, boardFab(worldLand), tasksFab('btn-quests'));
 }
 
-// ⚙️ Sound and vibration, on or off (saved).
+// ⚙️ Sound and vibration, on or off (saved); in the app, reminders too.
 function openSettings() {
     const row = (key, label) => ({ label: `${label}: ${settings[key] ? 'On' : 'Off'}`, wide: true, primary: settings[key],
         onClick: () => { settings[key] = !settings[key]; saveGame(); if (key === 'sound') sfx('coin'); else if (key === 'music') syncMusic(); else buzz(40); openSettings(); } });
+    const on = settings.reminders === true;
     showDialog({
         title: '⚙️ Settings',
         body: '<p class="hint">Music, little sounds as you play, a buzz on phones, and tips that show you around.</p>',
         actions: [row('music', '🎵 Music'), row('sound', '🔊 Sound'), row('vibrate', '📳 Vibration'), row('tips', '💡 Tips'),
+            Reminders.can && { label: `🔔 Reminders: ${on ? 'On' : 'Off'}`, wide: true, primary: on, onClick: () => Reminders.toggle().then(openSettings) },
             SalesAds.privacyOptions && { label: '🛡️ Ad privacy choices', wide: true, onClick: () => { closeDialog(); SalesAds.showPrivacyOptions(); } },
             { label: 'Done' }].filter(Boolean),
     });
@@ -6712,6 +6834,7 @@ function buyDeed(id) {
     res.money -= area.cost;
     sfx('buy');
     unlocks[id] = true;
+    Track.event(`land_buy_${id}`, { level: quests.level });
     if (grids[id].filter(Boolean).length <= 1) grids[id] = clutterBoard(id);
     ensureToolboxes();
     updateUI();
@@ -7171,6 +7294,7 @@ tutorialEl.querySelector('.tut-next').addEventListener('click', () => {
 function endTutorial(finished = false) {
     tutorial.done = true;
     tutorialEl.hidden = true;
+    Track.event(finished ? 'tutorial_complete' : 'tutorial_skip', finished ? {} : { step: tutorial.step + 1 }); // skipped at this step
     giftAfterTutorial = true;
     // The tool producers wait until now, so the first board is simple.
     ensureToolboxes();
@@ -7184,7 +7308,10 @@ function updateTutorial() {
     if (fixing || openingOn) { hidePointer(); return; }
     // A step is over once it's done, or (an explanation) once read.
     const over = step => step.done() || (step.explain && tutorial.explained.includes(step.id));
-    while (tutorial.step < TUTORIAL.length && over(TUTORIAL[tutorial.step])) tutorial.step++;
+    while (tutorial.step < TUTORIAL.length && over(TUTORIAL[tutorial.step])) {
+        Track.event(`tut_${String(tutorial.step + 1).padStart(2, '0')}_${TUTORIAL[tutorial.step].id}`); // "tut_01_job": this step is done
+        tutorial.step++;
+    }
     if (tutorial.step >= TUTORIAL.length) return endTutorial(true);
     const step = TUTORIAL[tutorial.step];
     // Not where the step happens: point the way there.
@@ -8091,7 +8218,7 @@ function passSkipPrice() {
 
 function buyPassLevel() {
     const price = passSkipPrice();
-    if (!price || !spendGems(price, buyPassLevel)) return;
+    if (!price || !spendGems(price, buyPassLevel, 'pass')) return;
     const { into, need } = passProgress();
     addPassPoints(need - into);
     updateUI();
@@ -8210,7 +8337,7 @@ function buyFlashOffer(i) {
     const o = flashSale()[i];
     if (!o || o.left <= 0) return;
     if (o.currency === 'gems') {
-        if (!spendGems(o.price)) return;
+        if (!spendGems(o.price, null, 'flash_sale')) return;
     } else if (res.money < o.price) {
         toast(`You need 💵${o.price - res.money} more.`);
         return;
@@ -8254,7 +8381,7 @@ function openDailyDeals() {
 function takeDeal(id) {
     const deal = DAILY_DEALS.find(d => d.id === id);
     if (!deal || dealsTaken().includes(id)) return;
-    if (deal.gems && !spendGems(deal.gems)) return;
+    if (deal.gems && !spendGems(deal.gems, null, 'daily_deal')) return;
     if (deal.coins) {
         if (res.money < deal.coins) return toast(`You need 💵${deal.coins - res.money} more.`);
         res.money -= deal.coins;
@@ -8752,9 +8879,9 @@ function popBubble(mode, index) {
             shop.adsWatched++;
             if (grids[mode][index] === bubble) releaseBubble(mode, index);
             else sendToBoard(mode, bubble.inner); // moved or gone meanwhile: the copy goes in the 🎁
-        });
+        }, 'bubble');
     }
-    if (!spendGems(bubble.gems, () => popBubble(mode, index))) return;
+    if (!spendGems(bubble.gems, () => popBubble(mode, index), 'bubble')) return;
     releaseBubble(mode, index);
 }
 
@@ -8790,12 +8917,13 @@ function unlockChest(mode, index) {
     if (!item || item.type !== 'chest' || item.openAt || chestReady(item)) return;
     item.openAt = Date.now() + chestStage(item).minutes * 60000;
     refreshBoard(mode, [index]);
+    if (chestStage(item).minutes >= REMIND_CHEST_MINUTES) Reminders.offer('chest');
 }
 
 // Opens it now for gems.
 function rushChest(mode, index) {
     const item = grids[mode][index];
-    if (!item || item.type !== 'chest' || chestReady(item) || !spendGems(chestStage(item).skip, () => rushChest(mode, index))) return;
+    if (!item || item.type !== 'chest' || chestReady(item) || !spendGems(chestStage(item).skip, () => rushChest(mode, index), 'chest')) return;
     item.openAt = Date.now();
     item.opened = true;
     updateUI();
@@ -9137,7 +9265,7 @@ function undoSale(mode) {
 
 function dustSelected(mode) {
     const item = selected && selected.mode === mode ? grids[mode][selected.index] : null;
-    if (!item || !item.web || !spendGems(dustPrice(item), () => dustSelected(mode))) return;
+    if (!item || !item.web || !spendGems(dustPrice(item), () => dustSelected(mode), 'cobweb')) return;
     delete item.web;
     stats.webs++;
     updateUI();
@@ -10243,6 +10371,213 @@ function renderGrid(mode, poppedIndices = []) {
     }
 }
 
+// --- REMINDERS ---
+// In the Android app, with the player's yes: a few notices that bring them back
+// at a good moment (energy full, a chest open, tomorrow's gift, the Fair, the
+// story, "the hens miss you"). The phone itself shows them: they are set when
+// the game goes to the background and taken away when it comes back, and no
+// server sends anything. The game asks in its own words first, at a moment a
+// reminder would help (out of ⚡ with a wait ahead, a chest that takes a while),
+// and the phone's own question comes only after a yes. ⚙️ Settings switches
+// them on and off.
+const REMIND_SOONEST_MS = 15 * 60000; // nothing sooner than this after you leave
+const REMIND_GAP_MS = 3 * 3600000;    // never two within this long
+const REMIND_PER_DAY = 2;             // or more than this many in a day
+const REMIND_HOURS = [9, 21];         // only between these hours, by the phone's clock
+const REMIND_ASK_AFTER_S = 180;       // play this long before the game asks at all
+const REMIND_ASK_ANYWAY_S = 480;      // by now, a quiet moment on the map will do...
+const REMIND_ASK_SETTLE_MS = 60000;   // ...but not in the first minute after the game opens
+const REMIND_ASKS = 2;                // asked this many times at most...
+const REMIND_ASK_DAYS = 7;            // ...this many days apart
+const REMIND_CHEST_MINUTES = 20;      // a chest this slow is worth a reminder
+const REMIND_ASK_LINES = {
+    energy: 'Out of energy? I can tell you when it is full again!',
+    chest: 'That chest takes a while. I can tell you when it is open!',
+    map: 'I can tell you when your energy is full, or when a gift is ready!',
+};
+
+// The story's open question: the cliffhanger the chapter opened on.
+function storyHook() {
+    const ch = currentChapter();
+    return (ch > 0 && CHAPTERS[ch - 1].endRecap) || 'Who left the note in the planks? Come and find out!';
+}
+
+const Reminders = (() => {
+    const LN = nativeApp && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications;
+    const KINDS = ['energy', 'chest', 'gift', 'fair', 'story', 'miss']; // a reminder's number is its place here + 1
+    const numbers = () => KINDS.map((kind, i) => ({ id: i + 1 }));
+    const openedAt = Date.now(); // when the game opened this time
+    let here = true;             // the game is on screen
+    let awayAt = 0, backAt = 0;  // the phone says each twice (the page and the app): once is enough
+
+    // A time moved out of the night: before 9:00 it waits for 9:00, from 21:00 for 9:00 the next day.
+    function byDay(at) {
+        const d = new Date(at), h = d.getHours();
+        if (h >= REMIND_HOURS[0] && h < REMIND_HOURS[1]) return at;
+        if (h >= REMIND_HOURS[1]) d.setDate(d.getDate() + 1);
+        d.setHours(REMIND_HOURS[0], 0, 0, 0);
+        return d.getTime();
+    }
+
+    // About the same time of day, some days on, kept inside that day (9:00 to 20:00).
+    function daysOn(now, days) {
+        const d = new Date(now);
+        d.setDate(d.getDate() + days);
+        if (d.getHours() < REMIND_HOURS[0]) d.setHours(REMIND_HOURS[0], 0, 0, 0);
+        else if (d.getHours() >= REMIND_HOURS[1] - 1) d.setHours(REMIND_HOURS[1] - 1, 0, 0, 0);
+        return d.getTime();
+    }
+
+    // What to remind about if the game closed now, soonest first: [{ kind, at, title, body }].
+    function plan(now = Date.now()) {
+        const list = [];
+        const add = (kind, at, title, body) => { if (at - now >= REMIND_SOONEST_MS) list.push({ kind, at: byDay(at), title, body }); };
+        // A real refill: at least half the bar.
+        if (res.energy <= ENERGY_CAP / 2 && timeUntilFullEnergy() > 0) add('energy', now + timeUntilFullEnergy(), '⚡ Your energy is full!', 'The farm is ready. Come and merge!');
+        const chests = Object.values(grids).flat().filter(c => c && c.type === 'chest' && c.openAt && c.openAt - now >= REMIND_SOONEST_MS).map(c => c.openAt);
+        if (chests.length) add('chest', Math.min(...chests), '🧰 Your chest is open!', 'Tap it to see what is inside.');
+        add('gift', daysOn(now, 1), '🎁 Your daily gift is here!', 'Come and get it!');
+        if (quests.level >= FAIR_LEVEL && !fairOpen()) add('fair', dayStart(nextFairDay()) + 10 * 3600000, '🎪 The Fair is open!', 'Come and win prizes this weekend!');
+        if (currentChapter() !== -1) add('story', daysOn(now, 3), `📖 Back in ${TOWN_NAME}...`, storyHook());
+        add('miss', daysOn(now, 7), '🐔 The hens miss you!', 'Your farm is waiting. Come back and merge!');
+        // Soonest first; one too close to the one before, or a third in a day, is left out.
+        const kept = [], perDay = {};
+        list.sort((a, b) => a.at - b.at).forEach(r => {
+            const day = new Date(r.at).toDateString();
+            if (kept.length && r.at - kept[kept.length - 1].at < REMIND_GAP_MS) return;
+            if ((perDay[day] || 0) >= REMIND_PER_DAY) return;
+            perDay[day] = (perDay[day] || 0) + 1;
+            kept.push(r);
+        });
+        return kept;
+    }
+
+    // The game goes to the background: this pause's reminders are set. Only with
+    // the player's yes and the phone's permission (asked to schedule without it,
+    // the plugin would bring up the phone's question unasked). Never to the
+    // minute: that would need the phone's "Alarms & reminders" permission.
+    function away() {
+        if (!LN || Date.now() - awayAt < 1500) return;
+        awayAt = Date.now();
+        here = false;
+        if (settings.reminders !== true || !tutorial.done) return;
+        const list = plan();
+        if (!list.length) return;
+        LN.checkPermissions().then(p => {
+            if (here || p.display !== 'granted') return null;
+            return LN.schedule({ notifications: list.map(r => ({
+                id: KINDS.indexOf(r.kind) + 1, title: r.title, body: r.body, largeBody: r.body, channelId: 'reminders',
+                schedule: { at: new Date(r.at).toISOString(), allowWhileIdle: true }, isExactNotification: false, extra: { kind: r.kind },
+            })) });
+        }).catch(() => {});
+    }
+
+    // The game is back on screen: nothing left to remind about.
+    function back() {
+        if (!LN || Date.now() - backAt < 1500) return;
+        backAt = Date.now();
+        here = true;
+        if (settings.reminders !== true) return;
+        LN.cancel({ notifications: numbers() }).catch(() => {});
+        LN.removeAllDeliveredNotifications().catch(() => {});
+    }
+
+    // The phone's own question (Android 13 and up ask; older ones just say whether
+    // notifications are on). Resolves to whether reminders are on now.
+    function turnOn() {
+        if (!LN) return Promise.resolve(false);
+        return LN.requestPermissions().then(p => p.display === 'granted', () => false).then(ok => {
+            settings.reminders = ok;
+            saveGame();
+            Track.event(ok ? 'reminder_allowed' : 'reminder_denied');
+            toast(ok ? '🔔 Reminders are on!' : 'No reminders. You can allow them in your phone\'s settings.', ok ? 'good' : '');
+            return ok;
+        });
+    }
+
+    // The game's own question, at a moment a reminder would help. Asked twice at
+    // most, a week apart; a yes or a no in ⚙️ Settings ends the asking.
+    function offer(why) {
+        if (!LN || settings.reminders !== undefined || !tutorial.done || openingOn || !dialogEl.hidden) return false;
+        if (Sales.playedSec() < REMIND_ASK_AFTER_S) return false;
+        const [asks, day] = settings.remindAsk || [0, 0];
+        if (asks >= REMIND_ASKS || (asks && today() - day < REMIND_ASK_DAYS)) return false;
+        settings.remindAsk = [asks + 1, today()];
+        saveGame();
+        Track.event('reminder_ask', { why, level: quests.level });
+        const npc = npcs.find(n => n.id === 'mayor');
+        showDialog({
+            art: npcBust(npc) || npcPicture(npc),
+            artRound: !npcBust(npc),
+            title: '🔔 Reminders',
+            body: `<p>“${REMIND_ASK_LINES[why]}”</p><p class="hint">— ${npc.name}</p>
+                   <p class="hint">Only a few. You can turn them off in ⚙️ Settings.</p>`,
+            actions: [{ label: 'Yes, remind me!', primary: true, wide: true, onClick: () => { Track.event('reminder_yes'); turnOn(); } },
+                { label: 'No thanks', onClick: () => Track.event('reminder_no') }],
+        });
+        return true;
+    }
+
+    return {
+        can: !!LN, plan, away, back, offer,
+        // ⚙️ Settings: on (the phone may ask) or off. Resolves once that's settled.
+        toggle() {
+            if (settings.reminders !== true) return turnOn();
+            settings.reminders = false;
+            saveGame();
+            Track.event('reminder_off');
+            LN.cancel({ notifications: numbers() }).catch(() => {});
+            return Promise.resolve(false);
+        },
+        // Every second: not asked yet at any better moment, a quiet one on the map will do.
+        tick() {
+            if (LN && settings.reminders === undefined && Sales.playedSec() >= REMIND_ASK_ANYWAY_S && Date.now() - openedAt >= REMIND_ASK_SETTLE_MS
+                && quietOnMap() && !storyQueue.length && !pendingOffers.length && !salesPauseAt) offer('map');
+        },
+        // When the game starts: the reminders' own channel in the phone's settings,
+        // a count of the reminders that brought someone back, and a clean slate.
+        start() {
+            if (!LN) return;
+            LN.createChannel({ id: 'reminders', name: 'Reminders', description: 'Energy, chests, gifts and the Fair', importance: 3 }).catch(() => {});
+            LN.addListener('localNotificationActionPerformed', e => {
+                const kind = ((e && e.notification && e.notification.extra) || {}).kind;
+                Track.event(`reminder_open_${KINDS.includes(kind) ? kind : 'other'}`);
+            });
+            back();
+        },
+    };
+})();
+
+// --- A RATING ---
+// In the Android app, after a happy moment (an area or a land restored) and once
+// the cheering is over, Google Play's own rating card may come up: at most once
+// in 60 days, never in a player's first minutes, and with no question from the
+// game first (Google's rule). Google decides whether the card really shows, and
+// doesn't tell the game what the player did with it.
+const RATE_AFTER_S = 600;          // play this long first
+const RATE_EVERY_MS = 60 * DAY_MS; // then at most this often
+const RATE_WITHIN_MS = 10 * 60000; // of the happy moment
+let happyAt = 0;                   // when an area or a land was last restored
+
+// Every second: the card, once the happy moment's popups are gone and you're
+// looking at the farm (the map, or the place you just fixed).
+function maybeAskRating() {
+    const review = nativeApp && window.Capacitor.Plugins && window.Capacitor.Plugins.InAppReview;
+    if (!review || !happyAt) return;
+    if (Date.now() - happyAt > RATE_WITHIN_MS) { happyAt = 0; return; } // the moment has passed
+    const calm = (currentScene === 'map' || currentScene === 'fix') && dialogEl.hidden && tutorialEl.hidden && tutorial.done
+        && !fixing && !draggedItemInfo && !openingOn && !storyQueue.length && !pendingOffers.length && !salesPauseAt
+        && Date.now() - happyAt > 4000 && Date.now() - dialogClosedAt > 1500;
+    if (!calm) return;
+    happyAt = 0;
+    if (Sales.playedSec() < RATE_AFTER_S || Date.now() - (settings.ratedAt || 0) < RATE_EVERY_MS) return;
+    settings.ratedAt = Date.now();
+    saveGame();
+    Track.event('rate_ask', { jobs: restoration.done.length, level: quests.level });
+    // Google couldn't be asked at all (no Play Store, no network): the next happy moment tries again.
+    try { review.requestReview().catch(() => { settings.ratedAt = 0; }); } catch (e) { settings.ratedAt = 0; }
+}
+
 // --- SAVING ---
 // Progress is kept in this browser's localStorage, including when the next ⚡
 // and each producer's next charge arrive, so they keep coming while the game
@@ -10321,6 +10656,9 @@ function loadGame() {
         if (save.settings && save.settings.vibrate === false) settings.vibrate = false;
         if (save.settings && save.settings.music === false) settings.music = false;
         if (save.settings && save.settings.tips === false) settings.tips = false;
+        if (save.settings && typeof save.settings.reminders === 'boolean') settings.reminders = save.settings.reminders;
+        if (save.settings && Array.isArray(save.settings.remindAsk)) settings.remindAsk = save.settings.remindAsk;
+        if (save.settings && save.settings.ratedAt) settings.ratedAt = save.settings.ratedAt;
         if (save.guides) Object.assign(guides, save.guides);
         if (save.lastBoard && AREAS[save.lastBoard]) lastBoard = save.lastBoard;
         if (save.tickedAt) { lastTickAt = save.tickedAt; awayFor = Date.now() - save.tickedAt; }
@@ -10423,6 +10761,8 @@ setInterval(() => {
     checkSalesPause();
     showFairResults();
     syncStory();
+    Reminders.tick();
+    maybeAskRating();
     // An area that opened while a card was up plays its unlock once it's closed.
     if (currentScene === 'fix') unlockNewZones(fixLand, document.querySelector('#scene-fix .world'));
     updateTutorial();
@@ -10461,7 +10801,11 @@ if (nativeApp && window.Capacitor.Plugins.App) {
         if (currentScene !== 'map') return goTo(AREAS[currentScene] && fixLand === currentScene ? 'fix' : 'map');
         window.Capacitor.Plugins.App.minimizeApp();
     });
+    // Reminders are set as the game leaves the screen and cleared as it comes back.
+    window.Capacitor.Plugins.App.addListener('appStateChange', state => (state.isActive ? Reminders.back() : Reminders.away()));
 }
+document.addEventListener('visibilitychange', () => (document.hidden ? Reminders.away() : Reminders.back()));
+Reminders.start();
 if ('serviceWorker' in navigator && location.protocol === 'https:' && !nativeApp) {
     navigator.serviceWorker.register('sw.js').catch(() => { /* the game works without it */ });
 }

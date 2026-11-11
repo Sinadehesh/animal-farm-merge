@@ -694,6 +694,7 @@ scratched out, cut from `assets/raw/icon_rose_girl.jpg` by `tools/make_icons.py`
 | ✅ | App icon with room for a round mask, 512×512 | `assets/ui/app-icon-rose-maskable-512.png` |
 | ✅ | iPhone home screen, 180×180 | `assets/ui/apple-touch-icon-rose.png` |
 | ✅ | Android launcher icons (round, square, adaptive layer) | `app/android/app/src/main/res/mipmap-*/ic_launcher*.png` |
+| ✅ | Android notification icon for reminders: the Barn's hen as a white shape, at 5 sizes (`tools/make_status_icon.py`, from `assets/items/barn/03_hen.png`) | `app/android/app/src/main/res/drawable-*/ic_stat_farm.png` |
 | ✅ | Google Play icon, 512×512 | `app/store/play-icon-512.png` |
 | ✅ | Google Play feature graphic, 1024×500 (`tools/make_store_graphic.py`) | `app/store/feature-graphic-1024x500.png` |
 | ✅ | Google Play phone screenshots, 6 at 1080×1920 (`tools/store_screenshots.mjs`, `tools/make_store_screens.py`), retaken with the new cast, board and town | `app/store/screenshots/` |

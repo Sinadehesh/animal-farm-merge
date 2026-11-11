@@ -3,9 +3,11 @@
 The game packed as an Android app with [Capacitor](https://capacitorjs.com), with real purchases through
 Google Play Billing (the `cordova-plugin-purchase` plugin). The website and the app run the same `game.js`:
 
-- **Website:** purchases are test purchases and pay at once; "Watch an ad" buttons give their reward.
-- **App:** purchases go through Google Play and pay only once Google approves them; "Watch an ad" buttons are
-  hidden until an ad network is added. The phone's back button closes dialogs and steps back.
+- **Website:** purchases are test purchases and pay at once; "Watch an ad" buttons give their reward. No
+  analytics, reminders or rating card.
+- **App:** purchases go through Google Play and pay only once Google approves them; "Watch an ad" buttons play
+  AdMob's rewarded ads. The phone's back button closes dialogs and steps back. Only the app has analytics,
+  reminders and the rating card (section 5).
 
 `build-web.mjs` copies the game into `www/` with only the pictures and sounds it uses (not `assets/raw/`), turning
 the pictures into WebP under their own file names (the app's browser reads an image by its contents): 56 MB of
@@ -71,7 +73,8 @@ chmod 600 ~/animal-farm-merge/app/android/keystore.properties
 **On GitHub (no key on your computer needed):** Actions → *Build Android app bundle* → *Run workflow*. It signs with
 the upload key kept in the repository's secrets and gives `app-release.aab` under the run's *Artifacts*. It sets
 `versionCode` to the run number, so each upload is accepted (the secret names it reads are at the top of
-`.github/workflows/build-aab.yml`).
+`.github/workflows/build-aab.yml`). With the secret `GOOGLE_SERVICES_JSON` (section 5) the build has Google
+Analytics; without it the app is the same, minus analytics.
 
 **On your computer:**
 
@@ -93,7 +96,9 @@ Install a test build on a phone with USB debugging on: `~/android-sdk/platform-t
 rewarded ad unit `ca-app-pub-1454905177805714/6296962299` (in `monetize.js`, `MONETIZE.ads.rewarded`), used by every
 "Watch an ad" button and the ad bubble. Test builds (`npm run apk`) show Google's test ads, so never tap real ads on
 your own phone; the store build shows real ones. In AdMob, publish a GDPR consent message (Privacy & messaging) so
-players in Europe get the consent form, and link the app to Google Play once it is public.
+players in Europe get the consent form, and link the app to Google Play once it is public. **The message has to
+exist:** the game asks Google's consent step before anything else, and with no message that step reports an
+error, so the game shows no ads and sends no analytics, to anyone.
 
 **Done (as of 2026-10-20):** the developer account is paid ($25), the ID check is passed and the payments profile is
 set up. Don't ask for these again; start from step 1 below.
@@ -119,7 +124,9 @@ set up. Don't ask for these again; start from step 1 below.
    questionnaire, target audience (*13+*), government apps / financial features (*no*), and data safety:
    collected and shared by the AdMob SDK, encrypted in transit, for advertising, analytics and fraud prevention:
    *Approximate location* (from the IP address), *App interactions*, *Diagnostics*, *Device or other IDs*.
-   Purchases are processed by Google Play; the game itself sends nothing to us.
+   Once a build has Google Analytics (section 5), add *Purchase history* (under Financial info: collected, not
+   shared, for Analytics); Analytics also collects the first, second and fourth of those, which are already
+   listed. Purchases are processed by Google Play.
 7. **Main store listing**: short and full description, 512×512 icon (`app/store/play-icon-512.png`),
    1024×500 feature graphic (`app/store/feature-graphic-1024x500.png`), phone screenshots
    (`app/store/screenshots/`, in order).
@@ -159,3 +166,94 @@ set up. Don't ask for these again; start from step 1 below.
 All are consumables: the game "finishes" each purchase after paying out, so packs and passes can be bought
 again. The game itself limits one-time offers. Once the products are active, the game shows Google's price in
 the player's own currency instead of the dollar prices above.
+
+## 5. Analytics, reminders and the rating card (app only)
+
+### Analytics (Google Analytics for Firebase)
+
+The game tells Google Analytics what happens in play, through the `@capacitor-firebase/analytics` plugin (`Track`,
+at the top of `game.js`). Nothing is sent from the website, from a build without the Firebase file, or before the
+consent step allows it.
+
+**Set it up once:**
+
+1. https://console.firebase.google.com → **Create a project** (any name) → leave **Google Analytics** on and pick
+   or create an Analytics account.
+2. In the project: **Add app → Android**. Package name: `com.sinadehesh.mergefarmstead`. **Register app**, then
+   **Download google-services.json**. Skip the steps after that (the build does them).
+3. GitHub → this repository → **Settings → Secrets and variables → Actions → New repository secret**. Name:
+   `GOOGLE_SERVICES_JSON`. Value: the whole text of that file. (For a build on your computer, put the file at
+   `app/android/app/google-services.json` instead; git ignores it.)
+4. Build as usual (section 3). The run's *Firebase file* step says whether the build has analytics.
+5. AdMob → **Privacy & messaging** → the European regulations message → its settings (the gear) → turn on
+   **consent mode for advertising purposes** and **consent mode for analytics purposes** → save. Without the
+   second, players in Europe are never counted: the game keeps analytics off for them.
+6. Play Console → **App content → Data safety**: add *Purchase history* (step 6 of section 4).
+7. Useful, not needed: in Firebase, **Project settings → Integrations**, link **AdMob** (ad income in the
+   reports) and **Google Play** (purchase income).
+
+Counts show in Firebase under **Analytics → Events** within a day; **Realtime** shows the last half hour. To
+watch your own phone live: `adb shell setprop debug.firebase.analytics.app com.sinadehesh.mergefarmstead`, then
+**Analytics → DebugView**.
+
+**Consent** (Google's "basic consent mode"): collection is off in the manifest
+(`firebase_analytics_collection_enabled` is false) and the game turns it on once the ad plugin's consent step has
+an answer. Google's consent form saves the player's choices on the phone as four digits (`UMP_consentModeValues`:
+ad storage, ad user data, ad personalisation, analytics storage; 1 yes, 2 no, 3 no need to ask, 4 not set up),
+which the app's own `ConsentMode` plugin (`ConsentModePlugin.java`) hands to the game. Analytics run when the last
+digit is 1 or 3, or when nothing is set up and the form says this player needn't be asked (outside Europe). The
+answer is remembered for the next start (so a game played offline still counts) and checked again at every start
+and after *Ad privacy choices* in ⚙️ Settings.
+
+**What is sent.** Google adds its own (first open, sessions, time in the game, purchases) and these:
+
+| Event | When | Details |
+|---|---|---|
+| `intro_watched`, `intro_skipped` | the opening film ends | |
+| `tutorial_begin`, `tut_01_job` … `tut_11_onward`, `tutorial_complete`, `tutorial_skip` | the tutorial starts; each step done; its end | `step` (where it was skipped) |
+| `level_up` | a new level | `level` |
+| `job_done`; `jobs_1`, `jobs_3`, `jobs_5`, `jobs_10` … `jobs_400`, then all of them | a job done; that many jobs done | `job`, `land`, `jobs`, `level` |
+| `area_done`, `land_done` | an area or a whole land restored | `area` or `land`, `level` |
+| `chapter_2` … `chapter_5`, `story_end` | a chapter opens; the story ends | |
+| `land_buy_hay`, `_farm`, `_fert`, `_aqua`, `_flower` | a land bought | `level` |
+| `daily_gift` | the daily gift claimed | `day`, `streak`, `twice` |
+| `energy_out` | out of ⚡ | `times`, `level`, `minutes` (played so far) |
+| `producer_out` | a producer out of charges | `board`, `tool`, `level` |
+| `shop_open` | the Shop opened | `level` |
+| `gems_energy`, `_recharge`, `_tool_recharge`, `_tool`, `_coins`, `_pass`, `_flash_sale`, `_daily_deal`, `_bubble`, `_chest`, `_cobweb` | 💎 spent, by what on | `value` (the 💎), `level` |
+| `buy_<product id>` | Google approved a purchase | `value` (US$), `currency` |
+| `ad_watched_energy`, `_recharge`, `_gems`, `_gift`, `_bubble`, `_well` | an ad watched to the end, by where | `level` |
+| `sale_show`, `sale_tap`, `sale_yes`, `sale_no` | the sales director showed ways to pay, and the answer | `place`, `featured`, `ways`, `arm`, `took` |
+| `ad_bubble_show` | an Ad Bubble floated up | `arm`, `ecpm` |
+| `reminder_ask`, `_yes`, `_no`, `_allowed`, `_denied`, `_off` | the reminder question and its answers | `why`, `level` |
+| `reminder_open_energy`, `_chest`, `_gift`, `_fair`, `_story`, `_miss` | a reminder was tapped | |
+| `rate_ask` | the rating card was asked for | `jobs`, `level` |
+
+Each kind of thing has its own event name, so the Events list answers "how many players got this far" with no
+setting up. A detail (such as `level`) shows in reports only once it is added under **Admin → Custom
+definitions** in Google Analytics.
+
+### Reminders
+
+With the player's yes, the phone shows a few notices (`Reminders` in `game.js`, the
+`@capacitor/local-notifications` plugin). They are set on the phone as the game goes to the background and taken
+away as it comes back; no server sends anything.
+
+- **Asking:** the game asks in its own words first, when a reminder would help: out of ⚡ and waiting, a chest of
+  20 minutes or more, or a quiet moment on the map after 8 minutes of play. Never during the tutorial or the first
+  3 minutes; twice at most, a week apart. The phone's own question comes only after a yes. ⚙️ Settings has the
+  switch.
+- **What:** ⚡ full (if half the bar or more was empty), a chest open, tomorrow's gift, the Fair opening (Friday
+  10:00), the story's cliffhanger after 3 days, "the hens miss you" after 7.
+- **Rules:** nothing in the first 15 minutes away, nothing between 21:00 and 9:00, never two within 3 hours, two a
+  day at most. After the 7-day one, nothing more until the player comes back.
+- They are never set to the minute, so the app doesn't need the phone's "Alarms & reminders" permission (the
+  manifest takes it out). The small icon is `ic_stat_farm` (the hen's outline, from `tools/make_status_icon.py`).
+
+### The rating card
+
+After an area or a land is restored, once its popups are gone, the game asks Google Play for its rating card
+(`maybeAskRating` in `game.js`, the `@capacitor-community/in-app-review` plugin): not in a player's first 10
+minutes, and once in 60 days at most. The game asks no question of its own first (Google's rule). Google decides
+whether the card really shows (it limits how often a player sees it, and never shows it in an app installed
+outside Play, so try it from a Play test track) and doesn't say what the player did.

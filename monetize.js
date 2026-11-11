@@ -92,8 +92,8 @@ const MONETIZE = {
         explore: 0.03,    // now and then feature a way at random, so none is written off for good
         strength: 10,     // the starting guess counts as this many answers
     },
-    // Each event, for analytics once there is some, e.g.
-    // (name, data) => FirebaseAnalytics.logEvent({ name, params: data })
+    // Each event goes to the game's analytics: game.js sets this to pass them on
+    // (Track, at its top), in the Android app only.
     onEvent: null,
 };
 
@@ -286,6 +286,8 @@ const Sales = (() => {
 
     // A new player's first minutes: nothing unasked yet (offers wait too).
     api.quiet = () => cfg.childDirected || st.playedSec < cfg.rules.quietMinutes * 60;
+    // Seconds played so far, all sessions together.
+    api.playedSec = () => st.playedSec;
 
     // An unasked suggestion at a natural pause, or null when it's not the time.
     api.suggest = (p, options) => {
@@ -402,6 +404,8 @@ const Sales = (() => {
 //   show(onReward, onDone)  plays it; onReward only once it was watched to the
 //            end, onDone when it has closed, either way
 //   playing  an ad is on screen (the music waits)
+//   consent  the consent step's answer in the app ('REQUIRED', 'NOT_REQUIRED',
+//            'OBTAINED'), once it is through; onConsent(status) is called then
 // In the app it is AdMob, after Google's consent form where the law asks for
 // one; debug builds (npm run apk) get Google's test ads. On the website a test
 // stand-in "plays" at once and pays about the going rate of the player's country.
@@ -451,12 +455,19 @@ const SalesAds = (() => {
         if (ad && ad.onDone) ad.onDone();
         load();
     }
+    // The consent step is through (at start, or the player changed their choices):
+    // the game's analytics follow the same answer.
+    function answered(info) {
+        ads.consent = info.status;
+        if (ads.onConsent) { try { ads.onConsent(info.status); } catch (e) { /* analytics must never break the ads */ } }
+    }
     async function start() {
         if (!AdMob) return;
         try {
             let info = await AdMob.requestConsentInfo();
             if (info.isConsentFormAvailable && info.status === 'REQUIRED') info = await AdMob.showConsentForm();
             ads.privacyOptions = info.privacyOptionsRequirementStatus === 'REQUIRED';
+            answered(info);
             if (!info.canRequestAds) return;
             await AdMob.initialize({ tagForChildDirectedTreatment: MONETIZE.childDirected, maxAdContentRating: cfg.maxRating });
             AdMob.addListener('onRewardedVideoAdReward', () => { if (current) current.rewarded = true; });
@@ -484,6 +495,8 @@ const SalesAds = (() => {
         AdMob.showRewardVideoAd().catch(finish);
     };
     // Where the law asks for it (Europe), players can change their ad choices from ⚙️ Settings.
-    ads.showPrivacyOptions = () => { if (AdMob) AdMob.showPrivacyOptionsForm().catch(() => {}); };
+    ads.showPrivacyOptions = () => {
+        if (AdMob) AdMob.showPrivacyOptionsForm().then(() => answered({ status: ads.consent })).catch(() => {});
+    };
     return ads;
 })();

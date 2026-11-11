@@ -13,6 +13,9 @@ name: Build Android app bundle
 #   the key alias (default upload): ANDROID_KEY_ALIAS, KEY_ALIAS
 #   the key password (default: the keystore password): ANDROID_KEY_PASSWORD, KEY_PASSWORD
 # To make the base64 text on your computer: base64 -w0 upload-key.jks
+#
+# Optional, for Google Analytics (see app/README.md, "Analytics"):
+#   the Firebase file's text:       GOOGLE_SERVICES_JSON
 
 on:
   workflow_dispatch:
@@ -86,6 +89,25 @@ jobs:
           sed -i -E "s/versionCode [0-9]+/versionCode $CODE/; s/versionName \"[^\"]*\"/versionName \"$NAME\"/" app/android/app/build.gradle
           grep -E "versionCode|versionName" app/android/app/build.gradle
 
+      # Google Analytics needs the app's Firebase file (google-services.json), kept
+      # in the secret GOOGLE_SERVICES_JSON (the file's whole text). Without the
+      # secret the app is built without analytics: the game then never calls Firebase.
+      - name: Firebase file (optional)
+        env:
+          GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES" ]; then echo "GOOGLE_SERVICES_JSON: not set. Building without analytics."; exit 0; fi
+          FILE=app/android/app/google-services.json
+          ours() { jq -e '[.client[].client_info.android_client_info.package_name] | index("com.sinadehesh.mergefarmstead") != null' "$FILE" > /dev/null 2>&1; }
+          # The file's text, or base64 of it.
+          printf '%s' "$GOOGLE_SERVICES" > "$FILE"
+          ours || { printf '%s' "$GOOGLE_SERVICES" | tr -d ' \n\r' | base64 -d > "$FILE" 2>/dev/null; ours; } || {
+            rm -f "$FILE"
+            echo "::error::GOOGLE_SERVICES_JSON isn't the google-services.json of the Android app com.sinadehesh.mergefarmstead. Paste the whole file's text into the secret."
+            exit 1
+          }
+          echo "GOOGLE_SERVICES_JSON: found. This build has analytics."
+
       - name: Build the bundle
         working-directory: app
         run: npm run aab
@@ -114,4 +136,4 @@ jobs:
 
       - name: Remove the key
         if: always()
-        run: rm -f "$RUNNER_TEMP/upload-key.jks" app/android/keystore.properties
+        run: rm -f "$RUNNER_TEMP/upload-key.jks" app/android/keystore.properties app/android/app/google-services.json
