@@ -2476,7 +2476,8 @@ const TASKS = [
     { id: 'town6', land: 'town', after: ['town3', 'town4', 'town5', 'hen3', 'aqua3', 'big2', 'farm5', 'aqua8', 'fert10'], house: 'townhall', name: 'Restore the Town Hall', who: 'mayor', xp: 80, reward: { chest: 'blue' },
       needs: [{ item: 'barn', tier: 6, n: 1 }, { item: 'hay', tier: 5, n: 1 }, { item: 'aqua', tier: 5, n: 1 }],
       line: 'You\'re a hero!' },
-    { id: 'town7', land: 'town', at: [50, 66], look: ['🪧', '🎉'], after: ['town6', 'flower5'], // the finale: after the festival garden name: 'Throw the Sunnyvale festival', who: 'hattie', xp: 100, reward: { gems: 50 },
+    // The finale: after the Town Hall and the festival garden.
+    { id: 'town7', land: 'town', at: [50, 66], look: ['🪧', '🎉'], after: ['town6', 'flower5'], name: 'Throw the Sunnyvale festival', who: 'hattie', xp: 100, reward: { gems: 50 },
       needs: [{ item: 'decor', tier: 6, n: 1 }, { item: 'farm', tier: 6, n: 1 }], line: 'Thank you!' },
 ];
 
