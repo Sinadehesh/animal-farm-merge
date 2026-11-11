@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 800" width="450" height="800" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <pattern id="tufts" width="90" height="80" patternUnits="userSpaceOnUse">
+      <path d="M12 20 l4 -8 l4 8 M58 52 l4 -8 l4 8 M34 74 l3 -6 l3 6" fill="none" stroke="#6fb24a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="74" cy="18" r="2.5" fill="#fff3a8"/><circle cx="20" cy="56" r="2.5" fill="#ffd1e0"/>
+    </pattern>
+    <g id="tree"><rect x="-5" y="0" width="10" height="22" fill="#8a5a33"/><circle cx="0" cy="-10" r="20" fill="#4caf50"/><circle cx="-12" cy="2" r="12" fill="#4caf50"/><circle cx="12" cy="2" r="12" fill="#4caf50"/></g>
+  </defs>
+  <rect width="450" height="800" fill="#8ccf5e"/>
+  <ellipse cx="90" cy="300" rx="140" ry="90" fill="#97d968"/>
+  <ellipse cx="380" cy="560" rx="150" ry="100" fill="#97d968"/>
+  <ellipse cx="200" cy="740" rx="200" ry="80" fill="#97d968"/>
+  <rect width="450" height="800" fill="url(#tufts)"/>
+  <!-- dirt road from the bottom of the farm up to town -->
+  <path d="M225 830 C 230 700, 190 640, 220 560 S 280 420, 230 330 S 250 170, 330 110 S 400 30, 410 -20" fill="none" stroke="#c99b62" stroke-width="58" stroke-linecap="round"/>
+  <path d="M225 830 C 230 700, 190 640, 220 560 S 280 420, 230 330 S 250 170, 330 110 S 400 30, 410 -20" fill="none" stroke="#e7c78f" stroke-width="46" stroke-linecap="round"/>
+  <path d="M225 830 C 230 700, 190 640, 220 560 S 280 420, 230 330 S 250 170, 330 110 S 400 30, 410 -20" fill="none" stroke="#d6b07a" stroke-width="3" stroke-dasharray="4 22" stroke-linecap="round"/>
+  <!-- trees around the edges -->
+  <g stroke="#4a3426" stroke-width="4" stroke-linejoin="round">
+    
+    <use href="#tree" x="24" y="230"/>
+    <use href="#tree" x="428" y="420"/>
+    <use href="#tree" x="20" y="530"/>
+    <use href="#tree" x="434" y="760"/>
+    <use href="#tree" x="14" y="770"/>
+    <use href="#tree" x="190" y="470"/>
+  </g>
+  <!-- fence along the bottom -->
+  <g stroke="#4a3426" stroke-width="4" stroke-linecap="round">
+    <path d="M40 790 H180 M270 790 H410" stroke="#c8955c" stroke-width="7"/>
+    <path d="M50 776 V800 M90 776 V800 M130 776 V800 M170 776 V800 M280 776 V800 M320 776 V800 M360 776 V800 M400 776 V800" stroke="#c8955c" stroke-width="8"/>
+  </g>
+</svg>

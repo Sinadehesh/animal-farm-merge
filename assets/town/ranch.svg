@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 190" width="200" height="190">
+  <ellipse cx="100" cy="180" rx="94" ry="8" fill="#000" opacity=".15"/>
+  <g stroke="#4a3426" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="24" y="76" width="152" height="96" fill="#fdfaf2"/>
+    <path d="M12 82 L100 22 L188 82 Z" fill="#d9483b"/>
+    <!-- cow-spot sign -->
+    <rect x="64" y="46" width="72" height="28" rx="6" fill="#fdfaf2" stroke-width="4"/>
+    <ellipse cx="82" cy="58" rx="8" ry="6" fill="#4a3426" stroke="none"/>
+    <ellipse cx="118" cy="62" rx="7" ry="5" fill="#4a3426" stroke="none"/>
+    <ellipse cx="102" cy="54" rx="5" ry="4" fill="#4a3426" stroke="none"/>
+    <!-- door + windows -->
+    <rect x="84" y="114" width="34" height="58" fill="#8e2a22"/>
+    <path d="M88 118 L114 168 M114 118 L88 168" stroke="#fdfaf2" stroke-width="3"/>
+    <rect x="38" y="104" width="28" height="26" fill="#ffe08a" stroke-width="4"/>
+    <rect x="134" y="104" width="28" height="26" fill="#ffe08a" stroke-width="4"/>
+    <!-- fence -->
+    <path d="M4 150 H58 M4 166 H58 M142 150 H196 M142 166 H196" stroke-width="5"/>
+    <path d="M10 140 V176 M32 140 V176 M54 140 V176 M146 140 V176 M168 140 V176 M190 140 V176" stroke-width="6"/>
+    <!-- milk can -->
+    <path d="M126 176 V156 Q126 150 132 148 V142 H142 V148 Q148 150 148 156 V176 Z" fill="#b9c4cc" stroke-width="4"/>
+  </g>
+</svg>
