@@ -1215,7 +1215,7 @@ function openShop(note = '') {
     const card = (id, cls, html, onClick) => { buys[id] = onClick; return `<button class="${cls}" data-buy="${id}">${html}</button>`; };
 
     const top = [basketDaysLeft() <= 0
-        ? card('basket', 'shop-feature', tag('Best deal') + pic('merge', '🧺') + words(DAILY_BASKET.name, `💎${DAILY_BASKET.gemsPerDay} every day for ${DAILY_BASKET.days} days`) + price(DAILY_BASKET.price), buyDailyBasket)
+        ? card('basket', 'shop-feature', tag('Best deal') + pic('merge', '🧺') + words('Daily Basket', `💎${DAILY_BASKET.gemsPerDay} a day for ${DAILY_BASKET.days} days`) + price(DAILY_BASKET.price), buyDailyBasket)
         : `<div class="shop-feature done">${pic('merge', '🧺')}${words('Daily Basket is on!', `💎${DAILY_BASKET.gemsPerDay} a day, ${basketDeliveriesLeft()} more days`)}</div>`];
     if (!shop.offerBought) top.push(card('offer', 'shop-feature offer', tag('Only once', 'hot') + pic('gift', '🎁') + words(SPECIAL_OFFER.name, `💎${SPECIAL_OFFER.gems} + 💵${withCommas(SPECIAL_OFFER.money)} + ⚡${SPECIAL_OFFER.energy}`) + price(SPECIAL_OFFER.price), buySpecialOffer));
     const packs = GEM_PACKS.map((pack, i) => card(pack.id, 'shop-pack',
@@ -1474,7 +1474,7 @@ function grantReward(r, title) {
 function flyGift() {
     setTimeout(() => {
         if (AREAS[currentScene]) renderBoardHeader(currentScene); // its 🎁 shows the new count
-        const to = document.querySelector('.scene:not([hidden]) .crate-btn') || document.querySelector('.scene:not([hidden]) .fix-merge');
+        const to = [...document.querySelectorAll('.scene:not([hidden]) .crate-btn, .scene:not([hidden]) .inv-btn, .scene:not([hidden]) .fix-merge')].find(el => el.offsetWidth);
         if (!to) return;
         const st = stageEl.getBoundingClientRect();
         flyReward('🎁', { x: st.left + st.width / 2, y: st.top + st.height * 0.45 }, to, 1, 0, 'big');
@@ -1623,7 +1623,7 @@ const TASKS = [
     { id: 'farm7', land: 'farm', zone: 'fieldgate', at: [70, 48], look: ['seedcart_tipped', 'seedcart'], after: ['farm6'],
       name: 'Set the seed cart right', who: 'hattie', xp: 4, needs: [{ item: 'farm', tier: 1, n: 3 }], line: 'Seeds!' },
     { id: 'farm8', land: 'farm', zone: 'fieldgate', at: [15, 25], look: ['plough_rusty', 'plough'], after: ['farm6'],
-      name: 'Clean up the old plough', who: 'ruby', xp: 5, needs: [{ item: 'garden', tier: 3, n: 1 }], line: 'Shiny!' },
+      name: 'Clean up the old plow', who: 'ruby', xp: 5, needs: [{ item: 'garden', tier: 3, n: 1 }], line: 'Shiny!' },
     { id: 'farm9', land: 'farm', zone: 'fieldgate', at: [52, 17], look: ['birdhouse_broken', 'birdhouse'], after: ['farm7'],
       name: 'Put up a birdhouse', who: 'hattie', xp: 5, needs: [{ item: 'tools', tier: 1, n: 2 }], line: 'Tweet!' },
     { id: 'farm10', land: 'farm', zone: 'fieldgate', at: [70, 88], look: ['', 'signpost'], after: ['farm8', 'farm9', 'farm45', 'farm46'], reward: { chest: 'brown' },
@@ -1740,7 +1740,7 @@ const TASKS = [
     { id: 'fert12', land: 'fert', zone: 'leafpiles', at: [50, 62], look: ['🍂', '🟫'], after: ['fert10', 'fert11'],
       name: 'Sweep the path', who: 'poppy', xp: 11, needs: [{ item: 'clean', tier: 4, n: 1 }], line: 'Swish swish!' },
     { id: 'fert13', land: 'fert', zone: 'leafpiles', at: [15, 32], look: ['', '🌼'], after: ['fert12', 'fert45', 'fert46'], reward: { chest: 'brown' },
-      name: 'Plant autumn flowers', who: 'poppy', xp: 12, needs: [{ item: 'fert', tier: 4, n: 1 }, { item: 'garden', tier: 1, n: 1 }], line: 'Autumn colours!' },
+      name: 'Plant autumn flowers', who: 'poppy', xp: 12, needs: [{ item: 'fert', tier: 4, n: 1 }, { item: 'garden', tier: 1, n: 1 }], line: 'Autumn colors!' },
     // Compost Bins: collapsed bins, tools everywhere, a wobbly potting table.
     { id: 'fert14', land: 'fert', zone: 'compostbins', at: [62, 28], look: ['🔧', ''],
       name: 'Pick up the scattered tools', who: 'ruby', xp: 10, needs: [{ item: 'tools', tier: 1, n: 2 }], line: 'Found them!' },
@@ -1852,7 +1852,7 @@ const TASKS = [
     { id: 'flower2', land: 'flower', zone: 'gardengate', at: [32, 40], look: ['🕳️', '🌼'], after: ['flower10'],
       name: 'Plant a row of daisies', who: 'poppy', xp: 18, needs: [{ item: 'flower', tier: 3, n: 3 }], line: 'Daisies!' },
     { id: 'flower3', land: 'flower', zone: 'gardengate', at: [72, 68], look: ['🌱', '🌷'], after: ['flower10'],
-      name: 'Grow tulips for the Mayor', who: 'mayor', xp: 19, needs: [{ item: 'flower', tier: 4, n: 2 }], line: 'My favourite!' },
+      name: 'Grow tulips for the Mayor', who: 'mayor', xp: 19, needs: [{ item: 'flower', tier: 4, n: 2 }], line: 'My favorite!' },
     { id: 'flower11', land: 'flower', zone: 'gardengate', at: [52, 27], look: ['', '🚿'], after: ['flower8'],
       name: 'Fill the watering can', who: 'poppy', xp: 18, needs: [{ item: 'flower', tier: 0, n: 4 }], line: 'Splash!' },
     { id: 'flower12', land: 'flower', zone: 'gardengate', at: [82, 20], look: ['', '🪑'], after: ['flower2', 'flower3', 'flower11', 'flower46', 'flower47'], reward: { chest: 'brown' },
@@ -1963,7 +1963,7 @@ const TASKS = [
     { id: 'barn43', land: 'barn', zone: 'henhouse', at: [70, 54], look: ['🔨', '✨'], after: ['barn41'],
       name: 'Plant a shady bush', who: 'hattie', xp: 4, needs: [{ item: 'barn', tier: 4, n: 1 }], line: 'Lovely!' },
     { id: 'barn44', land: 'barn', zone: 'henhouse', at: [42, 74], look: ['🔨', '✨'], after: ['barn42'],
-      name: 'Knit a tea cosy for Bram', who: 'mayor', xp: 4, needs: [{ item: 'tools', tier: 3, n: 1 }, { item: 'wool', tier: 2, n: 2 }], line: 'Perfect!' },
+      name: 'Knit a tea cozy for Bram', who: 'mayor', xp: 4, needs: [{ item: 'tools', tier: 3, n: 1 }, { item: 'wool', tier: 2, n: 2 }], line: 'Perfect!' },
     { id: 'barn45', land: 'barn', zone: 'henhouse', at: [56, 89], look: ['🔨', '✨'], after: ['barn43'],
       name: 'Make a chick nursery', who: 'ruby', xp: 4, needs: [{ item: 'wool', tier: 4, n: 1 }, { item: 'barn', tier: 3, n: 1 }], line: 'So cozy!' },
     { id: 'barn46', land: 'barn', zone: 'henhouse', at: [84, 89], look: ['🔨', '✨'], after: ['barn44'],
@@ -2233,7 +2233,7 @@ const TASKS = [
     { id: 'fert29', land: 'fert', zone: 'leafpiles', at: [84, 89], look: ['🔨', '✨'], after: ['fert2'],
       name: 'Start a worm bin', who: 'poppy', xp: 8, needs: [{ item: 'worms', tier: 1, n: 2 }], line: 'Great work!' },
     { id: 'fert30', land: 'fert', zone: 'leafpiles', at: [14, 64], look: ['🔨', '✨'], after: ['fert2'],
-      name: 'Sift the leaf mould', who: 'hattie', xp: 8, needs: [{ item: 'fert', tier: 1, n: 2 }], line: 'Just right!' },
+      name: 'Sift the leaf mold', who: 'hattie', xp: 8, needs: [{ item: 'fert', tier: 1, n: 2 }], line: 'Just right!' },
     { id: 'fert31', land: 'fert', zone: 'leafpiles', at: [56, 84], look: ['🔨', '✨'], after: ['fert29'],
       name: 'Bag the leaves', who: 'ruby', xp: 8, needs: [{ item: 'clean', tier: 1, n: 1 }, { item: 'worms', tier: 0, n: 2 }], line: 'Wonderful!' },
     { id: 'fert32', land: 'fert', zone: 'leafpiles', at: [56, 24], look: ['🔨', '✨'], after: ['fert30'],
@@ -2302,7 +2302,7 @@ const TASKS = [
     { id: 'fert63', land: 'fert', zone: 'compostbins', at: [14, 79], look: ['🔨', '✨'], after: ['fert61'],
       name: 'Brew compost tea', who: 'hattie', xp: 14, needs: [{ item: 'worms', tier: 5, n: 1 }], line: 'Looks great!' },
     { id: 'fert64', land: 'fert', zone: 'compostbins', at: [28, 54], look: ['🔨', '✨'], after: ['fert62'], reward: { chest: 'blue' },
-      name: 'Give compost to the neighbours', who: 'ruby', xp: 14, needs: [{ item: 'worms', tier: 4, n: 1 }, { item: 'clean', tier: 4, n: 1 }], line: 'Hooray!' },
+      name: 'Give compost to the neighbors', who: 'ruby', xp: 14, needs: [{ item: 'worms', tier: 4, n: 1 }, { item: 'clean', tier: 4, n: 1 }], line: 'Hooray!' },
     // mushrooms
     { id: 'fert65', land: 'fert', zone: 'mushrooms', at: [84, 24], look: ['🔨', '✨'], after: ['fert21'],
       name: 'Spread worm castings', who: 'poppy', xp: 11, needs: [{ item: 'worms', tier: 4, n: 1 }], line: 'Hooray!' },
@@ -2448,7 +2448,7 @@ const TASKS = [
     { id: 'aqua80', land: 'aqua', zone: 'boatdock', at: [70, 49], look: ['🔨', '✨'], after: ['aqua78'],
       name: 'Launch the sailboat', who: 'finn', xp: 20, needs: [{ item: 'boat', tier: 5, n: 1 }, { item: 'aqua', tier: 5, n: 1 }], line: 'Great work!' },
     { id: 'aqua81', land: 'aqua', zone: 'boatdock', at: [28, 64], look: ['🔨', '✨'], after: ['aqua79'],
-      name: 'Light the harbour lamp', who: 'ruby', xp: 20, needs: [{ item: 'boat', tier: 6, n: 1 }], line: 'Just right!' },
+      name: 'Light the harbor lamp', who: 'ruby', xp: 20, needs: [{ item: 'boat', tier: 6, n: 1 }], line: 'Just right!' },
     { id: 'aqua82', land: 'aqua', zone: 'boatdock', at: [14, 24], look: ['🔨', '✨'], after: ['aqua80'], reward: { chest: 'blue' },
       name: 'Hold a regatta', who: 'poppy', xp: 21, needs: [{ item: 'boat', tier: 5, n: 1 }, { item: 'fishing', tier: 5, n: 1 }], line: 'Wonderful!' },
     // gardengate
@@ -5319,7 +5319,7 @@ const STORY_BEATS = {
         did('hay27') ? ['mayor', 'Reggie... You were right here. And you didn\'t even say hello.', 'Oh, Mayor...']
             : ['mayor', 'R... R. Grimsby. R...', 'Mayor?']],
     farm76: [['poppy', 'Ellis asked me to bake an apple pie. A BIG one!'],
-        ['poppy', 'Apple pie is Mira\'s favourite. Hee hee!'],
+        ['poppy', 'Apple pie is Mira\'s favorite. Hee hee!'],
         ['ruby', 'Mae! That\'s a secret! A top secret pie!', 'Ha!']],
     farm28: [['mayor', 'A picnic, like the old days! But first, I must tell you something.'],
         ['mayor', 'The night of the storm, a man in a grey coat came to my door.'],
@@ -5513,7 +5513,7 @@ const STORY_BEATS = {
     // Chapter 5: The Golden Bell
     flower1: [['poppy', 'My garden! It looks sad now... but not for long!']],
     flower3: () => (did('hay27')
-        ? [['mayor', 'Tulips! They were Reggie\'s favourite flower when he was little.'],
+        ? [['mayor', 'Tulips! They were Reggie\'s favorite flower when he was little.'],
             ['mayor', 'He picked them every spring, and got mud all over the house.'],
             ['mayor', 'I would give anything to see that mud again.', 'Oh, Mayor...']]
         : [['mayor', 'Tulips! Just for me? How splendid!'],
@@ -6352,6 +6352,10 @@ function showDialog({ art, artRound = false, title, body, actions, sheet = false
     Sales.closed(); // the popup this one replaces: its ways not taken count as a no
     dialogEl.classList.toggle('sheet', sheet); // a card sliding up from the bottom
     dialogEl.dataset.kind = kind; // for a popup's own layout (the Season Pass's tall track)
+    // A long list of buttons (the Flash Sale, Settings): on a short screen all but
+    // the last scroll, and the last (Close, Done) stays in reach under them.
+    const many = actions.length > 5;
+    dialogEl.querySelector('.dialog').classList.toggle('many', many);
     const tut = document.getElementById('tutorial');
     if (tut) tut.hidden = true;
     dialogArt.hidden = !art;
@@ -6360,7 +6364,9 @@ function showDialog({ art, artRound = false, title, body, actions, sheet = false
     dialogTitle.innerHTML = iconize(escapeText(title));
     dialogBody.innerHTML = iconize(body);
     dialogActions.innerHTML = '';
-    actions.forEach(action => {
+    const scroller = many ? document.createElement('div') : null;
+    if (scroller) { scroller.className = 'actions-scroll'; dialogActions.appendChild(scroller); }
+    actions.forEach((action, k) => {
         const btn = document.createElement('button');
         const buy = action.buy ?? /💎/.test(action.label); // orange: spends gems
         btn.className = 'btn' + (action.primary ? ' btn-primary' : '') + (action.wide ? ' btn-wide' : '') + (action.half ? ' btn-half' : '') + (buy ? ' btn-buy' : '');
@@ -6372,7 +6378,7 @@ function showDialog({ art, artRound = false, title, body, actions, sheet = false
             closeDialog();
             if (action.onClick) action.onClick();
         });
-        dialogActions.appendChild(btn);
+        (scroller && k < actions.length - 1 ? scroller : dialogActions).appendChild(btn);
     });
     dialogEl.hidden = false;
     dialogBody.scrollTop = 0; // a new popup starts at its top (once shown: a hidden one can't scroll)
@@ -8502,8 +8508,8 @@ function updateCountdowns() {
 document.getElementById('btn-energy').addEventListener('click', () => openEnergy());
 document.getElementById('btn-level').addEventListener('click', openTaskLog);
 chargeBtn.addEventListener('click', cycleCharge);
-document.getElementById('btn-coins').addEventListener('click', openShop);
-document.getElementById('btn-gems').addEventListener('click', openShop);
+document.getElementById('btn-coins').addEventListener('click', () => openShop());
+document.getElementById('btn-gems').addEventListener('click', () => openShop());
 
 // --- GRID AND MERGE LOGIC ---
 
@@ -9114,9 +9120,11 @@ function renderInfoBar(mode) {
     if (!el) return;
     const prod = PRODUCERS[mode];
     const item = selected && selected.mode === mode ? grids[mode][selected.index] : null;
-    const chainBtn = '<button class="chain-btn" title="See the whole chain">ⓘ</button>';
     const icon = item ? `<span class="info-icon">${itemIconFor(mode, item)}</span>` : '';
-    const text = (title, small) => `<span class="info-text"><b>${title}</b><br><small>${small}</small></span>`;
+    // The same picture as a button with a little "i": the whole chain (or the producer's levels).
+    const chainIcon = item ? `<button class="info-icon chain-btn" title="See the whole chain">${itemIconFor(mode, item)}<i class="info-i">i</i></button>` : '';
+    // The name, then (if there's room on the line) its tier or level.
+    const text = (title, small, extra = '') => `<span class="info-text"><b><span class="nm">${title}</span>${extra ? `<span class="tr">&nbsp;· ${extra}</span>` : ''}</b><br><small>${small}</small></span>`;
     const button = (cls, label) => `<button class="sell-btn ${cls}">${label}</button>`;
     const countdown = at => `<span data-ready="${at}">${formatDuration(at - Date.now())}</span>`;
     let html = `<button class="inv-btn" title="Inventory: drag items here">${uiIcon('inventory', '🎒')}<small>${inventory.items.length}/${inventoryCapacity()}</small></button>`;
@@ -9127,10 +9135,10 @@ function renderInfoBar(mode) {
                  <span class="info-text"><b>Sold ${itemName(chainOf(mode, lastSale.item), lastSale.item.tier)}</b> for 💵${lastSale.price}<br><small>Changed your mind?</small></span>
                  ${button('undo-btn', 'Undo')}`;
     } else if (!item) {
-        html += `<span class="info-text">Tap a ${prod.emoji} ${producerBaseName(mode)} to make items for ⚡1. Drag two alike together to merge. Tap an item to see it.</span>`;
+        html += `<span class="info-text tip">Tap a ${prod.emoji} ${producerBaseName(mode)} to make items. Drag two alike together to merge!</span>`;
     } else if (item.web) {
         const name = boardItemName(mode, item);
-        html += icon + text(`${name} · ${uiIcon('cobweb', '🕸️')}`, `Covered in cobwebs. Merge a free ${name} into it to free it.`) + button('dust-btn', `Dust<br>💎${dustPrice(item)}`);
+        html += icon + text(name, `Covered in cobwebs. Merge a free ${name} into it to free it.`, uiIcon('cobweb', '🕸️')) + button('dust-btn', `Dust<br>💎${dustPrice(item)}`);
     } else if (item.type === 'box') {
         html += `<span class="info-icon">📦</span>` + text('Crate', 'Merge anything next to it to open it.');
     } else if (item.type === 'bubble') {
@@ -9141,8 +9149,8 @@ function renderInfoBar(mode) {
                 + button('pop-btn', `Pop<br>💎${item.gems}`);
     } else if (item.type === 'toolbox') {
         const t = TOOLS[item.chain];
-        html += icon + text(t.name, item.drops > 0 ? `Tap to make ${t.what} for ⚡1. ${item.drops}/${TOOL_CHARGES} taps left.`
-            : `Recharging: ${countdown(item.readyAt)}.`) + chainBtn
+        html += chainIcon + text(t.name, item.drops > 0 ? `Tap to make ${t.what} for ⚡1. ${item.drops}/${TOOL_CHARGES} taps left.`
+            : `Recharging: ${countdown(item.readyAt)}.`)
             + (item.readyAt ? button('skip-btn', `Recharge<br>💎${rechargePrice(mode, item)}`) : '');
     } else if (item.type === 'shop') {
         const level = levelOf(item);
@@ -9150,11 +9158,11 @@ function renderInfoBar(mode) {
         const next = mode === 'fair' ? 'Every merge here scores Fair points.'
             : level < PRODUCER_MAX_LEVEL ? `Merge two to make a ${producerName(mode, level + 1)}.` : 'Top level!';
         if (level < FIRST_WORKING_LEVEL) {
-            html += icon + text(`${name} · part Lv${level}`, `${next} At Lv${FIRST_WORKING_LEVEL} it becomes a ${producerBaseName(mode)} that makes items.`) + chainBtn;
+            html += chainIcon + text(name, `${next} At Lv${FIRST_WORKING_LEVEL} it becomes a ${producerBaseName(mode)} that makes items.`, `part Lv${level}`);
         } else {
             const s = producerStats(mode, level);
             const timer = item.readyAt ? ` · next charge ${countdown(item.readyAt)}` : '';
-            html += icon + text(`${name} · Lv${level}`, `${item.drops}/${s.charges * s.drops} taps left${timer}. ${next}`) + chainBtn
+            html += chainIcon + text(name, `${item.drops}/${s.charges * s.drops} taps left${timer}. ${next}`, `Lv${level}`)
                 + (item.readyAt ? button('skip-btn', `Recharge<br>💎${s.skip}`) : '');
         }
     } else if (BOOSTERS[item.type]) {
@@ -9194,10 +9202,11 @@ function renderInfoBar(mode) {
         const tip = item.tier >= last ? 'The best there is!'
             : item.tier >= tierCap(chain) ? `Max tier for now: buy the ${TOOLS[chain] ? 'Workshop Manual' : 'Growth Guide'} at the Market.`
             : `Merge two to make ${itemIcon(chain, item.tier + 1)} ${itemName(chain, item.tier + 1)}.`;
-        html += icon + text(`${itemName(chain, item.tier)} · tier ${item.tier}`, tip) + chainBtn + button('sell-item-btn', `Sell<br>💵${sellPrice(mode, item)}`);
+        html += chainIcon + text(itemName(chain, item.tier), tip, `tier ${item.tier}`) + button('sell-item-btn', `Sell<br>💵${sellPrice(mode, item)}`);
     }
 
     el.innerHTML = iconize(html);
+    fitInfoBar(el);
     const index = selected && selected.index;
     const on = (sel, fn) => { const btn = el.querySelector(sel); if (btn) btn.addEventListener('click', fn); };
     on('.inv-btn', () => openInventory(mode));
@@ -9213,6 +9222,17 @@ function renderInfoBar(mode) {
     on('.chain-btn', () => (item.type === 'shop' ? openProducerInfo(mode)
         : openChain(item.type === 'toolbox' ? item.chain : chainOf(mode, item), item.tier)));
     on('.sell-item-btn', () => sellSelected(mode));
+}
+
+// A crowded bar on a small phone: first the 🎁 steps aside (it's back as soon as
+// nothing is selected), then a name that still doesn't fit takes the tip's lines.
+function fitInfoBar(el) {
+    const text = el.querySelector('.info-text'), name = el.querySelector('.nm');
+    if (!text || !name) return;
+    const cut = () => name.scrollWidth > name.clientWidth + 1;
+    const gift = el.querySelector('.crate-btn');
+    if (gift && (cut() || text.clientWidth < el.clientWidth * 0.2)) gift.classList.add('aside');
+    if (cut()) text.classList.add('long');
 }
 
 // Selling frees space; big items ask first because orders pay far more.
@@ -9314,9 +9334,9 @@ function openProducerInfo(mode) {
         const level = i + 1;
         if (mode === 'fair' && level < FIRST_WORKING_LEVEL) return '';
         const s = producerStats(mode, level);
-        const odds = s && DROP_ODDS[level - FIRST_WORKING_LEVEL].map((p, t) => p && `${Math.round(p * 100)}% t${t}`).filter(Boolean).join(' ');
-        return `<div class="quest"><span>${itemIconFor(mode, { type: 'shop', level })} Lv${level} ${name}</span>
-                <small>${s ? `${s.charges}×${s.drops} taps · ${odds}` : 'part'}</small></div>`;
+        const odds = s && DROP_ODDS[level - FIRST_WORKING_LEVEL].map((p, t) => p && `<span class="nb">${itemIcon(mode, t)} ${Math.round(p * 100)}%</span>`).filter(Boolean).join(' ');
+        return `<div class="quest prod-row"><span>${itemIconFor(mode, { type: 'shop', level })} Lv${level} ${name}</span>
+                <small>${s ? `${s.drops} taps a charge · stores ${s.charges} · makes ${odds}` : 'a part: merge two'}</small></div>`;
     }).join('');
     showDialog({
         title: `${PRODUCERS[mode].emoji} ${producerBaseName(mode)} levels`,
@@ -9450,8 +9470,9 @@ function handleDragEnd(e) {
     }
 
     const elements = document.elementsFromPoint(e.clientX, e.clientY);
-    // Dropped on 🎒: store it.
-    if (elements.some(el => el.closest && el.closest(`#scene-${mode} .inv-btn`))) {
+    // Dropped on 🎒 (or a fingertip's width from it: it's a small target): store it.
+    const bag = document.querySelector(`#scene-${mode} .inv-btn`), near = bag && bag.getBoundingClientRect(), reach = stageEl.clientWidth * 0.04;
+    if (near && near.width && e.clientX > near.left - reach && e.clientX < near.right + reach && e.clientY > near.top - reach && e.clientY < near.bottom + reach * 2) {
         storeItem(mode, index);
         refreshBoard(mode);
         return;
@@ -9582,6 +9603,9 @@ function startFx() {
             resolution: Math.min(window.devicePixelRatio || 1, 1.5), autoDensity: true, resizeTo: window, powerPreference: 'low-power' });
         app.view.id = 'sparkle';
         document.body.appendChild(app.view);
+        // The sparkle layer takes no taps. Left watching for them, PixiJS asks for a
+        // new frame 60 times a second for ever, and the phone never gets to rest.
+        try { app.renderer.events.setTargetElement(null); } catch (e) { /* it keeps watching, as before */ }
         // Glows and rays at the back, then confetti, dust and flying things, sparkles in front.
         [FX.back, FX.mid, FX.front] = [0, 1, 2].map(() => app.stage.addChild(new PIXI.Container()));
     } catch (e) {
@@ -10219,12 +10243,17 @@ function ensureToolboxes() {
 // and copying).
 const EMOJI_ICONS = { '🎁': 'gift', '🔒': 'lock', '🔨': 'hammer', '✨': 'sparkle', '📋': 'jobs', '💵': 'coin', '💎': 'gem',
     '⭐': 'star', '⚡': 'energy', '✅': 'check', '🔥': 'offer', '🎒': 'inventory', '🎟': 'pass', '📅': 'daily', '🫙': 'jar', '🗝': 'key' };
-const EMOJI_RE = new RegExp(`(${Object.keys(EMOJI_ICONS).join('|')})\uFE0F?`, 'gu');
+// An icon's emoji, with the number right after it if there is one ("💎 18", "⚡100", "💵1,250").
+const EMOJI_RE = new RegExp(`([+×])?(${Object.keys(EMOJI_ICONS).join('|')})\uFE0F?( ?\\d[\\d,.]*[km]?)?`, 'gu');
 
+// Swaps the emoji in a text for the game's own icons. An icon and its number
+// stay together on one line (a price never breaks in two).
 function iconize(html) {
-    return String(html).split(/(<[^>]*>)/).map(part => part.startsWith('<') ? part : part.replace(EMOJI_RE, (all, e) => {
+    return String(html).split(/(<[^>]*>)/).map(part => part.startsWith('<') ? part : part.replace(EMOJI_RE, (all, sign = '', e, number = '') => {
         const src = (ASSETS.ui || {})[EMOJI_ICONS[e]];
-        return src ? `<img class="ui-icon" src="${src}" alt="" draggable="false"><i class="emo">${all}</i>` : all;
+        if (!src) return all;
+        const icon = `<img class="ui-icon" src="${src}" alt="" draggable="false"><i class="emo">${all.slice(sign.length, all.length - number.length)}</i>`;
+        return sign || number ? `<span class="nb">${sign}${icon}${number}</span>` : icon;
     })).join('');
 }
 
@@ -10330,7 +10359,10 @@ function itemTimer(item) {
 function renderGrid(mode, poppedIndices = []) {
     const gridEl = document.getElementById(`grid-${mode}`);
     if (!gridEl) return;
-    gridEl.innerHTML = '';
+    // A square that would look just the same is left as it is, so a tap or a
+    // merge draws only the squares it changed (a slow phone feels the difference).
+    const old = gridEl.children.length === NUM_CELLS ? [...gridEl.children] : null;
+    if (!old) gridEl.innerHTML = '';
     const wanted = new Set(npcs.filter(n => n.request && n.request.mode === mode).map(n => `${mode}:${n.request.tier}`).concat(taskWanted()));
 
     for (let i = 0; i < NUM_CELLS; i++) {
@@ -10367,7 +10399,8 @@ function renderGrid(mode, poppedIndices = []) {
             itemEl.addEventListener('pointerdown', (e) => handleDragStart(e, mode, i));
             cell.appendChild(itemEl);
         }
-        gridEl.appendChild(cell);
+        if (!old) gridEl.appendChild(cell);
+        else if (poppedIndices.includes(i) || old[i].outerHTML !== cell.outerHTML) gridEl.replaceChild(cell, old[i]); // what pops, pops afresh
     }
 }
 
@@ -10583,6 +10616,11 @@ function maybeAskRating() {
 // and each producer's next charge arrive, so they keep coming while the game
 // is closed. Open the game with ?reset at the end of the link to start over.
 const SAVE_KEY = 'merge-farmstead-save-v1';
+// A damaged save is never thrown away or written over by a new game: the last
+// save that loaded (the backup) takes its place, and the damaged one is kept.
+const SAVE_BACKUP_KEY = `${SAVE_KEY}-backup`;
+const SAVE_BROKEN_KEY = `${SAVE_KEY}-broken`;
+let recovering = false; // the page is about to start again from the backup: nothing is saved meanwhile
 let awayFor = 0; // how long the game was closed, from the save
 const RECAP_AFTER_MS = 8 * 3600000; // back after this long: the story so far
 // 2: one ⚡ Energy bar instead of five essentials, and producers with parts.
@@ -10592,7 +10630,7 @@ const RECAP_AFTER_MS = 8 * 3600000; // back after this long: the story so far
 const SAVE_VERSION = 5;
 
 function saveGame() {
-    if (layoutMode) return; // ?layout plays on a scratch game and leaves the real one alone
+    if (layoutMode || recovering) return; // ?layout plays on a scratch game and leaves the real one alone
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
             version: SAVE_VERSION,
@@ -10613,83 +10651,130 @@ function migrateProducers(save) {
         if (item.type === 'shop') item.level = Math.min(PRODUCER_MAX_LEVEL, (item.level || 1) + 3);
         if (item.type === 'box') bump(item.hidden);
     };
-    Object.values(save.grids || {}).forEach(board => board.forEach(bump));
-    Object.values(save.crates || {}).forEach(list => list.forEach(bump));
+    Object.values(save.grids || {}).forEach(board => Array.isArray(board) && board.forEach(bump));
+    Object.values(save.crates || {}).forEach(list => Array.isArray(list) && list.forEach(bump));
 }
 
+// Loads the saved game; false means a new game. A save that can't be read (or
+// that breaks half-way in) goes to recoverSave below.
 function loadGame() {
+    let raw = null;
     try {
         if (new URLSearchParams(location.search).has('reset')) {
-            localStorage.removeItem(SAVE_KEY);
+            [SAVE_KEY, SAVE_BACKUP_KEY, SAVE_BROKEN_KEY].forEach(key => localStorage.removeItem(key));
             history.replaceState(null, '', location.pathname);
         }
-        const save = JSON.parse(localStorage.getItem(SAVE_KEY));
-        if (!save) return false;
-        const version = save.version || 1;
-        if (version < 2) migrateProducers(save);
-        Object.keys(res).forEach(key => { if (typeof save.res[key] === 'number') res[key] = save.res[key]; });
-        energyAt = save.energyAt || null;
-        Object.assign(shop, save.shop);
-        Object.assign(crates, save.crates);
-        Object.assign(stats, save.stats);
-        quests.level = (save.quests || {}).level || 1; // version 1 saves had no quests
-        quests.xp = (save.quests || {}).xp || 0;
-        if (save.restoration) Object.assign(restoration, save.restoration);
-        // Saves from before areas: every area already open counts as seen (no unlock replays).
-        if (!save.restoration || !save.restoration.zonesOpen) restoration.zonesOpen = null;
-        if (save.pass) Object.assign(pass, save.pass);
-        if (save.dailyGoals) Object.assign(dailyGoals, save.dailyGoals);
-        if (save.fair) Object.assign(fair, save.fair);
-        Object.assign(tutorial, save.tutorial || { done: true }); // players from before the tutorial know the ropes
-        Object.assign(inventory, save.inventory);
-        if (version < 4) {
-            // Land bought before restoration jobs existed counts as its first job done.
-            Object.keys(AREAS).forEach(id => { if (unlocks[id] || (save.unlocks || {})[id]) {
-                const first = landTasks(id)[0];
-                if (first.needs[0].own && !restoration.done.includes(first.id)) restoration.done.push(first.id);
-            } });
-        }
-        Object.assign(daily, save.daily);
-        if (save.settings && typeof save.settings.charge === 'number') settings.charge = save.settings.charge;
-        if (save.settings && save.settings.unlimitedUntil) settings.unlimitedUntil = save.settings.unlimitedUntil;
-        if (save.settings && save.settings.sound === false) settings.sound = false;
-        if (save.settings && save.settings.vibrate === false) settings.vibrate = false;
-        if (save.settings && save.settings.music === false) settings.music = false;
-        if (save.settings && save.settings.tips === false) settings.tips = false;
-        if (save.settings && typeof save.settings.reminders === 'boolean') settings.reminders = save.settings.reminders;
-        if (save.settings && Array.isArray(save.settings.remindAsk)) settings.remindAsk = save.settings.remindAsk;
-        if (save.settings && save.settings.ratedAt) settings.ratedAt = save.settings.ratedAt;
-        if (save.guides) Object.assign(guides, save.guides);
-        if (save.lastBoard && AREAS[save.lastBoard]) lastBoard = save.lastBoard;
-        if (save.tickedAt) { lastTickAt = save.tickedAt; awayFor = Date.now() - save.tickedAt; }
-        Object.assign(unlocks, save.unlocks);
-        maxTier = save.maxTier;
-        // Saves from before the Workshop Manual keep the tools they've already made.
-        const owned = [...Object.values(save.grids || {}).flat(), ...Object.values(save.crates || {}).flat(), ...(save.inventory?.items || []).map(e => e.item)]
-            .filter(c => c && c.chain && TOOLS[c.chain] && !c.type).map(c => c.tier);
-        toolTier = typeof save.toolTier === 'number' ? save.toolTier : Math.min(7, Math.max(TOOL_TIER_START, ...owned));
-        Object.keys(grids).forEach(mode => {
-            if (save.grids[mode] && save.grids[mode].length === NUM_CELLS) grids[mode] = save.grids[mode];
-        });
-        (save.npcs || []).forEach(saved => {
-            const npc = npcs.find(n => n.id === saved.id);
-            if (npc) Object.assign(npc, saved);
-            // Orders paid ❤️ hearts before version 3; now they pay XP.
-            if (npc && npc.request && npc.request.rewardXp === undefined) npc.request.rewardXp = orderXp(npc.request.tier);
-        });
-        // Anyone left without an order (renamed since the save, say) gets a new one.
-        npcs.forEach(n => { if (!n.request) generateRequestFor(n); });
-        if (save.story) Object.assign(story, save.story);
-        else {
-            // Saves from before the story skip the intro and see their current day once.
-            const now = currentChapter();
-            Object.assign(story, { intro: true, seen: CHAPTERS.map((_, i) => i).filter(i => now === -1 || i < now), ended: now === -1 });
-        }
-        if (!restoration.zonesOpen) restoration.zonesOpen = ZONES.filter(zoneOpen).map(z => z.id);
-        return true;
+        // The save, or (should it be gone) the last one that loaded.
+        raw = localStorage.getItem(SAVE_KEY) || localStorage.getItem(SAVE_BACKUP_KEY);
     } catch (e) {
-        return false;
+        return false; // storage is blocked: a new game each time
     }
+    if (!raw) return false;
+    try {
+        const save = JSON.parse(raw);
+        if (!save || typeof save !== 'object') throw new Error('not a save');
+        applySave(save);
+    } catch (e) {
+        return recoverSave(raw);
+    }
+    // It loaded: this is the save to fall back on next time.
+    try { if (localStorage.getItem(SAVE_BACKUP_KEY) !== raw) localStorage.setItem(SAVE_BACKUP_KEY, raw); } catch (e) { /* no room for a second copy */ }
+    return true;
+}
+
+// The save is damaged. It is kept aside, the backup (if there is another one)
+// goes in its place, and the page starts again: part of the damaged save may
+// already be in memory, and a fresh start is the only clean one.
+function recoverSave(raw) {
+    try {
+        const tries = +(sessionStorage.getItem('merge-farmstead-recover') || 0);
+        if (tries >= 3) return false; // tried enough: a new game, as before
+        sessionStorage.setItem('merge-farmstead-recover', tries + 1);
+        if (!localStorage.getItem(SAVE_BROKEN_KEY)) localStorage.setItem(SAVE_BROKEN_KEY, raw);
+        const backup = localStorage.getItem(SAVE_BACKUP_KEY);
+        if (backup && backup !== raw) localStorage.setItem(SAVE_KEY, backup);
+        else [SAVE_KEY, SAVE_BACKUP_KEY].forEach(key => localStorage.removeItem(key));
+        recovering = true;
+        location.reload();
+    } catch (e) { /* storage or reload not allowed: a new game */ }
+    return false;
+}
+
+// Puts a parsed save into the game. Whatever the save holds, the game ends up
+// with numbers where it needs numbers and boards of the right size.
+function applySave(save) {
+    const list = v => (Array.isArray(v) ? v : []); // a list, whatever the save has there
+    const version = save.version || 1;
+    if (version < 2) migrateProducers(save);
+    Object.keys(res).forEach(key => { if (typeof (save.res || {})[key] === 'number') res[key] = save.res[key]; });
+    energyAt = save.energyAt || null;
+    Object.assign(shop, save.shop);
+    Object.assign(crates, save.crates);
+    Object.assign(stats, save.stats);
+    quests.level = (save.quests || {}).level || 1; // version 1 saves had no quests
+    quests.xp = (save.quests || {}).xp || 0;
+    if (save.restoration) Object.assign(restoration, save.restoration);
+    // Saves from before areas: every area already open counts as seen (no unlock replays).
+    if (!save.restoration || !save.restoration.zonesOpen) restoration.zonesOpen = null;
+    if (save.pass) Object.assign(pass, save.pass);
+    if (save.dailyGoals) Object.assign(dailyGoals, save.dailyGoals);
+    if (save.fair) Object.assign(fair, save.fair);
+    Object.assign(tutorial, save.tutorial || { done: true }); // players from before the tutorial know the ropes
+    Object.assign(inventory, save.inventory);
+    if (version < 4) {
+        // Land bought before restoration jobs existed counts as its first job done.
+        Object.keys(AREAS).forEach(id => { if (unlocks[id] || (save.unlocks || {})[id]) {
+            const first = landTasks(id)[0];
+            if (first.needs[0].own && !restoration.done.includes(first.id)) restoration.done.push(first.id);
+        } });
+    }
+    Object.assign(daily, save.daily);
+    if (save.settings && typeof save.settings.charge === 'number') settings.charge = save.settings.charge;
+    if (save.settings && save.settings.unlimitedUntil) settings.unlimitedUntil = save.settings.unlimitedUntil;
+    if (save.settings && save.settings.sound === false) settings.sound = false;
+    if (save.settings && save.settings.vibrate === false) settings.vibrate = false;
+    if (save.settings && save.settings.music === false) settings.music = false;
+    if (save.settings && save.settings.tips === false) settings.tips = false;
+    if (save.settings && typeof save.settings.reminders === 'boolean') settings.reminders = save.settings.reminders;
+    if (save.settings && Array.isArray(save.settings.remindAsk)) settings.remindAsk = save.settings.remindAsk;
+    if (save.settings && save.settings.ratedAt) settings.ratedAt = save.settings.ratedAt;
+    if (save.guides) Object.assign(guides, save.guides);
+    if (save.lastBoard && AREAS[save.lastBoard]) lastBoard = save.lastBoard;
+    if (save.tickedAt) { lastTickAt = save.tickedAt; awayFor = Date.now() - save.tickedAt; }
+    Object.assign(unlocks, save.unlocks);
+    if (Number.isFinite(save.maxTier)) maxTier = save.maxTier;
+    // Saves from before the Workshop Manual keep the tools they've already made.
+    const owned = [...Object.values(save.grids || {}).flatMap(list), ...Object.values(save.crates || {}).flatMap(list), ...list((save.inventory || {}).items).map(e => e && e.item)]
+        .filter(c => c && c.chain && TOOLS[c.chain] && !c.type).map(c => c.tier);
+    toolTier = typeof save.toolTier === 'number' ? save.toolTier : Math.min(7, Math.max(TOOL_TIER_START, ...owned));
+    Object.keys(grids).forEach(mode => {
+        const board = (save.grids || {})[mode];
+        if (Array.isArray(board) && board.length === NUM_CELLS) grids[mode] = board.map(cell => (cell && typeof cell === 'object' ? cell : null));
+    });
+    list(save.npcs).forEach(saved => {
+        const npc = saved && npcs.find(n => n.id === saved.id);
+        if (npc) Object.assign(npc, saved);
+        // Orders paid ❤️ hearts before version 3; now they pay XP.
+        if (npc && npc.request && npc.request.rewardXp === undefined) npc.request.rewardXp = orderXp(npc.request.tier);
+    });
+    // Anyone left without an order (renamed since the save, say) gets a new one.
+    npcs.forEach(n => { if (!n.request) generateRequestFor(n); });
+    if (save.story) Object.assign(story, save.story);
+    else {
+        // Saves from before the story skip the intro and see their current day once.
+        const now = currentChapter();
+        Object.assign(story, { intro: true, seen: CHAPTERS.map((_, i) => i).filter(i => now === -1 || i < now), ended: now === -1 });
+    }
+    if (!restoration.zonesOpen) restoration.zonesOpen = ZONES.filter(zoneOpen).map(z => z.id);
+    // Numbers stay numbers, lists stay lists, whatever was in the save.
+    Object.keys(START).forEach(key => { if (!Number.isFinite(res[key]) || res[key] < 0) res[key] = START[key]; });
+    if (!Number.isFinite(quests.level) || quests.level < 1) quests.level = 1;
+    if (!Number.isFinite(quests.xp) || quests.xp < 0) quests.xp = 0;
+    if (!Number.isFinite(shop.jar) || shop.jar < 0) shop.jar = 0;
+    if (!Array.isArray(restoration.done)) restoration.done = [];
+    if (!Array.isArray(story.seen)) story.seen = [];
+    if (!Array.isArray(inventory.items)) inventory.items = [];
+    Object.keys(grids).forEach(mode => { if (!Array.isArray(crates[mode])) crates[mode] = []; });
 }
 
 // Initial setup
@@ -10772,6 +10857,7 @@ setInterval(() => {
     saveGame();
 }, 1000);
 addEventListener('pagehide', saveGame);
+document.addEventListener('visibilitychange', () => { if (document.hidden) saveGame(); }); // the app going to the background
 
 // The map's big pictures, decoded in the background soon after start, so they
 // are ready when you drag to them instead of popping in late.

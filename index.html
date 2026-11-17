@@ -30,6 +30,9 @@
         }
         * { box-sizing: border-box; }
         html, body { margin: 0; height: 100%; }
+        /* Words stay the size they are drawn at: a phone's browser must not blow them up
+           (the app does the same for the phone's "font size" setting, in MainActivity). */
+        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
         body {
             background: #3b2a1e;
             font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, sans-serif;
@@ -74,6 +77,9 @@
         }
         .btn-back { padding: 0 9px; font-size: 16px; }
         .btn-back[hidden], .res[hidden] { display: none; }
+        /* Slim to look at, but a fingertip anywhere in the bar's height reaches them. */
+        .hud button { position: relative; }
+        .hud button::after { content: ''; position: absolute; inset: -6px -2px; }
         .btn-back:active, .pill:active, .res:active { transform: translateY(1px); background: rgba(255, 255, 255, 0.2); }
         .pill .plus, .res .plus {
             display: inline-flex;
@@ -380,6 +386,16 @@
         }
         .info-icon { font-size: 7cqw; line-height: 1; }
         .info-icon .inline-item { height: 9cqw; }
+        /* The selected item's picture is also the way to its whole chain: a little "i" on its corner. */
+        .info-icon.chain-btn { position: relative; width: auto; height: auto; padding: 0; background: none; border: 0; border-radius: 0; font-size: 7cqw; line-height: 1; }
+        .info-i {
+            position: absolute; left: -1cqw; top: -0.6cqw; width: 3.8cqw; height: 3.8cqw;
+            display: flex; align-items: center; justify-content: center;
+            background: #fff; color: var(--ink); border: 1.5px solid var(--ink); border-radius: 50%;
+            font: italic 900 2.7cqw/1 Georgia, 'Times New Roman', serif;
+        }
+        /* An icon and the number after it stay on one line. */
+        .nb { white-space: nowrap; }
         .info-text { flex: 1; font-size: 3.1cqw; line-height: 1.25; }
         .info-text small { font-size: 2.7cqw; color: #8a6a50; }
         .sell-btn {
@@ -607,7 +623,8 @@
         }
         .crate-btn {
             flex: 0 0 auto;
-            padding: 1cqw 2.5cqw;
+            padding: 1cqw 1.8cqw;
+            white-space: nowrap;
             background: var(--paper);
             color: var(--ink);
             border: 3px solid var(--ink);
@@ -701,7 +718,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 0.4cqw 1.6cqw;
+            padding: 0.4cqw 2.4cqw;
             background: var(--paper);
             color: var(--ink);
             border: 3px solid var(--ink);
@@ -1138,6 +1155,10 @@
             font-weight: 800;
         }
         .quest small { color: #8a6a50; }
+        /* A producer's levels: its name, and under it what that level does. */
+        .quest.prod-row { grid-template-columns: 1fr; gap: 0.4cqw; margin-bottom: 2cqw; }
+        .quest.prod-row small { padding-left: 8cqw; font-weight: 700; }
+        .quest.prod-row small .inline-item { height: 1.5em; }
         .quest-bar { grid-column: 1 / -1; height: 2cqw; background: #e2d8c8; border-radius: 999px; overflow: hidden; }
         .quest-bar i { display: block; height: 100%; background: #5cc15a; }
         .item.pop { animation: squash-pop 0.46s ease-out; }
@@ -1168,6 +1189,15 @@
         .amb-mote { position: absolute; width: 1.2cqw; height: 1.2cqw; border-radius: 50%; background: #fffbe0; box-shadow: 0 0 1.5cqw 0.5cqw rgba(255, 245, 190, 0.8); left: calc(8% + var(--i) * 13%); bottom: -3%; opacity: 0; animation: amb-rise calc(9s + var(--i) * 1.7s) ease-in-out infinite; animation-delay: calc(var(--i) * -2.3s); }
         @keyframes amb-rise { 0% { opacity: 0; translate: 0 0; } 15% { opacity: 0.8; } 50% { translate: 4cqw -45cqw; } 85% { opacity: 0.6; } 100% { opacity: 0; translate: -3cqw -90cqw; } }
         @media (prefers-reduced-motion: reduce) { .amb, #fx { display: none; } }
+        /* "Remove animations" on the phone: nothing bobs, pulses or drifts for ever; each
+           animation plays once and rests. */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-iteration-count: 1 !important; }
+            /* ...but the hand that shows how to drag keeps showing it (it teaches, it doesn't
+               decorate), and "Tap to start" stays bright instead of resting half-faded. */
+            .tut-hand.dragging { animation-iteration-count: infinite !important; }
+            .op-title p { animation: none !important; }
+        }
 
         /* --- DIALOG & TOASTS --- */
         .dialog-backdrop {
@@ -1201,6 +1231,13 @@
         .dialog h2 { margin: 1cqw 0 2cqw; font-size: 5.4cqw; font-weight: 900; }
         .dialog-body { font-size: 3.9cqw; line-height: 1.45; max-height: 112cqw; min-height: 0; flex: 0 1 auto; overflow-y: auto; }
         .dialog-actions { flex: 0 0 auto; }
+        /* A popup with a long list of buttons (the Flash Sale, Settings): on a short
+           screen the list scrolls, so the last button is never off the screen. */
+        .dialog.many .dialog-body { flex: 0 0 auto; }
+        .dialog.many .dialog-actions { flex: 0 1 auto; min-height: 0; flex-direction: column; flex-wrap: nowrap; align-items: center; }
+        .actions-scroll { flex: 0 1 auto; min-height: 0; width: 100%; overflow-y: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 3cqw; padding: 0.6cqw 0.6cqw 1.6cqw; }
+        /* Titles and button labels break into even lines (no single word left alone). */
+        .dialog h2, .dialog .btn, .shop-text b, .order-need { text-wrap: balance; }
         .dialog-body p { margin: 0 0 2cqw; }
         .dialog-body .hint { color: #8a6a50; font-size: 3.4cqw; }
         .inline-item { display: inline-block; height: 1.5em; vertical-align: middle; }
@@ -2068,7 +2105,26 @@
            lines about it (the rest is behind ⓘ), so the orders above never get pushed away. */
         .board-footer .info-bar { height: 14cqw; min-height: 0; overflow: hidden; }
         .board-footer .info-text { min-width: 0; overflow: hidden; line-height: 1.2; }
-        .board-footer .info-text b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* The name always shows (cut with … only if it alone is too long); its tier or level
+           follows if the line has room, and otherwise wraps out of sight. */
+        .board-footer .info-text b { display: flex; flex-wrap: wrap; max-height: 1.25em; overflow: hidden; }
+        .board-footer .info-text b .nm { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .board-footer .info-text b .tr { white-space: nowrap; color: #8a6a50; font-weight: 800; }
+        .board-footer .info-text b .tr .ui-icon { height: 1em; vertical-align: -0.12em; }
+        /* The tip shown when nothing is selected: three lines at most. */
+        .board-footer .info-text.tip { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+        .board-footer .info-bar { gap: 1.5cqw; }
+        /* A crowded bar (fitInfoBar): the 🎁 steps aside; a long name takes the tip's lines. */
+        .crate-btn.aside { display: none; }
+        /* The bag's count sits inside its frame, not on its lower edge. */
+        .board-footer .inv-btn { padding-bottom: 1.5cqw; }
+        .board-footer .inv-btn .ui-icon { height: 5cqw; }
+        /* Two buttons side by side (a locked chest's Unlock and Now): slimmer, so its name fits. */
+        html.kit .board-footer .unlock-btn, html.kit .board-footer .unlock-btn + .rush-btn { padding-left: 2.2cqw; padding-right: 2.2cqw; }
+        .board-footer .info-text.long small { display: none; }
+        .board-footer .info-text.long b { max-height: 2.5em; }
+        .board-footer .info-text.long b .nm { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .board-footer .info-text.long b .tr { display: none; }
         .board-footer .info-text br { display: none; }
         .board-footer .info-text small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 2.6cqw; line-height: 1.2; }
         .board-footer .info-bar > * { flex-shrink: 0; }
@@ -2328,8 +2384,8 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202611112205"></script>
-    <script src="monetize.js?v=202611112205"></script>
-    <script src="game.js?v=202611112205"></script>
+    <script src="assets.js?v=202611171431"></script>
+    <script src="monetize.js?v=202611171431"></script>
+    <script src="game.js?v=202611171431"></script>
 </body>
 </html>
