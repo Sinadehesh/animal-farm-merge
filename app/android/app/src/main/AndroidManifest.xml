@@ -46,6 +46,12 @@
             android:value="false" />
     </application>
 
+    <!-- The game is played upright (screenOrientation above), but it does not NEED a screen
+         that turns upright: without this line Google Play takes "portrait" as a must-have
+         and hides the game from devices that can't (Chromebooks, PCs, headsets), and
+         Play Console reports it as an issue on every release. -->
+    <uses-feature android:name="android.hardware.screen.portrait" android:required="false" />
+
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
