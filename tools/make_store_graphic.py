@@ -39,7 +39,7 @@ img = Image.fromarray(np.clip(canvas, 0, 255).astype(np.uint8)).convert('RGBA')
 deco = f'{FONTS}/CinzelDecorative-Bold.ttf.ttf'
 fell = f'{FONTS}/IMFeENsc28P.ttf.ttf'
 f_top = ImageFont.truetype(deco, round(38 * S))
-f_main = ImageFont.truetype(deco, round(60 * S))
+f_main = ImageFont.truetype(deco, round(68 * S))
 f_tag = ImageFont.truetype(fell, round(30 * S))
 CX = W - 242 * S
 
@@ -60,7 +60,7 @@ def layer_text(fn):
 
 def words(d, fill_top, fill_main, fill_tag, fill_rule):
     spaced(d, (CX, 196 * S), 'MERGE', f_top, fill_top, 14 * S)
-    spaced(d, (CX, 270 * S), 'FARMSTEAD', f_main, fill_main, 2 * S)
+    spaced(d, (CX, 272 * S), 'KEEPER', f_main, fill_main, 9 * S)
     w = max(2, round(2 * S))
     d.line((CX - 150 * S, 300 * S, CX - 22 * S, 300 * S), fill=fill_rule, width=w)
     d.line((CX + 22 * S, 300 * S, CX + 150 * S, 300 * S), fill=fill_rule, width=w)
