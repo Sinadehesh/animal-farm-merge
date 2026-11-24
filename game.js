@@ -9380,6 +9380,9 @@ function placeDragElement(e) {
 
 // How far (px) the pointer must move before a press becomes a drag; less is a tap.
 const DRAG_THRESHOLD = 6;
+// A merge's beat: the dragged one flies in, and this long after the new thing bursts out
+// (.item.pop.fly in the styles waits the same).
+const MERGE_BEAT_MS = 70;
 
 function handleDragStart(e, mode, index) {
     e.preventDefault();
@@ -9396,6 +9399,7 @@ function cancelDrag() {
     document.removeEventListener('pointerup', handleDragEnd);
     document.removeEventListener('pointercancel', cancelDrag);
     if (dragElement) { dragElement.remove(); dragElement = null; }
+    clearMergeHint();
     if (!draggedItemInfo) return;
     const { mode } = draggedItemInfo;
     draggedItemInfo = null;
@@ -9428,6 +9432,69 @@ function handleDragMove(e) {
         beginDragPreview();
     }
     placeDragElement(e);
+    hintMerge(e);
+}
+
+// Animations are for those who haven't asked their phone to remove them.
+const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// While dragging: the item under the finger that this one would merge with
+// glows and swells ("drop me here"), and the dragged one swells with it.
+let mergeHintEl = null;
+
+function hintMerge(e) {
+    const { mode, index } = draggedItemInfo;
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const cell = under && under.closest ? under.closest(`#grid-${mode} .grid-cell`) : null;
+    const at = cell ? +cell.dataset.index : -1;
+    const el = at >= 0 && at !== index && wouldMerge(mode, grids[mode][index], grids[mode][at]) ? cell.querySelector('.item') : null;
+    if (el === mergeHintEl) return;
+    clearMergeHint();
+    mergeHintEl = el;
+    if (el) el.classList.add('merge-ok');
+    if (dragElement) dragElement.classList.toggle('ready', !!el);
+}
+
+function clearMergeHint() {
+    if (mergeHintEl) mergeHintEl.classList.remove('merge-ok');
+    mergeHintEl = null;
+}
+
+// The dragged picture's last moment: it flies to where its item ended up (into
+// its twin, to its new square, into the bag, or back home), so nothing blinks
+// from one square to another. For show only: the board has already changed.
+function landGhost(ghost, mode, toIndex, how) {
+    if (!ghost) return;
+    const cell = toIndex >= 0 ? document.querySelector(`#grid-${mode} .grid-cell[data-index="${toIndex}"]`) : null;
+    const to = how === 'bag' ? document.querySelector(`#scene-${mode} .inv-btn`) : cell;
+    if (!to || calm() || document.hidden) return ghost.remove();
+    const a = ghost.getBoundingClientRect(), b = to.getBoundingClientRect();
+    const dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);
+    const end = how === 'merge' ? [0.62, 0.55] : how === 'bag' ? [0.3, 0.45] : [1, 1]; // its size and how solid it is on landing
+    const dur = how === 'merge' ? 90 : how === 'bag' ? 170 : Math.round(Math.min(190, 90 + Math.hypot(dx, dy) * 0.3));
+    // The item itself shows as its picture lands (see .item.settle).
+    const item = how === 'move' || how === 'home' ? cell.querySelector('.item') : null;
+    if (item) {
+        item.classList.add('settle');
+        item.addEventListener('animationend', () => item.classList.remove('settle'), { once: true });
+    }
+    const done = () => ghost.remove();
+    ghost.animate([{ transform: 'scale(1.2)', opacity: 0.9 }, { transform: `translate(${dx}px, ${dy}px) scale(${end[0]})`, opacity: end[1] }],
+        { duration: dur, easing: how === 'merge' ? 'ease-in' : 'cubic-bezier(0.2, 0.8, 0.3, 1)', fill: 'forwards' }).onfinish = done;
+    setTimeout(done, dur + 250); // gone, whatever becomes of the animation
+}
+
+// The squares around a merge get a little push, like a drop in a pond.
+function fxRipple(mode, index) {
+    if (calm()) return;
+    const col = index % GAME_WIDTH, row = Math.floor(index / GAME_WIDTH);
+    getNeighbors8(index).forEach(n => {
+        const el = cellItem(mode, n);
+        if (!el || el.classList.contains('pop')) return;
+        const dx = Math.sign((n % GAME_WIDTH) - col), dy = Math.sign(Math.floor(n / GAME_WIDTH) - row);
+        el.animate([{ transform: 'translate(0, 0)' }, { transform: `translate(${dx * 7}%, ${dy * 7}%) scale(0.96)`, offset: 0.3 }, { transform: 'translate(0, 0)' }],
+            { duration: 260, easing: 'ease-out' });
+    });
 }
 
 // A tap: producers, piggy banks and open chests drop something; a double tap
@@ -9457,12 +9524,11 @@ function handleDragEnd(e) {
     document.removeEventListener('pointercancel', cancelDrag);
 
     const wasDragged = !!dragElement;
-    if (dragElement) {
-        dragElement.remove();
-        dragElement = null;
-    }
+    const ghost = dragElement; // the dragged picture: it lands where its item ends up (landGhost)
+    dragElement = null;
+    clearMergeHint();
 
-    if (!draggedItemInfo) return;
+    if (!draggedItemInfo) { if (ghost) ghost.remove(); return; }
     const { mode, index } = draggedItemInfo;
     draggedItemInfo = null;
 
@@ -9475,8 +9541,9 @@ function handleDragEnd(e) {
     // Dropped on 🎒 (or a fingertip's width from it: it's a small target): store it.
     const bag = document.querySelector(`#scene-${mode} .inv-btn`), near = bag && bag.getBoundingClientRect(), reach = stageEl.clientWidth * 0.04;
     if (near && near.width && e.clientX > near.left - reach && e.clientX < near.right + reach && e.clientY > near.top - reach && e.clientY < near.bottom + reach * 2) {
-        storeItem(mode, index);
+        const stored = storeItem(mode, index);
         refreshBoard(mode);
+        landGhost(ghost, mode, index, stored ? 'bag' : 'home');
         return;
     }
     let targetCell = null;
@@ -9489,11 +9556,12 @@ function handleDragEnd(e) {
 
     let popped = [];
     let fxLater = null;
+    let land = [index, 'home']; // where the dragged picture lands, and how: back home unless it merged or moved
     if (targetCell) {
         const targetIndex = parseInt(targetCell.dataset.index);
         if (targetIndex !== index) {
             const sourceItem = grids[mode][index];
-            if (!sourceItem) { refreshBoard(mode); return; } // it ran out (a charger, the Fair) mid-drag
+            if (!sourceItem) { if (ghost) ghost.remove(); refreshBoard(mode); return; } // it ran out (a charger, the Fair) mid-drag
             const targetItem = grids[mode][targetIndex];
             // Producers and their parts, boosters, currency, chests and piggy banks
             // merge by level; plain items by tier.
@@ -9542,6 +9610,7 @@ function handleDragEnd(e) {
             if (swapped) {
                 grids[mode][index] = targetItem;
                 grids[mode][targetIndex] = sourceItem;
+                land = [targetIndex, 'move'];
             }
             if (made) {
                 sfx('merge', made.type ? { chain: 'level', tier: made.level } : { chain, tier: made.tier });
@@ -9556,9 +9625,11 @@ function handleDragEnd(e) {
                 popped = [targetIndex, ...opened, ...afterMerge(mode, targetIndex, made)];
                 fxLater = () => {
                     fxMerge(mode, targetIndex, made.type ? made.level : made.tier);
+                    fxRipple(mode, targetIndex);
                     if (targetItem.web) fxWeb(mode, targetIndex);
                     opened.forEach(i => fxCrate(mode, i));
                 };
+                land = [targetIndex, 'merge'];
             }
             selected = { mode, index: made || swapped ? targetIndex : index };
         }
@@ -9566,7 +9637,18 @@ function handleDragEnd(e) {
 
     checkTasks();
     refreshBoard(mode, popped);
-    if (fxLater) fxLater();
+    if (fxLater && ghost && !calm()) {
+        // A merge: the dragged one flies into its twin, and a beat later the new thing bursts out.
+        const made = cellItem(mode, land[0]);
+        if (made) made.classList.add('fly');
+        setTimeout(fxLater, MERGE_BEAT_MS);
+    } else if (fxLater) fxLater();
+    // A swap: what was in the way shows up in the square the dragged one left.
+    if (land[1] === 'move' && grids[mode][index] && !calm()) {
+        const other = cellItem(mode, index);
+        if (other) { other.classList.add('settle'); other.addEventListener('animationend', () => other.classList.remove('settle'), { once: true }); }
+    }
+    landGhost(ghost, mode, land[0], land[1]);
 }
 
 // --- THE SPARKLE LAYER ---
