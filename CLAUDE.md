@@ -33,4 +33,5 @@
   something not asked for (including ideas Claude suggests itself), run the `scope-gatekeeper` skill: pause, ask
   what the end goal is, whether this is needed for it, what happens without it and whether there's a simpler way,
   give an honest view, and wait for an explicit yes. Skip it only when told "skip the scope check". (The walking
-  cast was scope creep, and was taken out.)
+  cast of townsfolk was scope creep, and was taken out. Clara's own walking from job to job was asked for, in
+  November 2026, and stays: see section 4 of `ASSET_LIST.md`.)
