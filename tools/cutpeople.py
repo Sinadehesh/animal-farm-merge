@@ -1,6 +1,6 @@
 """Cuts each person's pictures for the game out of their art (assets/raw/people/).
 
-    python3 tools/cutpeople.py <raw_dir> <out_dir> <Name_Prefix>
+    python3 tools/cutpeople.py <raw_dir> <out_dir> <Name_Prefix> [--views]
 
 From <Name_Prefix>_Character_Reference.png (a sheet on plain paper: a big figure
 on the left, four standing figures turning round along the top, a big portrait
@@ -18,6 +18,10 @@ cartoon look) is keyed out by colour instead, edges and all, like tools/cutprops
 its pictures are stand2.webp, bust2.webp and portrait2.webp (new names, as players'
 phones keep pictures for good), its portrait on cream, and its waist lower (the
 cartoon cast has big heads).
+
+With --views it writes only the third and fourth standing figures of a magenta sheet,
+side2.webp (from the side, facing right) and back2.webp (from behind), at the standing
+figure's scale: Clara walks in them (hero in assets.js). It prints their sizes.
 """
 import os
 import sys
@@ -197,6 +201,13 @@ def main():
         row = sorted((b for b in boxes if b[3] - b[1] > img.height * 0.2 and b[1] < img.height * 0.15 and b[3] < img.height * 0.6), key=lambda b: b[0])
         cut_one = cut_keyed if toon else cut
         stand = cut_one(img, row[0], paper)
+        if '--views' in sys.argv:
+            for view, box in (('side', row[2]), ('back', row[3])):
+                fig = cut_keyed(img, box, paper)
+                fig = fig.resize((round(fig.width * 420 / stand.height), round(fig.height * 420 / stand.height)), Image.LANCZOS)
+                save(fig, os.path.join(out, f'{view}2.webp'))
+                print(f'  {view}: {fig.width}/{fig.height}')
+            return
         bust = bust_of(cut_one(img, big, paper), WAIST_TOON if toon else WAIST)
         tag = '2' if toon else ''
         if toon:

@@ -9,7 +9,7 @@ It is kept up to date whenever the game gets a new slot.
 - Sizes: items, producers and special items 256×256 PNG with a transparent background; buildings, characters
   and props 512×512; backgrounds 1080×1920.
 
-**618 assets:** 618 done ✅, 0 placeholders 🟡, 0 missing ⬜.
+**620 assets:** 620 done ✅, 0 placeholders 🟡, 0 missing ⬜.
 
 ## 1. Backgrounds (3)
 
@@ -36,8 +36,15 @@ Same camera angle for all: front view, slightly from above, whole building with 
 
 ## 4. Characters (7 people)
 
-Nobody walks: Clara stands where she's working on the map (and turns up at each job you tap), and the townsfolk
-stand at their doors on the town square. Their art is a **character reference** per person (a big figure on the
+Only Clara walks: she goes to each job you tap or fix, on foot where the ground she may walk runs all the way
+there and with a leap where it doesn't (her section in `game.js`). She's seen going the way she goes, in three of
+her sheet's four standing figures: from the side (`side2.webp`, facing right; flipped for the left), from behind
+(`back2.webp`) and from the front (`stand2.webp`). `python3 tools/cutpeople.py assets/raw/people
+assets/people/clara Clara_Everhart --views` cuts the first two. On the move each is shown in pieces, cut at the
+hips, so her legs can step (`.hero-rig` in `index.html`: a new picture of her needs those cuts set again); drawn
+walking pictures could take the place of that one day, but none are needed.
+
+The townsfolk stand at their doors on the town square. Their art is a **character reference** per person (a big figure on the
 left, standing figures turning round along the top, a big portrait under them; Clara's and the Mayor's in the Drive
 folder "characters for merge keeper", the others' sent in the chat). `tools/cutpeople.py` cuts each into
 `assets/people/<name>/`: `stand.webp` (the first standing figure, facing you, on the map), `bust.webp` (the big
@@ -50,7 +57,7 @@ keys those out and names their pictures `stand2.webp`, `bust2.webp` and `portrai
 
 | | Character | Standing | Waist up | Portrait |
 |---|---|---|---|---|
-| ✅ | Clara Everhart, the player (`hero`), in the cartoon look | ✅ | (not used) | (not used) |
+| ✅ | Clara Everhart, the player (`hero`), in the cartoon look | ✅ and, for walking, ✅ from the side and ✅ from behind | (not used) | (not used) |
 | ✅ | the Village Mayor, Mayor Bramble (`mayor`), in the cartoon look | ✅ | ✅ | ✅ |
 | ✅ | Bram Goodbarrel, the rancher (`hattie`), in the cartoon look | ✅ | ✅ | ✅ |
 | ✅ | Ellis Spokewell, the carpenter (`ruby`), in the cartoon look | ✅ | ✅ | ✅ |

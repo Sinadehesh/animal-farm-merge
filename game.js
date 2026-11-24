@@ -3262,6 +3262,8 @@ function panZoom(view, stage, st, limits, first, settled) {
         const cur = now();
         if (cur.n !== last.n) { last = cur; return; }
         if (!moved && Math.hypot(cur.x - last.x, cur.y - last.y) < 8 && cur.n < 2) return;
+        // A mouse can be let go outside the map: the drag still has to hear of it (a finger's lift always reaches it).
+        if (!moved && e.pointerType === 'mouse') { try { view.setPointerCapture(e.pointerId); } catch (err) { /* let go already */ } }
         moved = true;
         view.classList.add('dragging');
         if (cur.n > 1 && last.d) {
@@ -3810,11 +3812,25 @@ function renderWorld(scene) {
 }
 
 // Clara, the farmer: she stands on the farm's paths and grass, never on water,
-// a building or a mess. She turns up at each job you tap or fix, with a hop when
-// it's done. Drag to another part of the farm and she turns up there, on a path
-// near the middle.
+// a building, a mess, a tree or a bush. She goes to each job you tap or fix,
+// with a hop when it's done: on foot where the ground she may walk runs all
+// the way there (round trees and fences, along the paths; about four moves in
+// ten from one job to the next), and with a leap over whatever is in between
+// where it doesn't (each land's ground is in patches, apart from one
+// another). Drag to another part of the farm and she comes into view, on a
+// path near the middle. From too far off to watch she turns up a short way
+// off first; with animations off, she just turns up, as she always did.
 const HERO_TALL = 90; // her height, in world units (a barn is about 250)
-const hero = { x: null, y: null };
+const hero = { x: null, y: null, face: 1, view: 'front', walk: null, raf: 0 };
+const HERO_WALK = 250;    // world units a second at a walk (the screen is 340 across)
+const HERO_LONGEST = 2.6; // seconds: a longer way is run, to take no more than this
+const HERO_FAR = 1700;    // further than this by the way round: she turns up HERO_NEAR from the place and walks the rest
+const HERO_NEAR = 520;
+const HERO_RUSH = 700;    // a fix is starting: from within this she dashes over, from further she turns up
+const HERO_LEAP = 900;    // the furthest she leaps in one go, as the crow flies
+const HERO_STEP = [46, 80]; // a step's length at a walk and at a run, in world units
+const HERO_LEG = 42;      // her legs, in hundredths of her height (the hips are at 58% of her picture: .hero-leg in index.html)
+const HERO_FRONT = 2;     // squares of open ground she keeps in front of her feet on the way (4 where she stands: standNear)
 
 // Where she can stand on each plot (made by tools/walkmask.py): 100 x 100 cells
 // over its picture, 0 blocked, 1 grass, 2 path or floor, 3 not the picture.
@@ -3929,6 +3945,13 @@ function buildWalkMap() {
             });
         });
     });
+    // Trees, bushes, reeds and stumps on the meadow: she goes round them, and
+    // never stands in one or behind its leaves (flowers she walks through).
+    sceneryPlaces().forEach(({ kind, x, y }) => {
+        const [ht, ar] = SCENERY[kind], wd = ht * ar;
+        if (ht < 36) return;
+        each(x - wd * 0.36, y - ht * 0.94, wd * 0.72, ht * 0.94 + 6, (px, py) => (cells[walkIndex(px, py)] === 1 ? 0 : undefined));
+    });
     // Patches of ground cut off from the rest, too small to stand about on, don't count.
     const part = new Int32Array(cells.length), sizes = [0];
     for (let i = 0; i < cells.length; i++) {
@@ -3951,8 +3974,13 @@ function buildWalkMap() {
     return { cells, cols, rows };
 }
 
-// Made again only when an area opens or a job is done.
+// Made again only when an area opens or a job is done. (Finding that out goes
+// through every job, so a search for a way, which asks thousands of times
+// while nothing can change, holds on to the grid it started with: walkHeld.)
+let walkHeld = false;
+
 function walkGrid() {
+    if (walkHeld && walkMap) return walkMap;
     const key = ZONES.map(z => (zoneOpen(z) ? 1 : 0)).join('') + TASKS.filter(taskDone).length;
     if (!walkMap || walkMap.key !== key) walkMap = { ...buildWalkMap(), key };
     return walkMap;
@@ -4010,12 +4038,22 @@ function addHero(ui) {
     if (hero.x === null) firstPlace();
     const el = document.createElement('div');
     el.className = 'hero';
-    el.innerHTML = `<i class="hero-shadow"></i><img class="hero-art" src="${ASSETS.hero.stand}" alt="" draggable="false">`;
+    // Her picture; and, shown on the move, a picture of her in pieces for each way she can be seen going
+    // (heroStride). From the front and from behind: above the hips, and each leg. From the side, where one leg
+    // hides the other: the leg twice (the far one first, under the near one), and above the hips on top.
+    const { stand, back, side, sideAspect } = ASSETS.hero;
+    const pic = (cls, src) => `<img class="${cls}" src="${src}" alt="" draggable="false">`;
+    const legs = (view, src) => `<span class="hero-rig ${view}">${pic('hero-top', src)}${pic('hero-leg', src)}${pic('hero-leg right', src)}</span>`;
+    const leg = (cls, src) => `<span class="hero-leg ${cls}">${pic('', src)}<i></i></span>`;
+    el.innerHTML = `<i class="hero-shadow"></i><span class="hero-body">${pic('hero-art', stand)}${legs('front', stand)}${back ? legs('back', back) : ''}${
+        side ? `<span class="hero-rig side" style="aspect-ratio:${sideAspect}">${leg('far', side)}${leg('near', side)}${pic('hero-top', side)}</span>` : ''}</span>`;
     ui.appendChild(el);
     placeHero(el);
+    heroBody(el, 0, 0);
+    if (hero.walk) { el.dataset.view = hero.view; el.classList.add('walking'); if (!hero.raf) hero.raf = requestAnimationFrame(stepHero); } // the map was drawn again mid-stride
     // A moment later: if a prop now stands where she was, she steps off it.
     setTimeout(() => {
-        if (!el.isConnected || [1, 2].includes(walkGrid().cells[walkCell(hero.x, hero.y)])) return;
+        if (!el.isConnected || hero.walk || [1, 2].includes(walkGrid().cells[walkCell(hero.x, hero.y)])) return; // (on the move: she's on her way off it)
         const at = standNear(hero.x, hero.y, false, 300);
         if (at) popHero(el, at);
         else { firstPlace(); placeHero(el); }
@@ -4036,15 +4074,394 @@ function placeHero(el) {
 function popHero(el, at) {
     [hero.x, hero.y] = at;
     placeHero(el);
-    el.classList.remove('popping', 'cheer');
+    el.classList.remove('popping', 'cheer', 'arrive');
     void el.offsetWidth;
     el.classList.add('popping');
 }
 
-// She turns up at a job, to work on it (if she isn't there already).
-function heroToJob(task) {
-    const el = heroEl(), to = jobWorldXY(task);
-    if (el && to && Math.hypot(to[0] - hero.x, to[1] - hero.y) > 5) popHero(el, to);
+// She goes to a job, to work on it (if she isn't there already). then: what she
+// does once there. rush: a fix is starting, she has to be there now.
+function heroToJob(task, then = null, rush = false) {
+    const to = heroEl() && jobWorldXY(task);
+    if (to) heroGo(to, { then, rush });
+    else if (then) then();
+}
+
+// --- Walking ---
+// The squares she can walk: 0 no, 1 grass, 2 path; 5 and 6 the same with less
+// open ground in front than where she stands (a squeeze past a hedge or a
+// wall: she takes it only for want of a better way). Always with some open
+// ground just in front, so she never seems to walk across something painted
+// in front of her.
+function walkClear() {
+    const map = walkGrid();
+    if (!map.clear) {
+        const { cells, cols, rows } = map, clear = new Uint8Array(cells.length);
+        for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+            const i = r * cols + c, v = cells[i];
+            if (v !== 1 && v !== 2) continue;
+            let open = 0;
+            while (open < 4 && (r + open + 1 >= rows || cells[(r + open + 1) * cols + c])) open++;
+            if (open >= HERO_FRONT) clear[i] = open < 4 ? v + 4 : v;
+        }
+        map.clear = clear;
+        // Which patch of ground each square is in (a way exists only within one).
+        const part = map.part = new Int32Array(cells.length);
+        let id = 0;
+        for (let i = 0; i < clear.length; i++) {
+            if (!clear[i] || part[i]) continue;
+            const todo = [i];
+            part[i] = ++id;
+            while (todo.length) {
+                const j = todo.pop(), c = j % cols, r = (j - c) / cols;
+                for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+                    const nc = c + dc, nr = r + dr;
+                    if ((!dr && !dc) || nc < 0 || nr < 0 || nc >= cols || nr >= rows) continue;
+                    const n = nr * cols + nc;
+                    if (!clear[n] || part[n] || (dr && dc && (!clear[r * cols + nc] || !clear[nr * cols + c]))) continue;
+                    part[n] = id;
+                    todo.push(n);
+                }
+            }
+        }
+    }
+    return map.clear;
+}
+
+// The walkable square at a point, or the nearest one within a few squares; -1 if none.
+function nearestClear(x, y) {
+    const { cols, rows } = walkGrid(), clear = walkClear();
+    const c0 = Math.floor((x - WORLD_BOX.x0) / WALK_CELL), r0 = Math.floor((y - WORLD_BOX.y0) / WALK_CELL);
+    for (let d = 0; d <= 8; d++) {
+        let best = -1, far = Infinity;
+        for (let r = r0 - d; r <= r0 + d; r++) for (let c = c0 - d; c <= c0 + d; c++) {
+            if (Math.max(Math.abs(r - r0), Math.abs(c - c0)) !== d || r < 0 || c < 0 || r >= rows || c >= cols || !clear[r * cols + c]) continue;
+            const dist = (r - r0) ** 2 + (c - c0) ** 2;
+            if (dist < far) { far = dist; best = r * cols + c; }
+        }
+        if (best >= 0) return best;
+    }
+    return -1;
+}
+
+// Can she walk straight from one point to another? Every square the line
+// crosses has to be open, and it never squeezes between two corners.
+function clearLine(ax, ay, bx, by) {
+    const { cols, rows } = walkGrid(), clear = walkClear(), { x0, y0 } = WORLD_BOX;
+    const open = (c, r) => c >= 0 && r >= 0 && c < cols && r < rows && clear[r * cols + c] > 0;
+    const x = (ax - x0) / WALK_CELL, y = (ay - y0) / WALK_CELL, dx = (bx - ax) / WALK_CELL, dy = (by - ay) / WALK_CELL;
+    let c = Math.floor(x), r = Math.floor(y);
+    if (!open(c, r)) return false;
+    // tx, ty: how far along the line (0 to 1) it next crosses into another column, another row.
+    const sc = dx > 0 ? 1 : -1, sr = dy > 0 ? 1 : -1, ex = dx ? Math.abs(1 / dx) : Infinity, ey = dy ? Math.abs(1 / dy) : Infinity;
+    let tx = dx ? (dx > 0 ? c + 1 - x : x - c) * ex : Infinity, ty = dy ? (dy > 0 ? r + 1 - y : y - r) * ey : Infinity;
+    while (Math.min(tx, ty) < 1 - 1e-9) {
+        if (Math.abs(tx - ty) < 1e-9) { // through a corner: the squares on both sides of it too
+            if (!open(c + sc, r) || !open(c, r + sr)) return false;
+            c += sc; r += sr; tx += ex; ty += ey;
+        } else if (tx < ty) { c += sc; tx += ex; } else { r += sr; ty += ey; }
+        if (!open(c, r)) return false;
+    }
+    return true;
+}
+
+// The way from one point to another over walkable ground, liking paths better
+// than grass: a few points [[x, y], ...] in world units, or null when there's
+// no way (or none worth looking further for).
+const walkFind = { size: 0, stamp: 0 };
+const HERO_KEEN = 1.4; // how hard the search heads for the place (1: the very best way, slowly; more: a good way, fast)
+
+function heroPath(ax, ay, bx, by) {
+    walkGrid(); // up to date, and held for the search
+    walkHeld = true;
+    try { return findWay(ax, ay, bx, by); } finally { walkHeld = false; }
+}
+
+function findWay(ax, ay, bx, by) {
+    const map = walkGrid(), { cols, rows } = map, clear = walkClear(), N = clear.length;
+    const start = nearestClear(ax, ay), goal = nearestClear(bx, by);
+    if (start < 0 || goal < 0 || map.part[start] !== map.part[goal]) return null; // not on the same patch of ground
+    if (walkFind.size !== N) Object.assign(walkFind, { size: N, cost: new Float64Array(N), from: new Int32Array(N), seen: new Uint32Array(N), stamp: 0 });
+    const { cost, from, seen } = walkFind, stamp = ++walkFind.stamp;
+    const gc = goal % cols, gr = (goal - gc) / cols;
+    const guess = i => { const c = i % cols, dc = Math.abs(c - gc), dr = Math.abs((i - c) / cols - gr); return Math.max(dc, dr) + 0.4142 * Math.min(dc, dr); };
+    // The squares still to look at, the likeliest first (a small heap: how likely, which square).
+    const heapK = [], heapV = [];
+    const push = (k, v) => {
+        let i = heapK.length;
+        heapK.push(k); heapV.push(v);
+        while (i > 0) { const up = (i - 1) >> 1; if (heapK[up] <= k) break; heapK[i] = heapK[up]; heapV[i] = heapV[up]; i = up; }
+        heapK[i] = k; heapV[i] = v;
+    };
+    const pop = () => {
+        const top = heapV[0], k = heapK.pop(), v = heapV.pop(), n = heapK.length;
+        if (n) {
+            let i = 0;
+            for (;;) {
+                let kid = 2 * i + 1;
+                if (kid >= n) break;
+                if (kid + 1 < n && heapK[kid + 1] < heapK[kid]) kid++;
+                if (heapK[kid] >= k) break;
+                heapK[i] = heapK[kid]; heapV[i] = heapV[kid]; i = kid;
+            }
+            heapK[i] = k; heapV[i] = v;
+        }
+        return top;
+    };
+    cost[start] = 0; from[start] = -1; seen[start] = stamp;
+    push(guess(start) * HERO_KEEN, start);
+    // No further than she'd walk anyway (HERO_FAR, all on grass): the search stays near the two ends.
+    const most = (HERO_FAR / WALK_CELL) * 1.7 + 6;
+    let looked = 0, found = false;
+    while (heapK.length) {
+        const key = heapK[0], i = pop();
+        if (i === goal) { found = true; break; }
+        const here = cost[i];
+        if (key > here + guess(i) * HERO_KEEN + 1e-6) continue; // looked at since, by a shorter way
+        if (++looked > 9000) break; // far too roundabout: she'll leap, or turn up there
+        const c = i % cols, r = (i - c) / cols;
+        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+            if (!dr && !dc) continue;
+            const nc = c + dc, nr = r + dr;
+            if (nc < 0 || nr < 0 || nc >= cols || nr >= rows) continue;
+            const n = nr * cols + nc, kind = clear[n];
+            if (!kind) continue;
+            if (dr && dc && (!clear[r * cols + nc] || !clear[nr * cols + c])) continue; // no cutting a corner
+            const to = here + (dr && dc ? 1.4142 : 1) * ((kind & 3) === 2 ? 1 : 1.7) * (kind > 4 ? 2 : 1), left = guess(n);
+            if ((seen[n] === stamp && cost[n] <= to + 1e-6) || to + left > most) continue; // (no better by a rounding error: not again)
+            cost[n] = to; from[n] = i; seen[n] = stamp;
+            push(to + left * HERO_KEEN, n);
+        }
+    }
+    if (!found) return null;
+    const pts = [];
+    for (let i = goal; i >= 0; i = from[i]) pts.push(cellMiddle(i));
+    pts.reverse();
+    // Her own spot and the place itself at the ends, where a straight step reaches them.
+    if (clearLine(ax, ay, ...pts[0])) pts[0] = [ax, ay]; else pts.unshift([ax, ay]);
+    if (clearLine(...pts[pts.length - 1], bx, by)) pts[pts.length - 1] = [bx, by];
+    // Straight where she can go straight: from each point, on to the furthest one in a clear line
+    // (a few points past one that isn't are tried too)...
+    const way = [pts[0]];
+    for (let i = 0; i < pts.length - 1;) {
+        let j = i + 1;
+        for (let k = j + 1; k < pts.length && k <= j + 5; k++) if (clearLine(...pts[i], ...pts[k])) j = k;
+        way.push(pts[j]);
+        i = j;
+    }
+    // ...and the corners rounded off, where there's room.
+    const smooth = [way[0]];
+    for (let i = 1; i < way.length - 1; i++) {
+        const [px, py] = way[i - 1], [x, y] = way[i], [nx, ny] = way[i + 1];
+        const a = Math.min(0.45, 55 / (Math.hypot(x - px, y - py) || 1)), b = Math.min(0.45, 55 / (Math.hypot(nx - x, ny - y) || 1));
+        const p = [x + (px - x) * a, y + (py - y) * a], q = [x + (nx - x) * b, y + (ny - y) * b], m = [(p[0] + 2 * x + q[0]) / 4, (p[1] + 2 * y + q[1]) / 4];
+        if (clearLine(...p, ...m) && clearLine(...m, ...q)) smooth.push(p, m, q);
+        else smooth.push(way[i]);
+    }
+    smooth.push(way[way.length - 1]);
+    return smooth;
+}
+
+function pathLength(pts) {
+    let len = 0;
+    for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    return len;
+}
+
+// The last `len` of a way.
+function pathTail(pts, len) {
+    for (let i = pts.length - 1; i > 0; i--) {
+        const d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+        if (d >= len) { const k = len / d; return [[pts[i][0] + (pts[i - 1][0] - pts[i][0]) * k, pts[i][1] + (pts[i - 1][1] - pts[i][1]) * k], ...pts.slice(i)]; }
+        len -= d;
+    }
+    return pts;
+}
+
+// She goes to a place: on foot when the ground runs all the way there, with a
+// leap when it doesn't (or when the way round is much longer than the hop).
+// From too far off to watch she turns up a short way off first. With
+// animations switched off, or out of sight, she just turns up there.
+// then: what she does on arriving. rush: she has to be there now (a fix is starting).
+function heroGo(to, { then = null, rush = false } = {}) {
+    const el = heroEl();
+    if (!el) return;
+    const arrive = () => { if (then) then(); };
+    const far = Math.hypot(to[0] - hero.x, to[1] - hero.y);
+    // Sent somewhere else mid-leap: she comes down from the height she's at, not from the ground.
+    let air = hero.walk && hero.walk.leap ? leapUp(hero.walk, Math.min(1, (performance.now() - hero.walk.t0) / (hero.walk.secs * 1000))) : 0;
+    if (far <= 5) { if (hero.walk) endWalk(false); return arrive(); }
+    const view = el.closest('.world-view');
+    const lively = !calm() && currentScene === 'map' && !document.hidden && !(view && view.classList.contains('far'));
+    if (!lively || (rush && far > HERO_RUSH)) {
+        if (hero.walk) endWalk(false);
+        popHero(el, to);
+        return arrive();
+    }
+    let way = far <= HERO_FAR ? heroPath(hero.x, hero.y, to[0], to[1]) : null, len = way ? pathLength(way) : 0;
+    if (way && len > HERO_FAR) { // too long to watch: she turns up a short walk away
+        way = pathTail(way, HERO_NEAR);
+        len = HERO_NEAR;
+        popHero(el, way[0]);
+        air = 0;
+    } else if (way && far <= HERO_LEAP && (len > far * 2.2 + 120 || (rush && len > HERO_RUSH))) way = null; // the way round is silly (or too slow for now): over she goes
+    let walk;
+    if (way) {
+        const lens = [0];
+        for (let i = 1; i < way.length; i++) lens.push(lens[i - 1] + Math.hypot(way[i][0] - way[i - 1][0], way[i][1] - way[i - 1][1]));
+        const secs = rush ? Math.min(0.34, 0.12 + len / 2400) : Math.min(HERO_LONGEST, Math.max(0.3, len / HERO_WALK)), run = len / secs > 380;
+        // A whole number of steps, so she ends with both feet on the ground.
+        walk = { way, lens, len, secs, run, stride: len / Math.max(1, Math.round(len / HERO_STEP[+run])), dust: 0 };
+    } else {
+        // No ground to walk: a leap, from where she is or (from far off) from a short way off.
+        let from = [hero.x, hero.y], d = far;
+        if (far > HERO_LEAP) {
+            d = HERO_NEAR;
+            from = [to[0] + (hero.x - to[0]) * d / far, to[1] + (hero.y - to[1]) * d / far];
+            from = standNear(...from, false, 200) || from;
+            d = Math.hypot(to[0] - from[0], to[1] - from[1]);
+            popHero(el, from);
+            air = 0;
+        }
+        walk = { leap: true, way: [from, to], len: d, secs: rush ? 0.3 : Math.min(0.62, 0.34 + d / 2600), high: Math.min(190, Math.max(55, d * 0.24)) };
+        if (FX.app) { const r = el.getBoundingClientRect(); fxDust(r.left + r.width / 2, r.bottom - r.height * 0.06, r.width * 0.6, 2); }
+    }
+    if (walk.leap) heroTurn(to[0] - walk.way[0][0], to[1] - walk.way[0][1], true); // (on foot she turns as she goes: stepHero)
+    hero.walk = { ...walk, air, fresh: true, t0: performance.now(), then: arrive };
+    el.dataset.view = hero.view;
+    heroPose('stand');
+    el.classList.remove('arrive');
+    el.classList.add('walking');
+    if (!hero.raf) hero.raf = requestAnimationFrame(stepHero);
+}
+
+// How far along she is (0 to 1) at a share of the time: off gently, steady, and slowing to a stop.
+function walkEase(u) {
+    const a = 0.14, b = 0.2, top = 1 / (1 - a / 2 - b / 2);
+    return u < a ? top * u * u / (2 * a) : u < 1 - b ? top * (u - a / 2) : 1 - top * (1 - u) * (1 - u) / (2 * b);
+}
+
+// Her body mid-stride (steps: how many she has taken; lift: how much of a stride, 0 to 1), facing the way
+// she goes: swaying from foot to foot seen from the front or behind, leaning into it seen from the side or at
+// a run. air: still this high from a leap she was called away from, world units.
+function heroBody(el, steps, lift, air = 0) {
+    const body = el.querySelector('.hero-body'), shadow = el.querySelector('.hero-shadow');
+    if (!body) return;
+    const w = hero.walk, run = !!(w && w.run), side = hero.view === 'side', foot = w ? Math.sin(Math.PI * steps) * lift : 0; // 1: one foot, -1: the other
+    const up = heroStride(el, foot, run) + (air / HERO_TALL) * 100;
+    const sway = side ? 0 : foot * hero.face * (run ? 4.5 : 3.2), lean = w ? hero.face * (run ? 6 : side ? 2.5 : 1.5) * lift : 0;
+    body.style.transform = `translateY(${-up}%) rotate(${sway + lean}deg) scaleX(${hero.face})`;
+    if (shadow) shadow.style.scale = up > 0 ? Math.max(0.55, 1 - up / 30) : '';
+}
+
+// Her legs for one moment of a stride, in the pieces of the view she's seen in; gives back how far her body
+// rises with it (down, if less than 0), in hundredths of her height. From the front or from behind a foot lifts
+// (that leg drawn shorter, from the hip) while at a walk the other stays on the ground (it reaches down as she
+// rises); from the side her legs swing opposite ways from the hip, and she comes down a little as they spread.
+// (Walking pictures of her can take the place of all this.)
+function heroStride(el, foot, run) {
+    const legs = el.querySelectorAll(`.hero-rig.${hero.view} .hero-leg`);
+    if (hero.view === 'side') {
+        const swing = foot * (run ? 27 : 18);
+        legs.forEach((leg, i) => { leg.style.transform = swing ? `rotate(${i ? -swing : swing}deg)` : ''; });
+        return -HERO_LEG * (1 - Math.cos(swing * Math.PI / 180));
+    }
+    const bob = Math.abs(foot) * (run ? 7 : 2.4), down = run ? 1 : 1 + bob / HERO_LEG, bend = run ? 0.26 : 0.2;
+    legs.forEach((leg, i) => { const long = down - Math.max(0, i ? -foot : foot) * bend; leg.style.transform = long === 1 ? '' : `scaleY(${long})`; });
+    return bob;
+}
+
+// The view she's seen in for the way she's heading (dx, dy, world units): from the side along most ways (she
+// faces along it), from behind going up the screen, from the front coming down it. Once in a view she keeps it
+// until her heading is well into another's (fresh: setting off, no view to keep), so a bend doesn't flick her
+// to and fro.
+function heroTurn(dx, dy, fresh = false) {
+    if (Math.hypot(dx, dy) < 14) return;
+    const steep = Math.atan2(Math.abs(dy), Math.abs(dx)) * 180 / Math.PI, edge = fresh ? 54 : hero.view === 'side' ? 62 : 46;
+    // (A view whose picture isn't there, or hasn't come down the wire yet: from the front, like her standing picture.)
+    const ready = view => { const img = heroEl() && heroEl().querySelector(`.hero-rig.${view} img`); return !!(img && img.complete && img.naturalWidth); };
+    hero.view = steep < edge && ready('side') ? 'side' : dy < 0 && ready('back') ? 'back' : 'front';
+    // Only her side picture is turned over, to face left; from the front or behind she's always the right way round.
+    hero.face = hero.view !== 'side' ? 1 : Math.abs(dx) > 6 ? (dx < 0 ? -1 : 1) : hero.face;
+}
+
+// How high she is off the ground in a leap, `u` of the way over (0 to 1), in
+// world units: the arc, and the last of the height she set off from (sent
+// somewhere else mid-leap).
+function leapUp(w, u) {
+    return 4 * u * (1 - u) * w.high + (w.air || 0) * (1 - u) ** 2;
+}
+
+// Her body in a leap: up in an arc, stretched on the way up, leaning into it
+// and then back for the landing.
+function heroLeap(el, u, w) {
+    const body = el.querySelector('.hero-body'), shadow = el.querySelector('.hero-shadow');
+    if (!body) return;
+    const up = leapUp(w, u), rise = Math.cos(Math.PI * u), side = hero.view === 'side'; // rise: 1 leaving the ground, -1 coming down
+    body.style.transform = `translateY(${-(up / HERO_TALL) * 100}%) rotate(${hero.face * (side ? 11 : 3) * rise}deg) scaleX(${hero.face}) scale(${1 - 0.05 * rise}, ${1 + 0.09 * rise})`;
+    // Her legs at the top: knees up (from the front or behind), or spread in a stride (from the side).
+    const top = Math.sin(Math.PI * u);
+    el.querySelectorAll(`.hero-rig.${hero.view} .hero-leg`).forEach((leg, i) => { leg.style.transform = side ? `rotate(${(i ? -24 : 24) * top}deg)` : `scaleY(${1 - 0.2 * top})`; });
+    if (shadow) shadow.style.scale = 1 - 0.45 * Math.min(1, up / w.high);
+}
+
+function stepHero() {
+    hero.raf = 0;
+    const w = hero.walk, el = heroEl();
+    if (!w) return;
+    if (!el || currentScene !== 'map' || el.closest('.world-view.far')) return endWalk(true); // not to be seen: she's there
+    const u = Math.min(1, (performance.now() - w.t0) / (w.secs * 1000));
+    if (w.leap) {
+        // Over the ground in a straight line, quick off the mark and easing down; her body does the arc.
+        const k = 1 - (1 - u) ** 1.6, [ax, ay] = w.way[0], [bx, by] = w.way[1];
+        hero.x = ax + (bx - ax) * k;
+        hero.y = ay + (by - ay) * k;
+        placeHero(el);
+        heroLeap(el, u, w);
+        if (u < 1) hero.raf = requestAnimationFrame(stepHero);
+        else endWalk(true);
+        return;
+    }
+    // The point this far along the way.
+    const at = d => {
+        let i = 1;
+        while (i < w.lens.length - 1 && w.lens[i] < d) i++;
+        const [ax, ay] = w.way[i - 1], [bx, by] = w.way[i], k = (d - w.lens[i - 1]) / ((w.lens[i] - w.lens[i - 1]) || 1);
+        return [ax + (bx - ax) * k, ay + (by - ay) * k];
+    };
+    const s = w.len * walkEase(u), ahead = at(Math.min(w.len, s + 70));
+    [hero.x, hero.y] = at(s);
+    // She's seen going the way she's heading: a little ahead, so a wiggle in the way doesn't turn her to and fro.
+    heroTurn(ahead[0] - hero.x, ahead[1] - hero.y, w.fresh);
+    w.fresh = false;
+    if (el.dataset.view !== hero.view) el.dataset.view = hero.view;
+    placeHero(el);
+    // Her stride keeps time with the ground she covers; it eases in and out with her speed.
+    const steps = s / w.stride;
+    heroBody(el, steps, Math.min(1, u / 0.1, (1 - u) / 0.12 + 0.25), w.air ? w.air * Math.max(0, 1 - (performance.now() - w.t0) / 170) ** 2 : 0);
+    if (w.run && FX.app && steps - w.dust > 2) { w.dust = steps; const r = el.getBoundingClientRect(); fxDust(r.left + r.width / 2, r.bottom - r.height * 0.06, r.width * 0.5, 1); }
+    if (u < 1) hero.raf = requestAnimationFrame(stepHero);
+    else endWalk(true);
+}
+
+// The walk is over: she's at its end (there: put her there), standing, and does what she came for.
+function endWalk(there) {
+    const w = hero.walk, el = heroEl();
+    hero.walk = null;
+    if (!w) return;
+    if (there) [hero.x, hero.y] = w.way[w.way.length - 1];
+    hero.face = 1; // standing, she's her picture as it's drawn
+    if (el) {
+        placeHero(el);
+        heroBody(el, 0, 0);
+        el.classList.remove('walking');
+        if (there) {
+            void el.offsetWidth;
+            el.classList.add('arrive');
+            if (w.leap && FX.app && currentScene === 'map') { const r = el.getBoundingClientRect(); fxDust(r.left + r.width / 2, r.bottom - r.height * 0.06, r.width * 0.7, 3); }
+        }
+    }
+    if (there) w.then();
 }
 
 // Once a drag stops: if she's out of sight, she pops up on a path near the
@@ -4055,9 +4472,11 @@ function heroFollow(view, stage) {
     const { x0, y0, w, h } = WORLD_BOX;
     const cx = x0 + worldView.fx * w, cy = y0 + worldView.fy * h;
     const hw = (view.clientWidth / stage.offsetWidth) * w / 2, hh = (view.clientHeight / stage.offsetHeight) * h / 2;
-    if (Math.abs(hero.x - cx) < hw * 0.85 && hero.y - HERO_TALL > cy - hh * 0.9 && hero.y < cy + hh * 0.8) return;
+    // Where she is, or where she's walking to: in sight, she stays.
+    const [x, y] = hero.walk ? hero.walk.way[hero.walk.way.length - 1] : [hero.x, hero.y];
+    if (Math.abs(x - cx) < hw * 0.85 && y - HERO_TALL > cy - hh * 0.9 && y < cy + hh * 0.8) return;
     const at = placeStand(cx, cy, hw, hh) || standNear(cx, cy + hh * 0.2, true, Math.min(hw, hh) * 0.7);
-    if (at) { popHero(el, at); heroPose('wave', 1800); }
+    if (at) heroGo(at, { then: () => heroPose('wave', 1800) });
 }
 
 // Looking at a place with set spots for her (PLACE_SPOTS[id].stand): the one in view
@@ -4669,7 +5088,7 @@ function addZonePerson(el, tasks, zone) {
 
 function tapFix(task) {
     if (fixing) return;
-    if (currentScene === 'map') { heroToJob(task); heroPose(taskReady(task) ? 'point' : 'think', 2000); }
+    if (currentScene === 'map') heroToJob(task, () => heroPose(taskReady(task) ? 'point' : 'think', 2000));
     if (taskDone(task)) return toast(`“${task.line}”`);
     if (!taskOpen(task)) return toast('🔒 Later!');
     openTaskCard(task);
@@ -4822,7 +5241,7 @@ function fixJob(id) {
     const scene = document.getElementById(task.land === 'town' ? 'scene-town' : currentScene === 'map' ? 'scene-map' : 'scene-fix');
     const spot = scene.hidden ? null : scene.querySelector(`[data-job="${id}"]`);
     if (!spot) return completeTask(id);
-    if (currentScene === 'map') { heroToJob(task); heroPose('hammer', 1400); }
+    if (currentScene === 'map') heroToJob(task, () => heroPose('hammer', 1400), true);
     fixing = true;
     spot.classList.remove('spotlight');
     closeDialog();

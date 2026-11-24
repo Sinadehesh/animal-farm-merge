@@ -130,7 +130,11 @@ const ASSETS = {
     // picture's width over its height. The cast's pictures (here and below: stand, bust and
     // face) are cut by tools/cutpeople.py from the art in the Drive folder "characters for
     // merge keeper".
-    hero: { name: 'Clara Everhart', stand: 'assets/people/clara/stand2.webp', aspect: 186 / 420 },
+    // side and back: she walks in them (from the side she faces right; cutpeople.py --views).
+    // Her walk cuts these pictures' legs loose at the hips: when one changes, set .hero-top and
+    // .hero-leg in index.html, and HERO_LEG in game.js, to the new one.
+    hero: { name: 'Clara Everhart', stand: 'assets/people/clara/stand2.webp', aspect: 186 / 420,
+        side: 'assets/people/clara/side2.webp', sideAspect: 130 / 419, back: 'assets/people/clara/back2.webp' },
 
     // The sparkle layer's pictures (see THE SPARKLE LAYER in game.js), cut from
     // assets/raw/fx/sheet.jpg (light on black) by tools/cutfx.py, which turns the black
