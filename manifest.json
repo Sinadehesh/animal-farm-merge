@@ -1,6 +1,6 @@
 {
-  "name": "Merge Farmstead",
-  "short_name": "Farmstead",
+  "name": "Merge Keeper",
+  "short_name": "Merge Keeper",
   "description": "Merge, fix up the farm and save Sunnyvale.",
   "start_url": "./",
   "scope": "./",

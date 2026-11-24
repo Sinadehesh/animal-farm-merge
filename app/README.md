@@ -13,9 +13,9 @@ Google Play Billing (the `cordova-plugin-purchase` plugin). The website and the 
 the pictures into WebP under their own file names (the app's browser reads an image by its contents): 56 MB of
 pictures and sounds become about 16 MB, and the app about 22 MB.
 
-**The app id `com.sinadehesh.mergefarmstead` is permanent once uploaded to Play Console.** If the game gets
-another name, change `appId` in `capacitor.config.json`, `namespace`/`applicationId` in `android/app/build.gradle`
-and the `MainActivity.java` package folder *before* the first upload.
+**The game is called Merge Keeper** (it was Merge Farmstead until 1.0.14). **The app id
+`com.sinadehesh.mergefarmstead` is permanent** now that the game is on Google Play: it keeps the old word, and
+players never see it. The same goes for the privacy policy's address and the saved-game keys in `game.js`.
 
 ## 1. One-time setup (Linux)
 

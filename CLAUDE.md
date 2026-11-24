@@ -21,6 +21,14 @@
   commit. Each kind of thing gets its own event name, so the owner can read the counts without setting anything up.
 - Google Play: the developer account ($25), ID check and payments profile are done. Don't list them as to-dos again;
   the release steps that remain are in `app/README.md` (section 4).
+- The game is live on Google Play and is called **Merge Keeper** (Merge Farmstead until 1.0.14). The old word stays,
+  on purpose, in the app id (`com.sinadehesh.mergefarmstead`), the privacy policy's address
+  (`/mergefarmstead/privacy/`) and the saved-game keys (`merge-farmstead-save-v1` and the like): changing any of
+  them would lose players' farms or break the store listing. Never rename those.
+- Live means careful: `main` is what the next app build is made from. Anything the owner hasn't tried yet goes to the
+  work branch only (pushing it still updates the website, which is the place to try things) and reaches `main` when
+  the owner says so. Every visible change is compared against the screens before it (the tour and the pop-up cards),
+  not only checked on its own.
 - Scope: the owner asked to be stopped from scope creep. Before building any new feature, expanding scope or adding
   something not asked for (including ideas Claude suggests itself), run the `scope-gatekeeper` skill: pause, ask
   what the end goal is, whether this is needed for it, what happens without it and whether there's a simpler way,

@@ -1,4 +1,6 @@
-// --- MERGE FARMSTEAD ---
+// --- MERGE KEEPER ---
+// (Called Merge Farmstead until 1.0.14. The old word stays in the saved-game keys below and in the
+// app's id: changing either would lose players' farms.)
 // The farm map, the town and the market are physical places: each building,
 // person and shelf item is a sprite placed on a background that you tap.
 // Image paths all come from assets.js so AI-generated art can replace the
@@ -5814,7 +5816,7 @@ function playOpening() {
         <div class="op-clouds">${[0, 1, 2, 3, 4, 5].map(i => `<img src="${cloud}" alt="" style="--i:${i};--d:${CLOUD_PHASES[i]}s">`).join('')}</div>
         <div class="op-rain"></div>
         <div class="op-flash"></div>
-        <div class="op-title"><h1>Merge<br><span>Farmstead</span></h1><p>Tap to start</p></div>
+        <div class="op-title"><h1>Merge<br><span>Keeper</span></h1><p>Tap to start</p></div>
         <p class="op-caption"></p>
         <div class="op-friends">${['shopkeeper', 'hattie', 'ruby', 'mayor', 'finn', 'poppy'].map((id, i) =>
             `<img src="${ASSETS.characters[id] || (ASSETS.bust || {})[id]}" alt="" style="--i:${i}">`).join('')}</div>
@@ -6622,7 +6624,7 @@ function goTo(scene) {
     backBtn.hidden = scene === 'map';
     chargeBtn.hidden = !isBoard(scene);
 
-    if (scene === 'map') { titleEl.textContent = 'Farmstead'; renderMap(); }
+    if (scene === 'map') { titleEl.textContent = 'Farm'; renderMap(); }
     else if (scene === 'town') { titleEl.textContent = TOWN_NAME; renderTown(); }
     else if (scene === 'market') { titleEl.textContent = 'Market'; renderMarket(); }
     else if (scene === 'fix') { titleEl.textContent = AREAS[fixLand].name; renderFix(); }
@@ -10253,6 +10255,8 @@ function iconize(html) {
         const src = (ASSETS.ui || {})[EMOJI_ICONS[e]];
         if (!src) return all;
         const icon = `<img class="ui-icon" src="${src}" alt="" draggable="false"><i class="emo">${all.slice(sign.length, all.length - number.length)}</i>`;
+        // A span on purpose: a tag's own small icons are styled as "an icon in a span"
+        // (.spot span > .ui-icon). The .nb rule keeps it inline whatever a card does with its spans.
         return sign || number ? `<span class="nb">${sign}${icon}${number}</span>` : icon;
     })).join('');
 }

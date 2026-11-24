@@ -11,7 +11,7 @@
     <meta name="theme-color" content="#4a3426">
     <link rel="apple-touch-icon" href="assets/ui/apple-touch-icon-rose.png">
     <link rel="icon" type="image/png" href="assets/ui/app-icon-rose-192.png">
-    <title>Merge Farmstead</title>
+    <title>Merge Keeper</title>
     <style>
         :root {
             --worn: grayscale(0.8) sepia(0.45) brightness(0.72) contrast(0.9);
@@ -395,7 +395,9 @@
             font: italic 900 2.7cqw/1 Georgia, 'Times New Roman', serif;
         }
         /* An icon and the number after it stay on one line. */
-        .nb { white-space: nowrap; }
+        /* Always inline, whatever a card's rules do with the spans inside it (a column, a grid):
+           without this, the thank-you bubble stacked "+", the coin and the number and stretched the coin. */
+        .nb { display: inline !important; white-space: nowrap; }
         .info-text { flex: 1; font-size: 3.1cqw; line-height: 1.25; }
         .info-text small { font-size: 2.7cqw; color: #8a6a50; }
         .sell-btn {
@@ -1390,7 +1392,7 @@
         }
         .thanks::before { content: ''; position: absolute; left: 50%; top: -2.4cqw; width: 3.6cqw; height: 3.6cqw; margin-left: -1.8cqw; background: var(--paper); border-left: 3px solid var(--ink); border-top: 3px solid var(--ink); rotate: 45deg; }
         .thanks .face { width: 11cqw; height: 11cqw; border-radius: 50%; object-fit: cover; object-position: top; border: 2px solid var(--ink); background: #fff; }
-        .thanks span { display: flex; flex-direction: column; line-height: 1.2; }
+        .thanks > span { display: flex; flex-direction: column; line-height: 1.2; }
         .thanks b { font-size: 2.6cqw; color: #a0522d; text-transform: uppercase; letter-spacing: 0.04em; }
         .thanks i { font-style: normal; font-weight: 900; font-size: 4cqw; color: var(--ink); }
         .thanks small { font-size: 3cqw; font-weight: 800; color: #6b4f3a; }
@@ -1590,7 +1592,7 @@
         .fix-cheer .happy { width: 16cqw; height: 16cqw; margin: -5cqw 0 -3cqw -2cqw; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.25)); }
         .spot.full-body .spot-label { bottom: 2%; }
         .fix-call .face { width: 13cqw; height: 13cqw; border-radius: 50%; border: 2px solid var(--ink); object-fit: cover; object-position: top; }
-        .fix-call span { flex: 1; display: grid; font-size: max(11px, 3.6cqw); }
+        .fix-call > span { flex: 1; display: grid; font-size: max(11px, 3.6cqw); }
         .fix-call small { color: #6b5a45; font-weight: 700; }
         .fix-call .btn { white-space: nowrap; }
         .fix-call-x { position: absolute; right: -2cqw; top: -2cqw; width: 6cqw; height: 6cqw; border-radius: 50%; border: 2px solid var(--ink); background: #fff; font-size: 3cqw; padding: 0; }
@@ -1768,7 +1770,7 @@
             animation: popIn 0.35s cubic-bezier(.3, 1.6, .5, 1), fadeOut 0.4s 2.2s forwards;
         }
         .fix-cheer .face { width: 11cqw; height: 11cqw; border-radius: 50%; border: 2px solid var(--ink); object-fit: cover; object-position: top; }
-        .fix-cheer span { display: grid; font-size: max(12px, 3.8cqw); }
+        .fix-cheer > span { display: grid; font-size: max(12px, 3.8cqw); }
         .fix-cheer small { font-weight: 900; color: #3a7a2c; }
         .fix-cheer .ui-icon { width: 4cqw; height: 4cqw; }
         /* --- BOARD, Merge Mansion style: the place behind, a cream framed board,
@@ -2349,7 +2351,7 @@
 <body>
     <header class="hud">
         <button id="btn-back" class="btn-back" hidden aria-label="Back to the map">⬅</button>
-        <h1 id="scene-title">Farmstead</h1>
+        <h1 id="scene-title">Farm</h1>
         <button class="res res-level" id="btn-level" title="Level and jobs">
             <span><i class="ui-slot" data-ui="star">⭐</i> <b id="level-val">1</b></span>
             <span class="xp-bar"><i id="xp-fill"></i></span>
@@ -2384,8 +2386,8 @@
         <div id="toasts" aria-live="polite"></div>
     </main>
 
-    <script src="assets.js?v=202611171431"></script>
-    <script src="monetize.js?v=202611171431"></script>
-    <script src="game.js?v=202611171431"></script>
+    <script src="assets.js?v=202611240917"></script>
+    <script src="monetize.js?v=202611240917"></script>
+    <script src="game.js?v=202611240917"></script>
 </body>
 </html>
