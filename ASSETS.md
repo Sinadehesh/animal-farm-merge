@@ -67,6 +67,14 @@ cut the image out cleanly. The game adds its own shadows.
    Sparkles stay with their item, and a soft glow can't join two items together. Use `1 1` for a single image, `256` for items and `512` for
    buildings and characters. Backgrounds don't need this step; resize them to
    1080×1920.
+   If an item still carries pale bits of its sheet once cut (a halo round it, patches of a pastel
+   backdrop: the glowing top items of the chains had them, and they show on the board's tiles and badly
+   on anything darker), clean it:
+   ```
+   python3 tools/cleancut.py assets/items/barn/11_unicorn.png assets/items/barn/11_unicorn_clean.png
+   ```
+   and look at the result on a dark colour. It must be checked by eye: a white item with no outline (a
+   swan, flour, a plate) can lose part of itself, and pale sparkles go too. Those are left as they are.
 4. **Register it** in `assets.js` and look at it in the game. Check items next to
    the tiers above and below them, and buildings on the map next to their neighbours.
 

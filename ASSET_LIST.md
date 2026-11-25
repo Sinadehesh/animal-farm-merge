@@ -107,7 +107,7 @@ below it by its outline alone, bigger and fancier as it goes up; tiers 9-11 get 
 | ✅ | 8 | Horse | `assets/items/barn/08_horse.png` |  |
 | ✅ | 9 | Alpaca | `assets/items/barn/09_alpaca.png` |  |
 | ✅ | 10 | Prize Bull | `assets/items/barn/10_bull.png` |  |
-| ✅ | 11 | Unicorn | `assets/items/barn/11_unicorn.png` |  |
+| ✅ | 11 | Unicorn | `assets/items/barn/11_unicorn_clean.png` |  |
 
 ### Crop Field
 
@@ -123,8 +123,8 @@ below it by its outline alone, bigger and fancier as it goes up; tiers 9-11 get 
 | ✅ | 7 | Cabbage | `assets/items/farm/07_cabbage.png` |  |
 | ✅ | 8 | Pumpkin | `assets/items/farm/08_pumpkin.png` |  |
 | ✅ | 9 | Watermelon | `assets/items/farm/09_watermelon.png` |  |
-| ✅ | 10 | Golden Apple | `assets/items/farm/10_golden_apple.png` | a shiny golden apple |
-| ✅ | 11 | Giant Sun | `assets/items/farm/11_giant_sun.png` | a giant sunflower |
+| ✅ | 10 | Golden Apple | `assets/items/farm/10_golden_apple_clean.png` | a shiny golden apple |
+| ✅ | 11 | Giant Sun | `assets/items/farm/11_giant_sun_clean.png` | a giant sunflower |
 
 ### Hay Field
 
@@ -140,8 +140,8 @@ below it by its outline alone, bigger and fancier as it goes up; tiers 9-11 get 
 | ✅ | 7 | Hay Wagon | `assets/items/hay/07_wagon.png` |  |
 | ✅ | 8 | Windmill | `assets/items/hay/08_windmill.png` |  |
 | ✅ | 9 | Golden Hay | `assets/items/hay/09_golden_hay.png` | a golden hay bale |
-| ✅ | 10 | Magic Hay | `assets/items/hay/10_magic_hay.png` | a hay bale with sparkles |
-| ✅ | 11 | Rainbow Hay | `assets/items/hay/11_rainbow_hay.png` |  |
+| ✅ | 10 | Magic Hay | `assets/items/hay/10_magic_hay_clean.png` | a hay bale with sparkles |
+| ✅ | 11 | Rainbow Hay | `assets/items/hay/11_rainbow_hay_clean.png` |  |
 
 ### Compost Yard
 
@@ -157,7 +157,7 @@ below it by its outline alone, bigger and fancier as it goes up; tiers 9-11 get 
 | ✅ | 7 | Super Plant Food | `assets/items/fert/07_super_plant_food.png` |  |
 | ✅ | 8 | Grow Tonic | `assets/items/fert/08_grow_tonic.png` | a fertilizer bottle with a lightning label |
 | ✅ | 9 | Garden Elixir | `assets/items/fert/09_garden_elixir.png` | a burlap sack with a gem on its tie |
-| ✅ | 10 | Magic Mulch | `assets/items/fert/10_magic_mulch.png` | a dark sack with gold trim and a lightning bolt |
+| ✅ | 10 | Magic Mulch | `assets/items/fert/10_magic_mulch_clean.png` | a dark sack with gold trim and a lightning bolt |
 | ✅ | 11 | Starlight Mulch | `assets/items/fert/11_starlight_mulch.png` | a purple crystal sack of fertilizer |
 
 ### Fish Pond
@@ -174,8 +174,8 @@ below it by its outline alone, bigger and fancier as it goes up; tiers 9-11 get 
 | ✅ | 7 | Otter | `assets/items/aqua/07_otter.png` |  |
 | ✅ | 8 | Duck | `assets/items/aqua/08_duck.png` |  |
 | ✅ | 9 | Swan | `assets/items/aqua/09_swan.png` |  |
-| ✅ | 10 | Flamingo | `assets/items/aqua/10_flamingo.png` |  |
-| ✅ | 11 | Sea Monster | `assets/items/aqua/11_sea_monster.png` |  |
+| ✅ | 10 | Flamingo | `assets/items/aqua/10_flamingo_clean.png` |  |
+| ✅ | 11 | Sea Monster | `assets/items/aqua/11_sea_monster_clean.png` |  |
 
 ### Flower Garden
 
@@ -192,7 +192,7 @@ below it by its outline alone, bigger and fancier as it goes up; tiers 9-11 get 
 | ✅ | 8 | Lotus | `assets/items/flower/08_lotus.png` |  |
 | ✅ | 9 | Rafflesia | `assets/items/flower/09_rafflesia.png` |  |
 | ✅ | 10 | Crystal Flower | `assets/items/flower/10_crystal_flower.png` | a flower made of pink crystal |
-| ✅ | 11 | Tree of Life | `assets/items/flower/11_tree_of_life.png` | a tiny glowing tree in a pot |
+| ✅ | 11 | Tree of Life | `assets/items/flower/11_tree_of_life_clean.png` | a tiny glowing tree in a pot |
 
 ## 8. Producers (6 boards × 8 levels = 48)
 

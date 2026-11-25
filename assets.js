@@ -597,7 +597,7 @@ const ASSETS = {
         chest_coin_open: ['assets/items/chests/coin_open_1.png', 'assets/items/chests/coin_open_2.png', 'assets/items/chests/coin_open_3.png'],
         chest_energy_open: ['assets/items/chests/energy_open2_1.png', 'assets/items/chests/energy_open2_2.png', 'assets/items/chests/energy_open2_3.png'],
         chest_brown_open: ['assets/items/chests/brown_open_1.png', 'assets/items/chests/brown_open_2.png', 'assets/items/chests/brown_open_3.png', 'assets/items/chests/brown_open_4.png'],
-        chest_blue_open: ['assets/items/chests/blue_open_1.png', 'assets/items/chests/blue_open_2.png', 'assets/items/chests/blue_open_3.png', 'assets/items/chests/blue_open_4.png'],
+        chest_blue_open: ['assets/items/chests/blue_open_1.png', 'assets/items/chests/blue_open_2.png', 'assets/items/chests/blue_open_3.png', 'assets/items/chests/blue_open_4_clean.png'],
         piggy: [
             'assets/items/special/piggy_1.png',
             'assets/items/special/piggy_2.png',
@@ -624,7 +624,7 @@ const ASSETS = {
             'assets/items/barn/08_horse.png',
             'assets/items/barn/09_alpaca.png',
             'assets/items/barn/10_bull.png',
-            'assets/items/barn/11_unicorn.png',
+            'assets/items/barn/11_unicorn_clean.png',
         ],
         // Cut from assets/raw/items_hay.webp.
         hay: [
@@ -638,8 +638,8 @@ const ASSETS = {
             'assets/items/hay/07_wagon.png',
             'assets/items/hay/08_windmill.png',
             'assets/items/hay/09_golden_hay.png',
-            'assets/items/hay/10_magic_hay.png',
-            'assets/items/hay/11_rainbow_hay.png',
+            'assets/items/hay/10_magic_hay_clean.png',
+            'assets/items/hay/11_rainbow_hay_clean.png',
         ],
         // Cut from assets/raw/farm_chain_v3.webp.
         farm: [
@@ -653,8 +653,8 @@ const ASSETS = {
             'assets/items/farm/07_cabbage.png',
             'assets/items/farm/08_pumpkin.png',
             'assets/items/farm/09_watermelon.png',
-            'assets/items/farm/10_golden_apple.png',
-            'assets/items/farm/11_giant_sun.png',
+            'assets/items/farm/10_golden_apple_clean.png',
+            'assets/items/farm/11_giant_sun_clean.png',
         ],
         // Cut from assets/raw/fert_chain_v3.webp.
         fert: [
@@ -668,7 +668,7 @@ const ASSETS = {
             'assets/items/fert/07_super_plant_food.png',
             'assets/items/fert/08_grow_tonic.png',
             'assets/items/fert/09_garden_elixir.png',
-            'assets/items/fert/10_magic_mulch.png',
+            'assets/items/fert/10_magic_mulch_clean.png',
             'assets/items/fert/11_starlight_mulch.png',
         ],
         // Cut from assets/raw/items_aqua.webp.
@@ -683,8 +683,8 @@ const ASSETS = {
             'assets/items/aqua/07_otter.png',
             'assets/items/aqua/08_duck.png',
             'assets/items/aqua/09_swan.png',
-            'assets/items/aqua/10_flamingo.png',
-            'assets/items/aqua/11_sea_monster.png',
+            'assets/items/aqua/10_flamingo_clean.png',
+            'assets/items/aqua/11_sea_monster_clean.png',
         ],
         // Cut from assets/raw/items_flower.webp.
         flower: [
@@ -699,7 +699,7 @@ const ASSETS = {
             'assets/items/flower/08_lotus.png',
             'assets/items/flower/09_rafflesia.png',
             'assets/items/flower/10_crystal_flower.png',
-            'assets/items/flower/11_tree_of_life.png',
+            'assets/items/flower/11_tree_of_life_clean.png',
         ],
         // Country Fair chains, one per weekly theme (8 tiers each).
         fair_pie: [
