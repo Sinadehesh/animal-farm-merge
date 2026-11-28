@@ -100,6 +100,16 @@ players in Europe get the consent form, and link the app to Google Play once it 
 exist:** the game asks Google's consent step before anything else, and with no message that step reports an
 error, so the game shows no ads and sends no analytics, to anyone.
 
+**AdMob has to be able to verify the app, or it runs no ads** (it says the app's details don't match):
+- Play Console → **Grow users → Store presence → Store settings → Store listing contact details → Website**:
+  `https://www.sinadehesh.com`. AdMob finds the app's `app-ads.txt` through that address, and only there. The file
+  is already at the website's root (`site/app-ads.txt` in the website's repository) and names this publisher
+  (`google.com, pub-1454905177805714, DIRECT, f08c47fec0942fa0`).
+- AdMob → **Apps → the app → App settings → App store details**: link it to the Play listing (search for the
+  package name, `com.sinadehesh.mergefarmstead`: the game's name has changed, the package hasn't).
+- Then AdMob → **Apps → View all apps → app-ads.txt → Check for updates**. Google takes up to a day to read a
+  listing's new website, and reviews a newly linked app before ads run in full.
+
 **Done (as of 2026-10-20):** the developer account is paid ($25), the ID check is passed and the payments profile is
 set up. Don't ask for these again; start from step 1 below.
 
